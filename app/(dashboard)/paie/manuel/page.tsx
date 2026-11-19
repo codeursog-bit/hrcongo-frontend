@@ -12,6 +12,8 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import { ModulePageFrame } from '@/components/requests/ModulePageFrame';
+import { Badge, Button as DesignButton, Card as DesignCard, EmptyState, Input, Select } from '@/components/design-system/primitives';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -178,28 +180,28 @@ const seniority = (hireDate?: string) => {
 // ─── Micro-composants ────────────────────────────────────────────────────────
 
 const SLabel = ({ children }: { children: React.ReactNode }) => (
-  <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5">{children}</label>
+  <label className="mb-1.5 block text-xs font-semibold text-[var(--text-secondary)]">{children}</label>
 );
 
 const Card = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
-  <div className={`bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 ${className}`}>
+  <DesignCard className={className}>
     {children}
-  </div>
+  </DesignCard>
 );
 
-const SectionHeader = ({ icon, title, subtitle, total, color }: {
-  icon: React.ReactNode; title: string; subtitle: string; total?: number; color: string;
+const SectionHeader = ({ icon, title, subtitle, total }: {
+  icon: React.ReactNode; title: string; subtitle: string; total?: number;
 }) => (
-  <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100 dark:border-gray-700/50">
-    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${color}`}>
+  <div className="flex items-center gap-3 px-5 py-4">
+    <span className="shrink-0 text-[var(--brand-strong)]">
       {icon}
-    </div>
+    </span>
     <div className="flex-1 min-w-0">
-      <p className="text-sm font-bold text-gray-800 dark:text-gray-200">{title}</p>
-      <p className="text-[11px] text-gray-400 dark:text-gray-500">{subtitle}</p>
+      <p className="text-sm font-semibold text-[var(--text)]">{title}</p>
+      <p className="text-xs text-[var(--text-secondary)]">{subtitle}</p>
     </div>
     {total != null && total > 0 && (
-      <span className="text-sm font-mono font-bold text-gray-600 dark:text-gray-300 shrink-0">
+      <span className="shrink-0 font-mono text-sm font-semibold tabular-nums text-[var(--text)]">
         {fmt(total)} F
       </span>
     )}
@@ -208,8 +210,8 @@ const SectionHeader = ({ icon, title, subtitle, total, color }: {
 
 const BLine = ({ label, value, cls, sm }: { label: string; value: string; cls?: string; sm?: boolean }) => (
   <div className={`flex items-center justify-between ${sm ? 'py-0.5' : 'py-1.5'}`}>
-    <span className={`${sm ? 'text-xs' : 'text-sm'} text-gray-500 dark:text-gray-400`}>{label}</span>
-    <span className={`font-mono font-bold tabular-nums ${sm ? 'text-xs' : 'text-sm'} ${cls ?? 'text-gray-700 dark:text-gray-200'}`}>{value}</span>
+    <span className={`${sm ? 'text-xs' : 'text-sm'} text-[var(--text-secondary)] `}>{label}</span>
+    <span className={`font-mono font-semibold tabular-nums ${sm ? 'text-xs' : 'text-sm'} ${cls ?? 'text-[var(--text-secondary)] '}`}>{value}</span>
   </div>
 );
 
@@ -218,13 +220,13 @@ const SimpleRow = ({ row, onChangeLabel, onChangeAmount, onRemove, placeholder =
 }) => (
   <motion.div initial={{ opacity:0, y:-4 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-4 }} className="group flex items-center gap-2">
     <input type="text" value={row.label} onChange={e => onChangeLabel(e.target.value)} placeholder={placeholder}
-      className="flex-1 min-w-0 px-3 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-400/30 placeholder:text-gray-300 dark:placeholder:text-gray-600" />
+      className="k-input !min-h-0 min-w-0 flex-1 !px-3 !py-2 text-sm" />
     <div className="relative w-32 shrink-0">
       <input type="number" value={row.amount || ''} onChange={e => onChangeAmount(e.target.value===''?'':Number(e.target.value))} placeholder={amountPlaceholder}
-        className="w-full pl-3 pr-5 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold text-right text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-400/30" />
-      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 pointer-events-none">F</span>
+        className="k-input !min-h-0 w-full !py-2 !pl-3 !pr-5 text-right text-sm font-semibold tabular-nums" />
+      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-[var(--text-secondary)] pointer-events-none">F</span>
     </div>
-    <button onClick={onRemove} className="p-1.5 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all shrink-0"><Trash2 size={13} /></button>
+    <button onClick={onRemove} className="p-1.5 text-[var(--text-secondary)] hover:text-[var(--danger-text)] opacity-0 group-hover:opacity-100 hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  rounded-lg transition-colors shrink-0"><Trash2 size={13} /></button>
   </motion.div>
 );
 
@@ -255,9 +257,9 @@ const InputRow = ({
         value={row.base}
         onChange={e => onChangeBase(e.target.value === '' ? '' : Number(e.target.value))}
         placeholder="Base"
-        className="w-full pl-2 pr-5 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-mono text-right text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/30"
+        className="k-input !min-h-0 w-full !py-2 !pl-2 !pr-5 text-right text-sm font-mono tabular-nums"
       />
-      <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] text-gray-400 pointer-events-none">F</span>
+      <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] text-[var(--text-secondary)] pointer-events-none">F</span>
     </div>
     <input
       type="number"
@@ -265,18 +267,18 @@ const InputRow = ({
       step="0.01"
       onChange={e => onChangeRate(e.target.value === '' ? '' : Number(e.target.value))}
       placeholder="Taux"
-      className="w-full px-2 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-mono text-center text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/30"
+      className="k-input !min-h-0 w-full !px-2 !py-2 text-center text-sm font-mono tabular-nums"
     />
-    <div className={`px-2 py-2 rounded-xl text-sm font-black font-mono text-right tabular-nums border transition-colors ${
+    <div className={`px-2 py-2 rounded-xl text-sm font-semibold font-mono text-right tabular-nums border transition-colors ${
       row.amount > 0
-        ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300'
-        : 'bg-gray-50 dark:bg-gray-900/30 border-gray-100 dark:border-gray-700/50 text-gray-300 dark:text-gray-600'
+        ? 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  border-[var(--border)]  text-[var(--success-text)] '
+        : 'bg-[var(--surface-2)]  border-[var(--border)]  text-[var(--text-secondary)] '
     }`}>
       {row.amount > 0 ? row.amount.toLocaleString('fr-FR') : '—'}
     </div>
     <button
       onClick={onRemove}
-      className="p-1.5 text-gray-300 hover:text-red-500 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
+      className="p-1.5 text-[var(--text-secondary)] hover:text-[var(--danger-text)]  opacity-0 group-hover:opacity-100 hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  rounded-lg transition-colors"
     >
       <Trash2 size={13} />
     </button>
@@ -337,17 +339,17 @@ const LabelInput = ({
         onChange={e => handleChange(e.target.value)}
         onFocus={() => query.length >= 1 && setOpen(true)}
         placeholder={placeholder}
-        className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-400/30 placeholder:text-gray-300 dark:placeholder:text-gray-600"
+        className="w-full px-3 py-2 bg-[var(--surface-2)]  border border-[var(--border)]  rounded-xl text-sm text-[var(--text)]  focus:outline-none focus:ring-2 focus:ring-[var(--focus)] placeholder:text-[var(--text-secondary)] "
       />
       <AnimatePresence>
         {open && filtered.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
-            className="absolute z-[999] left-0 right-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl overflow-hidden"
+            className="absolute left-0 right-0 top-full z-[999] mt-1 overflow-hidden rounded-xl bg-[var(--surface)] shadow-[var(--shadow-pop)]"
           >
             {filtered.map(s => (
               <button key={s} onMouseDown={() => handleSelect(s)}
-                className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors border-b border-gray-50 dark:border-gray-700/50 last:border-0">
+                className="w-full px-3 py-2 text-left text-sm text-[var(--text)] transition-colors hover:bg-[var(--surface-2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--focus)]">
                 {/* Highlight la partie matchée */}
                 {(() => {
                   const idx = s.toLowerCase().indexOf(query.toLowerCase());
@@ -355,7 +357,7 @@ const LabelInput = ({
                   return (
                     <>
                       {s.slice(0, idx)}
-                      <span className="font-bold text-emerald-600 dark:text-emerald-400">{s.slice(idx, idx + query.length)}</span>
+                      <span className="font-semibold text-[var(--brand-strong)]">{s.slice(idx, idx + query.length)}</span>
                       {s.slice(idx + query.length)}
                     </>
                   );
@@ -966,20 +968,20 @@ export default function ManuelPayrollPage() {
   const dbIndemSugg = bonusTemplates.filter(t => !t.isTaxable);
 
   return (
-    <div className="max-w-[1380px] mx-auto pb-28 px-4 pt-1">
+    <ModulePageFrame kind="list">
+      <div data-guide="paie-manual-workspace" className="max-w-[1380px] mx-auto pb-28 px-4 pt-1">
 
       {/* ── Header ── */}
-      <div className="flex items-center gap-4 mb-7">
-        <button onClick={() => router.back()}
-          className="p-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shrink-0">
-          <ArrowLeft size={18} className="text-gray-500" />
-        </button>
+      <div className="mb-6 flex items-start gap-4">
+        <DesignButton variant="secondary" onClick={() => router.back()} aria-label="Retour" className="shrink-0">
+          <ArrowLeft size={18} strokeWidth={1.5} />
+        </DesignButton>
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">Saisie manuelle de paie</h1>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 uppercase tracking-wide">Manuel</span>
+            <h1 className="text-2xl font-semibold tracking-tight text-[var(--text)]">Saisie manuelle de paie</h1>
+            <Badge tone="info">Un bulletin</Badge>
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">CNSS, ITS et TUS calculés automatiquement selon la nature de chaque élément</p>
+          <p className="mt-1 text-sm text-[var(--text-secondary)]">Saisissez les éléments, puis vérifiez le calcul renvoyé par le serveur.</p>
         </div>
       </div>
 
@@ -990,48 +992,43 @@ export default function ManuelPayrollPage() {
 
           {/* ── Période ── */}
           <Card className="p-5">
-            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-4">Période</p>
+            <p className="mb-4 text-[11px] font-semibold uppercase tracking-wider text-[var(--text-secondary)]">Période de paie</p>
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <SLabel>Mois</SLabel>
-                <select value={month} onChange={e => setMonth(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/30">
-                  {MONTHS.map(m => <option key={m}>{m}</option>)}
-                </select>
-              </div>
-              <div>
-                <SLabel>Année</SLabel>
-                <select value={year} onChange={e => setYear(Number(e.target.value))}
-                  className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/30">
-                  {Array.from(new Set([...Array.from({ length: 7 }, (_, i) => Math.max(2020, new Date().getFullYear() - 5) + i), year])).sort((a, b) => a - b).map(y => <option key={y}>{y}</option>)}
-                </select>
-              </div>
+              <Select label="Mois" value={month} onChange={e => setMonth(e.target.value)}>
+                {MONTHS.map(m => <option key={m}>{m}</option>)}
+              </Select>
+              <Select label="Année" value={year} onChange={e => setYear(Number(e.target.value))}>
+                {Array.from(new Set([...Array.from({ length: 7 }, (_, i) => Math.max(2020, new Date().getFullYear() - 5) + i), year])).sort((a, b) => a - b).map(y => <option key={y}>{y}</option>)}
+              </Select>
             </div>
           </Card>
 
           {/* ── Employé ── */}
-          <Card className="overflow-visible">
-            <div className="px-5 pt-5 pb-4">
-              <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3">Employé</p>
-
+          <DesignCard
+            title="Employé"
+            action={selectedEmp
+              ? <Badge tone="success">Sélectionné</Badge>
+              : <Badge tone="neutral">À sélectionner</Badge>}
+            className="overflow-visible"
+          >
+            <div>
               {selectedEmp ? (
                 <div>
-                  <div className="flex items-start justify-between p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-2xl mb-4">
+                  <div className="mb-4 flex flex-wrap items-start justify-between gap-3 rounded-xl bg-[var(--surface-2)] p-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-xl bg-emerald-200 dark:bg-emerald-800 flex items-center justify-center text-emerald-700 dark:text-emerald-300 font-black text-sm shrink-0">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--brand-soft)] text-sm font-semibold text-[var(--brand-strong)]">
                         {selectedEmp.firstName[0]}{selectedEmp.lastName[0]}
                       </div>
                       <div>
-                        <p className="font-bold text-gray-900 dark:text-white">{selectedEmp.firstName} {selectedEmp.lastName}</p>
-                        <p className="text-xs text-gray-500">{selectedEmp.position}</p>
+                        <p className="font-semibold text-[var(--text)]">{selectedEmp.firstName} {selectedEmp.lastName}</p>
+                        <p className="text-sm text-[var(--text-secondary)]">{selectedEmp.position || 'Poste non renseigné'}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      {loadingDetail && <Loader2 size={14} className="animate-spin text-emerald-500" />}
-                      <button onClick={() => { setSelectedEmp(null); setEmpSearch(''); setSim(null); }}
-                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors">
-                        <X size={14} />
-                      </button>
+                      {loadingDetail && <Loader2 size={14} className="animate-spin text-[var(--brand-strong)]" aria-label="Chargement des informations employé" />}
+                      <DesignButton variant="ghost" onClick={() => { setSelectedEmp(null); setEmpSearch(''); setSim(null); }}>
+                        <X size={14} strokeWidth={1.5} /> Changer
+                      </DesignButton>
                     </div>
                   </div>
 
@@ -1044,17 +1041,17 @@ export default function ManuelPayrollPage() {
                         { icon: <Users      size={13} />, label: 'Situation',
                           value: `${MARITAL_LABELS[empDetail.maritalStatus ?? ''] ?? '—'}${empDetail.numberOfChildren ? ` · ${empDetail.numberOfChildren} enf.` : ''}` },
                       ].map(({ icon, label, value }) => (
-                        <div key={label} className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-900/40 rounded-xl">
-                          <span className="text-gray-400 dark:text-gray-500 shrink-0">{icon}</span>
+                        <div key={label} className="flex items-center gap-2 rounded-xl bg-[var(--surface-2)] px-3 py-2">
+                          <span className="shrink-0 text-[var(--text-secondary)]">{icon}</span>
                           <div className="min-w-0">
-                            <p className="text-[10px] text-gray-400 dark:text-gray-500">{label}</p>
-                            <p className="text-xs font-bold text-gray-700 dark:text-gray-300 truncate">{value}</p>
+                            <p className="text-[10px] text-[var(--text-secondary)]">{label}</p>
+                            <p className="truncate text-xs font-semibold text-[var(--text)]">{value}</p>
                           </div>
                         </div>
                       ))}
-                      <div className="col-span-2 flex items-center justify-between px-3 py-2.5 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/50 rounded-xl">
-                        <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">Salaire de base</span>
-                        <span className="text-sm font-black font-mono text-emerald-700 dark:text-emerald-300">
+                      <div className="col-span-2 flex items-center justify-between rounded-xl bg-[var(--brand-soft)] px-3 py-2.5">
+                        <span className="text-xs font-semibold text-[var(--brand-strong)]">Salaire de base</span>
+                        <span className="font-mono text-sm font-semibold tabular-nums text-[var(--brand-strong)]">
                           {empDetail.baseSalary ? `${fmt(Number(empDetail.baseSalary))} FCFA` : '—'}
                         </span>
                       </div>
@@ -1063,31 +1060,39 @@ export default function ManuelPayrollPage() {
                 </div>
               ) : (
                 <div className="relative">
-                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input type="text" value={empSearch}
+                  <Input
+                    label="Rechercher un employé"
+                    type="search"
+                    value={empSearch}
                     onChange={e => { setEmpSearch(e.target.value); setShowDrop(true); }}
                     onFocus={() => setShowDrop(true)}
-                    placeholder="Rechercher par nom, prénom ou matricule…"
-                    className="w-full pl-9 pr-3 py-2.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 text-gray-800 dark:text-gray-200 placeholder:text-gray-400" />
+                    onKeyDown={e => { if (e.key === 'Escape') setShowDrop(false); }}
+                    placeholder="Nom, prénom ou matricule"
+                    autoComplete="off"
+                  />
                   <AnimatePresence>
-                    {showDrop && filtered.length > 0 && (
+                    {showDrop && (
                       <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                        className="absolute z-30 left-0 right-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl overflow-hidden">
-                        {filtered.map((e, i) => (
-                          <button key={e.id}
+                        className="absolute left-0 right-0 top-full z-30 mt-2 max-h-60 overflow-y-auto rounded-xl bg-[var(--surface)] p-2 shadow-[var(--shadow-pop)]">
+                        {filtered.length ? filtered.map(e => (
+                          <button key={e.id} type="button"
                             onClick={() => { setSelectedEmp(e); setEmpSearch(''); setShowDrop(false); }}
-                            className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 text-left transition-colors ${i > 0 ? 'border-t border-gray-50 dark:border-gray-700/50' : ''}`}>
-                            <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-[11px] font-black text-gray-600 dark:text-gray-300 shrink-0">
+                            className="flex min-h-12 w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-[var(--surface-2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--focus)]">
+                            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--brand-soft)] text-xs font-semibold text-[var(--brand-strong)]">
                               {e.firstName[0]}{e.lastName[0]}
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-sm font-bold text-gray-900 dark:text-white">{e.firstName} {e.lastName}</p>
-                              <p className="text-[11px] text-gray-400 truncate">
+                            </span>
+                            <span className="min-w-0">
+                              <span className="block truncate text-sm font-semibold text-[var(--text)]">{e.firstName} {e.lastName}</span>
+                              <span className="block truncate text-xs text-[var(--text-secondary)]">
                                 {[e.employeeNumber, e.position, e.department?.name].filter(Boolean).join(' · ')}
-                              </p>
-                            </div>
+                              </span>
+                            </span>
                           </button>
-                        ))}
+                        )) : (
+                          <EmptyState title={employees.length ? 'Aucun résultat' : 'Aucun employé disponible'}>
+                            {employees.length ? 'Aucun employé ne correspond à cette recherche.' : 'La liste des employés est vide.'}
+                          </EmptyState>
+                        )}
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -1097,14 +1102,14 @@ export default function ManuelPayrollPage() {
 
             {/* ✅ Bannière congé — solde >= 26j */}
             {showCongeBanner && (
-              <div className="mx-5 mb-0 mt-3 flex items-center justify-between px-4 py-2.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
+              <div className="mx-5 mb-0 mt-3 flex items-center justify-between px-4 py-2.5 bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  border border-[var(--border)]  rounded-xl">
                 <div className="flex items-center gap-2">
                   <span className="text-lg">🏖️</span>
                   <div>
-                    <p className="text-xs font-bold text-amber-700 dark:text-amber-300">
+                    <p className="text-xs font-semibold text-[var(--warning-text)] ">
                       {soldeConge}j de congés disponibles
                     </p>
-                    <p className="text-[10px] text-amber-600 dark:text-amber-400">
+                    <p className="text-[10px] text-[var(--warning-text)] ">
                       Indemnité congé : <strong>{baseCongeCalc.toLocaleString('fr-FR')} F/an</strong> (ytd ÷ 12)
                     </p>
                   </div>
@@ -1112,7 +1117,7 @@ export default function ManuelPayrollPage() {
                 <button
                   onClick={addCongesPaies}
                   disabled={primes.some(p => /cong[eé]/i.test(p.label))}
-                  className="px-3 py-1.5 text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0">
+                  className="px-3 py-1.5 text-xs font-semibold bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] hover:bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)] rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0">
                   {primes.some(p => /cong[eé]/i.test(p.label)) ? '✓ Ajouté' : 'Ajouter congé'}
                 </button>
               </div>
@@ -1121,12 +1126,12 @@ export default function ManuelPayrollPage() {
             {/* ✅ Toggle "Utiliser données précédentes" */}
             {selectedEmp && empDetail && (
               <div className="mx-5 mb-4 mt-3">
-                <div className="flex items-center justify-between px-4 py-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl">
+                <div className="flex items-center justify-between px-4 py-3 bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  border border-[var(--border)]  rounded-xl">
                   <div className="flex items-center gap-2.5">
-                    <History size={15} className="text-emerald-500 shrink-0" />
+                    <History size={15} className="text-[var(--success-text)] shrink-0" />
                     <div>
-                      <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300">Utiliser les données du mois précédent</p>
-                      <p className="text-[10px] text-emerald-500 dark:text-emerald-400">
+                      <p className="text-xs font-semibold text-[var(--success-text)] ">Utiliser les données du mois précédent</p>
+                      <p className="text-[10px] text-[var(--success-text)] ">
                         {(() => {
                           const idx = MONTHS.findIndex(m => m === month);
                           const prevIdx = idx === 0 ? 11 : idx - 1;
@@ -1139,12 +1144,12 @@ export default function ManuelPayrollPage() {
                   <div className="flex items-center gap-2 shrink-0">
                     {prevDataLoaded && (
                       <button onClick={clearPrevData}
-                        className="flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-gray-500 hover:text-red-500 border border-gray-200 dark:border-gray-600 rounded-lg transition-colors">
+                        className="flex items-center gap-1 px-2 py-1 text-[10px] font-semibold text-[var(--text-secondary)] hover:text-[var(--danger-text)] border border-[var(--border)]  rounded-lg transition-colors">
                         <RotateCcw size={9} /> Vider
                       </button>
                     )}
                     {loadingPrev
-                      ? <Loader2 size={16} className="animate-spin text-emerald-500" />
+                      ? <Loader2 size={16} className="animate-spin text-[var(--success-text)]" />
                       : (
                         <button
                           onClick={() => {
@@ -1153,15 +1158,15 @@ export default function ManuelPayrollPage() {
                             if (next) loadPrevData();
                             else clearPrevData();
                           }}
-                          className={`relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none ${usePrevData ? 'bg-emerald-500' : 'bg-gray-200 dark:bg-gray-700'}`}>
-                          <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${usePrevData ? 'translate-x-5' : ''}`} />
+                          className={`relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none ${usePrevData ? 'bg-[var(--brand-soft)]' : 'bg-[var(--surface-2)] '}`}>
+                          <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-[var(--surface)] rounded-full shadow transition-transform duration-200 ${usePrevData ? 'translate-x-5' : ''}`} />
                         </button>
                       )
                     }
                   </div>
                 </div>
                 {prevDataLoaded && (
-                  <p className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-1.5 px-1 flex items-center gap-1">
+                  <p className="text-[10px] text-[var(--success-text)]  mt-1.5 px-1 flex items-center gap-1">
                     <CheckCircle2 size={9} /> Données chargées — modifiez librement avant de confirmer
                   </p>
                 )}
@@ -1169,12 +1174,12 @@ export default function ManuelPayrollPage() {
             )}
 
             {selectedEmp && (
-              <div className="px-5 pb-5 border-t border-gray-100 dark:border-gray-700/50 pt-4">
+              <div className="px-5 pb-5 border-t border-[var(--border)]  pt-4">
                 <SLabel>
                   Jours travaillés{' '}
-                  <span className="font-normal text-gray-400">/ {sim?.workDays ?? 26} jours théoriques</span>
+                  <span className="font-normal text-[var(--text-secondary)]">/ {sim?.workDays ?? 26} jours théoriques</span>
                   {!workedDaysEdited && sim && (
-                    <span className="ml-1.5 text-[10px] font-bold text-emerald-500">(présences)</span>
+                    <span className="ml-1.5 text-[10px] font-semibold text-[var(--success-text)]">(présences)</span>
                   )}
                 </SLabel>
                 <div className="flex items-center gap-3">
@@ -1184,41 +1189,41 @@ export default function ManuelPayrollPage() {
                       const max = sim?.workDays ?? 26;
                       setWorkedDays(e.target.value === '' ? '' : Math.min(max, Math.max(0, Number(e.target.value))));
                     }}
-                    className={`w-20 px-3 py-2 bg-gray-50 dark:bg-gray-900/50 border rounded-xl text-sm font-bold text-center text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 ${
-                      workedDaysEdited ? 'border-amber-400' : 'border-gray-200 dark:border-gray-700'
+                    className={`w-20 px-3 py-2 bg-[var(--surface-2)]  border rounded-xl text-sm font-semibold text-center text-[var(--text)]  focus:outline-none focus:ring-2 focus:ring-[var(--focus)] ${
+                      workedDaysEdited ? 'border-[var(--border)]' : 'border-[var(--border)] '
                     }`} />
-                  <div className="flex-1 h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                    <div className="h-full bg-emerald-400 rounded-full transition-all"
+                  <div className="flex-1 h-1.5 bg-[var(--surface-2)]  rounded-full overflow-hidden">
+                    <div className="h-full bg-[var(--brand)] rounded-full transition-colors"
                       style={{ width: `${Math.min(100,(n(workedDays)/(sim?.workDays ?? 26))*100)}%` }} />
                   </div>
-                  <span className="text-xs text-gray-400 tabular-nums w-8 text-right">{Math.round((n(workedDays)/(sim?.workDays ?? 26))*100)}%</span>
+                  <span className="text-xs text-[var(--text-secondary)] tabular-nums w-8 text-right">{Math.round((n(workedDays)/(sim?.workDays ?? 26))*100)}%</span>
                 </div>
                 {!workedDaysEdited && sim?.daysToPay === 0 && (
-                  <p className="text-[10px] text-amber-500 mt-1.5 flex items-center gap-1">
+                  <p className="text-[10px] text-[var(--warning-text)] mt-1.5 flex items-center gap-1">
                     <AlertCircle size={9} /> Aucune présence trouvée en BDD pour ce mois — vérifiez le pointage ou ajustez ce champ.
                   </p>
                 )}
               </div>
             )}
-          </Card>
+          </DesignCard>
 
           {/* ── Heures supplémentaires ── */}
           <Card className="p-5">
-            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3">Heures supplémentaires</p>
+            <p className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">Heures supplémentaires</p>
             <div className="grid grid-cols-4 gap-3">
               {([
-                { label:'+10%',  v:ot10,  set:setOt10,  col:'text-amber-500',  ring:'focus:ring-amber-400/30' },
-                { label:'+25%',  v:ot25,  set:setOt25,  col:'text-amber-500', ring:'focus:ring-amber-400/30' },
-                { label:'+50%',  v:ot50,  set:setOt50,  col:'text-amber-500',   ring:'focus:ring-amber-400/30' },
-                { label:'+100%', v:ot100, set:setOt100, col:'text-amber-500',    ring:'focus:ring-amber-400/30' },
+                { label:'+10%',  v:ot10,  set:setOt10,  col:'text-[var(--warning-text)]',  ring:'focus:ring-[var(--focus)]' },
+                { label:'+25%',  v:ot25,  set:setOt25,  col:'text-[var(--warning-text)]', ring:'focus:ring-[var(--focus)]' },
+                { label:'+50%',  v:ot50,  set:setOt50,  col:'text-[var(--warning-text)]',   ring:'focus:ring-[var(--focus)]' },
+                { label:'+100%', v:ot100, set:setOt100, col:'text-[var(--warning-text)]',    ring:'focus:ring-[var(--focus)]' },
               ] as const).map(({ label, v, set, col, ring }) => (
                 <div key={label} className="text-center">
-                  <label className={`block text-xs font-bold mb-1.5 ${col}`}>{label}</label>
+                  <label className={`block text-xs font-semibold mb-1.5 ${col}`}>{label}</label>
                   <div className="relative">
                     <input type="number" min={0} value={v}
                       onChange={e => set(e.target.value === '' ? 0 : Number(e.target.value) as any)}
-                      className={`w-full pl-2 pr-5 py-2.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold text-center text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 ${ring}`} />
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400">h</span>
+                      className={`w-full pl-2 pr-5 py-2.5 bg-[var(--surface-2)]  border border-[var(--border)]  rounded-xl text-sm font-semibold text-center text-[var(--text)]  focus:outline-none focus:ring-2 ${ring}`} />
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-[var(--text-secondary)]">h</span>
                   </div>
                 </div>
               ))}
@@ -1228,16 +1233,15 @@ export default function ManuelPayrollPage() {
           {/* ── Primes ── */}
           <Card className="overflow-visible">
             <SectionHeader
-              icon={<span className="text-amber-600 dark:text-amber-400 text-xs font-black">%</span>}
+              icon={<span className="text-xs font-semibold">%</span>}
               title="Primes"
               subtitle="Soumises à CNSS et ITS — viennent avant le brut"
               total={totalPrimes}
-              color="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-600"
             />
             <div className="px-5 py-4 space-y-2">
               <div className="grid grid-cols-[1fr_100px_70px_90px_28px] gap-2 px-1 mb-1">
                 {['Libellé','Base (F)','Taux','Gain (F)',''].map((h,i) => (
-                  <span key={i} className={`text-[10px] font-bold text-gray-400 uppercase tracking-wide ${i===3?'text-right':''}`}>{h}</span>
+                  <span key={i} className={`text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide ${i===3?'text-right':''}`}>{h}</span>
                 ))}
               </div>
               <AnimatePresence initial={false}>
@@ -1256,21 +1260,21 @@ export default function ManuelPayrollPage() {
               </AnimatePresence>
               <div className="flex flex-wrap items-center gap-2 pt-1">
                 <button onClick={() => setPrimes(p => [...p, newRow()])}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded-lg transition-colors">
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[var(--warning-text)]  border border-[var(--border)]  bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  hover:bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  rounded-lg transition-colors">
                   <Plus size={11} /> Ajouter une prime
                 </button>
                 <div className="relative">
                   <button onClick={() => setShowPrimeSugg(v => !v)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[var(--text-secondary)]  border border-[var(--border)]  bg-[var(--surface-2)]  hover:bg-[var(--surface-2)]  rounded-lg transition-colors">
                     Suggestions <ChevronDown size={9} className={`transition-transform ${showPrimeSugg ? 'rotate-180':''}`} />
                   </button>
                   <AnimatePresence>
                     {showPrimeSugg && (
                       <motion.div initial={{ opacity:0, y:-4 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }}
-                        className="absolute z-[999] left-0 top-full mt-1.5 w-72 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl p-3 space-y-1.5">
+                        className="absolute z-[999] left-0 top-full mt-1.5 w-72 bg-[var(--surface)]  border border-[var(--border)]  rounded-2xl shadow-2xl p-3 space-y-1.5">
                         <input type="text" value={primeSuggSearch} onChange={e => setPrimeSuggSearch(e.target.value)}
                           placeholder="Rechercher une prime…"
-                          className="w-full px-3 py-1.5 mb-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-amber-400/30 text-gray-700 dark:text-gray-300" />
+                          className="w-full px-3 py-1.5 mb-2 bg-[var(--surface-2)]  border border-[var(--border)]  rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[var(--focus)] text-[var(--text-secondary)] " />
                         <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto">
                           {(dbPrimeSugg.length > 0
                             ? dbPrimeSugg.map(t => ({ name: t.name, amount: t.defaultAmount ? String(Number(t.defaultAmount)) : '' }))
@@ -1282,13 +1286,13 @@ export default function ManuelPayrollPage() {
                               <button key={name}
                                 onClick={() => { addSuggestion(setPrimes, primes, name, amount as any); }}
                                 disabled={added}
-                                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold border transition-colors ${added ? 'opacity-40 cursor-not-allowed bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-400' : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800 hover:bg-amber-100'}`}>
+                                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold border transition-colors ${added ? 'opacity-40 cursor-not-allowed bg-[var(--surface-2)]  border-[var(--border)]  text-[var(--text-secondary)]' : 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  text-[var(--warning-text)]  border-[var(--border)]  hover:bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]'}`}>
                                 {added ? <Check size={9}/> : <Plus size={9}/>} {name}
                               </button>
                             );
                           })}
                         </div>
-                        <button onClick={() => setShowPrimeSugg(false)} className="w-full pt-1 text-xs text-gray-400 hover:text-gray-600 transition-colors">Fermer</button>
+                        <button onClick={() => setShowPrimeSugg(false)} className="w-full pt-1 text-xs text-[var(--text-secondary)] hover:text-[var(--text-secondary)] transition-colors">Fermer</button>
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -1300,16 +1304,15 @@ export default function ManuelPayrollPage() {
           {/* ── Indemnités ── */}
           <Card className="overflow-visible">
             <SectionHeader
-              icon={<span className="text-emerald-600 dark:text-emerald-400 text-xs font-black">≠</span>}
+              icon={<span className="text-xs font-semibold">≠</span>}
               title="Indemnités"
               subtitle="Non soumises à CNSS ni ITS — transport, logement, panier…"
               total={totalIndemnites}
-              color="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-emerald-600"
             />
             <div className="px-5 py-4 space-y-2">
               <div className="grid grid-cols-[1fr_100px_70px_90px_28px] gap-2 px-1 mb-1">
                 {['Libellé','Base (F)','Taux','Gain (F)',''].map((h,i) => (
-                  <span key={i} className={`text-[10px] font-bold text-gray-400 uppercase tracking-wide ${i===3?'text-right':''}`}>{h}</span>
+                  <span key={i} className={`text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide ${i===3?'text-right':''}`}>{h}</span>
                 ))}
               </div>
               <AnimatePresence initial={false}>
@@ -1325,21 +1328,21 @@ export default function ManuelPayrollPage() {
               </AnimatePresence>
               <div className="flex flex-wrap items-center gap-2 pt-1">
                 <button onClick={() => setIndemnites(p => [...p, newRow()])}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 rounded-lg transition-colors">
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[var(--action)]  border border-[var(--border)]  bg-[var(--brand-soft)]  hover:bg-[var(--brand-soft)]  rounded-lg transition-colors">
                   <Plus size={11} /> Ajouter une indemnité
                 </button>
                 <div className="relative">
                   <button onClick={() => setShowIndemSugg(v => !v)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[var(--text-secondary)]  border border-[var(--border)]  bg-[var(--surface-2)]  hover:bg-[var(--surface-2)]  rounded-lg transition-colors">
                     Suggestions <ChevronDown size={9} className={`transition-transform ${showIndemSugg?'rotate-180':''}`} />
                   </button>
                   <AnimatePresence>
                     {showIndemSugg && (
                       <motion.div initial={{ opacity:0, y:-4 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }}
-                        className="absolute z-[999] left-0 top-full mt-1.5 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl p-3">
+                        className="absolute z-[999] left-0 top-full mt-1.5 w-64 bg-[var(--surface)]  border border-[var(--border)]  rounded-2xl shadow-2xl p-3">
                         <input type="text" value={indemSuggSearch} onChange={e => setIndemSuggSearch(e.target.value)}
                           placeholder="Rechercher une indemnité…"
-                          className="w-full px-3 py-1.5 mb-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-400/30 text-gray-700 dark:text-gray-300" />
+                          className="w-full px-3 py-1.5 mb-2 bg-[var(--surface-2)]  border border-[var(--border)]  rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[var(--focus)] text-[var(--text-secondary)] " />
                         <div className="flex flex-wrap gap-1.5">
                           {(dbIndemSugg.length > 0
                             ? dbIndemSugg.map(t => ({ name: t.name, amount: t.defaultAmount ? String(Number(t.defaultAmount)) : '' }))
@@ -1351,13 +1354,13 @@ export default function ManuelPayrollPage() {
                               <button key={name}
                                 onClick={() => addSuggestion(setIndemnites, indemnites, name, amount as any)}
                                 disabled={added}
-                                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold border transition-colors ${added ? 'opacity-40 cursor-not-allowed bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-400' : 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100'}`}>
+                                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold border transition-colors ${added ? 'opacity-40 cursor-not-allowed bg-[var(--surface-2)]  border-[var(--border)]  text-[var(--text-secondary)]' : 'bg-[var(--brand-soft)]  text-[var(--action)]  border-[var(--border)]  hover:bg-[var(--brand-soft)]'}`}>
                                 {added ? <Check size={9}/> : <Plus size={9}/>} {name}
                               </button>
                             );
                           })}
                         </div>
-                        <button onClick={() => setShowIndemSugg(false)} className="w-full pt-2 text-xs text-gray-400 hover:text-gray-600 transition-colors">Fermer</button>
+                        <button onClick={() => setShowIndemSugg(false)} className="w-full pt-2 text-xs text-[var(--text-secondary)] hover:text-[var(--text-secondary)] transition-colors">Fermer</button>
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -1369,11 +1372,10 @@ export default function ManuelPayrollPage() {
           {/* ── Taxes ── */}
           <Card className="overflow-visible">
             <SectionHeader
-              icon={<Building2 size={14} className="text-amber-600 dark:text-amber-400" />}
+              icon={<Building2 size={14} strokeWidth={1.5} />}
               title="Taxes & Retenues spécifiques"
               subtitle="CNSS et ITS automatiques — ajoutez ici les taxes supplémentaires"
               total={totalTaxes}
-              color="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800"
             />
             <div className="px-5 py-4 space-y-2">
               <AnimatePresence initial={false}>
@@ -1387,31 +1389,31 @@ export default function ManuelPayrollPage() {
               </AnimatePresence>
               <div className="flex flex-wrap items-center gap-2 pt-1">
                 <button onClick={() => setTaxes(p => [...p, newRow()])}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded-lg transition-colors">
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[var(--warning-text)]  border border-[var(--border)]  bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  hover:bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  rounded-lg transition-colors">
                   <Plus size={11} /> Ajouter une taxe
                 </button>
                 {companyTaxes.length > 0 && (
                   <div className="relative">
                     <button onClick={() => setShowTaxSugg(v => !v)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[var(--text-secondary)]  border border-[var(--border)]  bg-[var(--surface-2)]  hover:bg-[var(--surface-2)]  rounded-lg transition-colors">
                       Taxes configurées <ChevronDown size={9} className={`transition-transform ${showTaxSugg?'rotate-180':''}`} />
                     </button>
                     <AnimatePresence>
                       {showTaxSugg && (
                         <motion.div initial={{ opacity:0, y:-4 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }}
-                          className="absolute z-[999] left-0 top-full mt-1.5 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl p-3">
-                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-2">Taxes de l'entreprise</p>
+                          className="absolute z-[999] left-0 top-full mt-1.5 w-64 bg-[var(--surface)]  border border-[var(--border)]  rounded-2xl shadow-2xl p-3">
+                          <p className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide mb-2">Taxes de l'entreprise</p>
                           <div className="space-y-1">
                             {companyTaxes.map(tax => {
                               const added = taxes.some(t => t.refId === tax.id);
                               return (
                                 <button key={tax.id} onClick={() => { addTaxFromTemplate(tax); setShowTaxSugg(false); }} disabled={added}
-                                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm transition-colors ${added ? 'opacity-40 cursor-not-allowed' : 'hover:bg-amber-50 dark:hover:bg-amber-900/20'}`}>
+                                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm transition-colors ${added ? 'opacity-40 cursor-not-allowed' : 'hover:bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] '}`}>
                                   <div className="text-left">
-                                    <p className="font-semibold text-gray-800 dark:text-gray-200">{tax.name}</p>
-                                    <p className="text-[10px] text-gray-400 font-mono">{tax.code} · {Number(tax.fixedEmployee)>0?`${fmt(Number(tax.fixedEmployee))} F fixe`:`${(Number(tax.employeeRate)*100).toFixed(2)}%`}</p>
+                                    <p className="font-semibold text-[var(--text)] ">{tax.name}</p>
+                                    <p className="text-[10px] text-[var(--text-secondary)] font-mono">{tax.code} · {Number(tax.fixedEmployee)>0?`${fmt(Number(tax.fixedEmployee))} F fixe`:`${(Number(tax.employeeRate)*100).toFixed(2)}%`}</p>
                                   </div>
-                                  {added ? <Check size={12} className="text-emerald-500"/> : <Plus size={12} className="text-gray-400"/>}
+                                  {added ? <Check size={12} className="text-[var(--success-text)]"/> : <Plus size={12} className="text-[var(--text-secondary)]"/>}
                                 </button>
                               );
                             })}
@@ -1428,20 +1430,19 @@ export default function ManuelPayrollPage() {
           {/* ── Prêts ── */}
           <Card className="overflow-hidden">
             <SectionHeader
-              icon={<CreditCard size={14} className="text-amber-600 dark:text-amber-400" />}
+              icon={<CreditCard size={14} strokeWidth={1.5} />}
               title="Prêts"
               subtitle="Remboursements mensuels à déduire du net"
               total={[...empLoans.map(l => Number(l.monthlyRepayment)), ...loans.map(r => n(r.amount))].reduce((s,v)=>s+v,0)}
-              color="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800"
             />
             <div className="px-5 py-4 space-y-2">
               {empLoans.map(loan => (
-                <div key={loan.id} className="flex items-center justify-between px-3 py-2.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40 rounded-xl">
+                <div key={loan.id} className="flex items-center justify-between px-3 py-2.5 bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  border border-[var(--border)]  rounded-xl">
                   <div>
-                    <p className="text-sm font-bold text-gray-800 dark:text-gray-200">Prêt{loan.reason ? ` — ${loan.reason}` : ''}</p>
-                    <p className="text-[11px] text-gray-400">Solde restant : {fmt(Number(loan.remainingBalance))} F</p>
+                    <p className="text-sm font-semibold text-[var(--text)] ">Prêt{loan.reason ? ` — ${loan.reason}` : ''}</p>
+                    <p className="text-[11px] text-[var(--text-secondary)]">Solde restant : {fmt(Number(loan.remainingBalance))} F</p>
                   </div>
-                  <span className="text-sm font-mono font-black text-amber-600 dark:text-amber-400">−{fmt(Number(loan.monthlyRepayment))} F</span>
+                  <span className="text-sm font-mono font-semibold text-[var(--warning-text)] ">−{fmt(Number(loan.monthlyRepayment))} F</span>
                 </div>
               ))}
               <AnimatePresence initial={false}>
@@ -1455,7 +1456,7 @@ export default function ManuelPayrollPage() {
                 ))}
               </AnimatePresence>
               <button onClick={() => setLoans(p => [...p, newRow()])}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded-lg transition-colors mt-1">
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[var(--warning-text)]  border border-[var(--border)]  bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  hover:bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  rounded-lg transition-colors mt-1">
                 <Plus size={11} /> Ajouter un prêt manuellement
               </button>
             </div>
@@ -1464,20 +1465,19 @@ export default function ManuelPayrollPage() {
           {/* ── Avances ── */}
           <Card className="overflow-hidden">
             <SectionHeader
-              icon={<Wallet size={14} className="text-red-600 dark:text-red-400" />}
+              icon={<Wallet size={14} strokeWidth={1.5} />}
               title="Avances sur salaire"
               subtitle="Montants à déduire du net ce mois-ci"
               total={[...empAdvances.map(a => Number(a.amount)), ...advances.map(r => n(r.amount))].reduce((s,v)=>s+v,0)}
-              color="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
             />
             <div className="px-5 py-4 space-y-2">
               {empAdvances.map(adv => (
-                <div key={adv.id} className="flex items-center justify-between px-3 py-2.5 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/40 rounded-xl">
+                <div key={adv.id} className="flex items-center justify-between px-3 py-2.5 bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  border border-[var(--border)]  rounded-xl">
                   <div>
-                    <p className="text-sm font-bold text-gray-800 dark:text-gray-200">Avance sur salaire</p>
-                    {adv.reason && <p className="text-[11px] text-gray-400">{adv.reason}</p>}
+                    <p className="text-sm font-semibold text-[var(--text)] ">Avance sur salaire</p>
+                    {adv.reason && <p className="text-[11px] text-[var(--text-secondary)]">{adv.reason}</p>}
                   </div>
-                  <span className="text-sm font-mono font-black text-red-600 dark:text-red-400">−{fmt(Number(adv.amount))} F</span>
+                  <span className="text-sm font-mono font-semibold text-[var(--danger-text)] ">−{fmt(Number(adv.amount))} F</span>
                 </div>
               ))}
               <AnimatePresence initial={false}>
@@ -1491,7 +1491,7 @@ export default function ManuelPayrollPage() {
                 ))}
               </AnimatePresence>
               <button onClick={() => setAdvances(p => [...p, newRow()])}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors mt-1">
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[var(--danger-text)]  border border-[var(--border)]  bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  rounded-lg transition-colors mt-1">
                 <Plus size={11} /> Ajouter une avance manuellement
               </button>
             </div>
@@ -1500,11 +1500,10 @@ export default function ManuelPayrollPage() {
           {/* ════ SECTION RETENUES LIBRES ════ */}
           <Card className="overflow-hidden">
             <SectionHeader
-              icon={<span className="text-red-600 dark:text-red-400 text-xs font-black">−</span>}
+              icon={<span className="text-xs font-semibold">−</span>}
               title="Autres retenues"
               subtitle="Retenues sans pré-enregistrement — déduites du net"
               total={totalRetenues}
-              color="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
             />
             <div className="px-5 py-4 space-y-2">
               <AnimatePresence initial={false}>
@@ -1514,23 +1513,23 @@ export default function ManuelPayrollPage() {
                     <input type="text" value={r.label}
                       onChange={e => setRetenues(prev => prev.map(x => x.localId === r.localId ? { ...x, label: e.target.value } : x))}
                       placeholder="Ex : Remboursement, Trop-perçu, Cotisation…"
-                      className="flex-1 min-w-0 px-3 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-red-400/30 placeholder:text-gray-300 dark:placeholder:text-gray-600" />
+                      className="flex-1 min-w-0 px-3 py-2 bg-[var(--surface-2)]  border border-[var(--border)]  rounded-xl text-sm text-[var(--text)]  focus:outline-none focus:ring-2 focus:ring-[var(--focus)] placeholder:text-[var(--text-secondary)] " />
                     <div className="relative w-32 shrink-0">
                       <input type="number" value={r.amount || ''}
                         onChange={e => setRetenues(prev => prev.map(x => x.localId === r.localId ? { ...x, amount: e.target.value === '' ? '' : Number(e.target.value) } : x))}
                         placeholder="Montant"
-                        className="w-full pl-3 pr-5 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold text-right text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-red-400/30" />
-                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 pointer-events-none">F</span>
+                        className="w-full pl-3 pr-5 py-2 bg-[var(--surface-2)]  border border-[var(--border)]  rounded-xl text-sm font-semibold text-right text-[var(--text)]  focus:outline-none focus:ring-2 focus:ring-[var(--focus)]" />
+                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-[var(--text-secondary)] pointer-events-none">F</span>
                     </div>
                     <button onClick={() => setRetenues(prev => prev.filter(x => x.localId !== r.localId))}
-                      className="p-1.5 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all shrink-0">
+                      className="p-1.5 text-[var(--text-secondary)] hover:text-[var(--danger-text)] opacity-0 group-hover:opacity-100 hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  rounded-lg transition-colors shrink-0">
                       <Trash2 size={13} />
                     </button>
                   </motion.div>
                 ))}
               </AnimatePresence>
               <button onClick={() => setRetenues(prev => [...prev, { localId: uid(), label: '', amount: '' }])}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors mt-1">
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[var(--danger-text)]  border border-[var(--border)]  bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  rounded-lg transition-colors mt-1">
                 <Plus size={11} /> Ajouter une retenue
               </button>
             </div>
@@ -1538,18 +1537,18 @@ export default function ManuelPayrollPage() {
 
           {/* ════ SUGGESTIONS PARAFIFI ════ */}
           {isParafifi && empDetail && (
-            <Card className="overflow-visible border-2 border-dashed border-amber-200 dark:border-amber-800">
+            <Card className="overflow-visible border-2 border-dashed border-[var(--border)] ">
               <div className="px-5 py-4">
-                <p className="text-[11px] font-bold text-amber-500 dark:text-amber-400 uppercase tracking-wider mb-3">
+                <p className="text-[11px] font-semibold text-[var(--warning-text)]  uppercase tracking-wider mb-3">
                   🏢 Éléments spéciaux — Parafifi
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {/* Prime ancienneté */}
                   <button onClick={addAnciennete}
                     disabled={!empDetail.hireDate || getSeniorityYears(empDetail.hireDate) === 0 || primes.some(p => p.label === "Prime d'ancienneté")}
-                    className="flex flex-col items-start px-4 py-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl hover:bg-amber-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-                    <span className="text-xs font-bold text-amber-700 dark:text-amber-300">Prime d'ancienneté</span>
-                    <span className="text-[10px] text-amber-500 mt-0.5">
+                    className="flex flex-col items-start px-4 py-3 bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  border border-[var(--border)]  rounded-xl hover:bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                    <span className="text-xs font-semibold text-[var(--warning-text)] ">Prime d'ancienneté</span>
+                    <span className="text-[10px] text-[var(--warning-text)] mt-0.5">
                       {empDetail.hireDate
                         ? `${getSeniorityYears(empDetail.hireDate)} ans → taux ${(getSeniorityRate(empDetail.hireDate) * 100).toFixed(0)}% → ${Math.round(Number(empDetail.baseSalary) * getSeniorityRate(empDetail.hireDate)).toLocaleString('fr-FR')} F`
                         : 'Date embauche manquante'}
@@ -1558,23 +1557,23 @@ export default function ManuelPayrollPage() {
                   {/* Gratification */}
                   <button onClick={addGratification}
                     disabled={primes.some(p => p.label === 'Gratification')}
-                    className="flex flex-col items-start px-4 py-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl hover:bg-amber-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-                    <span className="text-xs font-bold text-amber-700 dark:text-amber-300">Gratification</span>
-                    <span className="text-[10px] text-amber-500 mt-0.5">
+                    className="flex flex-col items-start px-4 py-3 bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  border border-[var(--border)]  rounded-xl hover:bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                    <span className="text-xs font-semibold text-[var(--warning-text)] ">Gratification</span>
+                    <span className="text-[10px] text-[var(--warning-text)] mt-0.5">
                       Salaire base ÷ 2 = {Math.round(Number(empDetail.baseSalary) / 2).toLocaleString('fr-FR')} F
                     </span>
                   </button>
                   {/* Congés payés */}
                   <button onClick={addCongesPaies}
                     disabled={primes.some(p => p.label === 'Indemnité de congés payés')}
-                    className="flex flex-col items-start px-4 py-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl hover:bg-amber-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-                    <span className="text-xs font-bold text-amber-700 dark:text-amber-300">Congés payés</span>
-                    <span className="text-[10px] text-amber-500 mt-0.5">
+                    className="flex flex-col items-start px-4 py-3 bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  border border-[var(--border)]  rounded-xl hover:bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                    <span className="text-xs font-semibold text-[var(--warning-text)] ">Congés payés</span>
+                    <span className="text-[10px] text-[var(--warning-text)] mt-0.5">
                       Salaire base ÷ 2 = {Math.round(Number(empDetail.baseSalary) / 2).toLocaleString('fr-FR')} F
                     </span>
                   </button>
                 </div>
-                <p className="text-[10px] text-amber-400 mt-3">Ces éléments sont soumis à CNSS et ITS — ajoutés dans la section Primes.</p>
+                <p className="text-[10px] text-[var(--warning-text)] mt-3">Ces éléments sont soumis à CNSS et ITS — ajoutés dans la section Primes.</p>
               </div>
             </Card>
           )}
@@ -1582,71 +1581,71 @@ export default function ManuelPayrollPage() {
           {/* ════ POINT DE DÉPART HISTORIQUE ════ */}
           {/* Visible uniquement en janvier OU après retour congé (cycle = 0) */}
           {selectedEmp && isCarryOverMonth && (
-            <Card className="p-5 border-2 border-dashed border-amber-200 dark:border-amber-800">
+            <Card className="p-5 border-2 border-dashed border-[var(--border)] ">
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-                  <span className="text-amber-600 text-xs font-black">📅</span>
+                <div className="w-7 h-7 rounded-lg bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  flex items-center justify-center">
+                  <span className="text-[var(--warning-text)] text-xs font-semibold">📅</span>
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-gray-800 dark:text-gray-200">
+                  <p className="text-sm font-semibold text-[var(--text)] ">
                     Point de départ — Brut &amp; Charges historiques
                   </p>
-                  <p className="text-[10px] text-amber-600 dark:text-amber-400">
+                  <p className="text-[10px] text-[var(--warning-text)] ">
                     {month === 'Janvier' ? `Janvier ${year} — début de cycle` : 'Retour de congé — nouveau cycle'}
                   </p>
                 </div>
               </div>
-              <p className="text-[10px] text-gray-400 mb-3">
+              <p className="text-[10px] text-[var(--text-secondary)] mb-3">
                 Saisissez le <strong>brut annuel</strong> cumulé <strong>avant</strong> ce mois (bulletins papier ou anciens systèmes).
                 Le reste (CNSS, net imposable, charges patronales) est calculé automatiquement.
               </p>
               <div className="grid grid-cols-2 gap-2 mb-3">
                 <div>
-                  <p className="text-[10px] text-gray-400 mb-1">Brut annuel historique</p>
+                  <p className="text-[10px] text-[var(--text-secondary)] mb-1">Brut annuel historique</p>
                   <div className="relative">
                     <input type="number" value={carryOverBrut}
                       onChange={e => setCarryOverBrut(e.target.value===''?'':Number(e.target.value))}
                       placeholder="0"
-                      className="w-full pl-2 pr-6 py-2 bg-gray-50 dark:bg-gray-900/50 border border-emerald-200 dark:border-emerald-800 rounded-xl text-xs font-mono text-right focus:outline-none focus:ring-2 focus:ring-emerald-400/30 text-gray-800 dark:text-gray-200" />
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] text-gray-400">F</span>
+                      className="w-full pl-2 pr-6 py-2 bg-[var(--surface-2)]  border border-[var(--border)]  rounded-xl text-xs font-mono text-right focus:outline-none focus:ring-2 focus:ring-[var(--focus)] text-[var(--text)] " />
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] text-[var(--text-secondary)]">F</span>
                   </div>
                 </div>
                 <div>
-                  <p className="text-[10px] text-gray-400 mb-1">Taux patronal CNSS</p>
+                  <p className="text-[10px] text-[var(--text-secondary)] mb-1">Taux patronal CNSS</p>
                   <div className="relative">
                     <input type="number" step="0.01" value={carryOverTauxPat}
                       onChange={e => setCarryOverTauxPat(e.target.value===''?'':Number(e.target.value))}
                       placeholder="20.28"
-                      className="w-full pl-2 pr-6 py-2 bg-gray-50 dark:bg-gray-900/50 border border-amber-200 dark:border-amber-800 rounded-xl text-xs font-mono text-right focus:outline-none focus:ring-2 focus:ring-amber-400/30 text-gray-800 dark:text-gray-200" />
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] text-gray-400">%</span>
+                      className="w-full pl-2 pr-6 py-2 bg-[var(--surface-2)]  border border-[var(--border)]  rounded-xl text-xs font-mono text-right focus:outline-none focus:ring-2 focus:ring-[var(--focus)] text-[var(--text)] " />
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] text-[var(--text-secondary)]">%</span>
                   </div>
                 </div>
               </div>
               {n(carryOverBrut) > 0 && (
                 <div className="grid grid-cols-3 gap-2 mb-3 text-center">
-                  <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg py-1.5 px-1">
-                    <p className="text-[8px] text-emerald-500">Net imposable</p>
-                    <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300">{carryOverNetImp.toLocaleString('fr-FR')}</p>
+                  <div className="bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  rounded-lg py-1.5 px-1">
+                    <p className="text-[8px] text-[var(--success-text)]">Net imposable</p>
+                    <p className="text-[10px] font-semibold text-[var(--success-text)] ">{carryOverNetImp.toLocaleString('fr-FR')}</p>
                   </div>
-                  <div className="bg-red-50 dark:bg-red-900/20 rounded-lg py-1.5 px-1">
-                    <p className="text-[8px] text-red-500">CNSS sal. (4%)</p>
-                    <p className="text-[10px] font-bold text-red-700 dark:text-red-300">{carryOverChargesSal.toLocaleString('fr-FR')}</p>
+                  <div className="bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  rounded-lg py-1.5 px-1">
+                    <p className="text-[8px] text-[var(--danger-text)]">CNSS sal. (4%)</p>
+                    <p className="text-[10px] font-semibold text-[var(--danger-text)] ">{carryOverChargesSal.toLocaleString('fr-FR')}</p>
                   </div>
-                  <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg py-1.5 px-1">
-                    <p className="text-[8px] text-amber-500">Charges pat.</p>
-                    <p className="text-[10px] font-bold text-amber-700 dark:text-amber-300">{carryOverChargesPat.toLocaleString('fr-FR')}</p>
+                  <div className="bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  rounded-lg py-1.5 px-1">
+                    <p className="text-[8px] text-[var(--warning-text)]">Charges pat.</p>
+                    <p className="text-[10px] font-semibold text-[var(--warning-text)] ">{carryOverChargesPat.toLocaleString('fr-FR')}</p>
                   </div>
                 </div>
               )}
               <button onClick={saveCarryOver} disabled={savingCarryOver}
-                className="w-full py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+                className="w-full py-2 bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] hover:bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)] text-xs font-semibold rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
                 {savingCarryOver ? <><Loader2 size={12} className="animate-spin"/>Sauvegarde…</> :
                  carryOverSaved  ? <><CheckCircle2 size={12}/>Sauvegardé ✓</> :
                                    'Enregistrer le point de départ'}
               </button>
               {(n(carryOverBrut) > 0) && (
-                <p className="text-[10px] text-center text-gray-400 mt-2">
-                  Indemnité congé estimée : <strong className="text-emerald-600">{Math.round(n(carryOverBrut) / 12).toLocaleString('fr-FR')} F/an</strong>
+                <p className="text-[10px] text-center text-[var(--text-secondary)] mt-2">
+                  Indemnité congé estimée : <strong className="text-[var(--success-text)]">{Math.round(n(carryOverBrut) / 12).toLocaleString('fr-FR')} F/an</strong>
                 </p>
               )}
             </Card>
@@ -1655,7 +1654,7 @@ export default function ManuelPayrollPage() {
           {/* ════ CONGÉS ANNUELS ════ */}
           {selectedEmp && (
             <Card className="p-5">
-              <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3">Congés annuels</p>
+              <p className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">Congés annuels</p>
               <div className="grid grid-cols-3 gap-2">
                 {([
                   { label:'Droits', val:congesDroits, set:setCongesDroits },
@@ -1663,30 +1662,30 @@ export default function ManuelPayrollPage() {
                   { label:'Solde',  val:congesSolde,  set:setCongesSolde },
                 ] as const).map(({ label, val, set }) => (
                   <div key={label}>
-                    <p className="text-[10px] text-gray-400 mb-1">{label} (jours)</p>
+                    <p className="text-[10px] text-[var(--text-secondary)] mb-1">{label} (jours)</p>
                     <input type="number" value={val}
                       onChange={e => (set as any)(e.target.value===''?'':Number(e.target.value))}
                       placeholder="0"
-                      className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-xs font-mono text-center text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-400/30" />
+                      className="w-full px-3 py-2 bg-[var(--surface-2)]  border border-[var(--border)]  rounded-xl text-xs font-mono text-center text-[var(--text)]  focus:outline-none focus:ring-2 focus:ring-[var(--focus)]" />
                   </div>
                 ))}
               </div>
-              <p className="text-[10px] text-gray-400 mt-2 text-center">
+              <p className="text-[10px] text-[var(--text-secondary)] mt-2 text-center">
                 Ces valeurs s'affichent dans la section congés annuels du bulletin.
               </p>
 
               {/* ✅ Jours pris ce mois — visible si congés payés dans les primes */}
               {primes.some(p => /cong[eé]/i.test(p.label)) && (
-                <div className="mt-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
-                  <p className="text-xs font-bold text-amber-700 dark:text-amber-300 mb-2">
+                <div className="mt-3 p-3 bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  border border-[var(--border)]  rounded-xl">
+                  <p className="text-xs font-semibold text-[var(--warning-text)]  mb-2">
                     🏖️ Congés payés détectés — combien de jours part-il ?
                   </p>
                   <div className="flex items-center gap-2">
                     <input type="number" value={joursCongesPris} min={1} max={78}
                       onChange={e => setJoursCongesPris(e.target.value===''?'':Number(e.target.value))}
                       placeholder="ex: 26"
-                      className="w-24 px-3 py-2 bg-white dark:bg-gray-900/50 border border-amber-300 dark:border-amber-700 rounded-xl text-sm font-bold text-center text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-amber-400/30" />
-                    <span className="text-xs text-amber-600">jours — le cycle brut/charges repart à 0 après ce bulletin</span>
+                      className="w-24 px-3 py-2 bg-[var(--surface)]  border border-[var(--border)]  rounded-xl text-sm font-semibold text-center text-[var(--text)]  focus:outline-none focus:ring-2 focus:ring-[var(--focus)]" />
+                    <span className="text-xs text-[var(--warning-text)]">jours — le cycle brut/charges repart à 0 après ce bulletin</span>
                   </div>
                 </div>
               )}
@@ -1694,9 +1693,9 @@ export default function ManuelPayrollPage() {
           )}
 
           {!selectedEmp && (
-            <div className="flex items-center gap-3 px-4 py-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl">
-              <AlertCircle size={14} className="text-emerald-500 shrink-0" />
-              <p className="text-sm text-emerald-700 dark:text-emerald-300">Sélectionnez un employé pour commencer la saisie.</p>
+            <div className="flex items-center gap-3 px-4 py-3 bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  border border-[var(--border)]  rounded-xl">
+              <AlertCircle size={14} className="text-[var(--success-text)] shrink-0" />
+              <p className="text-sm text-[var(--success-text)] ">Sélectionnez un employé pour commencer la saisie.</p>
             </div>
           )}
         </div>
@@ -1706,49 +1705,49 @@ export default function ManuelPayrollPage() {
           <AnimatePresence mode="wait">
             {sim ? (
               <motion.div key="sim" initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                className="k-card !p-0 overflow-hidden">
 
-                <div className="bg-gray-900 dark:bg-black text-white px-5 py-4">
+                <div className="border-b border-[var(--border)] bg-[var(--surface-2)] px-5 py-4">
                   <div className="flex items-start justify-between mb-2">
                     <div>
-                      <p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold">Aperçu bulletin</p>
-                      <p className="font-black text-lg mt-0.5">{sim.employee.firstName} {sim.employee.lastName}</p>
+                      <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-secondary)]">Aperçu du bulletin</p>
+                      <p className="mt-0.5 text-lg font-semibold text-[var(--text)]">{sim.employee.firstName} {sim.employee.lastName}</p>
                     </div>
                     {simLoading && (
-                      <div className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1 rounded-full">
-                        <Loader2 size={10} className="animate-spin text-emerald-400" />
-                        <span className="text-[10px] text-emerald-300 font-semibold">Recalcul…</span>
+                      <div className="flex items-center gap-1.5">
+                        <Loader2 size={12} className="animate-spin text-[var(--brand-strong)]" />
+                        <span className="text-xs text-[var(--text-secondary)]">Recalcul…</span>
                       </div>
                     )}
                   </div>
-                  <div className="flex flex-wrap gap-1.5 text-[11px] text-gray-400">
+                  <div className="flex flex-wrap gap-1.5 text-[11px] text-[var(--text-secondary)]">
                     <span className="capitalize">{month} {year}</span>
                     <span>·</span>
                     <span>{sim.daysToPay}/{sim.workDays} jours</span>
-                    {sim.absenceDeduction > 0 && <><span>·</span><span className="text-amber-400">−{fmt(sim.absenceDeduction)} F abs.</span></>}
-                    {hasOt && <><span>·</span><span className="text-amber-400">HS</span></>}
+                    {sim.absenceDeduction > 0 && <><span>·</span><span className="text-[var(--warning-text)]">−{fmt(sim.absenceDeduction)} F abs.</span></>}
+                    {hasOt && <><span>·</span><span className="text-[var(--warning-text)]">HS</span></>}
                   </div>
                 </div>
 
-                <div className="p-4">
+                <div className="p-4 loan-document-protected">
                   <PayslipBreakdown result={simLive ?? sim} />
                 </div>
 
                 <div className="px-5 pb-5">
-                  <button onClick={submit} disabled={submitting || simLoading}
-                    className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100 text-sm">
-                    {submitting ? <><Loader2 size={15} className="animate-spin"/>Enregistrement…</> : <><CheckCircle2 size={15}/>Confirmer & créer le bulletin</>}
-                  </button>
+                  <DesignButton onClick={submit} disabled={simLoading} loading={submitting} className="w-full">
+                    {!submitting && <CheckCircle2 size={16} strokeWidth={1.5} />}
+                    {submitting ? 'Enregistrement…' : 'Confirmer & créer le bulletin'}
+                  </DesignButton>
                 </div>
               </motion.div>
             ) : (
               <motion.div key="empty" initial={{ opacity:0 }} animate={{ opacity:1 }}
-                className="bg-gray-50 dark:bg-gray-800/50 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-2xl min-h-[260px] flex flex-col items-center justify-center text-center p-8">
+                className="bg-[var(--surface-2)]  border-2 border-dashed border-[var(--border)]  rounded-2xl min-h-[260px] flex flex-col items-center justify-center text-center p-8">
                 {simLoading
                   ? <KonzaLoader variant="section" label="Calcul en cours…" className="!py-0" />
                   : simError
-                  ? <><AlertCircle size={32} className="mb-3 text-red-400"/><p className="text-sm font-medium text-red-500 max-w-[200px]">{simError}</p></>
-                  : <><Calculator size={36} className="mb-3 text-gray-300 dark:text-gray-600"/><p className="text-sm font-semibold text-gray-500 dark:text-gray-400">{!selectedEmp?'Sélectionnez un employé':!empDetail?'Chargement…':'Le bulletin se calcule automatiquement'}</p><p className="text-xs text-gray-400 mt-1">Mis à jour en temps réel</p></>
+                  ? <><AlertCircle size={32} className="mb-3 text-[var(--danger-text)]"/><p className="text-sm font-medium text-[var(--danger-text)] max-w-[200px]">{simError}</p></>
+                  : <><Calculator size={36} className="mb-3 text-[var(--text-secondary)] "/><p className="text-sm font-semibold text-[var(--text-secondary)] ">{!selectedEmp?'Sélectionnez un employé':!empDetail?'Chargement…':'Le bulletin se calcule automatiquement'}</p><p className="text-xs text-[var(--text-secondary)] mt-1">Mis à jour en temps réel</p></>
                 }
               </motion.div>
             )}
@@ -1759,23 +1758,24 @@ export default function ManuelPayrollPage() {
       {/* Modal succès */}
       <AnimatePresence>
         {success && (
-          <motion.div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" initial={{ opacity:0 }} animate={{ opacity:1 }}>
+          <motion.div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgb(0_0_0_/.48)]  p-4" initial={{ opacity:0 }} animate={{ opacity:1 }}>
             <motion.div initial={{ opacity:0, scale:0.9, y:20 }} animate={{ opacity:1, scale:1, y:0 }} transition={{ type:'spring', stiffness:300, damping:26 }}
-              className="bg-white dark:bg-gray-800 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl">
-              <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mx-auto mb-5">
-                <CheckCircle2 size={34} className="text-emerald-500" />
+              className="bg-[var(--surface)]  rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl">
+              <div className="w-16 h-16 rounded-full bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  flex items-center justify-center mx-auto mb-5">
+                <CheckCircle2 size={34} className="text-[var(--success-text)]" />
               </div>
-              <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-2">Bulletin créé !</h2>
-              <p className="text-gray-400 text-sm mb-7">La fiche de paie a été enregistrée avec succès.</p>
+              <h2 className="text-2xl font-semibold text-[var(--text)] dark:text-[var(--on-brand)] mb-2">Bulletin créé !</h2>
+              <p className="text-[var(--text-secondary)] text-sm mb-7">La fiche de paie a été enregistrée avec succès.</p>
               <div className="flex gap-3">
-                <button onClick={resetPage} className="flex-1 py-3 border border-gray-200 dark:border-gray-700 rounded-xl font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm">Nouveau</button>
-                {createdId && <button onClick={() => router.push(`/paie/${createdId}`)} className="flex-1 py-3 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 transition-colors text-sm">Voir bulletin</button>}
-                <button onClick={() => router.push('/paie')} className="flex-1 py-3 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 transition-colors text-sm">Liste paie</button>
+                <button onClick={resetPage} className="flex-1 py-3 border border-[var(--border)]  rounded-xl font-semibold text-[var(--text-secondary)]  hover:bg-[var(--surface-2)]  transition-colors text-sm">Nouveau</button>
+                {createdId && <button onClick={() => router.push(`/paie/${createdId}`)} className="flex-1 py-3 bg-[var(--brand-soft)] text-[var(--action)] font-semibold rounded-xl hover:bg-[var(--brand-soft)] transition-colors text-sm">Voir bulletin</button>}
+                <button onClick={() => router.push('/paie')} className="flex-1 py-3 bg-[var(--brand-soft)] text-[var(--action)] font-semibold rounded-xl hover:bg-[var(--brand-soft)] transition-colors text-sm">Liste paie</button>
               </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+      </div>
+    </ModulePageFrame>
   );
 }

@@ -1,4 +1,9 @@
 'use client';
+import { ModulePageFrame, ModulePageSkeleton } from '@/components/requests/ModulePageFrame';
+import { Button } from '@/components/design-system/primitives';
+import '@/components/requests/service-pages.css';
+import { SuccessMark } from '@/components/design-system/feedback';
+
 
 // ============================================================================
 // 🎉 PAGE SUCCÈS / ATTENTE / ÉCHEC - FLOW MOBILE MONEY
@@ -249,10 +254,10 @@ function SuccessContent() {
         <div className="max-w-md w-full glass-panel p-8 rounded-2xl shadow-2xl relative z-10">
           <div className="text-center mb-6">
             <div className="w-24 h-24 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-green-500/30">
-              <CheckCircle className="w-14 h-14 text-white" strokeWidth={2.5} />
+              <SuccessMark />
             </div>
             <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-green-600 via-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Félicitations ! 🎉
+              Abonnement activé
             </h1>
             <p className="text-slate-600 dark:text-slate-300 font-medium">
               Votre abonnement est activé
@@ -305,21 +310,21 @@ function SuccessContent() {
 
           <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 mb-6 border border-blue-100 dark:border-blue-800">
             <p className="text-sm text-blue-700 dark:text-blue-300 text-center">
-              🚀 Vous avez accès à toutes les fonctionnalités de votre plan !
+              Vous avez accès à toutes les fonctionnalités de votre plan.
             </p>
           </div>
 
           <div className="space-y-3">
             <Link href="/dashboard" className="block">
-              <button className="w-full bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:opacity-90 transition-all flex items-center justify-center gap-2 group">
+              <Button variant="primary" className="w-full bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:opacity-90 transition-all flex items-center justify-center gap-2 group">
                 <span>Aller au tableau de bord</span>
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </button>
+              </Button>
             </Link>
             <Link href="/parametres/subscription" className="block">
-              <button className="w-full bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold py-3 px-6 rounded-xl border-2 border-slate-200 dark:border-slate-700 hover:border-purple-300 transition-all">
+              <Button variant="ghost" className="w-full bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold py-3 px-6 rounded-xl border-2 border-slate-200 dark:border-slate-700 hover:border-purple-300 transition-all">
                 Gérer mon abonnement
-              </button>
+              </Button>
             </Link>
           </div>
         </div>
@@ -349,17 +354,17 @@ function SuccessContent() {
             </p>
           </div>
           <div className="space-y-3">
-            <button
+            <Button variant="primary"
               onClick={() => router.push('/pricing')}
               className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:opacity-90 transition-all flex items-center justify-center gap-2"
             >
               <Rocket className="w-4 h-4" />
               Réessayer le paiement
-            </button>
+            </Button>
             <Link href="/dashboard" className="block">
-              <button className="w-full bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold py-3 px-6 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 transition-all">
+              <Button variant="ghost" className="w-full bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold py-3 px-6 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 transition-all">
                 Retour au tableau de bord
-              </button>
+              </Button>
             </Link>
           </div>
         </div>
@@ -405,12 +410,12 @@ function SuccessContent() {
           </p>
           <div className="space-y-3">
             {[
-              { icon: '📱', text: 'Vous avez confirmé sur votre téléphone' },
-              { icon: '⚡', text: 'Votre opérateur traite la transaction' },
-              { icon: '🎉', text: "L'abonnement s'active automatiquement" },
+              { icon: Phone, text: 'Vous avez confirmé sur votre téléphone' },
+              { icon: Zap, text: 'Votre opérateur traite la transaction' },
+              { icon: CheckCircle, text: "L'abonnement s'active automatiquement" },
             ].map((step, i) => (
               <div key={i} className="flex items-center gap-3">
-                <span className="text-lg">{step.icon}</span>
+                <step.icon size={18} strokeWidth={1.5} aria-hidden="true" />
                 <p className="text-sm text-amber-800 dark:text-amber-300">{step.text}</p>
               </div>
             ))}
@@ -438,7 +443,7 @@ function SuccessContent() {
         )}
 
         <div className="space-y-3">
-          <button
+          <Button variant="primary"
             onClick={handleManualCheck}
             disabled={isChecking}
             className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
@@ -447,12 +452,12 @@ function SuccessContent() {
               ? <><Loader2 className="w-4 h-4 animate-spin" /> Vérification…</>
               : <><RefreshCw className="w-4 h-4" /> Vérifier maintenant</>
             }
-          </button>
+          </Button>
 
           <Link href="/parametres/subscription" className="block">
-            <button className="w-full bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold py-3 px-6 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all text-sm">
+            <Button variant="ghost" className="w-full bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold py-3 px-6 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all text-sm">
               Voir mon abonnement
-            </button>
+            </Button>
           </Link>
 
           <p className="text-[11px] text-center text-slate-400">
@@ -466,10 +471,10 @@ function SuccessContent() {
 
 export default function SuccessPage() {
   return (
-    <Suspense fallback={
-      <KonzaLoader variant="page" />
+    <ModulePageFrame kind="list"><div className="service-module-page" data-service="success"><Suspense fallback={
+      <ModulePageSkeleton label="Chargement de l’abonnement" />
     }>
       <SuccessContent />
-    </Suspense>
+    </Suspense></div></ModulePageFrame>
   );
 }

@@ -1,10 +1,15 @@
 'use client';
+import { ModulePageFrame, ModulePageSkeleton } from '@/components/requests/ModulePageFrame';
+import { Button } from '@/components/design-system/primitives';
+import '@/components/requests/service-pages.css';
+
 
 // ============================================================================
 // 📄 app/(dashboard)/documents/legal/page.tsx
 // Corrigé : /employees/simple au lieu de /employees (réponse paginée sinon)
 // ============================================================================
 
+import { Modal } from '@/components/design-system/feedback';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -118,16 +123,16 @@ export default function LegalLibraryPage() {
   };
 
   return (
-    <div className="max-w-[1600px] mx-auto pb-20 space-y-8">
+    <ModulePageFrame kind="list"><div className="service-module-page" data-service="documents/generate"><div className="max-w-[1600px] mx-auto pb-20 space-y-8">
 
       {/* Header */}
       <div className="flex items-center gap-4">
-        <button
-          onClick={() => router.back()}
+        <Button variant="ghost"
+          onClick={() => router.back()} aria-label="Revenir à la page précédente"
           className="p-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 transition-colors"
         >
           <ArrowLeft size={20} className="text-gray-500" />
-        </button>
+        </Button>
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Bibliothèque Juridique</h1>
           <p className="text-gray-500 dark:text-gray-400">Générez des documents conformes au droit du travail.</p>
@@ -152,7 +157,7 @@ export default function LegalLibraryPage() {
           <motion.div
             key={`${tpl.id}-${i}`}
             className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer group"
-            onClick={() => handleOpenWizard(tpl)}
+            onClick={() => handleOpenWizard(tpl)} role="button" tabIndex={0} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();handleOpenWizard(tpl);}}}
           >
             <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${tpl.color}`}>
               <tpl.icon size={24} />
@@ -173,29 +178,7 @@ export default function LegalLibraryPage() {
       {/* Modal wizard */}
       <AnimatePresence>
         {selectedTemplate && (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }}
-              className="bg-white dark:bg-gray-800 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden"
-            >
-              {/* Header modal */}
-              <div className="p-6 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-xl ${selectedTemplate.color}`}>
-                    <selectedTemplate.icon size={22} />
-                  </div>
-                  <h2 className="text-lg font-bold text-gray-900 dark:text-white">{selectedTemplate.title}</h2>
-                </div>
-                <button
-                  onClick={() => setSelectedTemplate(null)}
-                  className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full text-gray-500"
-                >
-                  <X size={18} />
-                </button>
-              </div>
+          <Modal open title={selectedTemplate.title} onClose={()=>setSelectedTemplate(null)}>
 
               {/* Corps modal */}
               <div className="p-8">
@@ -206,12 +189,12 @@ export default function LegalLibraryPage() {
                     </div>
                     <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Document créé !</h3>
                     <p className="text-gray-400 text-sm mb-5">Le document a été ajouté à la liste.</p>
-                    <button
+                    <Button variant="primary"
                       onClick={() => router.push('/documents')}
                       className="px-6 py-3 bg-emerald-500 text-white font-bold rounded-xl shadow-lg hover:bg-emerald-600 transition-colors"
                     >
                       Voir mes documents
-                    </button>
+                    </Button>
                   </div>
                 ) : (
                   <div className="space-y-5">
@@ -242,7 +225,7 @@ export default function LegalLibraryPage() {
                       )}
                     </div>
 
-                    <button
+                    <Button variant="ghost"
                       onClick={handleGenerate}
                       disabled={!selectedEmp || isGenerating}
                       className="w-full px-8 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-bold rounded-xl shadow-lg disabled:opacity-50 flex justify-center items-center gap-2 hover:scale-[1.01] transition-transform"
@@ -252,14 +235,13 @@ export default function LegalLibraryPage() {
                         : <CheckCircle2 size={18} />
                       }
                       Générer le document
-                    </button>
+                    </Button>
                   </div>
                 )}
               </div>
-            </motion.div>
-          </motion.div>
+            </Modal>
         )}
       </AnimatePresence>
-    </div>
+    </div></div></ModulePageFrame>
   );
 }

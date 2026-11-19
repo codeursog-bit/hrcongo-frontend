@@ -12,11 +12,11 @@ import { attendanceApi } from '@/services/attendance-api';
 import { InstallPrompt } from '@/components/pwa/InstallPrompt';
 import { PendingActions } from '@/components/pwa/PendingActions';
 import { ContractExpiryToast } from '@/components/contracts/ContractExpiryToast';
-import OnboardingChecklist from '@/components/onboarding/OnboardingChecklist';
 import { useAuth } from '@/hooks/useAuth';
 import PushNotificationBanner from '@/components/PushNotificationBanner';
 import RouteGuard from '@/components/RouteGuard'; // 🔒 accès aux pages selon le rôle
 import GeoWarmup from '@/components/GeoWarmup'; // 🆕 préchauffe le GPS à l'ouverture de l'app (pointage plus rapide)
+import SubscriptionAccessGate from '@/components/subscription/SubscriptionAccessGate';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   // ✅ FIX CRITIQUE : récupérer "loading" depuis useAuth
@@ -86,8 +86,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <ContractExpiryToast userRole={userRole ?? ''} />
      <DashboardShell>
      <PushNotificationBanner />
-     <OnboardingChecklist />
-      <RouteGuard>{children}</RouteGuard>
+      <SubscriptionAccessGate><RouteGuard>{children}</RouteGuard></SubscriptionAccessGate>
      </DashboardShell>
     </PWAProvider>
   );

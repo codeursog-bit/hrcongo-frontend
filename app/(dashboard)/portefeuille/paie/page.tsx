@@ -11,6 +11,7 @@ import {
 import { GlobalLoader } from '@/components/ui/GlobalLoader';
 import { api } from '@/services/api';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import { PortfolioPageFrame as ModulePageFrame } from '@/components/portfolio/PortfolioPageFrame';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -87,7 +88,7 @@ function EmployeePicker({ companies, onSelect, selected }: {
         <div>
           <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Employé</label>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2  text-[var(--text-secondary)]" size={16} />
             <input
               type="text"
               value={selected ? `${selected.firstName} ${selected.lastName}` : query}
@@ -97,7 +98,7 @@ function EmployeePicker({ companies, onSelect, selected }: {
               className="w-full pl-9 pr-3 py-2.5 rounded-xl text-sm bg-[var(--surface-2)] border border-[var(--border)]"
               style={{ color: 'var(--text)' }}
             />
-            {searching && <Loader2 size={14} className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-emerald-400" />}
+            {searching && <Loader2 size={14} className="absolute right-3 top-1/2 -translate-y-1/2  animate-spin text-[var(--action)]" />}
           </div>
         </div>
       </div>
@@ -186,7 +187,7 @@ function IndividualPayrollTab({ companies }: { companies: PortfolioCompany[] }) 
       </div>
 
       {result && (
-        <div className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium ${result.ok ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'}`}>
+        <div className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium ${result.ok ? "bg-[var(--brand-soft)]  text-[var(--action)] " : "bg-[var(--portfolio-danger-soft)]  text-[var(--danger-text)] "}`}>
           {result.ok ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
           {result.message}
         </div>
@@ -195,7 +196,7 @@ function IndividualPayrollTab({ companies }: { companies: PortfolioCompany[] }) 
       <button
         onClick={handleSubmit}
         disabled={saving || !employee}
-        className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-emerald-500 hover:bg-emerald-600 text-white transition-colors disabled:opacity-50"
+        className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-[var(--action)] hover:bg-[var(--action)] text-[var(--on-brand)] transition-colors disabled:opacity-50"
       >
         {saving ? <Loader2 size={16} className="animate-spin" /> : <Wallet size={16} />}
         {saving ? 'Génération…' : 'Générer le bulletin'}
@@ -292,7 +293,7 @@ function ManualPayrollTab({ companies }: { companies: PortfolioCompany[] }) {
       <div>
         <div className="flex items-center justify-between mb-2">
           <p className="text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>Primes</p>
-          <button onClick={() => setBonuses(b => [...b, { bonusType: '', amount: '', fiscalType: 'TAXABLE_CNSS' }])} className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+          <button onClick={() => setBonuses(b => [...b, { bonusType: '', amount: '', fiscalType: 'TAXABLE_CNSS' }])} className="text-xs font-semibold text-[var(--action)]  flex items-center gap-1">
             <Plus size={13} /> Ajouter
           </button>
         </div>
@@ -306,7 +307,7 @@ function ManualPayrollTab({ companies }: { companies: PortfolioCompany[] }) {
                 <option value="TAXABLE_NO_CNSS">Imposable seul</option>
                 <option value="NON_TAXABLE">Non imposable</option>
               </select>
-              <button onClick={() => setBonuses(rows => rows.filter((_, idx) => idx !== i))} className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500"><Trash2 size={14} /></button>
+              <button onClick={() => setBonuses(rows => rows.filter((_, idx) => idx !== i))} className="p-2 rounded-lg hover:bg-[var(--portfolio-danger-soft)]  text-[var(--danger-text)]"><Trash2 size={14} /></button>
             </div>
           ))}
         </div>
@@ -316,7 +317,7 @@ function ManualPayrollTab({ companies }: { companies: PortfolioCompany[] }) {
       <div>
         <div className="flex items-center justify-between mb-2">
           <p className="text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>Déductions</p>
-          <button onClick={() => setDeductions(d => [...d, { label: '', amount: '' }])} className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+          <button onClick={() => setDeductions(d => [...d, { label: '', amount: '' }])} className="text-xs font-semibold text-[var(--action)]  flex items-center gap-1">
             <Plus size={13} /> Ajouter
           </button>
         </div>
@@ -325,7 +326,7 @@ function ManualPayrollTab({ companies }: { companies: PortfolioCompany[] }) {
             <div key={i} className="grid grid-cols-1 sm:grid-cols-[1fr_120px_32px] gap-2 sm:items-center">
               <input placeholder="Libellé (ex: Avance sur salaire)" value={d.label} onChange={e => setDeductions(rows => rows.map((r, idx) => idx === i ? { ...r, label: e.target.value } : r))} className={inputCls} style={{ color: 'var(--text)' }} />
               <input type="number" placeholder="Montant" value={d.amount} onChange={e => setDeductions(rows => rows.map((r, idx) => idx === i ? { ...r, amount: e.target.value } : r))} className={inputCls} style={{ color: 'var(--text)' }} />
-              <button onClick={() => setDeductions(rows => rows.filter((_, idx) => idx !== i))} className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500"><Trash2 size={14} /></button>
+              <button onClick={() => setDeductions(rows => rows.filter((_, idx) => idx !== i))} className="p-2 rounded-lg hover:bg-[var(--portfolio-danger-soft)]  text-[var(--danger-text)]"><Trash2 size={14} /></button>
             </div>
           ))}
         </div>
@@ -333,24 +334,24 @@ function ManualPayrollTab({ companies }: { companies: PortfolioCompany[] }) {
 
       {simulation && (
         <div className="rounded-xl p-4 bg-[var(--surface-2)] space-y-1">
-          <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: 'var(--text-muted)' }}>Aperçu de la simulation</p>
+          <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-muted)' }}>Aperçu de la simulation</p>
           <pre className="text-xs overflow-x-auto" style={{ color: 'var(--text)' }}>{JSON.stringify(simulation, null, 2)}</pre>
         </div>
       )}
 
       {result && (
-        <div className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium ${result.ok ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'}`}>
+        <div className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium ${result.ok ? "bg-[var(--brand-soft)]  text-[var(--action)] " : "bg-[var(--portfolio-danger-soft)]  text-[var(--danger-text)] "}`}>
           {result.ok ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
           {result.message}
         </div>
       )}
 
       <div className="flex items-center gap-2">
-        <button onClick={handleSimulate} disabled={simulating || !employee} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors disabled:opacity-50" style={{ border: '1px solid var(--border)', color: 'var(--text)' }}>
+        <button onClick={handleSimulate} disabled={simulating || !employee} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50" style={{ border: '1px solid var(--border)', color: 'var(--text)' }}>
           {simulating ? <Loader2 size={16} className="animate-spin" /> : null}
           Simuler
         </button>
-        <button onClick={handleSave} disabled={saving || !employee} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-emerald-500 hover:bg-emerald-600 text-white transition-colors disabled:opacity-50">
+        <button onClick={handleSave} disabled={saving || !employee} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-[var(--action)] hover:bg-[var(--action)] text-[var(--on-brand)] transition-colors disabled:opacity-50">
           {saving ? <Loader2 size={16} className="animate-spin" /> : <Wallet size={16} />}
           {saving ? 'Enregistrement…' : 'Enregistrer le bulletin'}
         </button>
@@ -511,7 +512,7 @@ function MassPayrollTab({ companies }: { companies: PortfolioCompany[] }) {
       </div>
 
       {limitError && (
-        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 text-sm font-medium">
+        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-[var(--portfolio-warning-soft)]  text-[var(--warning-text)]  text-sm font-medium">
           <AlertCircle size={16} className="shrink-0" />{limitError}
         </div>
       )}
@@ -526,7 +527,7 @@ function MassPayrollTab({ companies }: { companies: PortfolioCompany[] }) {
             <div key={c.id} style={{ borderBottom: '1px solid var(--border)' }}>
               <div className="flex items-center gap-3 px-4 py-3">
                 <button onClick={() => toggleCompanyChecked(c.id)} disabled={disabledCheckbox} className="disabled:opacity-30">
-                  {block.companyChecked ? <CheckSquare size={18} className="text-emerald-500" /> : <Square size={18} style={{ color: 'var(--text-muted)' }} />}
+                  {block.companyChecked ? <CheckSquare size={18} className="text-[var(--action)]" /> : <Square size={18} style={{ color: 'var(--text-muted)' }} />}
                 </button>
                 <button onClick={() => toggleExpand(c.id)} className="flex-1 flex items-center gap-2 text-left">
                   <Building2 size={15} style={{ color: 'var(--text-muted)' }} />
@@ -534,7 +535,7 @@ function MassPayrollTab({ companies }: { companies: PortfolioCompany[] }) {
                   <span className="text-xs" style={{ color: 'var(--text-muted)' }}>({block.selectedIds.size} sélectionné{block.selectedIds.size > 1 ? 's' : ''})</span>
                 </button>
                 {res && (
-                  <span className={`text-xs font-bold flex items-center gap-1 ${res.ok ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}`}>
+                  <span className={`text-xs font-semibold flex items-center gap-1 ${res.ok ? "text-[var(--action)] " : "text-[var(--danger-text)]"}`}>
                     {res.ok ? <CheckCircle2 size={13} /> : <AlertCircle size={13} />} {res.message}
                   </span>
                 )}
@@ -550,7 +551,7 @@ function MassPayrollTab({ companies }: { companies: PortfolioCompany[] }) {
                     <p className="text-xs py-2" style={{ color: 'var(--text-muted)' }}>Aucun employé actif</p>
                   ) : block.employees.map(emp => (
                     <button key={emp.id} onClick={() => toggleEmployee(c.id, emp.id)} className="w-full flex items-center gap-2.5 py-1.5 text-left">
-                      {block.selectedIds.has(emp.id) ? <CheckSquare size={15} className="text-emerald-500" /> : <Square size={15} style={{ color: 'var(--text-muted)' }} />}
+                      {block.selectedIds.has(emp.id) ? <CheckSquare size={15} className="text-[var(--action)]" /> : <Square size={15} style={{ color: 'var(--text-muted)' }} />}
                       <span className="text-xs" style={{ color: 'var(--text)' }}>{emp.firstName} {emp.lastName}</span>
                       <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{emp.employeeNumber}</span>
                     </button>
@@ -563,7 +564,7 @@ function MassPayrollTab({ companies }: { companies: PortfolioCompany[] }) {
       </div>
 
       {totalSelected > MASS_WARN_THRESHOLD && !running && (
-        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 text-sm font-medium">
+        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-[var(--portfolio-warning-soft)]  text-[var(--warning-text)]  text-sm font-medium">
           <AlertCircle size={16} className="shrink-0" />
           {totalSelected} employés sélectionnés — au-delà de {MASS_WARN_THRESHOLD}, la génération prendra plus de temps (traitement automatique par lots de {MASS_BATCH_SIZE}, personne ne sera oublié).
         </div>
@@ -572,7 +573,7 @@ function MassPayrollTab({ companies }: { companies: PortfolioCompany[] }) {
       {running && progress && (
         <div className="space-y-2">
           <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--surface-2)' }}>
-            <div className="h-full bg-emerald-500 transition-all" style={{ width: `${(progress.done / progress.total) * 100}%` }} />
+            <div className="h-full bg-[var(--action)] transition-all" style={{ width: `${(progress.done / progress.total) * 100}%` }} />
           </div>
           <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Lot {progress.done}/{progress.total} traité{progress.done > 1 ? 's' : ''}…</p>
         </div>
@@ -581,7 +582,7 @@ function MassPayrollTab({ companies }: { companies: PortfolioCompany[] }) {
       <button
         onClick={handleGenerate}
         disabled={running || totalSelected === 0}
-        className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-emerald-500 hover:bg-emerald-600 text-white transition-colors disabled:opacity-50"
+        className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-[var(--action)] hover:bg-[var(--action)] text-[var(--on-brand)] transition-colors disabled:opacity-50"
       >
         {running ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} />}
         {running ? 'Génération en cours…' : `Générer pour ${totalSelected} employé${totalSelected > 1 ? 's' : ''}`}
@@ -592,7 +593,7 @@ function MassPayrollTab({ companies }: { companies: PortfolioCompany[] }) {
 
 // ─── Page principale ──────────────────────────────────────────────────────────
 
-export default function PortfolioPayrollPage() {
+function PortfolioPayrollPage() {
   const [companies, setCompanies] = useState<PortfolioCompany[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<TabId>('individuelle');
@@ -610,15 +611,15 @@ export default function PortfolioPayrollPage() {
     <div className="space-y-6 min-h-screen pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight" style={{ color: 'var(--text)' }}>Paie</h1>
+          <h1 className="text-3xl font-semibold tracking-tight" style={{ color: 'var(--text)' }}>Paie</h1>
           <p className="mt-1 flex items-center gap-2" style={{ color: 'var(--text-muted)' }}>
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-[var(--action)] " />
             Individuelle, manuelle ou en masse sur toutes vos entreprises
           </p>
         </div>
         <Link
           href="/portefeuille/paie/liste"
-          className="px-4 py-2.5 rounded-xl text-sm font-bold transition-colors flex items-center gap-2 hover:bg-[var(--surface-2)]"
+          className="px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center gap-2 hover:bg-[var(--surface-2)]"
           style={{ border: '1px solid var(--border)', color: 'var(--text)' }}
         >
           <ListChecks size={16} /> Liste de paie
@@ -626,20 +627,20 @@ export default function PortfolioPayrollPage() {
       </div>
 
       {companies.length === 0 ? (
-        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 text-sm font-medium">
+        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-[var(--portfolio-warning-soft)]  text-[var(--warning-text)]  text-sm font-medium">
           <AlertCircle size={16} />
           Ajoutez au moins une entreprise pour générer de la paie.
         </div>
       ) : (
         <>
-          <div className="flex bg-[var(--surface-2)] p-1 rounded-xl w-fit max-w-full overflow-x-auto">
+          <div className="portfolio-tabs flex bg-[var(--surface-2)] p-1 rounded-xl w-fit max-w-full overflow-x-auto">
             {TABS.map(t => {
               const Icon = t.icon;
               return (
                 <button
                   key={t.id}
                   onClick={() => setTab(t.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${tab === t.id ? 'bg-[var(--surface)] text-emerald-500 shadow-sm' : ''}`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${tab === t.id ? "bg-[var(--surface)] text-[var(--action)] shadow-sm" : ''}`}
                   style={{ color: tab === t.id ? undefined : 'var(--text-muted)' }}
                 >
                   <Icon size={15} /> {t.label}
@@ -656,5 +657,14 @@ export default function PortfolioPayrollPage() {
         </>
       )}
     </div>
+  );
+}
+
+
+export default function PortfolioPayrollPageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <PortfolioPayrollPage />
+    </ModulePageFrame>
   );
 }

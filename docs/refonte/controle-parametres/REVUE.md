@@ -1,0 +1,7 @@
+# Paramètres — 18 novembre 2026
+
+**Paramètres — 18 novembre :** onze routes restructurées : accueil par domaines, navigation commune, listes départements/utilisateurs, rubriques et tableaux adaptés aux écrans étroits. Sélection des modèles bulletin/facture ouvrant le lecteur (zoom initial 72 %, plein écran), couleurs et blocs conservés ; éditeur et documents officiels inchangés. Démo des données complémentaires en lecture seule, sans invitation ni paiement simulé. Palette des treize sources : 1454 → 0 ; audit global : 12 194 → 10 740 classes, 1 647 → 1 646 hex, 405 → 399 emojis. Onze vues et interactions des modèles testées ; empreintes métier/documentaires conservées. Cases [~], revue visuelle clair/sombre/mobile par l’utilisateur encore attendue ; aucun backend modifié.
+
+Contrôles : `check-settings-review.cjs` (13 sources initiales), `check-settings-views.cjs` (11 vues SSR, choix bulletin et trois factures, réouverture du lecteur, mouvement réduit mobile, aucune écriture), `check-document-readers-review.cjs`. Les composants officiels sont remplacés par des doublures uniquement pendant les tests SSR ; leurs empreintes réelles sont vérifiées séparément. Les tests automatisés ne constituent pas une revue visuelle.
+
+Validation finale : TypeScript intégral sans cache réussi ; HTTP 200 sur `/parametres` et `/parametres/bulletin` via le serveur local existant. CSS analysée avec PostCSS et espaces Git vérifiés. Aucun contrôle visuel par navigateur effectué.

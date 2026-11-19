@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { User, X } from 'lucide-react';
+import { Badge, Button, Card, EmptyState, Input } from '@/components/design-system/primitives';
 
 interface Employee {
   id: string;
@@ -42,71 +43,62 @@ export default function EmployeeSelector({
   };
 
   return (
-    <section className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
-      <h2 className="text-lg font-bold text-[var(--text)] mb-4 flex items-center gap-2">
-        <User size={20} className="text-emerald-500" /> Employé
-      </h2>
-      
+    <Card title="Employé" action={selectedEmployee
+      ? <Badge tone="success">Sélectionné</Badge>
+      : <Badge tone="neutral">À sélectionner</Badge>}>
       <div className="relative">
         {selectedEmployee ? (
-          <div className="flex items-start justify-between bg-emerald-50 dark:bg-emerald-900/10 p-4 rounded-xl border border-emerald-100 dark:border-emerald-800">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-emerald-200 rounded-full flex items-center justify-center font-bold text-emerald-700">
+          <div className="flex flex-wrap items-start justify-between gap-4 rounded-xl bg-[var(--surface-2)] p-4">
+            <div className="flex min-w-0 items-center gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--brand-soft)] font-semibold text-[var(--brand-strong)]">
                 {selectedEmployee.firstName?.[0]}{selectedEmployee.lastName?.[0]}
               </div>
-              <div>
-                <h3 className="font-bold text-[var(--text)]">
+              <div className="min-w-0">
+                <h3 className="truncate font-semibold text-[var(--text)]">
                   {selectedEmployee.firstName} {selectedEmployee.lastName}
                 </h3>
-                <p className="text-sm text-[var(--text-muted)]">{selectedEmployee.position}</p>
-                <p className="text-xs text-emerald-600 dark:text-emerald-400 font-mono mt-1">
-                  {selectedEmployee.employeeNumber}
-                </p>
+                <p className="mt-1 truncate text-sm text-[var(--text-secondary)]">{selectedEmployee.position || 'Poste non renseigné'}</p>
+                <Badge tone="neutral">{selectedEmployee.employeeNumber || 'Matricule non renseigné'}</Badge>
               </div>
             </div>
-            <button 
-              onClick={onClear}
-              className="text-xs text-red-500 hover:underline mt-2 flex items-center justify-end gap-1"
-            >
-              <X size={12} /> Changer
-            </button>
+            <Button variant="ghost" onClick={onClear}><X size={15} strokeWidth={1.5} />Changer</Button>
           </div>
         ) : (
           <div className="relative">
-            <input 
-              type="text" 
-              placeholder="Rechercher par nom ou matricule..."
+            <Input
+              label="Rechercher un employé"
+              type="search"
+              placeholder="Nom, prénom ou matricule"
               value={search}
-              onChange={(e) => { setSearch(e.target.value); setShowList(true); }}
+              onChange={e => { setSearch(e.target.value); setShowList(true); }}
               onFocus={() => setShowList(true)}
-              className="w-full pl-10 pr-4 py-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+              onKeyDown={e => { if (e.key === 'Escape') setShowList(false); }}
+              autoComplete="off"
             />
-            <User size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            
-            {showList && filteredEmployees.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-[var(--surface)] rounded-xl shadow-xl border border-[var(--border)] max-h-60 overflow-y-auto z-20">
-                {filteredEmployees.map(emp => (
-                  <div 
-                    key={emp.id} 
-                    onClick={() => handleSelect(emp)}
-                    className="p-3 hover:bg-[var(--surface-2)] cursor-pointer flex items-center gap-3 transition-colors border-b border-[var(--border)] last:border-0"
-                  >
-                    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold">
-                      {emp.firstName?.[0]}
-                    </div>
-                    <div>
-                      <p className="font-bold text-sm text-[var(--text)]">
-                        {emp.firstName} {emp.lastName}
-                      </p>
-                      <p className="text-xs text-gray-500">{emp.employeeNumber}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+            {showList && (
+              <ul aria-label="Résultats employés"
+                className="absolute left-0 right-0 top-full z-20 mt-2 max-h-60 overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--surface)] p-2 shadow-[var(--shadow-pop)]">
+                {filteredEmployees.length ? filteredEmployees.map(emp => (
+                  <li key={emp.id}>
+                    <button type="button" onClick={() => handleSelect(emp)}
+                      className="flex min-h-12 w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-[var(--surface-2)]">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--brand-soft)] text-xs font-semibold text-[var(--brand-strong)]">
+                        {emp.firstName?.[0]}{emp.lastName?.[0]}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-semibold text-[var(--text)]">{emp.firstName} {emp.lastName}</span>
+                        <span className="block truncate text-xs text-[var(--text-secondary)]">{[emp.employeeNumber, emp.position].filter(Boolean).join(' · ') || 'Informations complémentaires indisponibles'}</span>
+                      </span>
+                    </button>
+                  </li>
+                )) : (
+                  <li><EmptyState icon={User} title="Aucun résultat">Aucun employé ne correspond à cette recherche.</EmptyState></li>
+                )}
+              </ul>
             )}
           </div>
         )}
       </div>
-    </section>
+    </Card>
   );
 }

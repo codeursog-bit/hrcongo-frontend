@@ -14,6 +14,7 @@ import { ArrowLeft, ArrowDown, ArrowUp, Loader2, ListChecks, Plus, Trash2, UserX
 import { useAlert } from '@/components/providers/AlertProvider';
 import { approvalsApi, CircuitsConfig, ApprovalKind } from '@/services/approvals';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import { SettingsFrame as ModulePageFrame } from '@/components/settings/SettingsFrame';
 
 type TypeKey = 'LOAN' | 'ADVANCE' | 'ABSENCE' | 'LEAVE';
 const TYPES: { key: TypeKey; kind: ApprovalKind; title: string; desc: string }[] = [
@@ -23,7 +24,7 @@ const TYPES: { key: TypeKey; kind: ApprovalKind; title: string; desc: string }[]
   { key: 'LEAVE', kind: 'leave', title: 'Congés', desc: 'Avis demandés avant la décision sur une demande de congé (repos). L’indemnité ne dépend que du planning.' },
 ];
 
-export default function CircuitsPage() {
+function CircuitsPage() {
   const router = useRouter();
   const alert = useAlert();
   const [config, setConfig] = useState<CircuitsConfig | null>(null);
@@ -69,7 +70,7 @@ export default function CircuitsPage() {
           <ArrowLeft size={20} className="text-[var(--text-muted)]" />
         </button>
         <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6">
-          <h1 className="text-lg font-bold text-[var(--text)] mb-2">Circuits de validation indisponibles</h1>
+          <h1 className="text-lg font-semibold text-[var(--text)] mb-2">Circuits de validation indisponibles</h1>
           <p className="text-sm text-[var(--text-muted)] leading-relaxed">
             Le serveur ne connaît pas encore les routes <code>/approvals/…</code> : la partie « avis » du back-end n&apos;est
             pas déployée ou le module n&apos;est pas enregistré. Les validations continuent de fonctionner comme avant.
@@ -117,7 +118,7 @@ export default function CircuitsPage() {
 
   return (
     <div className="max-w-3xl mx-auto pb-20 space-y-6">
-      <div className="flex items-center gap-4">
+      <div className="settings-page-header flex items-center gap-4">
         <button
           onClick={() => router.back()}
           className="p-2 bg-[var(--surface)] rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)] transition-colors"
@@ -125,13 +126,13 @@ export default function CircuitsPage() {
           <ArrowLeft size={20} className="text-[var(--text-muted)]" />
         </button>
         <div>
-          <h1 className="text-2xl font-bold text-[var(--text)] tracking-tight">Circuits de validation</h1>
+          <h1 className="text-2xl font-semibold text-[var(--text)] tracking-tight">Circuits de validation</h1>
           <p className="text-sm text-[var(--text-muted)]">Quels avis demander, et dans quel ordre.</p>
         </div>
       </div>
 
       <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-4 flex items-start gap-3">
-        <Info size={18} className="text-emerald-600 shrink-0 mt-0.5" />
+        <Info size={18} className="text-[var(--success-text)] shrink-0 mt-0.5" />
         <p className="text-sm text-[var(--text-muted)] leading-relaxed">
           Les avis sont <strong className="text-[var(--text)]">consultatifs</strong> : la décision finale (approuver ou refuser)
           reste à l&apos;administrateur ou au manager RH. Sans circuit actif, tout fonctionne comme avant.
@@ -143,14 +144,14 @@ export default function CircuitsPage() {
         const d = draft[t.key];
         const available = config.catalog.filter((f) => !d.steps.includes(f.code));
         return (
-          <div key={t.key} className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 space-y-4">
+          <div key={t.key} className="settings-circuit-card bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 space-y-4">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600">
+                <div className="p-2.5 rounded-xl bg-[var(--brand-soft)]  text-[var(--success-text)]">
                   <ListChecks size={20} />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-[var(--text)]">{t.title}</h2>
+                  <h2 className="text-lg font-semibold text-[var(--text)]">{t.title}</h2>
                   <p className="text-xs text-[var(--text-muted)]">{t.desc}</p>
                 </div>
               </div>
@@ -158,10 +159,10 @@ export default function CircuitsPage() {
                 type="button"
                 disabled={!config.canEdit}
                 onClick={() => update(t.key, { isActive: !d.isActive })}
-                className={`shrink-0 w-12 h-7 rounded-full flex items-center px-0.5 transition-colors disabled:opacity-50 ${d.isActive ? 'bg-emerald-500 justify-end' : 'bg-[var(--border)] justify-start'}`}
+                className={`shrink-0 w-12 h-7 rounded-full flex items-center px-0.5 transition-colors disabled:opacity-50 ${d.isActive ? 'bg-[var(--brand)] justify-end' : 'bg-[var(--border)] justify-start'}`}
                 aria-label={d.isActive ? 'Désactiver le circuit' : 'Activer le circuit'}
               >
-                <div className="w-6 h-6 rounded-full bg-white shadow" />
+                <div className="w-6 h-6 rounded-full bg-[var(--surface)] shadow" />
               </button>
             </div>
 
@@ -175,12 +176,12 @@ export default function CircuitsPage() {
                   const holders = config.holdersByCode[code] ?? [];
                   return (
                     <li key={code} className="flex items-center gap-3 p-3 rounded-xl border border-[var(--border)] bg-[var(--surface-2)]">
-                      <span className="w-7 h-7 shrink-0 rounded-lg bg-emerald-500 text-white text-xs font-bold flex items-center justify-center">
+                      <span className="w-7 h-7 shrink-0 rounded-lg bg-[var(--brand)] text-[var(--on-brand)] text-xs font-semibold flex items-center justify-center">
                         {i + 1}
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-bold text-[var(--text)]">{labelOf(code)}</p>
-                        <p className={`text-xs truncate flex items-center gap-1 ${holders.length ? 'text-[var(--text-muted)]' : 'text-amber-600'}`}>
+                        <p className="text-sm font-semibold text-[var(--text)]">{labelOf(code)}</p>
+                        <p className={`text-xs truncate flex items-center gap-1 ${holders.length ? 'text-[var(--text-muted)]' : 'text-[var(--warning-text)]'}`}>
                           {holders.length ? holders.join(', ') : (<><UserX size={12} /> Aucun titulaire — étape ignorée</>)}
                         </p>
                       </div>
@@ -188,7 +189,7 @@ export default function CircuitsPage() {
                         <div className="flex items-center gap-1 shrink-0">
                           <button onClick={() => move(t.key, i, -1)} disabled={i === 0} className="p-1.5 rounded-lg hover:bg-[var(--surface)] disabled:opacity-30 text-[var(--text-muted)]" aria-label="Monter"><ArrowUp size={16} /></button>
                           <button onClick={() => move(t.key, i, 1)} disabled={i === d.steps.length - 1} className="p-1.5 rounded-lg hover:bg-[var(--surface)] disabled:opacity-30 text-[var(--text-muted)]" aria-label="Descendre"><ArrowDown size={16} /></button>
-                          <button onClick={() => update(t.key, { steps: d.steps.filter((c) => c !== code) })} className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500" aria-label="Retirer"><Trash2 size={16} /></button>
+                          <button onClick={() => update(t.key, { steps: d.steps.filter((c) => c !== code) })} className="p-1.5 rounded-lg hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  text-[var(--danger-text)]" aria-label="Retirer"><Trash2 size={16} /></button>
                         </div>
                       )}
                     </li>
@@ -203,7 +204,7 @@ export default function CircuitsPage() {
                   <button
                     key={f.code}
                     onClick={() => update(t.key, { steps: [...d.steps, f.code] })}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--border)] text-xs font-bold text-[var(--text)] hover:bg-[var(--surface-2)]"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--border)] text-xs font-semibold text-[var(--text)] hover:bg-[var(--surface-2)]"
                   >
                     <Plus size={13} /> {f.label}
                   </button>
@@ -215,7 +216,7 @@ export default function CircuitsPage() {
               <button
                 onClick={() => save(t)}
                 disabled={!dirty(t.key) || saving !== null}
-                className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2"
+                className="w-full py-3 bg-[var(--brand)] hover:bg-[var(--brand)] disabled:opacity-40 text-[var(--on-brand)] font-semibold text-sm rounded-xl flex items-center justify-center gap-2"
               >
                 {saving === t.key ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
                 Enregistrer
@@ -227,5 +228,14 @@ export default function CircuitsPage() {
         );
       })}
     </div>
+  );
+}
+
+
+export default function CircuitsPageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <CircuitsPage />
+    </ModulePageFrame>
   );
 }

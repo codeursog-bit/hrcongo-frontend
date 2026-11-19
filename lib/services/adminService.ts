@@ -87,6 +87,9 @@ export const adminService = {
 
   // ── Config facturation (prix, codes, devis, agrégateur) ─────────────────
   getPlanPrices: () => adminFetch<any[]>('/admin/billing-config/plans'),
+  getCompanyEntitlements: (id:string) => adminFetch<any>(`/admin/billing-config/companies/${id}/entitlements`),
+  setCompanyEntitlement: (id:string,key:string,body:{value:boolean|number;expiresAt?:string|null;note?:string}) => adminFetch<any>(`/admin/billing-config/companies/${id}/entitlements/${key}`,'PATCH',body),
+  removeCompanyEntitlement: (id:string,key:string) => adminFetch<any>(`/admin/billing-config/companies/${id}/entitlements/${key}`,'DELETE'),
   updatePlanPrice: (plan: string, body: { priceMonthly: number; priceYearly: number }) =>
     adminFetch<any>(`/admin/billing-config/plans/${plan}`, 'PATCH', body),
   resetPlanPrice: (plan: string) =>

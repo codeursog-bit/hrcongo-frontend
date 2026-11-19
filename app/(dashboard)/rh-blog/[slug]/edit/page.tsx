@@ -11,10 +11,11 @@ import { authService } from '@/lib/services/authService';
 import { blogApi, BlogPost, BlogCategory } from '@/services/blog-api';
 import { BlogEditor, BlogEditorForm } from '@/components/blog/BlogEditor';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import { ModulePageFrame } from '@/components/requests/ModulePageFrame';
 
 const CAN_POST = ['HR_MANAGER', 'ADMIN', 'CABINET_ADMIN'];
 
-export default function RhBlogEditPage() {
+function RhBlogEditPage() {
   const { slug } = useParams() as { slug: string };
   const router   = useRouter();
   const user     = authService.getCurrentUser();
@@ -103,5 +104,14 @@ export default function RhBlogEditPage() {
         onSuccess={s => router.push(`/blog/${s}`)}
       />
     </div>
+  );
+}
+
+
+export default function RhBlogEditPageWithFrame() {
+  return (
+    <ModulePageFrame kind="detail">
+      <RhBlogEditPage />
+    </ModulePageFrame>
   );
 }

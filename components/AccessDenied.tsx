@@ -95,7 +95,7 @@ export default function AccessDenied({ role, homeHref }: { role?: string | null;
         {/* ── Actions ── */}
         <motion.div initial={{ y: 14, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.35 }} className="mt-6 space-y-3">
           <div className="flex flex-col sm:flex-row gap-3">
-            <Link href={homeHref} className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold shadow-sm transition-colors">
+            <Link href={homeHref} className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[var(--brand)] hover:bg-[var(--brand-strong)] text-[var(--on-brand)] font-semibold shadow-sm transition-colors">
               <Home size={17} /> Retour à mon espace
             </Link>
             <button onClick={() => (window.history.length > 1 ? router.back() : router.push(homeHref))}
@@ -105,7 +105,7 @@ export default function AccessDenied({ role, homeHref }: { role?: string | null;
           </div>
 
           {role && CAN_MESSAGE.includes(role) && (
-            <Link href={bp('/messages')} className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors">
+            <Link href={bp('/messages')} className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-[var(--brand-strong)] hover:bg-[var(--brand-soft)] transition-colors">
               <MessageCircle size={16} /> Écrire à l’administration pour demander l’accès
             </Link>
           )}
@@ -118,7 +118,7 @@ export default function AccessDenied({ role, homeHref }: { role?: string | null;
             {SHORTCUTS.map(s => {
               const Icon = s.icon;
               return (
-                <Link key={s.href} href={bp(s.href)} className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--text)] hover:border-emerald-300 transition-colors">
+                <Link key={s.href} href={bp(s.href)} className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--text)] hover:border-[var(--brand)] transition-colors">
                   <Icon size={13} /> {s.label}
                 </Link>
               );

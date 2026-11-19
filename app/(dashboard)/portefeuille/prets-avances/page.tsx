@@ -8,18 +8,19 @@
 // ============================================================================
 
 import React from 'react';
+import { PortfolioPageFrame } from '@/components/portfolio/PortfolioPageFrame';
 import { LoansDashboard } from '@/components/loans/LoansDashboard';
 
 export default function PortfolioLoansDashboardPage() {
   return (
-    <div className="space-y-6 min-h-screen pb-20">
+    <PortfolioPageFrame kind="dashboard"><div className="space-y-6 min-h-screen pb-20">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight" style={{ color: 'var(--text)' }}>Prêts & avances — tableau de bord</h1>
+        <h1 className="text-3xl font-semibold tracking-tight" style={{ color: 'var(--text)' }}>Prêts & avances — tableau de bord</h1>
         <p className="mt-1" style={{ color: 'var(--text-muted)' }}>
           Montants accordés, remboursements, taux de remboursement et dettes en cours de votre portefeuille — exportables en Excel.
         </p>
       </div>
       <LoansDashboard scope="PORTFOLIO" title="Prêts et avances" />
-    </div>
+    </div></PortfolioPageFrame>
   );
 }

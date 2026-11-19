@@ -16,13 +16,13 @@ import { EVENT_LABEL, ROLE_LABEL, fmtDateTimeFull, fmtTime, personName } from '@
 
 const EVENT_STYLE: Record<string, { icon: any; cls: string }> = {
   CREATED:          { icon: Ticket,       cls: 'bg-[var(--surface-2)] text-[var(--text-muted)]' },
-  APPROVED:         { icon: CheckCircle2, cls: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-300' },
-  REJECTED:         { icon: XCircle,      cls: 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-300' },
+  APPROVED:         { icon: CheckCircle2, cls: 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)]  ' },
+  REJECTED:         { icon: XCircle,      cls: 'bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] text-[var(--danger-text)]  ' },
   CANCELLED:        { icon: Ban,          cls: 'bg-[var(--surface-2)] text-[var(--text-muted)]' },
-  RETURN_DECLARED:  { icon: LogOut,       cls: 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-300' },
-  RETURN_CONFIRMED: { icon: ShieldCheck,  cls: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-300' },
-  RETURN_REJECTED:  { icon: ShieldX,      cls: 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-300' },
-  TIMES_EDITED:     { icon: PencilLine,   cls: 'bg-violet-50 text-violet-600 dark:bg-violet-900/20 dark:text-violet-300' },
+  RETURN_DECLARED:  { icon: LogOut,       cls: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)]  ' },
+  RETURN_CONFIRMED: { icon: ShieldCheck,  cls: 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)]  ' },
+  RETURN_REJECTED:  { icon: ShieldX,      cls: 'bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] text-[var(--danger-text)]  ' },
+  TIMES_EDITED:     { icon: PencilLine,   cls: 'bg-[var(--brand-soft)] text-[var(--action)]  ' },
 };
 
 interface TicketEvent {
@@ -80,7 +80,7 @@ export default function PermissionTimeline({ ticketId, refreshKey }: { ticketId:
 
   return (
     <div>
-      <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-3">Historique du ticket</p>
+      <p className="text-xs font-semibold text-[var(--text-muted)]   mb-3">Historique du ticket</p>
       {events === null && !error && (
         <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]"><Loader2 size={14} className="animate-spin" /> Chargement…</div>
       )}

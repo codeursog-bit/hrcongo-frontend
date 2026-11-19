@@ -12,6 +12,8 @@
 // ============================================================================
 
 import React, { useMemo, useState } from 'react';
+import { useModuleVisuals } from '@/components/requests/ModulePageFrame';
+const uiTypeColor=(type:string)=>`var(--leave-type-${type}, var(--brand))`;
 import {
   LEAVE_TYPE_COLORS, LEAVE_TYPE_LABELS, MONTHS_SHORT,
   dayOfYear, daysInYear, fmtDate, fmtDays,
@@ -38,10 +40,10 @@ const MONTH_STARTS = (year: number) =>
 // ─── Légende des situations (Gantt) ──────────────────────────────────────────
 
 export const PHASE_COLORS: Record<string, string> = {
-  COMPLETED: '#94a3b8',   // déjà pris
-  IN_PROGRESS: '#2563eb', // en congé en ce moment
-  UPCOMING: '#10b981',    // prévu, validé
-  PENDING: '#f59e0b',     // demandé, pas encore validé
+  COMPLETED: 'var(--text-secondary)',   // déjà pris
+  IN_PROGRESS: 'var(--brand)', // en congé en ce moment
+  UPCOMING: 'var(--brand)',    // prévu, validé
+  PENDING: 'var(--mustard)',     // demandé, pas encore validé
 };
 
 export function PhaseLegend() {
@@ -56,10 +58,10 @@ export function PhaseLegend() {
       {items.map(([k, label, hatched]) => (
         <span key={k} className="flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
           <span
-            className="w-4 h-2.5 rounded-sm"
+            data-leave-phase={k} className="w-4 h-2.5 rounded-sm"
             style={{
               background: hatched
-                ? `repeating-linear-gradient(45deg, ${PHASE_COLORS[k]}88, ${PHASE_COLORS[k]}88 3px, ${PHASE_COLORS[k]}33 3px, ${PHASE_COLORS[k]}33 6px)`
+                ? `repeating-linear-gradient(45deg, color-mix(in srgb, ${PHASE_COLORS[k]} 53%, var(--surface)), color-mix(in srgb, ${PHASE_COLORS[k]} 53%, var(--surface)) 3px, color-mix(in srgb, ${PHASE_COLORS[k]} 20%, var(--surface)) 3px, color-mix(in srgb, ${PHASE_COLORS[k]} 20%, var(--surface)) 6px)`
                 : PHASE_COLORS[k],
               border: hatched ? `1px dashed ${PHASE_COLORS[k]}` : 'none',
             }}
@@ -68,7 +70,7 @@ export function PhaseLegend() {
         </span>
       ))}
       <span className="flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
-        <span className="w-px h-3 bg-red-500" /> Aujourd&apos;hui
+        <span className="w-px h-3 bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]" /> Aujourd&apos;hui
       </span>
     </div>
   );
@@ -85,7 +87,7 @@ export function TypeLegend({ types }: { types: string[] }) {
     <div className="flex flex-wrap gap-x-4 gap-y-1.5">
       {types.map(t => (
         <span key={t} className="flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
-          <span className="w-2.5 h-2.5 rounded-sm" style={{ background: LEAVE_TYPE_COLORS[t] || '#94a3b8' }} />
+          <span className="w-2.5 h-2.5 rounded-sm" style={{ background: uiTypeColor(t) }} />
           {LEAVE_TYPE_LABELS[t] || t}
         </span>
       ))}
@@ -166,7 +168,7 @@ export function LeaveGantt({ leaves, year, rangeStart, rangeEnd, groupByDepartme
               {visibleMonths.map(({ m, start }) => (
                 <span
                   key={m}
-                  className="absolute text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)] pl-1"
+                  className="absolute text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)] pl-1"
                   style={{ left: `${pct(start)}%` }}
                 >
                   {MONTHS_SHORT[m]}
@@ -179,7 +181,7 @@ export function LeaveGantt({ leaves, year, rangeStart, rangeEnd, groupByDepartme
             <div key={g.dept || 'all'}>
               {groupByDepartment && (
                 <div className="flex items-center bg-[var(--surface-2)] border-b border-[var(--border)]">
-                  <div className="px-2 py-1 text-[11px] font-bold text-[var(--text)] truncate">{g.dept}</div>
+                  <div className="px-2 py-1 text-[11px] font-semibold text-[var(--text)] truncate">{g.dept}</div>
                 </div>
               )}
               {g.emps.map(emp => (
@@ -194,12 +196,12 @@ export function LeaveGantt({ leaves, year, rangeStart, rangeEnd, groupByDepartme
                       <div key={m} className="absolute top-0 bottom-0 border-l border-[var(--border)]/50" style={{ left: `${pct(start)}%` }} />
                     ))}
                     {showToday && (
-                      <div className="absolute top-0 bottom-0 w-px bg-red-500 z-10" style={{ left: `${pct(todayIdx)}%` }} />
+                      <div className="absolute top-0 bottom-0 w-px bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] z-10" style={{ left: `${pct(todayIdx)}%` }} />
                     )}
                     {emp.leaves.map((l: VisualLeave) => {
                       const s = Math.max(dayOfYear(l.startDate), rangeStart);
                       const e = Math.min(dayOfYear(l.endDate) + 1, rangeEnd);
-                      const color = PHASE_COLORS[l.phase] || '#94a3b8';
+                      const color = PHASE_COLORS[l.phase] || 'var(--text-secondary)';
                       const pending = l.status === 'PENDING';
                       const widthPct = pct(e) - pct(s);
                       return (
@@ -207,18 +209,18 @@ export function LeaveGantt({ leaves, year, rangeStart, rangeEnd, groupByDepartme
                           key={l.id}
                           onMouseEnter={() => setHover(l)}
                           onMouseLeave={() => setHover(null)}
-                          className="absolute top-2 h-6 rounded-md cursor-default flex items-center justify-center overflow-hidden"
+                          data-leave-phase={l.phase} className="absolute top-2 h-6 rounded-md cursor-default flex items-center justify-center overflow-hidden"
                           style={{
                             left: `${pct(s)}%`,
                             width: `${Math.max(pct(e) - pct(s), 0.6)}%`,
                             background: pending
-                              ? `repeating-linear-gradient(45deg, ${color}55, ${color}55 4px, ${color}22 4px, ${color}22 8px)`
+                              ? `repeating-linear-gradient(45deg, color-mix(in srgb, ${color} 33%, var(--surface)), color-mix(in srgb, ${color} 33%, var(--surface)) 4px, color-mix(in srgb, ${color} 13%, var(--surface)) 4px, color-mix(in srgb, ${color} 13%, var(--surface)) 8px)`
                               : color,
                             border: pending ? `1px dashed ${color}` : 'none',
                           }}
                         >
                           {widthPct > 9 && (
-                            <span className="text-[10px] font-semibold text-white whitespace-nowrap px-1 drop-shadow-sm">
+                            <span className="text-[10px] font-semibold text-[var(--text)] whitespace-nowrap px-1">
                               {shortDate(l.startDate)} → {shortDate(l.endDate)}
                             </span>
                           )}
@@ -329,8 +331,8 @@ export function AbsenceCurve({ leaves, year, headcount }: CurveProps) {
         {/* périodes les plus chargées */}
         {periods.map((p, i) => (
           <g key={i}>
-            <rect x={x(p.start)} y={PT} width={Math.max(x(p.end) - x(p.start), 3)} height={H - PT - PB} fill="#f59e0b" fillOpacity="0.14" />
-            <text x={(x(p.start) + x(p.end)) / 2} y={PT + 14} textAnchor="middle" fontSize="15" fontWeight="700" fill="#b45309">{badge[i]}</text>
+            <rect x={x(p.start)} y={PT} width={Math.max(x(p.end) - x(p.start), 3)} height={H - PT - PB} fill="var(--mustard)" fillOpacity="0.14" />
+            <text x={(x(p.start) + x(p.end)) / 2} y={PT + 14} textAnchor="middle" fontSize="15" fontWeight="700" fill="var(--warning-text)">{badge[i]}</text>
           </g>
         ))}
 
@@ -342,26 +344,26 @@ export function AbsenceCurve({ leaves, year, headcount }: CurveProps) {
           </g>
         ))}
 
-        <path d={area} fill="#10b981" fillOpacity="0.22" />
-        <path d={path} fill="none" stroke="#059669" strokeWidth="2.5" strokeLinejoin="round" />
+        <path d={area} fill="var(--loan-gradient-1)" fillOpacity="0.22" />
+        <path d={path} fill="none" stroke="var(--loan-chart-1)" strokeWidth="2.5" strokeLinejoin="round" />
 
         {/* aujourd'hui */}
         {showToday && (
           <g>
-            <line x1={x(todayIdx)} x2={x(todayIdx)} y1={PT} y2={H - PB} stroke="#ef4444" strokeWidth="1.5" strokeDasharray="4 3" />
-            <rect x={Math.min(x(todayIdx) - 38, W - 90)} y={H - PB - 22} width="76" height="18" rx="9" fill="#ef4444" />
-            <text x={Math.min(x(todayIdx), W - 52)} y={H - PB - 9} textAnchor="middle" fontSize="11" fontWeight="700" fill="#fff">Aujourd&apos;hui</text>
+            <line x1={x(todayIdx)} x2={x(todayIdx)} y1={PT} y2={H - PB} stroke="var(--brand)" strokeWidth="1.5" strokeDasharray="4 3" />
+            <rect x={Math.min(x(todayIdx) - 38, W - 90)} y={H - PB - 22} width="76" height="18" rx="9" fill="var(--brand)" />
+            <text x={Math.min(x(todayIdx), W - 52)} y={H - PB - 9} textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--surface)">Aujourd&apos;hui</text>
           </g>
         )}
 
         {/* pic */}
         {peak > 0 && (
           <g>
-            <circle cx={x(peakDay)} cy={y(peak)} r="6" fill="#ef4444" stroke="#fff" strokeWidth="2" />
+            <circle cx={x(peakDay)} cy={y(peak)} r="6" fill="var(--brand)" stroke="var(--surface)" strokeWidth="2" />
             <text
               x={Math.min(Math.max(x(peakDay), PL + 70), W - 90)}
               y={y(peak) - 12}
-              textAnchor="middle" fontSize="13" fontWeight="700" fill="#dc2626"
+              textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--action)"
             >
               Pic : {peak} absent{peak > 1 ? 's' : ''}
             </text>
@@ -374,13 +376,13 @@ export function AbsenceCurve({ leaves, year, headcount }: CurveProps) {
         <div className="rounded-xl bg-[var(--surface-2)] p-4 text-sm text-[var(--text)] space-y-1.5">
           {showToday && (
             <p>
-              <span className="text-red-500 font-bold">●</span> Aujourd&apos;hui : <strong>{todayCount === 0 ? 'personne' : `${todayCount} personne${todayCount > 1 ? 's' : ''}`}</strong> en congé
+              <span className="text-[var(--danger-text)] font-semibold">●</span> Aujourd&apos;hui : <strong>{todayCount === 0 ? 'personne' : `${todayCount} personne${todayCount > 1 ? 's' : ''}`}</strong> en congé
               {headcount > 0 && todayCount > 0 && <> sur {headcount} ({Math.round((todayCount / headcount) * 100)} % de l&apos;effectif)</>}.
             </p>
           )}
           {peak > 0 ? (
             <p>
-              <span className="text-red-500 font-bold">●</span> Le jour le plus chargé est le <strong>{fmtD(peakDay)}</strong> :{' '}
+              <span className="text-[var(--danger-text)] font-semibold">●</span> Le jour le plus chargé est le <strong>{fmtD(peakDay)}</strong> :{' '}
               <strong>{peak} personne{peak > 1 ? 's' : ''}</strong> absente{peak > 1 ? 's' : ''} en même temps
               {names[peakDay].size > 0 && <> ({Array.from(names[peakDay].values()).join(', ')})</>}.
             </p>
@@ -390,12 +392,12 @@ export function AbsenceCurve({ leaves, year, headcount }: CurveProps) {
         </div>
 
         {periods.length > 0 && (
-          <div className="rounded-xl bg-amber-50/70 dark:bg-amber-900/10 border border-amber-200/70 dark:border-amber-800/60 p-4">
-            <p className="text-xs font-bold uppercase tracking-wide text-amber-700 dark:text-amber-300 mb-2">Les périodes où l&apos;équipe est la plus réduite</p>
+          <div className="rounded-xl bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  border border-[var(--border)]  p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--warning-text)]  mb-2">Les périodes où l&apos;équipe est la plus réduite</p>
             <ul className="space-y-2 text-sm text-[var(--text)]">
               {periods.map((p, i) => (
                 <li key={i} className="flex gap-2">
-                  <span className="font-bold text-amber-700 dark:text-amber-300">{badge[i]}</span>
+                  <span className="font-semibold text-[var(--warning-text)] ">{badge[i]}</span>
                   <span>
                     {p.start === p.end ? <>Le <strong>{fmtD(p.start)}</strong></> : <>Du <strong>{fmtD(p.start)}</strong> au <strong>{fmtD(p.end)}</strong></>}
                     {' '}: jusqu&apos;à <strong>{p.max}</strong> absent{p.max > 1 ? 's' : ''}
@@ -450,11 +452,11 @@ export function MonthlyStackedBars({ leaves, year }: { leaves: VisualLeave[]; ye
               <div
                 key={type}
                 title={`${LEAVE_TYPE_LABELS[type] || type} : ${n} jour(s)`}
-                style={{ height: `${(n / d.parts.reduce((a, [, v]) => a + v, 0)) * 100}%`, background: LEAVE_TYPE_COLORS[type] || '#94a3b8' }}
+                style={{ height: `${(n / d.parts.reduce((a, [, v]) => a + v, 0)) * 100}%`, background: uiTypeColor(type) }}
               />
             ))}
           </div>
-          <span className={`text-[10px] font-semibold ${m === currentMonth ? 'text-emerald-600' : 'text-[var(--text-muted)]'}`}>
+          <span className={`text-[10px] font-semibold ${m === currentMonth ? 'text-[var(--action)]' : 'text-[var(--text-muted)]'}`}>
             {MONTHS_SHORT[m]}
           </span>
         </div>
@@ -466,6 +468,7 @@ export function MonthlyStackedBars({ leaves, year }: { leaves: VisualLeave[]; ye
 // ─── 4) Donut par type ───────────────────────────────────────────────────────
 
 export function TypeDonut({ data }: { data: { type: string; value: number }[] }) {
+  const {refonte:uiRefonte}=useModuleVisuals();
   const total = data.reduce((s, d) => s + d.value, 0);
   const R = 52, C = 2 * Math.PI * R;
   let offset = 0;
@@ -479,20 +482,21 @@ export function TypeDonut({ data }: { data: { type: string; value: number }[] })
           const el = (
             <circle
               key={d.type} cx="70" cy="70" r={R} fill="none"
-              stroke={LEAVE_TYPE_COLORS[d.type] || '#94a3b8'} strokeWidth="18"
-              strokeDasharray={`${len} ${C - len}`} strokeDashoffset={-offset}
+              stroke={uiTypeColor(d.type)} strokeWidth="18"
+              strokeDasharray={uiRefonte ? `${Math.max(0,len-4)} ${C-len+4}` : `${len} ${C - len}`} strokeDashoffset={-offset} strokeLinecap={uiRefonte ? 'round' : undefined}
             />
           );
           offset += len;
           return el;
         })}
+        {uiRefonte && <text x="70" y="76" textAnchor="middle" transform="rotate(90 70 70)" fill="var(--text)" fontSize="22" fontWeight="600">{Math.round(total)}</text>}
       </svg>
       <ul className="space-y-1.5 text-xs min-w-0">
         {data.map(d => (
           <li key={d.type} className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: LEAVE_TYPE_COLORS[d.type] || '#94a3b8' }} />
+            <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: uiTypeColor(d.type) }} />
             <span className="text-[var(--text-muted)] truncate">{LEAVE_TYPE_LABELS[d.type] || d.type}</span>
-            <span className="font-bold text-[var(--text)] ml-auto pl-2">{Math.round((d.value / total) * 100)} %</span>
+            <span className="font-semibold text-[var(--text)] ml-auto pl-2">{Math.round((d.value / total) * 100)} %</span>
           </li>
         ))}
       </ul>
@@ -503,7 +507,7 @@ export function TypeDonut({ data }: { data: { type: string; value: number }[] })
 // ─── 5) Barres horizontales (classement) ─────────────────────────────────────
 
 export function HorizontalBars({
-  data, unit = 'j', color = '#f59e0b',
+  data, unit = 'j', color = 'var(--mustard)',
 }: { data: { name: string; value: number }[]; unit?: string; color?: string }) {
   const max = Math.max(...data.map(d => d.value), 1);
   if (data.length === 0) return <p className="text-sm text-[var(--text-muted)] py-8 text-center">Aucune donnée.</p>;
@@ -551,24 +555,24 @@ export function PeoplePerMonthBars({ leaves, year, headcount }: { leaves: Visual
           const isPast = currentMonth === 12 || (currentMonth >= 0 && m < currentMonth);
           return (
             <div key={m} className="flex-1 flex flex-col items-center justify-end h-full gap-1" title={names.length ? names.join(', ') : 'Personne'}>
-              <span className="text-xs font-bold text-[var(--text)]">{names.length || ''}</span>
+              <span className="text-xs font-semibold text-[var(--text)]">{names.length || ''}</span>
               <div
                 className="w-full rounded-t-lg transition-all"
                 style={{
                   height: `${(names.length / max) * 78}%`,
                   minHeight: names.length ? 6 : 0,
-                  background: isNow ? '#059669' : isPast ? '#94a3b8' : '#6ee7b7',
+                  background: isNow ? 'var(--brand)' : isPast ? 'var(--text-secondary)' : 'var(--brand-soft)',
                 }}
               />
-              <span className={`text-[10px] sm:text-xs font-semibold ${isNow ? 'text-emerald-600' : 'text-[var(--text-muted)]'}`}>{MONTHS_SHORT[m]}</span>
+              <span className={`text-[10px] sm:text-xs font-semibold ${isNow ? 'text-[var(--action)]' : 'text-[var(--text-muted)]'}`}>{MONTHS_SHORT[m]}</span>
             </div>
           );
         })}
       </div>
       <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-[11px] text-[var(--text-muted)]">
-        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm" style={{ background: '#94a3b8' }} />Mois passés</span>
-        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm" style={{ background: '#059669' }} />Mois en cours</span>
-        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm" style={{ background: '#6ee7b7' }} />Mois à venir</span>
+        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm" style={{ background: 'var(--text-secondary)' }} />Mois passés</span>
+        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm" style={{ background: 'var(--brand)' }} />Mois en cours</span>
+        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm" style={{ background: 'var(--brand-soft)' }} />Mois à venir</span>
         {headcount > 0 && <span className="ml-auto">Effectif total : {headcount} personnes</span>}
       </div>
     </div>

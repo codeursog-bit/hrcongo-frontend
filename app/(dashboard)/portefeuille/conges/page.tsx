@@ -1,4 +1,5 @@
 'use client';
+import { PortfolioDialog } from '@/components/portfolio/PortfolioDialog';
 
 // app/(dashboard)/portefeuille/conges/page.tsx
 
@@ -9,6 +10,7 @@ import {
 } from 'lucide-react';
 import { GlobalLoader } from '@/components/ui/GlobalLoader';
 import { api } from '@/services/api';
+import { PortfolioPageFrame as ModulePageFrame } from '@/components/portfolio/PortfolioPageFrame';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -36,10 +38,10 @@ const LEAVE_TYPES = [
 ];
 
 const STATUS_META: Record<string, { label: string; cls: string }> = {
-  PENDING: { label: 'En attente', cls: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' },
-  APPROVED: { label: 'Approuvé', cls: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' },
-  REJECTED: { label: 'Refusé', cls: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
-  CANCELLED: { label: 'Annulé', cls: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300' },
+  PENDING: { label: 'En attente', cls: "bg-[var(--portfolio-warning-soft)] text-[var(--warning-text)]  " },
+  APPROVED: { label: 'Approuvé', cls: "bg-[var(--portfolio-positive-soft)] text-[var(--success-text)]  " },
+  REJECTED: { label: 'Refusé', cls: "bg-[var(--portfolio-danger-soft)] text-[var(--danger-text)]  " },
+  CANCELLED: { label: 'Annulé', cls: "bg-[var(--surface-2)] text-[var(--text-secondary)]  " },
 };
 
 const fmtDate = (d: string) => new Date(d).toLocaleDateString('fr-FR');
@@ -91,7 +93,7 @@ function EmployeePicker({ companies, onSelect, selected }: {
         </Field>
         <Field label="Employé">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2  text-[var(--text-secondary)]" size={16} />
             <input
               type="text"
               value={selected ? `${selected.firstName} ${selected.lastName}` : query}
@@ -101,7 +103,7 @@ function EmployeePicker({ companies, onSelect, selected }: {
               className="w-full pl-9 pr-3 py-2.5 rounded-xl text-sm bg-[var(--surface-2)] border border-[var(--border)]"
               style={{ color: 'var(--text)' }}
             />
-            {searching && <Loader2 size={14} className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-emerald-400" />}
+            {searching && <Loader2 size={14} className="absolute right-3 top-1/2 -translate-y-1/2  animate-spin text-[var(--action)]" />}
           </div>
         </Field>
       </div>
@@ -149,11 +151,11 @@ function CreateModal({ companies, onClose, onCreated }: {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => !saving && onClose()} />
-      <div className="relative w-full max-w-lg rounded-2xl overflow-hidden z-10" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+    <PortfolioDialog onClose={() => !saving && onClose()}>
+
+<div className="relative w-full max-w-lg rounded-2xl overflow-hidden z-10" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
         <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
-          <h2 className="text-sm font-bold" style={{ color: 'var(--text)' }}>Nouvelle demande de congé</h2>
+          <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Nouvelle demande de congé</h2>
           {!saving && <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-[var(--surface-2)]" style={{ color: 'var(--text-muted)' }}><X size={18} /></button>}
         </div>
 
@@ -181,20 +183,20 @@ function CreateModal({ companies, onClose, onCreated }: {
         </div>
 
         {error && (
-          <div className="mx-6 mb-4 flex items-center gap-2 px-4 py-3 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-xs font-medium">
+          <div className="mx-6 mb-4 flex items-center gap-2 px-4 py-3 rounded-xl bg-[var(--portfolio-danger-soft)]  text-[var(--danger-text)]  text-xs font-medium">
             <AlertCircle size={14} className="shrink-0" />{error}
           </div>
         )}
 
         <div className="flex items-center gap-2 px-6 py-4" style={{ borderTop: '1px solid var(--border)' }}>
-          <button onClick={handleSubmit} disabled={saving} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-emerald-500 hover:bg-emerald-600 text-white transition-colors disabled:opacity-60">
+          <button onClick={handleSubmit} disabled={saving} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-[var(--action)] hover:bg-[var(--action)] text-[var(--on-brand)] transition-colors disabled:opacity-60">
             {saving ? <Loader2 size={15} className="animate-spin" /> : <Plus size={15} />}
             {saving ? 'Création…' : 'Créer la demande'}
           </button>
           <button onClick={onClose} disabled={saving} className="px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-[var(--surface-2)]" style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}>Annuler</button>
         </div>
       </div>
-    </div>
+</PortfolioDialog>
   );
 }
 
@@ -224,32 +226,32 @@ function DecisionModal({ item, approve, onClose, onDone }: {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => !saving && onClose()} />
-      <div className="relative w-full max-w-sm rounded-2xl p-6 z-10" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-        <p className="text-sm font-bold mb-1" style={{ color: 'var(--text)' }}>{approve ? 'Approuver' : 'Refuser'} ce congé ?</p>
+    <PortfolioDialog onClose={() => !saving && onClose()}>
+
+<div className="relative w-full max-w-sm rounded-2xl p-6 z-10" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+        <p className="text-sm font-semibold mb-1" style={{ color: 'var(--text)' }}>{approve ? 'Approuver' : 'Refuser'} ce congé ?</p>
         <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>
           {item.employee.firstName} {item.employee.lastName} · {fmtDate(item.startDate)} → {fmtDate(item.endDate)}
         </p>
         {!approve && (
           <textarea value={reason} onChange={e => setReason(e.target.value)} placeholder="Motif du refus (optionnel)" rows={2} className={`${inputCls} mb-4`} style={{ color: 'var(--text)' }} />
         )}
-        {error && <div className="mb-3 text-xs text-red-500 flex items-center gap-1"><AlertCircle size={13} />{error}</div>}
+        {error && <div className="mb-3 text-xs text-[var(--danger-text)] flex items-center gap-1"><AlertCircle size={13} />{error}</div>}
         <div className="flex gap-2">
-          <button onClick={submit} disabled={saving} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-white transition-colors disabled:opacity-60 ${approve ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-red-500 hover:bg-red-600'}`}>
+          <button onClick={submit} disabled={saving} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-[var(--on-brand)] transition-colors disabled:opacity-60 ${approve ? "bg-[var(--action)] hover:bg-[var(--action)]" : "bg-[var(--portfolio-danger-soft)] hover:bg-[var(--portfolio-danger-soft)]"}`}>
             {saving && <Loader2 size={14} className="animate-spin" />}
             Confirmer
           </button>
           <button onClick={onClose} disabled={saving} className="px-4 py-2 rounded-xl text-sm font-medium hover:bg-[var(--surface-2)]" style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}>Annuler</button>
         </div>
       </div>
-    </div>
+</PortfolioDialog>
   );
 }
 
 // ─── Page principale ──────────────────────────────────────────────────────────
 
-export default function PortfolioLeavesPage() {
+function PortfolioLeavesPage() {
   const [companies, setCompanies] = useState<PortfolioCompany[]>([]);
   const [items, setItems] = useState<LeaveItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -304,19 +306,19 @@ export default function PortfolioLeavesPage() {
 
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight" style={{ color: 'var(--text)' }}>Congés</h1>
+          <h1 className="text-3xl font-semibold tracking-tight" style={{ color: 'var(--text)' }}>Congés</h1>
           <p className="mt-1 flex items-center gap-2" style={{ color: 'var(--text-muted)' }}>
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-[var(--action)] " />
             {items.length} demande{items.length > 1 ? 's' : ''} {pendingCount > 0 && `· ${pendingCount} en attente`}
           </p>
         </div>
-        <button onClick={() => setShowCreate(true)} disabled={companies.length === 0} className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold transition-colors flex items-center gap-2 disabled:opacity-50">
+        <button onClick={() => setShowCreate(true)} disabled={companies.length === 0} className="px-5 py-2.5 rounded-xl bg-[var(--action)] hover:bg-[var(--action)] text-[var(--on-brand)] font-semibold transition-colors flex items-center gap-2 disabled:opacity-50">
           <Plus size={18} /> Nouvelle demande
         </button>
       </div>
 
       {error && (
-        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm font-medium">
+        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-[var(--portfolio-danger-soft)]  text-[var(--danger-text)]  text-sm font-medium">
           <AlertCircle size={16} className="shrink-0" />{error}
         </div>
       )}
@@ -342,9 +344,9 @@ export default function PortfolioLeavesPage() {
         </div>
       ) : (
         <div className="rounded-2xl overflow-x-auto" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-          <div className="grid px-4 py-3" style={{ minWidth: 840, gridTemplateColumns: '1fr 150px 190px 130px 170px', gap: 12, borderBottom: '1px solid var(--border)' }}>
+          <div className="grid px-4 py-3" style={{ minWidth: 956, gridTemplateColumns: 'minmax(220px, 1fr) 150px 190px 130px 170px', gap: 12, borderBottom: '1px solid var(--border)' }}>
             {['Employé', 'Entreprise', 'Période', 'Statut', ''].map((h, i) => (
-              <p key={i} className="text-[11px] font-bold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>{h}</p>
+              <p key={i} className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>{h}</p>
             ))}
           </div>
           {items.map(item => {
@@ -354,26 +356,26 @@ export default function PortfolioLeavesPage() {
             const cancellable = item.status === 'APPROVED';
             return (
               <div key={item.id} className="grid items-center px-4 py-3 transition-colors hover:bg-[var(--surface-2)]"
-                style={{ minWidth: 840, gridTemplateColumns: '1fr 150px 190px 130px 170px', gap: 12, borderBottom: '1px solid var(--border)' }}>
+                style={{ minWidth: 956, gridTemplateColumns: 'minmax(220px, 1fr) 150px 190px 130px 170px', gap: 12, borderBottom: '1px solid var(--border)' }}>
                 <div className="min-w-0">
                   <p className="text-sm font-semibold truncate" style={{ color: 'var(--text)' }}>{item.employee.firstName} {item.employee.lastName}</p>
                   {item.reason && <p className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>{item.reason}</p>}
                 </div>
                 <p className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>{item.company.tradeName || item.company.legalName}</p>
                 <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{fmtDate(item.startDate)} → {fmtDate(item.endDate)}</p>
-                <span className={`inline-flex w-fit px-2.5 py-1 rounded-full text-[11px] font-bold ${meta.cls}`}>{meta.label}</span>
+                <span className={`inline-flex w-fit px-2.5 py-1 rounded-full text-[11px] font-semibold ${meta.cls}`}>{meta.label}</span>
                 <div className="flex items-center gap-1 justify-self-end">
                   {pending ? (
                     <>
-                      <button onClick={() => setDecisionItem({ item, approve: true })} disabled={isBusy} title="Approuver" className="p-2 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/20 text-emerald-500 disabled:opacity-50"><CheckCircle2 size={15} /></button>
-                      <button onClick={() => setDecisionItem({ item, approve: false })} disabled={isBusy} title="Refuser" className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500 disabled:opacity-50"><XCircle size={15} /></button>
+                      <button onClick={() => setDecisionItem({ item, approve: true })} disabled={isBusy} title="Approuver" className="p-2 rounded-lg hover:bg-[var(--brand-soft)]  text-[var(--action)] disabled:opacity-50"><CheckCircle2 size={15} /></button>
+                      <button onClick={() => setDecisionItem({ item, approve: false })} disabled={isBusy} title="Refuser" className="p-2 rounded-lg hover:bg-[var(--portfolio-danger-soft)]  text-[var(--danger-text)] disabled:opacity-50"><XCircle size={15} /></button>
                     </>
                   ) : cancellable ? (
-                    <button onClick={() => runAction(item, 'cancel')} disabled={isBusy} title="Annuler" className="p-2 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-900/20 text-amber-500 disabled:opacity-50">
+                    <button onClick={() => runAction(item, 'cancel')} disabled={isBusy} title="Annuler" className="p-2 rounded-lg hover:bg-[var(--portfolio-warning-soft)]  text-[var(--warning-text)] disabled:opacity-50">
                       {isBusy ? <Loader2 size={15} className="animate-spin" /> : <Ban size={15} />}
                     </button>
                   ) : null}
-                  <button onClick={() => runAction(item, 'delete')} disabled={isBusy} title="Supprimer" className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500 disabled:opacity-50">
+                  <button onClick={() => runAction(item, 'delete')} disabled={isBusy} title="Supprimer" className="p-2 rounded-lg hover:bg-[var(--portfolio-danger-soft)]  text-[var(--danger-text)] disabled:opacity-50">
                     <Trash2 size={15} />
                   </button>
                 </div>
@@ -383,5 +385,14 @@ export default function PortfolioLeavesPage() {
         </div>
       )}
     </div>
+  );
+}
+
+
+export default function PortfolioLeavesPageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <PortfolioLeavesPage />
+    </ModulePageFrame>
   );
 }

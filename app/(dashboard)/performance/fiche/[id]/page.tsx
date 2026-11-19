@@ -28,6 +28,7 @@ import {
   Sheet, SheetGoal, SheetCriterion, STATUS_LABEL, fmtDate, sumWeights, weightsMessage,
 } from '@/components/performance/sheet-types';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import { PerformanceFrame as ModulePageFrame } from '@/components/performance/PerformanceFrame';
 
 type Tab = 'objectifs' | 'criteres' | 'suivants' | 'synthese';
 type SaveState = 'idle' | 'saving' | 'saved' | 'error';
@@ -52,7 +53,7 @@ function ScoreTile({ label, value, sub, big }: { label: string; value: number | 
   );
 }
 
-export default function EvaluationSheetPage() {
+function EvaluationSheetPage() {
   const params = useParams();
   const id = params?.id as string;
   const { bp } = useBasePath();
@@ -324,9 +325,9 @@ export default function EvaluationSheetPage() {
 
       <div className="flex items-center justify-between print:hidden">
         <Link href={bp(permissions.isSelf ? '/performance/mon-espace' : review.cycle ? `/performance/cycles/${review.cycle.id}` : '/performance')}
-          className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-purple-600 transition-colors"><ArrowLeft size={16} /> Retour</Link>
-        <button onClick={() => window.print()} className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
-          <Printer size={15} /> <span className="hidden sm:inline">Imprimer / PDF</span>
+          className="inline-flex items-center gap-2 text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--action)] transition-colors"><ArrowLeft strokeWidth={1.5} size={16} /> Retour</Link>
+        <button onClick={() => window.print()} className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-[var(--border)] text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--surface-2)]">
+          <Printer strokeWidth={1.5} size={15} /> <span className="hidden sm:inline">Imprimer / PDF</span>
         </button>
       </div>
 
@@ -368,16 +369,16 @@ export default function EvaluationSheetPage() {
       )}
 
       {/* Onglets */}
-      <div className="sticky top-0 z-10 -mx-4 px-4 sm:mx-0 sm:px-0 py-2 bg-gray-50/90 dark:bg-gray-900/90 backdrop-blur print:hidden">
+      <div className="sticky top-0 z-10 -mx-4 px-4 sm:mx-0 sm:px-0 py-2 bg-[var(--surface-2)] print:hidden">
         <div className="flex gap-2 overflow-x-auto">
           {visibleTabs.map(t => {
             const bad = failing(t.key);
             return (
-              <button key={t.key} onClick={() => setTab(t.key)}
-                className={`relative whitespace-nowrap px-4 py-2.5 rounded-xl text-sm font-bold transition-colors min-h-[44px] ${activeTab === t.key ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/20' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-100 dark:border-gray-700'}`}>
+              <button aria-pressed={tab === t.key} key={t.key} onClick={() => setTab(t.key)}
+                className={`relative whitespace-nowrap px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors min-h-[44px] ${activeTab === t.key ? 'bg-[var(--brand)] text-[var(--on-brand)] shadow-lg' : 'bg-[var(--surface)] text-[var(--text-secondary)] border border-[var(--border)]'}`}>
                 {t.label}
-                {editing && bad > 0 && <span className="ml-2 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-full bg-amber-400 text-white text-[11px]">{bad}</span>}
-                {editing && checks.length > 0 && bad === 0 && t.key !== 'synthese' && <Check size={14} className="inline ml-2 -mt-0.5" />}
+                {editing && bad > 0 && <span className="ml-2 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-full bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--text)] text-[11px]">{bad}</span>}
+                {editing && checks.length > 0 && bad === 0 && t.key !== 'synthese' && <Check strokeWidth={1.5} size={14} className="inline ml-2 -mt-0.5" />}
               </button>
             );
           })}
@@ -499,8 +500,8 @@ export default function EvaluationSheetPage() {
       {permissions.canDelete && (
         <div className="print:hidden flex justify-center">
           <button type="button" onClick={deleteSheet} disabled={busy}
-            className="px-4 py-2.5 rounded-xl text-sm font-bold text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2 min-h-[44px] disabled:opacity-60">
-            <Trash2 size={16} /> Supprimer cette évaluation
+            className="px-4 py-2.5 rounded-xl text-sm font-semibold text-[var(--danger-text)] hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] flex items-center gap-2 min-h-[44px] disabled:opacity-60">
+            <Trash2 strokeWidth={1.5} size={16} /> Supprimer cette évaluation
           </button>
         </div>
       )}
@@ -508,34 +509,34 @@ export default function EvaluationSheetPage() {
       {/* Barre du bas : avant de soumettre */}
       {editing && (
         <div className="fixed bottom-3 left-3 right-3 sm:left-auto sm:right-6 sm:w-[28rem] z-20 print:hidden">
-          <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur rounded-2xl border border-gray-100 dark:border-gray-700 shadow-xl p-3 sm:p-4 space-y-3">
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-xl p-3 sm:p-4 space-y-3 performance-card">
             {actionError && (
-              <div className="rounded-xl bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 text-sm p-3 flex gap-2"><AlertTriangle size={16} className="shrink-0 mt-0.5" /> <p className="break-words">{actionError}</p></div>
+              <div className="rounded-xl bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] text-[var(--danger-text)] text-sm p-3 flex gap-2"><AlertTriangle strokeWidth={1.5} size={16} className="shrink-0 mt-0.5" /> <p className="break-words">{actionError}</p></div>
             )}
             <div>
-              <p className="text-sm font-bold text-gray-900 dark:text-white mb-1.5">{allOk ? 'Tout est prêt ✔' : 'Avant de soumettre'}</p>
+              <p className="text-sm font-semibold text-[var(--text)] mb-1.5">{allOk ? 'Tout est prêt ✔' : 'Avant de soumettre'}</p>
               {!allOk && (
                 <ul className="space-y-1.5 max-h-40 overflow-y-auto">
                   {checks.filter(c => !c.ok).map(c => (
-                    <li key={c.key} className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
-                      <Circle size={14} className="text-amber-500 mt-1 shrink-0" />
+                    <li key={c.key} className="flex items-start gap-2 text-sm text-[var(--text)]">
+                      <Circle strokeWidth={1.5} size={14} className="text-[var(--warning-text)] mt-1 shrink-0" />
                       <span className="flex-1 min-w-0">{c.label}</span>
-                      <button onClick={() => setTab(c.tab)} className="text-purple-600 font-bold text-xs shrink-0 px-2 py-1 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20">Corriger</button>
+                      <button aria-pressed={tab === c.tab} onClick={() => setTab(c.tab)} className="text-[var(--action)] font-semibold text-xs shrink-0 px-2 py-1 rounded-lg hover:bg-[var(--brand-soft)]">Corriger</button>
                     </li>
                   ))}
                 </ul>
               )}
             </div>
             <div className="flex items-center justify-between gap-3">
-              <span className={`text-xs flex items-center gap-1.5 ${save === 'error' ? 'text-red-500' : 'text-gray-400'}`}>
-                {save === 'saving' && <><Loader2 size={13} className="animate-spin" /> Enregistrement…</>}
-                {save === 'saved' && <><Cloud size={13} /> Enregistré</>}
-                {save === 'error' && <><CloudOff size={13} /> Non enregistré</>}
-                {save === 'idle' && <><Cloud size={13} /> Enregistré automatiquement</>}
+              <span className={`text-xs flex items-center gap-1.5 ${save === 'error' ? 'text-[var(--danger-text)]' : 'text-[var(--text-secondary)]'}`}>
+                {save === 'saving' && <><Loader2 strokeWidth={1.5} size={13} className="animate-spin" /> Enregistrement…</>}
+                {save === 'saved' && <><Cloud strokeWidth={1.5} size={13} /> Enregistré</>}
+                {save === 'error' && <><CloudOff strokeWidth={1.5} size={13} /> Non enregistré</>}
+                {save === 'idle' && <><Cloud strokeWidth={1.5} size={13} /> Enregistré automatiquement</>}
               </span>
               <button onClick={submit} disabled={busy || !allOk}
-                className="px-5 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold shadow-lg shadow-purple-500/20 flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed text-sm min-h-[48px]">
-                {busy ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />} Soumettre à l'employé
+                className="px-5 py-3 rounded-xl bg-[var(--brand)] hover:bg-[var(--brand)] text-[var(--on-brand)] font-semibold shadow-lg flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed text-sm min-h-[48px]">
+                {busy ? <Loader2 strokeWidth={1.5} size={16} className="animate-spin" /> : <Send strokeWidth={1.5} size={16} />} Soumettre à l'employé
               </button>
             </div>
           </div>
@@ -543,5 +544,14 @@ export default function EvaluationSheetPage() {
       )}
       {!editing && actionError && <div className="rounded-xl bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 text-sm p-3">{actionError}</div>}
     </div>
+  );
+}
+
+
+export default function EvaluationSheetPageWithFrame() {
+  return (
+    <ModulePageFrame kind="detail">
+      <EvaluationSheetPage />
+    </ModulePageFrame>
   );
 }

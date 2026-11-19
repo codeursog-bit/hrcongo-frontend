@@ -1,0 +1,57 @@
+.account { color: var(--text); padding-bottom: 32px; }
+.account .template-page { max-width: 1120px; }
+.account form > .k-button { align-self: flex-start; }
+.account-photo-picker { background: var(--brand); }
+.account-photo-picker:hover { background: var(--brand-strong); }
+.account-photo-picker svg { color:var(--on-brand-surface,var(--on-brand)); }
+.account .template-save:empty { display: none; }
+.account-nav { display: flex; flex-wrap: wrap; gap: 8px; }
+.account-nav a { padding: 10px 16px; border-radius: var(--radius-control); color: var(--text); background: var(--surface-2); font-size: 13px; font-weight: 600; }
+.account-nav a:hover { color: var(--action); background: var(--brand-soft); }
+.account-stack { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+.account-columns { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.account .k-card { border: 0; }
+.account .account-identity { padding: 32px; }
+.account .account-identity img { width: 96px; height: 96px; border-radius: 28px; box-shadow: none; --tw-ring-shadow: 0 0 transparent; }
+.account-role { display: inline-block; margin-top: 12px; color: var(--text-secondary); font-size: 12px; font-weight: 500; }
+.account-fields { display: flex; flex-direction: column; gap: 8px; }
+.account-field { display: flex; align-items: start; gap: 16px; padding: 12px 0; }
+.account-field > svg { flex-shrink: 0; margin-top: 3px; color: var(--text-secondary); }
+.account-field > div { min-width: 0; flex: 1; }
+.account-label, .account-field label, .account-mini > label { display: block; color: var(--text-secondary); font-size: 12px; font-weight: 500; margin-bottom: 8px; }
+.account-field p, .account-mini p { margin: 0; font-size: 14px; font-weight: 500; overflow-wrap: anywhere; }
+.account-fields-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 24px; }
+.account .k-input { min-height: 44px; }
+.account .k-input:focus { outline: 2px solid var(--focus); outline-offset: 2px; }
+.account :is(a, button, input, select):focus-visible, .account-photo-picker:focus-within { outline: 2px solid var(--focus); outline-offset: 4px; }
+.account [id] { scroll-margin-top: 24px; }
+.account-access { padding: 16px 0; }
+.account-access a { display: flex; align-items: center; justify-content: space-between; gap: 16px; color: var(--text); font-size: 14px; font-weight: 600; }
+.account-access a:hover { color: var(--action); }
+.account-access p { color: var(--text-secondary); font-size: 13px; line-height: 1.7; margin-top: 8px; }
+.account-preference { display: grid; gap: 8px; padding-top: 24px; font-size: 14px; }
+.account-preference strong { font-weight: 500; }
+.account-push { padding-top: 16px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; }
+.account-push > p { font-size: 14px; }
+.account-push button { background: var(--surface-2); border: 0; color: var(--text); border-radius: var(--radius-control); }
+.account-push svg { stroke-width: 1.5; }
+.account-push > div { color: var(--text-secondary); }
+.account-feedback { padding: 16px; display: flex; align-items: center; gap: 12px; border-radius: var(--radius-control); }
+.account-success { color: var(--success-text); background: color-mix(in srgb,var(--green) 13%,transparent); }
+.account-title-skeleton { max-width: 240px; height: 36px; }
+.account-profile-skeleton { height: 112px; }
+.account-password { padding-top: 16px; }
+.account-password > .k-help { margin-bottom: 24px; }
+.account-password .k-success-mark { margin: 0 auto 16px; }
+.account-password input { min-width: 0; }
+.account-password button { min-height: 44px; }
+.account-password :is(input,button):focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+@media (max-width: 800px) { .account-columns { grid-template-columns: minmax(0,1fr); } .account .account-identity { padding: 24px; } }
+@media (max-width: 480px) { .account-fields-grid { grid-template-columns: minmax(0,1fr); gap: 20px; } .account .k-card { padding: 20px; } .account-nav { gap: 4px; } .account-nav a { padding: 10px 12px; } .account .k-button { white-space: normal; } #securite .account-fields > div:first-child { flex-wrap: wrap; } }
+@media (prefers-reduced-motion: reduce) { .account *, .account-password * { animation: none !important; transition: none !important; } }
+
+.account-save-actions { width: 100%; }
+.account-save-actions > div { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 12px; }
+.account-save-actions > button { width: auto; margin-left: auto; }
+.account-save-actions > p { text-align: right; }
+.account-password .k-button-ghost { padding: 8px; }

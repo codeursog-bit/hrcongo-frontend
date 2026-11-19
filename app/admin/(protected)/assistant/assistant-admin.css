@@ -1,0 +1,113 @@
+.assistant-admin {
+  display: grid;
+  gap: 22px;
+  color: var(--text);
+  max-width: 1160px;
+  margin: auto;
+  padding: 24px;
+}
+.assistant-admin > header {
+  display: flex;
+  gap: 24px;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.assistant-admin header > div:last-child {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.assistant-admin h1 {
+  font-size: 26px;
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+.assistant-admin h3 {
+  font-size: 15px;
+  font-weight: 600;
+}
+.assistant-admin p {
+  font-size: 13px;
+  line-height: 1.7;
+}
+.assistant-admin label:has(input[type="checkbox"]) {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 14px;
+  margin: 14px 0;
+}
+.assistant-admin input[type="checkbox"] {
+  accent-color: var(--action);
+  width: 16px;
+  height: 16px;
+}
+.assistant-admin-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+}
+.assistant-admin-muted,
+.assistant-admin small {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.assistant-admin-table {
+  overflow: auto;
+}
+.assistant-admin table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 540px;
+}
+.assistant-admin th,
+.assistant-admin td {
+  text-align: left;
+  vertical-align: middle;
+  padding: 14px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.assistant-admin-search {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+}
+.assistant-admin-search > div {
+  flex: 1;
+}
+.assistant-admin-company {
+  padding: 20px 0;
+  border-top: 1px solid var(--border);
+  display: grid;
+  gap: 10px;
+}
+.assistant-admin-company > div:first-child {
+  overflow-wrap: anywhere;
+}
+.assistant-admin-audit {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.assistant-admin-notice {
+  padding: 14px;
+  border-radius: var(--radius-control);
+}
+@media (max-width: 700px) {
+  .assistant-admin {
+    padding: 16px;
+  }
+  .assistant-admin > header {
+    flex-direction: column;
+  }
+  .assistant-admin-fields {
+    grid-template-columns: 1fr;
+  }
+  .assistant-admin-search {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

@@ -1,17 +1,18 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import {
   BrainCircuit, Award, TrendingUp, Clock, XCircle, Zap,
   ArrowLeft, AlertTriangle, Eye, Target, BarChart3, Calendar,
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { api } from '@/services/api';
 import Link from 'next/link';
 import { ToastProvider, useToast } from '@/components/ui/useToast';
 import { JobFilterSelect } from '@/components/JobFilterSelect';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import { Badge, Card, EmptyState } from '@/components/design-system/primitives';
+import { RecruitmentListPage as ListPage } from '@/components/recruitment/RecruitmentFrame';
 
 // ─────────────────────────────────────────────
 // TYPES
@@ -52,9 +53,7 @@ const AI_COLUMNS = [
   {
     id: 'RETENU' as AIColumnId,
     title: 'Retenus',
-    bg: 'bg-emerald-500/10',
-    border: 'border-emerald-500/40',
-    accent: 'text-emerald-500',
+    accent: 'text-[var(--green)]',
     icon: Award,
     description: '≥ 75/100',
     emptyMsg: 'Aucun candidat retenu',
@@ -62,9 +61,7 @@ const AI_COLUMNS = [
   {
     id: 'MOYENNE' as AIColumnId,
     title: 'Profils Moyens',
-    bg: 'bg-amber-500/10',
-    border: 'border-amber-500/40',
-    accent: 'text-amber-500',
+    accent: 'text-[var(--mustard)]',
     icon: TrendingUp,
     description: '55–74/100',
     emptyMsg: 'Aucun profil moyen',
@@ -72,8 +69,6 @@ const AI_COLUMNS = [
   {
     id: 'SECONDE_CHANCE' as AIColumnId,
     title: 'Seconde Chance',
-    bg: 'bg-[var(--surface-2)]',
-    border: 'border-[var(--border)]',
     accent: 'text-[var(--text-muted)]',
     icon: Clock,
     description: '40–54/100',
@@ -82,9 +77,7 @@ const AI_COLUMNS = [
   {
     id: 'REFUS' as AIColumnId,
     title: 'Non Retenus',
-    bg: 'bg-red-500/10',
-    border: 'border-red-500/40',
-    accent: 'text-red-500',
+    accent: 'text-[var(--danger)]',
     icon: XCircle,
     description: '< 40/100',
     emptyMsg: 'Aucun candidat refusé',
@@ -96,8 +89,8 @@ const AI_COLUMNS = [
 // ─────────────────────────────────────────────
 
 function KanbanIAContent() {
-  const router = useRouter();
   const toast = useToast();
+  const prefersReducedMotion = useReducedMotion();
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [jobs, setJobs] = useState<JobOffer[]>([]);
   const [selectedJobId, setSelectedJobId] = useState<string>('');
@@ -135,215 +128,171 @@ function KanbanIAContent() {
     count: candidates.filter((c) => c.jobOffer?.id === j.id).length,
   }));
 
-  // ── LOADING ──
+  const headerAction = (
+    <div className="flex flex-wrap items-center gap-3">
+      <Link className="k-button k-button-secondary" href="/recrutement">
+        <ArrowLeft size={16} strokeWidth={1.5} aria-hidden="true" /> Retour
+      </Link>
+      <Link className="k-button k-button-secondary" href="/recrutement/entretiens">
+        <Calendar size={16} strokeWidth={1.5} aria-hidden="true" /> Entretiens
+      </Link>
+      <Link className="k-button k-button-primary" href="/recrutement/ia/analytics">
+        <BarChart3 size={16} strokeWidth={1.5} aria-hidden="true" /> Statistiques
+      </Link>
+    </div>
+  );
+  const jobFilter = (
+    <JobFilterSelect
+      jobs={jobOptions}
+      value={selectedJobId}
+      onChange={setSelectedJobId}
+      totalCount={candidates.length}
+    />
+  );
+
   if (isLoading) {
     return (
-      <KonzaLoader variant="page" label="Chargement du pipeline IA…" />
+      <ListPage
+        title="Pipeline Recrutement IA"
+        description="Suivez les candidatures selon leur score d’analyse."
+        action={headerAction}
+        filters={jobFilter}
+      >
+        <KonzaLoader variant="page" label="Chargement du pipeline IA…" />
+      </ListPage>
     );
   }
 
-  // ── EMPTY GLOBAL ──
   if (candidates.length === 0) {
     return (
-      <div className="min-h-screen bg-[var(--bg)] flex flex-col items-center justify-center p-8">
-        <div className="text-center max-w-md">
-          <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-emerald-500/30">
-            <BrainCircuit size={40} className="text-emerald-500" />
-          </div>
-          <h1 className="text-2xl font-bold text-[var(--text)] mb-3">Aucun candidat IA</h1>
-          <p className="text-[var(--text-muted)] mb-8">
-            Publiez des offres en mode{' '}
-            <span className="text-emerald-500 font-bold">IA Assistée</span> pour voir les candidats ici.
-          </p>
-          <Link
-            href="/recrutement"
-            className="px-6 py-3 bg-emerald-500 text-white rounded-xl font-bold inline-flex items-center gap-2"
+      <ListPage
+        title="Pipeline Recrutement IA"
+        description="Suivez les candidatures selon leur score d’analyse."
+        action={headerAction}
+        filters={jobFilter}
+      >
+        <Card>
+          <EmptyState
+            title="Aucun candidat IA"
+            icon={BrainCircuit}
+            action={<Link className="k-button k-button-secondary" href="/recrutement">Retour au recrutement</Link>}
           >
-            <ArrowLeft size={18} /> Retour au recrutement
-          </Link>
-        </div>
-      </div>
+            Publiez des offres en mode IA assistée pour voir les candidatures ici.
+          </EmptyState>
+        </Card>
+      </ListPage>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg)]">
-
-      {/* BG GLOW */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
-      </div>
-
-      <div className="relative z-10 p-6 md:p-8">
-        {/* HEADER */}
-        <div className="max-w-[1800px] mx-auto mb-8">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => router.push('/recrutement')}
-                className="p-3 bg-[var(--surface)] hover:bg-[var(--surface-2)] rounded-xl border border-[var(--border)] transition-all"
-              >
-                <ArrowLeft size={20} className="text-[var(--text)]" />
-              </button>
-              <div>
-                <div className="flex items-center gap-3 mb-1">
-                  <h1 className="text-2xl font-black text-[var(--text)]">Pipeline Recrutement IA</h1>
-                  <div className="px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-1.5">
-                    <BrainCircuit size={14} className="text-emerald-500" />
-                    <span className="text-xs font-bold text-emerald-500 uppercase tracking-wider">IA</span>
-                  </div>
-                </div>
-                <p className="text-[var(--text-muted)] text-sm">
-                  {selectedJobId
-                    ? `${filteredCandidates.length} candidat(s) sur cette offre`
-                    : `${filteredCandidates.length} candidat(s) — toutes les offres`}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 flex-wrap">
-              <JobFilterSelect
-                jobs={jobOptions}
-                value={selectedJobId}
-                onChange={setSelectedJobId}
-                totalCount={candidates.length}
-              />
-              <Link
-                href="/recrutement/entretiens"
-                className="px-4 py-2.5 bg-[var(--surface-2)] hover:bg-[var(--border)] border border-[var(--border)] text-[var(--text)] rounded-xl font-bold text-sm flex items-center gap-2 transition-all"
-              >
-                <Calendar size={15} /> Entretiens
-              </Link>
-              <Link
-                href="/recrutement/ia/analytics"
-                className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg"
-              >
-                <BarChart3 size={15} /> Statistiques
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* KANBAN */}
-        <div className="max-w-[1800px] mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
-            {AI_COLUMNS.map((col, colIdx) => {
-              const colData = getColumnData(col.id);
-              const Icon = col.icon;
-              return (
-                <motion.div
-                  key={col.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: colIdx * 0.08 }}
-                  className="flex flex-col h-[calc(100vh-220px)] min-h-[400px]"
-                >
-                  {/* En-tête */}
-                  <div className={`${col.bg} backdrop-blur-xl border-2 ${col.border} rounded-2xl p-4 mb-3 shadow-xl`}>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <div className="p-1.5 bg-[var(--surface)] rounded-lg">
-                          <Icon size={18} className={col.accent} />
-                        </div>
-                        <h3 className="font-black text-[var(--text)] text-base">{col.title}</h3>
-                      </div>
-                      <div className="px-2.5 py-0.5 bg-[var(--surface)] rounded-full border border-[var(--border)]">
-                        <span className="text-sm font-bold text-[var(--text)]">{colData.length}</span>
-                      </div>
+    <ListPage
+      title="Pipeline Recrutement IA"
+      description={selectedJobId
+        ? `${filteredCandidates.length} candidat(s) sur cette offre`
+        : `${filteredCandidates.length} candidat(s) — toutes les offres`}
+      action={headerAction}
+      filters={jobFilter}
+    >
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 2xl:grid-cols-4">
+        {AI_COLUMNS.map((col, colIdx) => {
+          const colData = getColumnData(col.id);
+          const Icon = col.icon;
+          return (
+            <motion.section
+              key={col.id}
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: prefersReducedMotion ? 0 : colIdx * 0.05, duration: prefersReducedMotion ? 0 : 0.2 }}
+              aria-labelledby={`pipeline-${col.id}`}
+              className="flex min-w-0 flex-col gap-3"
+            >
+              <Card className="!p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <Icon size={17} strokeWidth={1.5} className={col.accent} aria-hidden="true" />
+                      <h2 id={`pipeline-${col.id}`} className="text-base font-semibold text-[var(--text)]">{col.title}</h2>
                     </div>
-                    <p className={`text-[11px] ${col.accent} font-bold uppercase tracking-wider opacity-80`}>{col.description}</p>
+                    <p className={`mt-1 text-xs ${col.accent}`}>{col.description}</p>
                   </div>
-
-                  {/* Cartes */}
-                  <div className="flex-1 bg-[var(--surface)] backdrop-blur-sm rounded-2xl p-2.5 overflow-y-auto border border-[var(--border)] space-y-2.5">
-                    <AnimatePresence mode="popLayout">
-                      {colData.length === 0 ? (
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          className="h-full flex flex-col items-center justify-center py-10 text-center"
+                  <Badge tone={col.id === 'RETENU' ? 'success' : col.id === 'MOYENNE' ? 'warning' : col.id === 'REFUS' ? 'danger' : 'neutral'}>
+                    {colData.length}
+                  </Badge>
+                </div>
+              </Card>
+              <div className="flex min-h-40 flex-col gap-3">
+                <AnimatePresence mode="popLayout">
+                  {colData.length === 0 ? (
+                    <Card key="empty" className="flex min-h-40 items-center justify-center !p-4">
+                      <EmptyState title={col.emptyMsg} icon={Icon}>
+                        {selectedJobId ? 'Aucune candidature dans cette étape pour cette offre.' : 'Les candidatures apparaîtront ici lorsqu’elles seront reçues.'}
+                      </EmptyState>
+                    </Card>
+                  ) : (
+                    colData.map((c) => {
+                      const hasOverride = c.hrDecision && c.hrDecision !== c.aiSuggestion;
+                      return (
+                        <motion.article
+                          key={c.id}
+                          layout={!prefersReducedMotion}
+                          initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={prefersReducedMotion ? undefined : { opacity: 0, y: -4 }}
+                          transition={{ duration: prefersReducedMotion ? 0 : 0.18 }}
                         >
-                          <div className="w-12 h-12 rounded-xl bg-[var(--surface-2)] flex items-center justify-center mb-3">
-                            <Icon size={20} className="text-[var(--text-muted)]" />
-                          </div>
-                          <p className="text-[var(--text-muted)] text-sm">{col.emptyMsg}</p>
-                          {selectedJobId && (
-                            <p className="text-[var(--text-muted)] text-xs mt-1 opacity-70">pour cette offre</p>
-                          )}
-                        </motion.div>
-                      ) : (
-                        colData.map((c) => {
-                          const hasOverride = c.hrDecision && c.hrDecision !== c.aiSuggestion;
-                          return (
-                            <motion.div
-                              key={c.id}
-                              layout
-                              initial={{ opacity: 0, scale: 0.95 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              exit={{ opacity: 0, scale: 0.9 }}
-                              onClick={() => router.push(`/recrutement/ia/candidats/${c.id}`)}
-                              className={`bg-[var(--surface-2)] backdrop-blur-xl border rounded-xl p-4 cursor-pointer transition-all hover:scale-[1.02] hover:shadow-xl group ${
-                                hasOverride ? 'border-amber-500/50' : 'border-[var(--border)] hover:border-emerald-500/40'
-                              }`}
-                            >
-                              <div className="flex items-center gap-3 mb-3">
-                                <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center font-bold text-white text-sm shadow-lg shrink-0">
-                                  {c.firstName[0]}{c.lastName[0]}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <h4 className="font-bold text-[var(--text)] text-sm truncate group-hover:text-emerald-500 transition-colors">
-                                    {c.firstName} {c.lastName}
-                                  </h4>
-                                  <p className="text-[11px] text-[var(--text-muted)] truncate">{c.jobOffer?.title}</p>
-                                </div>
+                          <Link
+                            href={`/recrutement/ia/candidats/${c.id}`}
+                            aria-label={`Voir le dossier de ${c.firstName} ${c.lastName}`}
+                            className="group block rounded-[var(--radius-card)] bg-[var(--surface)] p-4 text-left shadow-[var(--shadow-card)] transition-shadow hover:shadow-[var(--shadow-pop)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--brand)] focus-visible:outline-offset-2"
+                          >
+                            <div className="mb-4 flex min-w-0 items-center gap-3">
+                              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--brand-soft)] text-sm font-semibold text-[var(--text)]" aria-hidden="true">
+                                {c.firstName?.[0] || ''}{c.lastName?.[0] || ''}
+                              </span>
+                              <span className="min-w-0 flex-1">
+                                <span className="block truncate text-sm font-semibold text-[var(--text)] group-hover:text-[var(--brand-strong)]">
+                                  {c.firstName} {c.lastName}
+                                </span>
+                                <span className="block truncate text-xs text-[var(--text-muted)]">{c.jobOffer?.title}</span>
+                              </span>
+                              <Eye size={15} strokeWidth={1.5} className="shrink-0 text-[var(--text-muted)]" aria-hidden="true" />
+                            </div>
+                            <div className="mb-4 grid grid-cols-3 gap-2">
+                              <div className="rounded-xl bg-[var(--surface-2)] p-2 text-center">
+                                <span className="block text-[10px] text-[var(--text-muted)]">CV</span>
+                                <span className="text-xs font-semibold tabular-nums text-[var(--text)]">{c.cvScore || 0}<span className="text-[var(--text-muted)]">/35</span></span>
                               </div>
-                              <div className="grid grid-cols-3 gap-1.5 mb-3">
-                                <div className="bg-[var(--surface)] p-1.5 rounded-lg text-center border border-[var(--border)]">
-                                  <p className="text-[9px] text-[var(--text-muted)] uppercase font-bold">CV</p>
-                                  <p className="text-xs font-bold text-[var(--text)]">{c.cvScore || 0}<span className="text-[var(--text-muted)]">/35</span></p>
-                                </div>
-                                <div className="bg-[var(--surface)] p-1.5 rounded-lg text-center border border-[var(--border)]">
-                                  <p className="text-[9px] text-[var(--text-muted)] uppercase font-bold">Test</p>
-                                  <p className="text-xs font-bold text-[var(--text)]">{c.testScore || 0}<span className="text-[var(--text-muted)]">/65</span></p>
-                                </div>
-                                <div className="bg-emerald-500/10 p-1.5 rounded-lg text-center border border-emerald-500/20">
-                                  <p className="text-[9px] text-emerald-500 uppercase font-bold">Total</p>
-                                  <p className="text-xs font-bold text-emerald-500">{c.totalScore || 0}<span className="text-emerald-700 dark:text-emerald-300">/100</span></p>
-                                </div>
+                              <div className="rounded-xl bg-[var(--surface-2)] p-2 text-center">
+                                <span className="block text-[10px] text-[var(--text-muted)]">Test</span>
+                                <span className="text-xs font-semibold tabular-nums text-[var(--text)]">{c.testScore || 0}<span className="text-[var(--text-muted)]">/65</span></span>
                               </div>
-                              <div className="flex items-center justify-between text-[11px]">
-                                <div className="flex items-center gap-2">
-                                  {hasOverride && (
-                                    <span className="flex items-center gap-1 text-amber-500 font-bold">
-                                      <AlertTriangle size={11} /> Décision RH
-                                    </span>
-                                  )}
-                                  {(c.tabSwitchCount ?? 0) > 0 && (
-                                    <span className="flex items-center gap-1 text-amber-500 font-bold">
-                                      <Target size={11} /> {c.tabSwitchCount} switch
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="flex items-center gap-1.5 text-[var(--text-muted)]">
-                                  <Zap size={10} className="text-emerald-600" />
-                                  <span>{new Date(c.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
-                                  <Eye size={12} className="ml-1 group-hover:text-emerald-500 transition-colors" />
-                                </div>
+                              <div className="rounded-xl bg-[color-mix(in_srgb,var(--green)_12%,transparent)] p-2 text-center">
+                                <span className="block text-[10px] text-[var(--green)]">Total</span>
+                                <span className="text-xs font-semibold tabular-nums text-[var(--green)]">{c.totalScore || 0}<span>/100</span></span>
                               </div>
-                            </motion.div>
-                          );
-                        })
-                      )}
-                    </AnimatePresence>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
+                            </div>
+                            <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-[var(--text-muted)]">
+                              <span className="flex flex-wrap items-center gap-3">
+                                {hasOverride && <span className="flex items-center gap-1 text-[var(--mustard)]"><AlertTriangle size={12} aria-hidden="true" /> Décision RH</span>}
+                                {(c.tabSwitchCount ?? 0) > 0 && <span className="flex items-center gap-1 text-[var(--mustard)]"><Target size={12} aria-hidden="true" /> {c.tabSwitchCount} switch</span>}
+                              </span>
+                              <span className="inline-flex items-center gap-1.5">
+                                <Zap size={12} strokeWidth={1.5} aria-hidden="true" />
+                                {new Date(c.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                              </span>
+                            </div>
+                          </Link>
+                        </motion.article>
+                      );
+                    })
+                  )}
+                </AnimatePresence>
+              </div>
+            </motion.section>
+          );
+        })}
       </div>
-    </div>
+    </ListPage>
   );
 }
 

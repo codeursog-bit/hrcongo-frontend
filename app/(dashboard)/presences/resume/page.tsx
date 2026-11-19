@@ -1,5 +1,9 @@
 'use client';
+import { AttendanceSelect } from '@/components/attendance/AttendanceSelect';
 
+import { AttendanceLoadError } from '@/components/attendance/AttendanceLoadError';
+import { AttendanceModuleFrame } from '@/components/attendance/AttendanceModuleFrame';
+import { useModuleVisuals } from '@/components/requests/ModulePageFrame';
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -13,7 +17,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip, Legend, LineChart, Line,
+  Tooltip, Legend, AreaChart, Area,
 } from 'recharts';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
@@ -119,21 +123,23 @@ function getTypeLabel(det: DayDetail): string {
 
 function getTypeBadgeColor(type: string): string {
   switch (type) {
-    case 'PRESENT':       return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300';
-    case 'REMOTE':        return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300';
-    case 'LATE':          return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300';
+    case 'PRESENT':       return 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)]  ';
+    case 'REMOTE':        return 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)]  ';
+    case 'LATE':          return 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)]  ';
     case 'LEAVE':         return 'bg-[var(--surface-2)] text-[var(--text-muted)]';
     case 'HOLIDAY':       return 'bg-[var(--surface-2)] text-[var(--text-muted)]';
     case 'OFF_DAY':       return 'bg-[var(--surface-2)] text-[var(--text-muted)]';
-    case 'ABSENT_PAID':   return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300';
+    case 'ABSENT_PAID':   return 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)]  ';
     case 'ABSENT_UNPAID':
-    case 'ABSENT':        return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300';
+    case 'ABSENT':        return 'bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] text-[var(--danger-text)]  ';
     case 'FUTURE':         return 'bg-[var(--surface-2)] text-[var(--text-muted)]';
     default:               return 'bg-[var(--surface-2)] text-[var(--text-muted)]';
   }
 }
 
-export default function AttendanceResumePage() {
+function AttendanceResumePageContent() {
+  const [uiLoadError,setUiLoadError]=useState('');
+  const {motion:uiMotion}=useModuleVisuals();
   const { bp } = useBasePath();
   const router = useRouter();
 
@@ -183,11 +189,13 @@ export default function AttendanceResumePage() {
         clearInterval(interval);
         setIsGenerating(false);
         setData(reportData);
+      setUiLoadError('');
       }, 500);
     } catch (e) {
       clearInterval(interval);
       setIsGenerating(false);
       alert("Erreur lors de la génération du rapport");
+      setUiLoadError('Impossible de charger les pr\u00e9sences. R\u00e9essayez.');
     }
   };
 
@@ -371,13 +379,13 @@ export default function AttendanceResumePage() {
 
   const StatusBadge = ({ status }: { status: string }) => {
     const config = {
-      perfect: { color: 'bg-emerald-100 text-emerald-700', icon: CheckCircle2, label: 'OK' },
-      warning: { color: 'bg-amber-100 text-amber-700', icon: Clock, label: 'À vérifier' },
-      critical: { color: 'bg-red-100 text-red-700', icon: AlertTriangle, label: 'Anomalie' },
+      perfect: { color: 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)]', icon: CheckCircle2, label: 'OK' },
+      warning: { color: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)]', icon: Clock, label: 'À vérifier' },
+      critical: { color: 'bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] text-[var(--danger-text)]', icon: AlertTriangle, label: 'Anomalie' },
     };
     const { color, icon: Icon, label } = config[status as keyof typeof config] || config.perfect;
     return (
-      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${color}`}>
+      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${color}`}>
         <Icon size={12} /> {label}
       </span>
     );
@@ -389,15 +397,16 @@ export default function AttendanceResumePage() {
     <div className="max-w-[1600px] mx-auto pb-24 space-y-8">
 
       <PresenceSubNav userRole={userRole} />
+      <AttendanceLoadError message={uiLoadError} retry={generateReport} />
 
       {/* HEADER & CONTROLS */}
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
         <div>
-          <div className="flex items-center gap-3 mb-1">
+          <div className="flex items-center gap-3 mb-1 attendance-page-header">
            <Link href={bp('/presences')} className="p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors">
               <ArrowRight className="rotate-180 text-[var(--text-muted)]" size={20} />
             </Link>
-            <h1 className="text-3xl font-bold text-[var(--text)] tracking-tight">{canManage ? 'Résumés de Présences' : 'Mon Résumé de Présence'}</h1>
+            <h1 className="text-3xl font-semibold text-[var(--text)] tracking-tight">{canManage ? 'Résumés de Présences' : 'Mon Résumé de Présence'}</h1>
           </div>
           <p className="text-[var(--text-muted)] ml-11">{canManage ? 'Consolidez et exportez les heures pour la paie.' : 'Retrouvez vos heures, retards et absences du mois.'}</p>
         </div>
@@ -407,32 +416,32 @@ export default function AttendanceResumePage() {
             <Calendar size={18} className="text-[var(--text-muted)] shrink-0" />
 
             <div className="relative">
-              <select
+              <AttendanceSelect
                 value={month}
                 onChange={e => handlePeriodChange(e.target.value, year)}
-                className="appearance-none bg-[var(--surface-2)] text-[var(--text)] font-bold text-sm rounded-lg pl-3 pr-8 py-2.5 outline-none cursor-pointer border border-[var(--border)] focus:ring-2 focus:ring-emerald-500 transition-shadow"
+                className="appearance-none bg-[var(--surface-2)] text-[var(--text)] font-semibold text-sm rounded-lg pl-3 pr-8 py-2.5 outline-none cursor-pointer border border-[var(--border)] focus:ring-2 focus:ring-[var(--focus)] transition-shadow"
               >
                 {MONTHS.map(m => (
                   <option key={m.value} value={m.value} className="bg-[var(--surface)] text-[var(--text)]">
                     {m.label}
                   </option>
                 ))}
-              </select>
+              </AttendanceSelect>
               <ChevronDown size={14} className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
             </div>
 
             <div className="relative">
-              <select
+              <AttendanceSelect
                 value={year}
                 onChange={e => handlePeriodChange(month, Number(e.target.value))}
-                className="appearance-none bg-[var(--surface-2)] text-[var(--text)] font-bold text-sm rounded-lg pl-3 pr-8 py-2.5 outline-none cursor-pointer border border-[var(--border)] focus:ring-2 focus:ring-emerald-500 transition-shadow"
+                className="appearance-none bg-[var(--surface-2)] text-[var(--text)] font-semibold text-sm rounded-lg pl-3 pr-8 py-2.5 outline-none cursor-pointer border border-[var(--border)] focus:ring-2 focus:ring-[var(--focus)] transition-shadow"
               >
                 {YEARS.map(y => (
                   <option key={y} value={y} className="bg-[var(--surface)] text-[var(--text)]">
                     {y}
                   </option>
                 ))}
-              </select>
+              </AttendanceSelect>
               <ChevronDown size={14} className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
             </div>
           </div>
@@ -443,10 +452,10 @@ export default function AttendanceResumePage() {
             onClick={generateReport}
             disabled={isGenerating || isValidated}
             className={`
-              px-6 py-2.5 rounded-xl font-bold text-white shadow-lg transition-all flex items-center gap-2
+              px-6 py-2.5 rounded-xl font-semibold bg-[var(--brand)] text-[var(--on-brand)] shadow-lg transition-colors flex items-center gap-2
               ${isValidated
                 ? 'bg-[var(--text-muted)] cursor-not-allowed'
-                : 'bg-emerald-500 hover:bg-emerald-600 hover:scale-105 active:scale-95'}
+                : 'bg-[var(--brand)] hover:bg-[var(--brand)]  active:scale-95'}
             `}
           >
             {isGenerating ? <Loader2 className="animate-spin" size={18} /> : <FileSpreadsheet size={18} />}
@@ -464,16 +473,16 @@ export default function AttendanceResumePage() {
             exit={{ opacity: 0, height: 0 }}
             className="bg-[var(--surface)] rounded-2xl p-8 text-center border border-[var(--border)] shadow-sm"
           >
-            <h3 className="text-lg font-bold text-[var(--text)] mb-2">Traitement des pointages en cours...</h3>
+            <h3 className="text-lg font-semibold text-[var(--text)] mb-2">Traitement des pointages en cours...</h3>
             <p className="text-[var(--text-muted)] mb-6">{otOn ? 'Calcul des heures supplémentaires et vérification des anomalies.' : 'Heures travaillées et vérification des anomalies.'}</p>
             <div className="max-w-md mx-auto h-3 bg-[var(--surface-2)] rounded-full overflow-hidden">
               <motion.div
-                className="h-full bg-emerald-500 rounded-full"
+                className="h-full bg-[var(--brand)] rounded-full"
                 initial={{ width: 0 }}
                 animate={{ width: `${progress}%` }}
               />
             </div>
-            <p className="mt-2 text-sm font-mono text-emerald-600 dark:text-emerald-400">{Math.round(progress)}%</p>
+            <p className="mt-2 text-sm font-mono text-[var(--success-text)] ">{Math.round(progress)}%</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -486,11 +495,11 @@ export default function AttendanceResumePage() {
           className="space-y-8"
         >
           {/* OVERVIEW CARDS — LIGNE 1 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 attendance-metrics">
             <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-sm flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold text-[var(--text-muted)] uppercase mb-1">{canManage ? 'Employés Traités' : 'Jours travaillés'}</p>
-                <h3 className="text-2xl font-bold text-[var(--text)]">{canManage ? data.length : (totals?.daysWorked || 0)}</h3>
+                <p className="text-xs font-semibold text-[var(--text-muted)]  mb-1">{canManage ? 'Employés Traités' : 'Jours travaillés'}</p>
+                <h3 className="text-2xl font-semibold text-[var(--text)]">{canManage ? data.length : (totals?.daysWorked || 0)}</h3>
                 {!canManage && (
                   <p className="text-[11px] text-[var(--text-muted)] mt-0.5">
                     Jours où vous avez pointé{(totals?.daysWorkedOnRest || 0) > 0 ? ` (dont ${totals?.daysWorkedOnRest} de repos ou férié)` : ''}
@@ -503,36 +512,36 @@ export default function AttendanceResumePage() {
             </div>
             <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-sm flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold text-[var(--text-muted)] uppercase mb-1">Taux de Présence</p>
-                <h3 className="text-2xl font-bold text-[var(--text)]">{fmt(tauxPresenceGlobal)}%</h3>
+                <p className="text-xs font-semibold text-[var(--text-muted)]  mb-1">Taux de Présence</p>
+                <h3 className="text-2xl font-semibold text-[var(--text)]">{fmt(tauxPresenceGlobal)}%</h3>
               </div>
-              <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  text-[var(--success-text)] rounded-xl flex items-center justify-center">
                 <Percent size={24} />
               </div>
             </div>
             {otOn && (
               <>
-            <div className="bg-[var(--surface)] p-5 rounded-2xl border border-amber-100 dark:border-amber-900/30 shadow-sm flex items-center justify-between">
+            <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)]  shadow-sm flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold text-amber-600 uppercase mb-1">HS Normales</p>
-                <h3 className="text-2xl font-bold text-[var(--text)]">
+                <p className="text-xs font-semibold text-[var(--warning-text)]  mb-1">HS Normales</p>
+                <h3 className="text-2xl font-semibold text-[var(--text)]">
                   {fmt(data.reduce((s, r) => s + (r.overtime10 || 0) + (r.overtime25 || 0), 0))} <span className="text-sm text-[var(--text-muted)]">h</span>
                 </h3>
                 <p className="text-xs text-[var(--text-muted)] mt-0.5">+10% · +25%</p>
               </div>
-              <div className="w-12 h-12 bg-amber-50 dark:bg-amber-900/20 text-amber-500 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  text-[var(--warning-text)] rounded-xl flex items-center justify-center">
                 <Clock size={24} />
               </div>
             </div>
-            <div className="bg-[var(--surface)] p-5 rounded-2xl border border-amber-100 dark:border-amber-900/30 shadow-sm flex items-center justify-between">
+            <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)]  shadow-sm flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold text-amber-600 uppercase mb-1 flex items-center gap-1"><Moon size={11} /> HS Nuit</p>
-                <h3 className="text-2xl font-bold text-[var(--text)]">
+                <p className="text-xs font-semibold text-[var(--warning-text)]  mb-1 flex items-center gap-1"><Moon size={11} /> HS Nuit</p>
+                <h3 className="text-2xl font-semibold text-[var(--text)]">
                   {fmt(data.reduce((s, r) => s + (r.overtime50 || 0) + (r.overtime100 || 0), 0))} <span className="text-sm text-[var(--text-muted)]">h</span>
                 </h3>
                 <p className="text-xs text-[var(--text-muted)] mt-0.5">+50% · +100%</p>
               </div>
-              <div className="w-12 h-12 bg-amber-50 dark:bg-amber-900/20 text-amber-500 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  text-[var(--warning-text)] rounded-xl flex items-center justify-center">
                 <Moon size={24} />
               </div>
             </div>
@@ -542,53 +551,53 @@ export default function AttendanceResumePage() {
 
           {/* 🆕 Heures en plus (à titre informatif — n'impactent pas la paie) */}
           {data.reduce((sum, r) => sum + (r.extraHoursInfo || 0), 0) > 0 && (
-            <div className="bg-sky-50 dark:bg-sky-900/10 border border-sky-200 dark:border-sky-900/30 rounded-2xl p-5 flex items-center justify-between gap-4">
+            <div className="bg-[var(--brand-soft)]  border border-[var(--border)]  rounded-2xl p-5 flex items-center justify-between gap-4">
               <div>
-                <p className="text-xs font-bold text-sky-700 dark:text-sky-400 uppercase mb-1">Heures en plus (info)</p>
-                <h3 className="text-2xl font-bold text-[var(--text)]">
+                <p className="text-xs font-semibold text-[var(--action)]   mb-1">Heures en plus (info)</p>
+                <h3 className="text-2xl font-semibold text-[var(--text)]">
                   {fmt(data.reduce((sum, r) => sum + (r.extraHoursInfo || 0), 0))} <span className="text-sm text-[var(--text-muted)]">h</span>
                 </h3>
                 <p className="text-xs text-[var(--text-muted)] mt-0.5">Travaillées au-delà de l'horaire. À titre informatif : non comptées dans la paie.</p>
               </div>
-              <div className="w-12 h-12 bg-sky-100 dark:bg-sky-900/20 text-sky-500 rounded-xl flex items-center justify-center shrink-0">
+              <div className="w-12 h-12 bg-[var(--brand-soft)]  text-[var(--action)] rounded-xl flex items-center justify-center shrink-0">
                 <Clock size={24} />
               </div>
             </div>
           )}
 
           {/* OVERVIEW CARDS — LIGNE 2 : absences & congés */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 attendance-metrics">
             <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-sm flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold text-[var(--text-muted)] uppercase mb-1">Retards</p>
-                <h3 className="text-2xl font-bold text-[var(--text)]">{totals?.daysLate || 0}</h3>
+                <p className="text-xs font-semibold text-[var(--text-muted)]  mb-1">Retards</p>
+                <h3 className="text-2xl font-semibold text-[var(--text)]">{totals?.daysLate || 0}</h3>
               </div>
-              <div className="w-12 h-12 bg-amber-50 dark:bg-amber-900/20 text-amber-500 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  text-[var(--warning-text)] rounded-xl flex items-center justify-center">
                 <Clock size={24} />
               </div>
             </div>
-            <div className="bg-[var(--surface)] p-5 rounded-2xl border border-amber-100 dark:border-amber-900/30 shadow-sm flex items-center justify-between">
+            <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)]  shadow-sm flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold text-amber-600 uppercase mb-1">Absences Payées</p>
-                <h3 className="text-2xl font-bold text-[var(--text)]">{totals?.daysAbsentPaid || 0} <span className="text-sm text-[var(--text-muted)]">j</span></h3>
+                <p className="text-xs font-semibold text-[var(--warning-text)]  mb-1">Absences Payées</p>
+                <h3 className="text-2xl font-semibold text-[var(--text)]">{totals?.daysAbsentPaid || 0} <span className="text-sm text-[var(--text-muted)]">j</span></h3>
               </div>
-              <div className="w-12 h-12 bg-amber-50 dark:bg-amber-900/20 text-amber-500 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  text-[var(--warning-text)] rounded-xl flex items-center justify-center">
                 <UserX size={24} />
               </div>
             </div>
-            <div className="bg-[var(--surface)] p-5 rounded-2xl border border-red-100 dark:border-red-900/30 shadow-sm flex items-center justify-between">
+            <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)]  shadow-sm flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold text-red-600 uppercase mb-1">Absences Non Payées</p>
-                <h3 className="text-2xl font-bold text-[var(--text)]">{totals?.daysAbsentUnpaid || 0} <span className="text-sm text-[var(--text-muted)]">j</span></h3>
+                <p className="text-xs font-semibold text-[var(--danger-text)]  mb-1">Absences Non Payées</p>
+                <h3 className="text-2xl font-semibold text-[var(--text)]">{totals?.daysAbsentUnpaid || 0} <span className="text-sm text-[var(--text-muted)]">j</span></h3>
               </div>
-              <div className="w-12 h-12 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  text-[var(--danger-text)] rounded-xl flex items-center justify-center">
                 <CalendarOff size={24} />
               </div>
             </div>
             <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-sm flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold text-[var(--text-muted)] uppercase mb-1">En Congé</p>
-                <h3 className="text-2xl font-bold text-[var(--text)]">{totals?.daysOnLeave || 0} <span className="text-sm text-[var(--text-muted)]">j</span></h3>
+                <p className="text-xs font-semibold text-[var(--text-muted)]  mb-1">En Congé</p>
+                <h3 className="text-2xl font-semibold text-[var(--text)]">{totals?.daysOnLeave || 0} <span className="text-sm text-[var(--text-muted)]">j</span></h3>
               </div>
               <div className="w-12 h-12 bg-[var(--surface-2)] text-[var(--text-muted)] rounded-xl flex items-center justify-center">
                 <CalendarCheck size={24} />
@@ -598,8 +607,8 @@ export default function AttendanceResumePage() {
 
           {/* MAIN TABLE */}
           <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
+            <div className="overflow-x-auto attendance-table-scroll" tabIndex={0} role="region" aria-label="Tableau défilant horizontalement">
+              <table className="w-full text-left text-sm attendance-table">
                 <thead className="bg-[var(--surface-2)] text-[var(--text-muted)] font-semibold uppercase text-xs">
                   <tr>
                     <th className="px-6 py-3">Employé</th>
@@ -609,16 +618,16 @@ export default function AttendanceResumePage() {
                     <th className="px-6 py-3 text-center">Congés</th>
                     <th className="px-6 py-3 text-right">Heures Norm.</th>
                     {otOn && (<>
-                    <th className="px-6 py-3 text-right text-amber-600">HS +10%</th>
-                    <th className="px-6 py-3 text-right text-amber-600">HS +25%</th>
-                    <th className="px-6 py-3 text-right text-amber-600">
+                    <th className="px-6 py-3 text-right text-[var(--warning-text)]">HS +10%</th>
+                    <th className="px-6 py-3 text-right text-[var(--warning-text)]">HS +25%</th>
+                    <th className="px-6 py-3 text-right text-[var(--warning-text)]">
                       <span className="flex items-center justify-end gap-1"><Moon size={11} /> +50%</span>
                     </th>
-                    <th className="px-6 py-3 text-right text-red-600">
+                    <th className="px-6 py-3 text-right text-[var(--danger-text)]">
                       <span className="flex items-center justify-end gap-1"><Moon size={11} /> +100%</span>
                     </th>
                     </>)}
-                    <th className="px-6 py-3 text-right text-sky-600">H. en plus (info)</th>
+                    <th className="px-6 py-3 text-right text-[var(--action)]">H. en plus (info)</th>
                     <th className="px-6 py-3 text-center">Statut</th>
                     <th className="px-6 py-3 w-10"></th>
                   </tr>
@@ -628,13 +637,13 @@ export default function AttendanceResumePage() {
                     <React.Fragment key={row.id}>
                       <tr
                         onClick={() => setExpandedRow(expandedRow === row.id ? null : row.id)}
-                        className={`cursor-pointer hover:bg-[var(--surface-2)] transition-colors ${expandedRow === row.id ? 'bg-emerald-50/50 dark:bg-emerald-900/10' : ''}`}
+                        className={`cursor-pointer hover:bg-[var(--surface-2)] transition-colors ${expandedRow === row.id ? 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] ' : ''}`}
                       >
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             <img src={row.avatar || `https://ui-avatars.com/api/?name=${row.name}&background=random`} className="w-8 h-8 rounded-full" alt="" />
                             <div>
-                              <p className="font-bold text-[var(--text)]">{row.name}</p>
+                              <p className="font-semibold text-[var(--text)]">{row.name}</p>
                               <p className="text-xs text-[var(--text-muted)]">{row.matricule}</p>
                             </div>
                           </div>
@@ -642,32 +651,32 @@ export default function AttendanceResumePage() {
                         <td className="px-6 py-4 text-center font-medium">
                           {row.daysPresent}
                           {(row.daysWorkedOnRest ?? 0) > 0 && (
-                            <span className="block text-[10px] font-semibold text-amber-600" title="Pointés un jour de repos ou férié (hors jours présents)">
+                            <span className="block text-[10px] font-semibold text-[var(--warning-text)]" title="Pointés un jour de repos ou férié (hors jours présents)">
                               +{row.daysWorkedOnRest} repos/férié
                             </span>
                           )}
                         </td>
-                        <td className={`px-6 py-4 text-center font-bold ${row.daysLate > 2 ? 'text-amber-500' : 'text-[var(--text-muted)]'}`}>{row.daysLate}</td>
+                        <td className={`px-6 py-4 text-center font-semibold ${row.daysLate > 2 ? 'text-[var(--warning-text)]' : 'text-[var(--text-muted)]'}`}>{row.daysLate}</td>
                         <td className="px-6 py-4 text-center font-medium text-[var(--text-muted)]">
                           {row.daysAbsentUnpaid + row.daysAbsentPaid}
                         </td>
                         <td className="px-6 py-4 text-center font-medium text-[var(--text-muted)]">{row.daysOnLeave}</td>
                         <td className="px-6 py-4 text-right font-mono text-[var(--text-muted)]">{row.normalHours}</td>
                         {otOn && (<>
-                        <td className="px-6 py-4 text-right font-mono font-bold text-amber-600 dark:text-amber-400">
+                        <td className="px-6 py-4 text-right font-mono font-semibold text-[var(--warning-text)] ">
                           {(row.overtime10 || 0) > 0 ? fmt(row.overtime10) : <span className="text-[var(--text-muted)]">—</span>}
                         </td>
-                        <td className="px-6 py-4 text-right font-mono font-bold text-amber-600 dark:text-amber-400">
+                        <td className="px-6 py-4 text-right font-mono font-semibold text-[var(--warning-text)] ">
                           {(row.overtime25 || 0) > 0 ? fmt(row.overtime25) : <span className="text-[var(--text-muted)]">—</span>}
                         </td>
-                        <td className="px-6 py-4 text-right font-mono font-bold text-amber-600 dark:text-amber-400">
+                        <td className="px-6 py-4 text-right font-mono font-semibold text-[var(--warning-text)] ">
                           {(row.overtime50 || 0) > 0 ? fmt(row.overtime50) : <span className="text-[var(--text-muted)]">—</span>}
                         </td>
-                        <td className="px-6 py-4 text-right font-mono font-bold text-red-600 dark:text-red-400">
+                        <td className="px-6 py-4 text-right font-mono font-semibold text-[var(--danger-text)] ">
                           {(row.overtime100 || 0) > 0 ? fmt(row.overtime100) : <span className="text-[var(--text-muted)]">—</span>}
                         </td>
                         </>)}
-                        <td className="px-6 py-4 text-right font-mono font-bold text-sky-600 dark:text-sky-400">
+                        <td className="px-6 py-4 text-right font-mono font-semibold text-[var(--action)] ">
                           {(row.extraHoursInfo || 0) > 0 ? fmt(row.extraHoursInfo || 0) : <span className="text-[var(--text-muted)]">—</span>}
                         </td>
                         <td className="px-6 py-4 text-center"><StatusBadge status={row.status} /></td>
@@ -683,28 +692,28 @@ export default function AttendanceResumePage() {
                               {otOn && ((row.overtime10 || 0) + (row.overtime25 || 0) + (row.overtime50 || 0) + (row.overtime100 || 0)) > 0 && (
                                 <div className="flex flex-wrap gap-2 mb-4">
                                   {(row.overtime10 || 0) > 0 && (
-                                    <span className="text-xs bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 px-2.5 py-1 rounded-full font-bold">
+                                    <span className="text-xs bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  text-[var(--warning-text)]  px-2.5 py-1 rounded-full font-semibold">
                                       {fmt(row.overtime10)}h +10%
                                     </span>
                                   )}
                                   {(row.overtime25 || 0) > 0 && (
-                                    <span className="text-xs bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 px-2.5 py-1 rounded-full font-bold">
+                                    <span className="text-xs bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  text-[var(--warning-text)]  px-2.5 py-1 rounded-full font-semibold">
                                       {fmt(row.overtime25)}h +25%
                                     </span>
                                   )}
                                   {(row.overtime50 || 0) > 0 && (
-                                    <span className="text-xs bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 px-2.5 py-1 rounded-full font-bold">
-                                      🌙 {fmt(row.overtime50)}h +50%
+                                    <span className="text-xs bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  text-[var(--warning-text)]  px-2.5 py-1 rounded-full font-semibold">
+                                       {fmt(row.overtime50)}h +50%
                                     </span>
                                   )}
                                   {(row.overtime100 || 0) > 0 && (
-                                    <span className="text-xs bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300 px-2.5 py-1 rounded-full font-bold">
-                                      🌙 {fmt(row.overtime100)}h +100%
+                                    <span className="text-xs bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  text-[var(--danger-text)]  px-2.5 py-1 rounded-full font-semibold">
+                                       {fmt(row.overtime100)}h +100%
                                     </span>
                                   )}
                                 </div>
                               )}
-                              <table className="w-full text-xs text-left">
+                              <table className="w-full text-xs text-left attendance-table">
                                 <thead className="text-[var(--text-muted)] font-semibold border-b border-[var(--border)]">
                                   <tr>
                                     <th className="py-2">Date</th>
@@ -720,7 +729,7 @@ export default function AttendanceResumePage() {
                                       <td className="py-2 font-mono">{det.date}</td>
                                       <td className="py-2">{det.in}</td>
                                       <td className="py-2">{det.out}</td>
-                                      <td className="py-2 font-bold">{det.total}h</td>
+                                      <td className="py-2 font-semibold">{det.total}h</td>
                                       <td className="py-2">
                                         <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${getTypeBadgeColor(det.type)}`}>
                                           {getTypeLabel(det)}
@@ -747,8 +756,8 @@ export default function AttendanceResumePage() {
             {canManage && (
             <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
               <div className="flex items-center gap-2 mb-4">
-                <BarChart3 size={18} className="text-emerald-500" />
-                <h3 className="font-bold text-[var(--text)]">Taux par Département</h3>
+                <BarChart3 size={18} className="text-[var(--success-text)]" />
+                <h3 className="font-semibold text-[var(--text)]">Taux par Département</h3>
               </div>
               <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={departmentStats}>
@@ -757,9 +766,9 @@ export default function AttendanceResumePage() {
                   <YAxis unit="%" tick={{ fontSize: 11 }} />
                   <Tooltip formatter={(v: number) => `${v}%`} />
                   <Legend />
-                  <Bar dataKey="Présence" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]} />
-                  <Bar dataKey="Absence" stackId="a" fill="#ef4444" />
-                  <Bar dataKey="Congé" stackId="a" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Présence" stackId="a" fill="var(--green)" isAnimationActive={uiMotion} animationDuration={700} maxBarSize={22} />
+                  <Bar dataKey="Absence" stackId="a" fill="var(--danger)" isAnimationActive={uiMotion} animationDuration={700} maxBarSize={22} />
+                  <Bar dataKey="Congé" stackId="a" fill="var(--mustard)" radius={[12,12,0,0]} isAnimationActive={uiMotion} animationDuration={700} maxBarSize={22} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -768,25 +777,24 @@ export default function AttendanceResumePage() {
             {/* Évolution quotidienne du taux de présence */}
             <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
               <div className="flex items-center gap-2 mb-4">
-                <TrendingUp size={18} className="text-emerald-500" />
-                <h3 className="font-bold text-[var(--text)]">{canManage ? 'Évolution Quotidienne du Taux de Présence' : 'Mon Évolution Quotidienne'}</h3>
+                <TrendingUp size={18} className="text-[var(--success-text)]" />
+                <h3 className="font-semibold text-[var(--text)]">{canManage ? 'Évolution Quotidienne du Taux de Présence' : 'Mon Évolution Quotidienne'}</h3>
               </div>
               <ResponsiveContainer width="100%" height={280}>
-                <LineChart data={dailyTrend}>
-                  <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
+                <AreaChart data={dailyTrend}>
                   <XAxis dataKey="jour" tick={{ fontSize: 11 }} />
                   <YAxis unit="%" domain={[0, 100]} tick={{ fontSize: 11 }} />
                   <Tooltip formatter={(v: number) => `${v}%`} labelFormatter={(l) => `Jour ${l}`} />
-                  <Line type="monotone" dataKey="Taux de présence" stroke="#10b981" strokeWidth={2} dot={false} />
-                </LineChart>
+                  <Area type="monotone" dataKey="Taux de présence" stroke="var(--brand)" fill="var(--loan-gradient-1)" strokeWidth={2.5} dot={false} isAnimationActive={uiMotion} animationDuration={700} />
+                </AreaChart>
               </ResponsiveContainer>
             </div>
 
             {/* Répartition des motifs d'absence */}
             <div className={`bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6 ${canManage ? 'xl:col-span-2' : ''}`}>
               <div className="flex items-center gap-2 mb-4">
-                <UserX size={18} className="text-red-500" />
-                <h3 className="font-bold text-[var(--text)]">Motifs d'Absence (Maladie · Conventionnelle · Exceptionnelle)</h3>
+                <UserX size={18} className="text-[var(--danger-text)]" />
+                <h3 className="font-semibold text-[var(--text)]">Motifs d'Absence (Maladie · Conventionnelle · Exceptionnelle)</h3>
               </div>
               {absenceReasons.length > 0 ? (
                 <ResponsiveContainer width="100%" height={220}>
@@ -795,7 +803,7 @@ export default function AttendanceResumePage() {
                     <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
                     <YAxis type="category" dataKey="motif" tick={{ fontSize: 12 }} width={120} />
                     <Tooltip />
-                    <Bar dataKey="jours" name="Jours" fill="#f97316" radius={[0, 4, 4, 0]} />
+                    <Bar dataKey="jours" name="Jours" fill="var(--brand)" radius={[12,12,12,12]} maxBarSize={18} isAnimationActive={uiMotion} animationDuration={700} />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
@@ -810,7 +818,7 @@ export default function AttendanceResumePage() {
               <button
                 onClick={handleExport}
                 disabled={isExporting || !data || data.length === 0}
-                className="px-5 py-3 bg-[var(--surface-2)] hover:bg-[var(--border)] text-[var(--text)] font-bold rounded-xl transition-colors flex items-center gap-2 disabled:opacity-50"
+                className="px-5 py-3 bg-[var(--surface-2)] hover:bg-[var(--border)] text-[var(--text)] font-semibold rounded-xl transition-colors flex items-center gap-2 disabled:opacity-50"
               >
                 {isExporting ? <Loader2 className="animate-spin" size={18} /> : <FileSpreadsheet size={18} />}
                 {isExporting ? 'Export...' : 'Exporter en Excel'}
@@ -820,16 +828,16 @@ export default function AttendanceResumePage() {
             {canManage && (
             <div className="flex items-center gap-4 w-full md:w-auto">
               {!isValidated ? (
-                <button onClick={() => setIsValidated(true)} className="flex-1 md:flex-none px-6 py-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 font-bold rounded-xl transition-colors flex items-center justify-center gap-2">
+                <button onClick={() => setIsValidated(true)} className="flex-1 md:flex-none px-6 py-3 bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] hover:bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)] font-semibold rounded-xl transition-colors flex items-center justify-center gap-2">
                   <CheckCircle2 size={18} /> Valider ce Résumé
                 </button>
               ) : (
-                <div className="flex items-center gap-2 text-emerald-600 font-bold text-sm px-4 bg-emerald-50 dark:bg-emerald-900/20 py-3 rounded-xl border border-emerald-100 dark:border-emerald-800">
+                <div className="flex items-center gap-2 text-[var(--success-text)] font-semibold text-sm px-4 bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  py-3 rounded-xl border border-[var(--border)] ">
                   <Lock size={16} /> Validé
                 </div>
               )}
 
-              <button onClick={handleSendToPayroll} disabled={!isValidated} className="flex-1 md:flex-none px-8 py-3 bg-[var(--text)] text-[var(--bg)] font-bold rounded-xl hover:scale-105 transition-transform shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+              <button onClick={handleSendToPayroll} disabled={!isValidated} className="flex-1 md:flex-none px-8 py-3 bg-[var(--text)] text-[var(--bg)] font-semibold rounded-xl  transition-transform shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
                 Envoyer à la Paie <ArrowRight size={18} />
               </button>
             </div>
@@ -841,4 +849,8 @@ export default function AttendanceResumePage() {
 
     </div>
   );
+}
+
+export default function AttendanceResumePage() {
+  return <AttendanceModuleFrame kind="dashboard"><AttendanceResumePageContent /></AttendanceModuleFrame>;
 }

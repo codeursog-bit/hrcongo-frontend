@@ -2,16 +2,18 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import {
   ArrowLeft, User, Briefcase,
   CheckCircle2, XCircle, Eye, Calendar,
+  type LucideIcon,
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { api } from '@/services/api';
 import { ToastProvider, useToast } from '@/components/ui/useToast';
 import { JobFilterSelect } from '@/components/JobFilterSelect';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import { Badge, Card, EmptyState } from '@/components/design-system/primitives';
+import { RecruitmentListPage as ListPage } from '@/components/recruitment/RecruitmentFrame';
 
 // ─────────────────────────────────────────────
 // TYPES
@@ -46,45 +48,40 @@ interface Candidate {
 const MANUAL_COLUMNS: {
   id: ManualColumnId;
   title: string;
-  borderTop: string;
-  headerBg: string;
-  countBg: string;
-  icon: React.ElementType;
+  accent: string;
+  tone: 'success' | 'warning' | 'neutral' | 'info';
+  icon: LucideIcon;
   emptyMsg: string;
 }[] = [
   {
     id: 'APPLIED',
     title: 'Nouvelles candidatures',
-    borderTop: 'border-t-emerald-500',
-    headerBg: 'bg-emerald-50 dark:bg-emerald-500/5',
-    countBg: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400',
+    accent: 'text-[var(--brand-strong)]',
+    tone: 'info',
     icon: User,
     emptyMsg: 'Aucune nouvelle candidature',
   },
   {
     id: 'INTERVIEW',
     title: 'En entretien',
-    borderTop: 'border-t-amber-500',
-    headerBg: 'bg-amber-50 dark:bg-amber-500/5',
-    countBg: 'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400',
+    accent: 'text-[var(--mustard)]',
+    tone: 'warning',
     icon: Briefcase,
     emptyMsg: 'Aucun entretien planifié',
   },
   {
     id: 'HIRED',
     title: 'Embauchés',
-    borderTop: 'border-t-emerald-500',
-    headerBg: 'bg-emerald-50 dark:bg-emerald-500/5',
-    countBg: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400',
+    accent: 'text-[var(--green)]',
+    tone: 'success',
     icon: CheckCircle2,
     emptyMsg: 'Aucune embauche',
   },
   {
     id: 'REJECTED',
     title: 'Refusés',
-    borderTop: 'border-t-red-500',
-    headerBg: 'bg-red-50 dark:bg-red-500/5',
-    countBg: 'bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400',
+    accent: 'text-[var(--text-muted)]',
+    tone: 'neutral',
     icon: XCircle,
     emptyMsg: 'Aucun refus',
   },
@@ -103,8 +100,8 @@ const normalizeStatus = (status: string): ManualColumnId => {
 // ─────────────────────────────────────────────
 
 function KanbanManualContent() {
-  const router = useRouter();
   const toast = useToast();
+  const prefersReducedMotion = useReducedMotion();
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [jobs, setJobs] = useState<JobOffer[]>([]);
   const [selectedJobId, setSelectedJobId] = useState<string>('');
@@ -142,152 +139,142 @@ function KanbanManualContent() {
     count: candidates.filter((c) => c.jobOffer?.id === j.id).length,
   }));
 
-  // ── LOADING ──
+  const headerAction = (
+    <div className="flex flex-wrap items-center gap-3">
+      <Link className="k-button k-button-secondary" href="/recrutement">
+        <ArrowLeft size={16} strokeWidth={1.5} aria-hidden="true" /> Retour
+      </Link>
+      <Link className="k-button k-button-secondary" href="/recrutement/entretiens">
+        <Calendar size={16} strokeWidth={1.5} aria-hidden="true" /> Entretiens
+      </Link>
+    </div>
+  );
+  const jobFilter = (
+    <JobFilterSelect
+      jobs={jobOptions}
+      value={selectedJobId}
+      onChange={setSelectedJobId}
+      totalCount={candidates.length}
+    />
+  );
+
   if (isLoading) {
     return (
-      <KonzaLoader variant="page" label="Chargement du pipeline…" />
+      <ListPage
+        title="Pipeline Manuel"
+        description="Suivez les candidatures à chaque étape du recrutement."
+        action={headerAction}
+        filters={jobFilter}
+      >
+        <KonzaLoader variant="page" label="Chargement du pipeline…" />
+      </ListPage>
     );
   }
 
-  // ── EMPTY GLOBAL ──
   if (candidates.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 text-center">
-        <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mb-4 border border-emerald-500/20">
-          <User size={32} className="text-emerald-400" />
-        </div>
-        <h2 className="text-xl font-bold text-[var(--text)] mb-2">Aucune candidature manuelle</h2>
-        <p className="text-[var(--text-muted)] mb-6 text-sm">Publiez des offres en mode Manuel pour recevoir des candidatures ici.</p>
-        <Link
-          href="/recrutement"
-          className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl font-bold flex items-center gap-2 text-sm"
-        >
-          <ArrowLeft size={16} /> Retour
-        </Link>
-      </div>
+      <ListPage
+        title="Pipeline Manuel"
+        description="Suivez les candidatures à chaque étape du recrutement."
+        action={headerAction}
+        filters={jobFilter}
+      >
+        <Card>
+          <EmptyState
+            title="Aucune candidature manuelle"
+            icon={User}
+            action={<Link className="k-button k-button-secondary" href="/recrutement">Retour au recrutement</Link>}
+          >
+            Publiez une offre en mode manuel pour recevoir des candidatures ici.
+          </EmptyState>
+        </Card>
+      </ListPage>
     );
   }
 
   return (
-    <div className="h-[calc(100vh-80px)] flex flex-col">
-
-      {/* HEADER */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 px-1">
-        <div className="flex items-center gap-3">
-          <Link
-            href="/recrutement"
-            className="p-2 bg-[var(--surface)] rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)] transition-colors"
-          >
-            <ArrowLeft size={18} />
-          </Link>
-          <div>
-            <h1 className="text-xl font-bold text-[var(--text)]">Pipeline Manuel</h1>
-            <p className="text-xs text-[var(--text-muted)]">
-              {selectedJobId
-                ? `${filteredCandidates.length} candidat(s) sur cette offre`
-                : `${filteredCandidates.length} candidat(s) — toutes les offres`}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 flex-wrap">
-          {/* Sélecteur moderne */}
-          <JobFilterSelect
-            jobs={jobOptions}
-            value={selectedJobId}
-            onChange={setSelectedJobId}
-            totalCount={candidates.length}
-            
-          />
-
-          <Link
-            href="/recrutement/entretiens"
-            className="px-3 py-2.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 text-amber-600 dark:text-amber-400 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors"
-          >
-            <Calendar size={14} /> Entretiens
-          </Link>
-        </div>
-      </div>
-
-      {/* BOARD */}
-      <div className="flex-1 overflow-x-auto overflow-y-hidden pb-4">
-        <div className="flex gap-4 h-full min-w-[880px]">
-          {MANUAL_COLUMNS.map((col) => {
-            const colData = getColumnData(col.id);
-            const Icon = col.icon;
-
-            return (
-              <div key={col.id} className="flex-1 flex flex-col min-w-[210px]">
-
-                {/* En-tête colonne */}
-                <div className={`
-                  flex items-center justify-between px-4 py-3 mb-2
-                  ${col.headerBg} rounded-t-2xl border-t-[3px] ${col.borderTop}
-                  border-x border-b border-[var(--border)]/50
-                `}>
-                  <div className="flex items-center gap-2">
-                    <Icon size={15} className="text-[var(--text-muted)] shrink-0" />
-                    <h3 className="font-bold text-sm text-[var(--text)] leading-tight">{col.title}</h3>
+    <ListPage
+      title="Pipeline Manuel"
+      description={selectedJobId
+        ? `${filteredCandidates.length} candidat(s) sur cette offre`
+        : `${filteredCandidates.length} candidat(s) — toutes les offres`}
+      action={headerAction}
+      filters={jobFilter}
+    >
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 2xl:grid-cols-4">
+        {MANUAL_COLUMNS.map((col, colIdx) => {
+          const colData = getColumnData(col.id);
+          const Icon = col.icon;
+          return (
+            <motion.section
+              key={col.id}
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: prefersReducedMotion ? 0 : colIdx * 0.05, duration: prefersReducedMotion ? 0 : 0.2 }}
+              aria-labelledby={`pipeline-${col.id}`}
+              className="flex min-w-0 flex-col gap-3"
+            >
+              <Card className="!p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <Icon size={17} strokeWidth={1.5} className={col.accent} aria-hidden="true" />
+                      <h2 id={`pipeline-${col.id}`} className="text-base font-semibold leading-snug text-[var(--text)]">{col.title}</h2>
+                    </div>
                   </div>
-                  <span className={`text-xs px-2.5 py-0.5 rounded-full font-bold ${col.countBg}`}>
-                    {colData.length}
-                  </span>
+                  <Badge tone={col.tone}>{colData.length}</Badge>
                 </div>
-
-                {/* Cartes */}
-                <div className="flex-1 bg-[var(--surface-2)] rounded-b-2xl px-2 pt-2 pb-3 overflow-y-auto space-y-2 border border-t-0 border-[var(--border)]/50">
-                  <AnimatePresence mode="popLayout">
-                    {colData.length === 0 ? (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="flex flex-col items-center justify-center h-28 text-center py-6"
+              </Card>
+              <div className="flex min-h-40 flex-col gap-3">
+                <AnimatePresence mode="popLayout">
+                  {colData.length === 0 ? (
+                    <Card key="empty" className="flex min-h-40 items-center justify-center !p-4">
+                      <EmptyState title={col.emptyMsg} icon={Icon}>
+                        {selectedJobId ? 'Aucune candidature dans cette étape pour cette offre.' : 'Les candidatures apparaîtront ici lorsqu’elles seront reçues.'}
+                      </EmptyState>
+                    </Card>
+                  ) : (
+                    colData.map((c) => (
+                      <motion.article
+                        key={c.id}
+                        layout={!prefersReducedMotion}
+                        initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={prefersReducedMotion ? undefined : { opacity: 0, y: -4 }}
+                        transition={{ duration: prefersReducedMotion ? 0 : 0.18 }}
                       >
-                        <Icon size={22} className="text-[var(--border)] mb-2" />
-                        <p className="text-xs text-[var(--text-muted)] italic">{col.emptyMsg}</p>
-                        {selectedJobId && (
-                          <p className="text-[10px] text-[var(--text-muted)]/50 mt-1">pour cette offre</p>
-                        )}
-                      </motion.div>
-                    ) : (
-                      colData.map((c) => (
-                        <motion.div
-                          key={c.id}
-                          layout
-                          initial={{ opacity: 0, scale: 0.97 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.95 }}
-                          onClick={() => router.push(`/recrutement/manuel/candidats/${c.id}`)}
-                          className="bg-[var(--surface)] px-3 py-3 rounded-xl border border-[var(--border)] shadow-sm cursor-pointer hover:shadow-md hover:border-emerald-400/60 dark:hover:border-emerald-500/40 transition-all group"
+                        <Link
+                          href={`/recrutement/manuel/candidats/${c.id}`}
+                          aria-label={`Voir le dossier de ${c.firstName} ${c.lastName}`}
+                          className="group block rounded-[var(--radius-card)] bg-[var(--surface)] p-4 text-left shadow-[var(--shadow-card)] transition-shadow hover:shadow-[var(--shadow-pop)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--brand)] focus-visible:outline-offset-2"
                         >
-                          <div className="flex items-center gap-2.5 mb-2">
-                            <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center font-bold text-xs text-white shrink-0">
-                              {c.firstName[0]}{c.lastName[0]}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h4 className="font-bold text-sm text-[var(--text)] truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                                {c.firstName} {c.lastName}
-                              </h4>
-                              <p className="text-[11px] text-[var(--text-muted)] truncate">{c.jobOffer?.title}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] text-[var(--text-muted)] bg-[var(--surface-2)] px-2 py-0.5 rounded-md">
-                              {new Date(c.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                          <div className="mb-3 flex min-w-0 items-center gap-3">
+                            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[var(--brand-soft)] text-xs font-semibold text-[var(--text)]" aria-hidden="true">
+                              {c.firstName?.[0] || ''}{c.lastName?.[0] || ''}
                             </span>
-                            <Eye size={13} className="text-[var(--text-muted)] group-hover:text-emerald-500 transition-colors" />
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate text-sm font-semibold text-[var(--text)] group-hover:text-[var(--brand-strong)]">
+                                {c.firstName} {c.lastName}
+                              </span>
+                              <span className="block truncate text-xs text-[var(--text-muted)]">{c.jobOffer?.title}</span>
+                            </span>
+                            <Eye size={15} strokeWidth={1.5} className="shrink-0 text-[var(--text-muted)]" aria-hidden="true" />
                           </div>
-                        </motion.div>
-                      ))
-                    )}
-                  </AnimatePresence>
-                </div>
+                          <div className="flex items-center justify-between gap-2 border-t border-[var(--border)] pt-3 text-xs text-[var(--text-muted)]">
+                            <span>{new Date(c.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
+                            <span className={col.accent}>{col.title}</span>
+                          </div>
+                        </Link>
+                      </motion.article>
+                    ))
+                  )}
+                </AnimatePresence>
               </div>
-            );
-          })}
-        </div>
+            </motion.section>
+          );
+        })}
       </div>
-    </div>
+    </ListPage>
   );
 }
 

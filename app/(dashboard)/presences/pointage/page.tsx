@@ -1,4 +1,5 @@
 'use client';
+import { AttendancePageHeader } from '@/components/attendance/AttendancePageHeader';
 
 // ============================================================================
 // 📁 app/(dashboard)/presences/pointage/page.tsx — FINAL
@@ -13,6 +14,7 @@
 // 🆕 PresenceSubNav intégré (navigation entre pages du module Présences)
 // ============================================================================
 
+import { AttendanceModuleFrame } from '@/components/attendance/AttendanceModuleFrame';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -73,18 +75,18 @@ function AttendanceToast({
 
   return (
     <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-sm">
-      <div className={`backdrop-blur-xl border rounded-2xl p-4 shadow-2xl ${
-        isEarly ? 'bg-emerald-900/95 border-emerald-500/40' : 'bg-amber-900/95 border-amber-500/40'
+      <div className={` border rounded-2xl p-4 shadow-2xl ${
+        isEarly ? 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] border-[var(--border)]' : 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] border-[var(--border)]'
       }`}>
         <div className="flex items-start gap-3">
-          <div className={`p-2 rounded-xl flex-shrink-0 ${isEarly ? 'bg-emerald-500/20' : 'bg-amber-500/20'}`}>
-            <Sparkles size={16} className={isEarly ? 'text-emerald-400' : 'text-amber-400'} />
+          <div className={`p-2 rounded-xl flex-shrink-0 ${isEarly ? 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]' : 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]'}`}>
+            <Sparkles size={16} className={isEarly ? 'text-[var(--success-text)]' : 'text-[var(--warning-text)]'} />
           </div>
           <div className="flex-1 min-w-0">
-            <p className={`font-bold text-sm ${isEarly ? 'text-emerald-200' : 'text-amber-200'}`}>{title}</p>
-            <p className={`text-xs mt-1 leading-relaxed ${isEarly ? 'text-emerald-300/80' : 'text-amber-300/80'}`}>{message}</p>
+            <p className={`font-semibold text-sm ${isEarly ? 'text-[var(--success-text)]' : 'text-[var(--warning-text)]'}`}>{title}</p>
+            <p className={`text-xs mt-1 leading-relaxed ${isEarly ? 'text-[var(--success-text)]' : 'text-[var(--warning-text)]'}`}>{message}</p>
           </div>
-          <button onClick={onClose} className={`flex-shrink-0 mt-0.5 ${isEarly ? 'text-emerald-500 hover:text-emerald-300' : 'text-amber-500 hover:text-amber-300'}`}>
+          <button onClick={onClose} className={`flex-shrink-0 mt-0.5 ${isEarly ? 'text-[var(--success-text)] hover:text-[var(--success-text)]' : 'text-[var(--warning-text)] hover:text-[var(--warning-text)]'}`}>
             <XCircle size={16} />
           </button>
         </div>
@@ -119,14 +121,14 @@ function OvertimeWorkflowCard({
 
   if (attendance.overtimeStatus === 'PENDING_EMPLOYEE') {
     return (
-      <div className="bg-amber-500/10 border border-amber-500/40 rounded-3xl p-6 space-y-5">
+      <div className="bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] border border-[var(--border)] rounded-3xl p-6 space-y-5">
         <div className="flex items-start gap-3">
-          <div className="p-2.5 bg-amber-500/20 rounded-xl flex-shrink-0">
-            <HelpCircle size={20} className="text-amber-400" />
+          <div className="p-2.5 bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] rounded-xl flex-shrink-0">
+            <HelpCircle size={20} className="text-[var(--warning-text)]" />
           </div>
           <div>
-            <p className="font-bold text-amber-300 text-base">Toujours au bureau ?</p>
-            <p className="text-amber-400/80 text-xs mt-0.5">
+            <p className="font-semibold text-[var(--warning-text)] text-base">Toujours au bureau ?</p>
+            <p className="text-[var(--warning-text)] text-xs mt-0.5">
               Votre journée dépasse l'heure officielle.
               {attendance.pendingOvertimeHours ? ` Dépassement calculé : ${Number(attendance.pendingOvertimeHours).toFixed(1)}h.` : ''}
             </p>
@@ -134,24 +136,24 @@ function OvertimeWorkflowCard({
         </div>
         {attendance.checkIn && (
           <div className="flex items-center gap-2 px-4 py-2.5 bg-[var(--surface-2)] rounded-2xl">
-            <Timer size={14} className="text-amber-500 animate-pulse" />
+            <Timer size={14} className="text-[var(--warning-text)] " />
             <span className="text-xs text-[var(--text-muted)]">Temps total depuis l'entrée :</span>
-            <span className="font-mono font-bold text-amber-300 text-sm ml-auto">{elapsed}</span>
+            <span className="font-mono font-semibold text-[var(--warning-text)] text-sm ml-auto">{elapsed}</span>
           </div>
         )}
         <p className="text-xs text-[var(--text-muted)] text-center">Que souhaitez-vous faire ?</p>
         <div className="grid grid-cols-2 gap-3">
           <button onClick={onResolveForgotten} disabled={resolving}
             className="flex flex-col items-center gap-2 p-4 bg-[var(--surface-2)] hover:bg-[var(--border)] border border-[var(--border)] rounded-2xl transition-colors active:scale-95 disabled:opacity-50">
-            {resolving ? <Loader2 size={24} className="animate-spin text-[var(--text-muted)]" /> : <span className="text-2xl">😅</span>}
-            <span className="text-xs font-bold text-[var(--text)] text-center leading-tight">J'avais oublié de pointer la sortie</span>
+            {resolving ? <Loader2 size={24} className="animate-spin text-[var(--text-muted)]" /> : <span className="text-2xl"></span>}
+            <span className="text-xs font-semibold text-[var(--text)] text-center leading-tight">J'avais oublié de pointer la sortie</span>
             <span className="text-[10px] text-[var(--text-muted)] text-center">→ Journée clôturée à l'heure officielle</span>
           </button>
           <button onClick={onDeclareOvertime} disabled={resolving}
-            className="flex flex-col items-center gap-2 p-4 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 rounded-2xl transition-all active:scale-95 disabled:opacity-50">
-            {resolving ? <Loader2 size={24} className="animate-spin text-amber-300" /> : <span className="text-2xl">💼</span>}
-            <span className="text-xs font-bold text-amber-200 text-center leading-tight">Ce sont des heures supplémentaires</span>
-            <span className="text-[10px] text-amber-500/70 text-center">→ Demande envoyée au responsable</span>
+            className="flex flex-col items-center gap-2 p-4 bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] hover:bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] border border-[var(--border)] rounded-2xl transition-colors active:scale-95 disabled:opacity-50">
+            {resolving ? <Loader2 size={24} className="animate-spin text-[var(--warning-text)]" /> : <span className="text-2xl"></span>}
+            <span className="text-xs font-semibold text-[var(--warning-text)] text-center leading-tight">Ce sont des heures supplémentaires</span>
+            <span className="text-[10px] text-[var(--warning-text)] text-center">→ Demande envoyée au responsable</span>
           </button>
         </div>
       </div>
@@ -160,20 +162,20 @@ function OvertimeWorkflowCard({
 
   if (attendance.overtimeStatus === 'PENDING_APPROVAL') {
     return (
-      <div className="bg-amber-500/10 border border-amber-500/30 rounded-3xl p-6 space-y-4">
+      <div className="bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] border border-[var(--border)] rounded-3xl p-6 space-y-4">
         <div className="flex items-start gap-3">
-          <div className="p-2.5 bg-amber-500/20 rounded-xl flex-shrink-0">
-            <Clock size={20} className="text-amber-400 animate-pulse" />
+          <div className="p-2.5 bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] rounded-xl flex-shrink-0">
+            <Clock size={20} className="text-[var(--warning-text)] " />
           </div>
           <div>
-            <p className="font-bold text-amber-300">En attente de validation</p>
-            <p className="text-amber-400/80 text-xs mt-0.5">
-              Votre demande de <strong className="text-amber-300">{Number(attendance.pendingOvertimeHours || 0).toFixed(1)}h supplémentaires</strong> a été envoyée à votre responsable.
+            <p className="font-semibold text-[var(--warning-text)]">En attente de validation</p>
+            <p className="text-[var(--warning-text)] text-xs mt-0.5">
+              Votre demande de <strong className="text-[var(--warning-text)]">{Number(attendance.pendingOvertimeHours || 0).toFixed(1)}h supplémentaires</strong> a été envoyée à votre responsable.
             </p>
           </div>
         </div>
         <div className="px-4 py-3 bg-[var(--surface-2)] rounded-2xl text-xs text-[var(--text-muted)] flex items-center gap-2">
-          <Info size={13} className="text-amber-400 flex-shrink-0" />
+          <Info size={13} className="text-[var(--warning-text)] flex-shrink-0" />
           Votre responsable recevra une notification. Les heures ne seront comptées qu'après sa validation.
         </div>
         {attendance.overtimeRequestedAt && (
@@ -189,11 +191,11 @@ function OvertimeWorkflowCard({
 
   if (attendance.overtimeStatus === 'APPROVED') {
     return (
-      <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-3xl p-5 flex items-center gap-3">
-        <CheckCircle size={22} className="text-emerald-400 flex-shrink-0" />
+      <div className="bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] border border-[var(--border)] rounded-3xl p-5 flex items-center gap-3">
+        <CheckCircle size={22} className="text-[var(--success-text)] flex-shrink-0" />
         <div>
-          <p className="font-bold text-emerald-300 text-sm">Heures supplémentaires validées ✅</p>
-          <p className="text-xs text-emerald-400/70 mt-0.5">
+          <p className="font-semibold text-[var(--success-text)] text-sm">Heures supplémentaires validées </p>
+          <p className="text-xs text-[var(--success-text)] mt-0.5">
             Vos {Number(attendance.pendingOvertimeHours || 0).toFixed(1)}h seront comptabilisées sur votre bulletin.
           </p>
         </div>
@@ -203,11 +205,11 @@ function OvertimeWorkflowCard({
 
   if (attendance.overtimeStatus === 'REJECTED') {
     return (
-      <div className="bg-red-500/10 border border-red-500/30 rounded-3xl p-5 flex items-center gap-3">
-        <XCircle size={22} className="text-red-400 flex-shrink-0" />
+      <div className="bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] border border-[var(--border)] rounded-3xl p-5 flex items-center gap-3">
+        <XCircle size={22} className="text-[var(--danger-text)] flex-shrink-0" />
         <div>
-          <p className="font-bold text-red-300 text-sm">Heures supplémentaires non validées</p>
-          <p className="text-xs text-red-400/70 mt-0.5">Votre journée a été clôturée à l'heure officielle.</p>
+          <p className="font-semibold text-[var(--danger-text)] text-sm">Heures supplémentaires non validées</p>
+          <p className="text-xs text-[var(--danger-text)] mt-0.5">Votre journée a été clôturée à l'heure officielle.</p>
         </div>
       </div>
     );
@@ -217,7 +219,7 @@ function OvertimeWorkflowCard({
 }
 
 // ─── Page principale ──────────────────────────────────────────────────────────
-export default function AttendanceCheckInPage() {
+function AttendanceCheckInPageContent() {
   const { bp } = useBasePath();
   const router = useRouter();
   const { addNotification } = useNotification();
@@ -475,14 +477,14 @@ export default function AttendanceCheckInPage() {
             // Toast arrivée anticipée
             setActiveToast({
               variant: 'early',
-              title:   data.earlyArrivalTitle   || '☀️ Arrivée anticipée notée !',
+              title:   data.earlyArrivalTitle   || ' Arrivée anticipée notée !',
               message: data.earlyArrivalMessage || '',
             });
           } else if (data.slightLate) {
             // ✅ Toast petit retard (était absent avant)
             setActiveToast({
               variant: 'slight-late',
-              title:   data.slightLateTitle   || '😅 Un tout petit retard !',
+              title:   data.slightLateTitle   || ' Un tout petit retard !',
               message: data.slightLateMessage || '',
             });
           } else if (result.offline) {
@@ -622,26 +624,26 @@ export default function AttendanceCheckInPage() {
   const getGpsBadge = () => {
     if (scanMode) {
       return isOffline
-        ? { color: 'bg-amber-500/15 text-amber-500 border-amber-500/30', icon: <Wifi size={12} />, text: 'Hors ligne — scan indisponible' }
-        : { color: 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30', icon: <ScanLine size={12} />, text: 'Pointage par scan' };
+        ? { color: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)] border-[var(--border)]', icon: <Wifi size={12} />, text: 'Hors ligne — scan indisponible' }
+        : { color: 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)] border-[var(--border)]', icon: <ScanLine size={12} />, text: 'Pointage par scan' };
     }
     // 🆕 pendant le pointage : l'app cherche seule le bon signal, l'employé n'a rien à surveiller
     if (isProcessing && gpsProgress) {
       return {
-        color: 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30',
+        color: 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)] border-[var(--border)]',
         icon: <Loader2 className="animate-spin" size={12} />,
         text: gpsProgress.acc != null ? `Recherche du signal GPS… ±${gpsProgress.acc} m` : 'Recherche du signal GPS…',
       };
     }
     if (geoState.loading)         return { color: 'bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)]',            icon: <Loader2 className="animate-spin" size={12} />, text: 'Recherche GPS...' };
-    if (geoState.error)           return { color: 'bg-red-500/15 text-red-500 border-red-500/30',              icon: <Ban size={12} />,    text: 'GPS Inactif' };
-    if (isOffline)                return { color: 'bg-amber-500/15 text-amber-500 border-amber-500/30',    icon: <Wifi size={12} />,   text: 'Mode Hors Ligne' };
+    if (geoState.error)           return { color: 'bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] text-[var(--danger-text)] border-[var(--border)]',              icon: <Ban size={12} />,    text: 'GPS Inactif' };
+    if (isOffline)                return { color: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)] border-[var(--border)]',    icon: <Wifi size={12} />,   text: 'Mode Hors Ligne' };
     // 🆕 la précision annoncée par l'appareil est affichée : on voit tout de suite si le GPS est flou
     const accM = geoState.accuracy != null ? Math.round(geoState.accuracy) : null;
     if (accM != null && accM > 100) {
-      return { color: 'bg-amber-500/15 text-amber-500 border-amber-500/30', icon: <MapPin size={12} />, text: `GPS imprécis ±${accM} m` };
+      return { color: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)] border-[var(--border)]', icon: <MapPin size={12} />, text: `GPS imprécis ±${accM} m` };
     }
-    return { color: 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30', icon: <MapPin size={12} />, text: accM != null ? `GPS actif ±${accM} m` : 'GPS actif' };
+    return { color: 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)] border-[var(--border)]', icon: <MapPin size={12} />, text: accM != null ? `GPS actif ±${accM} m` : 'GPS actif' };
   };
 
   const badge = getGpsBadge();
@@ -653,7 +655,11 @@ export default function AttendanceCheckInPage() {
 
   // ─────────────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen pb-20 relative overflow-hidden flex flex-col items-center bg-[var(--bg)] text-[var(--text)]">
+    <div className="attendance-punch-workspace">
+<div className="attendance-workspace-nav"><PresenceSubNav userRole={userRole} /></div>
+<AttendancePageHeader title="Ma pointeuse" description="Votre journée de travail, de l’arrivée au départ."><button onClick={() => router.back()} className="p-2 bg-[var(--surface)] border border-[var(--border)]  rounded-full hover:bg-[var(--surface-2)] transition-colors" aria-label="Retour">
+          <ArrowLeft size={24} className="text-[var(--text)]" />
+        </button></AttendancePageHeader>
 
       {/* Toast earlyArrival / slightLate */}
       {activeToast && (
@@ -665,46 +671,30 @@ export default function AttendanceCheckInPage() {
         />
       )}
 
-      {/* Fond animé */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] border border-emerald-500/20 rounded-full animate-[ping_3s_linear_infinite]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] border border-emerald-500/30 rounded-full" />
-        <div className="absolute inset-0 bg-gradient-to-b from-[var(--bg)]/50 to-[var(--bg)]" />
-      </div>
-
-      {/* Bouton retour */}
-      <div className="absolute top-4 left-4 z-20">
-        <button onClick={() => router.back()} className="p-2 bg-[var(--surface)] border border-[var(--border)] backdrop-blur-md rounded-full hover:bg-[var(--surface-2)] transition-colors">
-          <ArrowLeft size={24} className="text-[var(--text)]" />
-        </button>
-      </div>
-
       {/* Horloge + badge GPS */}
-      <div className="w-full pt-12 pb-4 text-center relative z-10">
-        <div className="max-w-md mx-auto px-4 mb-6 text-left">
-          <PresenceSubNav userRole={userRole} />
-        </div>
+      <div className="attendance-clock-card">
 
-        <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold mb-6 border backdrop-blur-md transition-colors duration-500 ${badge.color}`}>
+
+        <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold mb-6 border  transition-colors duration-500 ${badge.color}`}>
           {badge.icon}{badge.text}
         </div>
-        <h1 className="text-6xl md:text-8xl font-bold tracking-tight font-mono tabular-nums text-[var(--text)]">
+        <p className="attendance-clock" aria-label="Heure actuelle">
           {currentTime ? currentTime.toLocaleTimeString('fr-FR') : '--:--:--'}
-        </h1>
+</p>
         <p className="text-[var(--text-muted)] mt-2 text-lg capitalize">
           {currentTime?.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
         </p>
-        {employeeName && <p className="text-emerald-500 font-bold mt-2">Bonjour, {employeeName}</p>}
+        {employeeName && <p className="text-[var(--success-text)] font-semibold mt-2">Bonjour, {employeeName}</p>}
       </div>
 
       {/* Contenu */}
-      <div className="w-full max-w-md px-4 relative z-10 space-y-4">
+      <div className="attendance-punch-controls space-y-5">
 
         {/* ── Carte pointage principale ──────────────────────────────────── */}
-        <div className="bg-[var(--surface)] backdrop-blur-xl rounded-2xl p-8 shadow-2xl border border-[var(--border)] text-center relative overflow-hidden">
+        <div className="bg-[var(--surface)]  rounded-2xl p-8 shadow-2xl border border-[var(--border)] text-center relative overflow-hidden">
           {showConfetti && (
             <div className="absolute inset-0 pointer-events-none">
-              <div className="w-full h-full bg-emerald-500/10 animate-pulse" />
+              <div className="w-full h-full bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] " />
             </div>
           )}
 
@@ -714,7 +704,7 @@ export default function AttendanceCheckInPage() {
               {([['SCAN', 'Scanner le QR', ScanLine], ['GPS', 'Position GPS', MapPin]] as const).map(([m, label, Icon]) => (
                 <button key={m} type="button" role="tab" aria-selected={mode === m} onClick={() => setMode(m)}
                   className={`flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
-                    mode === m ? 'bg-emerald-500 text-white shadow' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+                    mode === m ? 'bg-[var(--brand)] text-[var(--on-brand)] shadow' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
                   }`}>
                   <Icon size={16} /> {label}
                 </button>
@@ -724,16 +714,16 @@ export default function AttendanceCheckInPage() {
 
           {/* Alertes GPS */}
           {!scanMode && geoState.error && status === 'idle' && (
-            <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-left">
-              <div className="flex items-center gap-2 text-red-500 font-bold mb-1"><AlertTriangle size={18} /> Erreur GPS</div>
-              <p className="text-xs text-red-500">{geoState.error}</p>
+            <div className="mb-6 p-4 rounded-xl bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] border border-[var(--border)] text-left">
+              <div className="flex items-center gap-2 text-[var(--danger-text)] font-semibold mb-1"><AlertTriangle size={18} /> Erreur GPS</div>
+              <p className="text-xs text-[var(--danger-text)]">{geoState.error}</p>
             </div>
           )}
 
           {/* 🆕 GPS flou : on dit pourquoi et quoi faire AVANT que l'employé tente de pointer */}
           {!scanMode && !geoState.error && !geoState.loading && geoState.accuracy != null && geoState.accuracy > 100 && status === 'idle' && (
-            <div className="mb-6 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-left">
-              <p className="text-xs text-amber-600 dark:text-amber-400">
+            <div className="mb-6 p-3 rounded-xl bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] border border-[var(--border)] text-left">
+              <p className="text-xs text-[var(--warning-text)] ">
                 {geoState.accuracy > 500
                   ? <>Votre téléphone partage une position approximative (±{Math.round(geoState.accuracy)} m). Activez la localisation « précise » pour ce navigateur, puis réessayez.</>
                   : <>Signal GPS faible (±{Math.round(geoState.accuracy)} m). Connectez-vous au wifi de l'entreprise, sortez à découvert ou approchez-vous d'une fenêtre : le pointage cherche tout seul le meilleur signal.</>}
@@ -742,9 +732,9 @@ export default function AttendanceCheckInPage() {
           )}
 
           {isOffline && status === 'idle' && (
-            <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-left">
-              <div className="flex items-center gap-2 text-amber-500 font-bold mb-1"><Wifi size={18} /> Mode Hors Ligne</div>
-              <p className="text-xs text-amber-500/90">
+            <div className="mb-6 p-4 rounded-xl bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] border border-[var(--border)] text-left">
+              <div className="flex items-center gap-2 text-[var(--warning-text)] font-semibold mb-1"><Wifi size={18} /> Mode Hors Ligne</div>
+              <p className="text-xs text-[var(--warning-text)]">
                 {scanMode
                   ? 'Le scan nécessite une connexion. Passez en mode GPS pour pointer hors ligne.'
                   : 'Pointage enregistré localement, synchronisé dès le retour du réseau.'}
@@ -768,34 +758,34 @@ export default function AttendanceCheckInPage() {
                 onClick={onMainAction}
                 disabled={isProcessing || (scanMode && isOffline)}
                 aria-label={scanMode ? "Scanner le QR pour pointer l'entrée" : "Pointer l'entrée"}
-                className={`relative w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-8 transition-all duration-300 focus:outline-none active:scale-90 disabled:cursor-not-allowed ${
+                className={`relative w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-8 transition-colors duration-300 focus:outline-none active:scale-90 disabled:cursor-not-allowed ${
                   scanAnim === 'success'
-                    ? 'bg-emerald-500/30 text-emerald-300 scale-110 shadow-[0_0_40px_rgba(16,185,129,0.5)]'
+                    ? 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)] scale-110 '
                     : scanAnim === 'error'
-                    ? 'bg-red-500/30 text-red-300 shadow-[0_0_30px_rgba(239,68,68,0.4)]'
+                    ? 'bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] text-[var(--danger-text)] '
                     : scanAnim === 'scanning'
-                    ? 'bg-emerald-500/20 text-emerald-300'
+                    ? 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)]'
                     : scanMode || isOffline || !geoState.error
-                    ? 'bg-emerald-500/20 text-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.3)]'
+                    ? 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)] '
                     : 'bg-[var(--surface-2)] text-[var(--text-muted)]'
                 }`}
               >
                 {/* Anneau de scan qui pulse vers l'extérieur */}
                 {scanAnim === 'scanning' && (
-                  <span className="absolute inset-0 rounded-full border-2 border-emerald-400 animate-ping" />
+                  <span className="absolute inset-0 rounded-full border-2 border-[var(--border)] " />
                 )}
                 {scanAnim === 'success' && (
-                  <span className="absolute inset-0 rounded-full border-2 border-emerald-400 animate-ping" />
+                  <span className="absolute inset-0 rounded-full border-2 border-[var(--border)] " />
                 )}
 
                 {scanAnim === 'success' ? (
                   <CheckCircle2 size={44} strokeWidth={1.5} />
                 ) : scanAnim === 'error' ? (
-                  <XCircle size={44} strokeWidth={1.5} className="animate-pulse" />
+                  <XCircle size={44} strokeWidth={1.5} className="" />
                 ) : (
                   scanMode
                     ? <ScanLine size={48} strokeWidth={1.5} />
-                    : <Fingerprint size={48} strokeWidth={1.5} className={scanAnim === 'scanning' ? 'animate-pulse' : ''} />
+                    : <Fingerprint size={48} strokeWidth={1.5} className={scanAnim === 'scanning' ? '' : ''} />
                 )}
               </button>
 
@@ -805,7 +795,7 @@ export default function AttendanceCheckInPage() {
               <button
                 onClick={onMainAction}
                 disabled={isProcessing || (scanMode && isOffline)}
-                className="w-full py-4 font-bold rounded-2xl shadow-lg flex justify-center items-center gap-3 transition-all active:scale-95 bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-60"
+                className="w-full py-4 font-semibold rounded-2xl shadow-lg flex justify-center items-center gap-3 transition-colors active:scale-95 bg-[var(--brand)] text-[var(--on-brand)] hover:bg-[var(--brand)] disabled:opacity-60"
               >
                 {isProcessing ? <Loader2 className="animate-spin" /> : scanMode ? <ScanLine size={20} /> : <Clock size={20} />}
                 {scanMode ? "Scanner pour pointer l'entrée" : isOffline ? 'Pointer (Hors Ligne)' : "Pointer l'Entrée"}
@@ -815,10 +805,10 @@ export default function AttendanceCheckInPage() {
 
           {status === 'working' && !hasOvertimeWorkflow && (
             <>
-              <div className="w-20 h-20 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-emerald-400 animate-pulse border border-emerald-500/30">
+              <div className="w-20 h-20 bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] rounded-full flex items-center justify-center mx-auto mb-6 text-[var(--success-text)]  border border-[var(--border)]">
                 <Clock size={32} />
               </div>
-              <h2 className="text-2xl font-bold mb-2 text-[var(--text)]">Au travail</h2>
+              <h2 className="text-2xl font-semibold mb-2 text-[var(--text)]">Au travail</h2>
               <p className="text-[var(--text-muted)] mb-8 text-sm">
                 Débuté à{' '}
                 {todayAttendance?.checkIn
@@ -836,13 +826,13 @@ export default function AttendanceCheckInPage() {
                   )}
                   {breakInfo.state === 'AVAILABLE' && (
                     <button type="button" onClick={handleBreakStart} disabled={breakBusy || isProcessing}
-                      className="w-full py-3 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-500 font-bold flex items-center justify-center gap-2 hover:bg-amber-500/25 active:scale-95 transition disabled:opacity-50">
+                      className="w-full py-3 rounded-xl bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] border border-[var(--border)] text-[var(--warning-text)] font-semibold flex items-center justify-center gap-2 hover:bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] active:scale-95 transition disabled:opacity-50">
                       {breakBusy ? <Loader2 className="animate-spin" size={18} /> : <Coffee size={18} />} Prendre ma pause
                     </button>
                   )}
                   {breakInfo.state === 'ON_BREAK' && breakInfo.pause && (
                     <>
-                      <p className="text-sm font-bold text-amber-500 flex items-center gap-2">
+                      <p className="text-sm font-semibold text-[var(--warning-text)] flex items-center gap-2">
                         <Coffee size={16} /> En pause depuis {fmtHm(breakInfo.pause.startedAt)}
                       </p>
                       <p className="text-xs text-[var(--text-muted)] mt-1">
@@ -850,13 +840,13 @@ export default function AttendanceCheckInPage() {
                         {scanMode ? 'Scannez le QR pour reprendre.' : 'Pointez votre reprise en GPS.'}
                       </p>
                       {breakLateMin > (breakInfo.toleranceMinutes ?? 35) && (
-                        <p className="text-xs font-semibold text-red-500 mt-2">
-                          ⏰ Vous avez {breakLateMin} min de retard sur la reprise prévue.
+                        <p className="text-xs font-semibold text-[var(--danger-text)] mt-2">
+                           Vous avez {breakLateMin} min de retard sur la reprise prévue.
                         </p>
                       )}
                       {!scanMode && (
                         <button type="button" onClick={handleBreakEndGps} disabled={breakBusy || isProcessing}
-                          className="mt-3 w-full py-3 rounded-xl bg-emerald-500 text-white font-bold flex items-center justify-center gap-2 hover:bg-emerald-600 active:scale-95 transition disabled:opacity-50">
+                          className="mt-3 w-full py-3 rounded-xl bg-[var(--brand)] text-[var(--on-brand)] font-semibold flex items-center justify-center gap-2 hover:bg-[var(--brand)] active:scale-95 transition disabled:opacity-50">
                           {breakBusy ? <Loader2 className="animate-spin" size={18} /> : <Clock size={18} />} Reprendre le travail
                         </button>
                       )}
@@ -864,18 +854,18 @@ export default function AttendanceCheckInPage() {
                   )}
                   {breakInfo.state === 'DONE' && breakInfo.pause && (
                     <p className="text-xs text-[var(--text-muted)]">
-                      ☕ Pause : {fmtHm(breakInfo.pause.startedAt)} → {fmtHm(breakInfo.pause.endedAt)}
+                       Pause : {fmtHm(breakInfo.pause.startedAt)} → {fmtHm(breakInfo.pause.endedAt)}
                       {breakInfo.pause.minutes != null ? ` (${breakInfo.pause.minutes} min)` : ''}
-                      {breakInfo.pause.resumedAuto && <span className="text-amber-500 font-semibold"> · reprise non pointée</span>}
+                      {breakInfo.pause.resumedAuto && <span className="text-[var(--warning-text)] font-semibold"> · reprise non pointée</span>}
                       {!breakInfo.pause.resumedAuto && breakInfo.pause.lateMinutes > (breakInfo.toleranceMinutes ?? 35) && (
-                        <span className="text-red-500 font-semibold"> · retard de {breakInfo.pause.lateMinutes} min</span>
+                        <span className="text-[var(--danger-text)] font-semibold"> · retard de {breakInfo.pause.lateMinutes} min</span>
                       )}
                     </p>
                   )}
                 </div>
               )}
               <button onClick={onMainAction} disabled={isProcessing || (scanMode && isOffline)}
-                className="w-full py-4 bg-red-500/10 border border-red-500/50 text-red-400 font-bold rounded-2xl hover:bg-red-500/20 flex justify-center items-center gap-3 transition-transform active:scale-95 disabled:opacity-60">
+                className="w-full py-4 bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] border border-[var(--border)] text-[var(--danger-text)] font-semibold rounded-2xl hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] flex justify-center items-center gap-3 transition-transform active:scale-95 disabled:opacity-60">
                 {isProcessing ? <Loader2 className="animate-spin" /> : scanMode ? <ScanLine size={20} /> : <LogOut size={20} />}
                 {scanMode ? (breakInfo?.state === 'ON_BREAK' ? 'Scanner pour reprendre le travail' : 'Scanner pour la sortie') : 'Fin de journée'}
               </button>
@@ -884,13 +874,13 @@ export default function AttendanceCheckInPage() {
 
           {status === 'completed' && !hasOvertimeWorkflow && (
             <>
-              <div className="w-20 h-20 bg-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-amber-400 border border-amber-500/30">
+              <div className="w-20 h-20 bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] rounded-full flex items-center justify-center mx-auto mb-6 text-[var(--warning-text)] border border-[var(--border)]">
                 <CheckCircle2 size={32} />
               </div>
-              <h2 className="text-2xl font-bold mb-2 text-[var(--text)]">À demain !</h2>
+              <h2 className="text-2xl font-semibold mb-2 text-[var(--text)]">À demain !</h2>
               <p className="text-[var(--text-muted)] mb-8 text-sm">Votre journée est enregistrée.</p>
               <button onClick={() => router.push(bp('/presences'))}
-                className="w-full py-3 bg-[var(--surface-2)] text-[var(--text)] font-bold rounded-xl hover:bg-[var(--border)] transition-colors">
+                className="w-full py-3 bg-[var(--surface-2)] text-[var(--text)] font-semibold rounded-xl hover:bg-[var(--border)] transition-colors">
                 Fermer
               </button>
             </>
@@ -898,8 +888,8 @@ export default function AttendanceCheckInPage() {
 
           {status === 'error' && (
             <div className="py-8 text-center">
-              <AlertTriangle size={32} className="text-red-500 mx-auto mb-3" />
-              <p className="text-red-500 font-bold">Impossible de charger votre profil</p>
+              <AlertTriangle size={32} className="text-[var(--danger-text)] mx-auto mb-3" />
+              <p className="text-[var(--danger-text)] font-semibold">Impossible de charger votre profil</p>
               <button onClick={() => window.location.reload()} className="mt-4 px-4 py-2 bg-[var(--surface-2)] rounded-xl text-sm text-[var(--text)]">
                 Réessayer
               </button>
@@ -919,8 +909,8 @@ export default function AttendanceCheckInPage() {
         )}
 
         {/* ── Historique semaine ─────────────────────────────────────────── */}
-        <div className="bg-[var(--surface)] backdrop-blur-md rounded-2xl p-6 border border-[var(--border)] shadow-lg">
-          <h3 className="text-xs font-bold uppercase text-[var(--text-muted)] mb-4 flex items-center gap-2 tracking-widest">
+        <div className="bg-[var(--surface)]  rounded-2xl p-6 border border-[var(--border)] shadow-lg">
+          <h3 className="text-xs font-semibold  text-[var(--text-muted)] mb-4 flex items-center gap-2 ">
             <History size={12} /> Cette semaine
           </h3>
           {history.length > 0 ? (
@@ -930,36 +920,36 @@ export default function AttendanceCheckInPage() {
                 const isToday = new Date().toDateString() === date.toDateString();
                 const hasOT   = record.overtime10 > 0 || record.overtime25 > 0 || record.overtime50 > 0;
                 return (
-                  <div key={i} className={`flex justify-between items-center p-3 rounded-xl border ${isToday ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-[var(--surface-2)] border-[var(--border)]'}`}>
+                  <div key={i} className={`flex justify-between items-center p-3 rounded-xl border ${isToday ? 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] border-[var(--border)]' : 'bg-[var(--surface-2)] border-[var(--border)]'}`}>
                     <div>
-                      <p className="font-bold text-[var(--text)] text-sm capitalize">
+                      <p className="font-semibold text-[var(--text)] text-sm capitalize">
                         {date.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric' })}
                       </p>
                       <div className="flex gap-3 text-xs text-[var(--text-muted)] mt-1">
                         <span className="flex items-center gap-1">
-                          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                          <div className="w-1.5 h-1.5 rounded-full bg-[var(--brand)]" />
                           {record.checkIn ? new Date(record.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
                         </span>
                         <span className="flex items-center gap-1">
-                          <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                          <div className="w-1.5 h-1.5 rounded-full bg-[var(--danger)]" />
                           {record.checkOut ? new Date(record.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
                         </span>
                       </div>
                     </div>
                     <div className="flex flex-col gap-1 items-end">
                       {record.status === 'LATE' && (
-                        <span className="text-[10px] px-2 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold">RETARD</span>
+                        <span className="text-[10px] px-2 py-1 rounded-full bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)] border border-[var(--border)] font-semibold">RETARD</span>
                       )}
                       {record.notes === 'SUSPICIOUS_LOCATION' && (
-                        <span className="text-[10px] px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 font-bold">SUSPECT</span>
+                        <span className="text-[10px] px-2 py-1 rounded-full bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)] border border-[var(--border)] font-semibold">SUSPECT</span>
                       )}
                       {hasOT && (
-                        <span className="text-[10px] px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold flex items-center gap-1">
+                        <span className="text-[10px] px-2 py-1 rounded-full bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)] border border-[var(--border)] font-semibold flex items-center gap-1">
                           <Zap size={9} /> HS
                         </span>
                       )}
                       {record.overtimeStatus === 'PENDING_APPROVAL' && (
-                        <span className="text-[10px] px-2 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold">EN ATTENTE</span>
+                        <span className="text-[10px] px-2 py-1 rounded-full bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)] border border-[var(--border)] font-semibold">EN ATTENTE</span>
                       )}
                     </div>
                   </div>
@@ -977,4 +967,8 @@ export default function AttendanceCheckInPage() {
       {showQr && <QrPunchModal onClose={() => setShowQr(false)} onDone={handleQrDone} />}
     </div>
   );
+}
+
+export default function AttendanceCheckInPage() {
+  return <AttendanceModuleFrame kind="detail"><AttendanceCheckInPageContent /></AttendanceModuleFrame>;
 }

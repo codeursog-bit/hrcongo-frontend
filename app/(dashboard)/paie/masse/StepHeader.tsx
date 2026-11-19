@@ -3,6 +3,7 @@
 // ===========================
 import React from 'react';
 import { Calendar, Clock, Check, Play } from 'lucide-react';
+import { Badge } from '@/components/design-system/primitives';
 
 const STEPS = [
   { id: 1, label: 'Période', icon: Calendar },
@@ -16,24 +17,32 @@ interface StepHeaderProps {
 
 export default function StepHeader({ currentStep }: StepHeaderProps) {
   return (
-    <div className="grid grid-cols-3 border-b border-[var(--border)]">
+    <ol aria-label="Étapes de génération de la paie" className="grid grid-cols-1 gap-3 border-b border-[var(--border)] p-4 sm:grid-cols-3">
       {STEPS.map((s) => {
         const isActive = currentStep === s.id;
         const isDone = currentStep > s.id;
         return (
-          <div 
-            key={s.id} 
-            className={`relative flex flex-col items-center justify-center py-6 transition-colors ${isActive ? 'bg-emerald-50/50 dark:bg-emerald-900/10' : ''}`}
-          >
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-all ${isActive ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 scale-110' : isDone ? 'bg-emerald-500/60 text-white' : 'bg-[var(--surface-2)] text-gray-400'}`}>
-              {isDone ? <Check size={20} /> : <s.icon size={20}/>}
-            </div>
-            <span className={`text-xs font-bold uppercase tracking-wider ${isActive ? 'text-emerald-600 dark:text-emerald-400' : isDone ? 'text-emerald-600' : 'text-gray-400'}`}>
-              {s.label}
+          <li key={s.id} aria-current={isActive ? 'step' : undefined}
+            className={`flex min-w-0 items-center gap-3 rounded-xl border p-3 transition-colors ${
+              isActive ? 'border-[var(--brand-soft)] bg-[var(--brand-soft)]' :
+              isDone ? 'border-[var(--border)] bg-[var(--surface)]' : 'border-transparent bg-[var(--surface-2)]'
+            }`}>
+            <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
+              isDone ? 'bg-[var(--green)] text-[var(--on-brand)]' :
+              isActive ? 'bg-[var(--action)] text-[var(--on-brand)]' : 'bg-[var(--surface)] text-[var(--text-secondary)]'
+            }`}>
+              {isDone ? <Check size={18} strokeWidth={1.5} /> : <s.icon size={18} strokeWidth={1.5} />}
             </span>
-          </div>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[10px] font-medium uppercase tracking-wide text-[var(--text-secondary)]">Étape {s.id}</span>
+              <span className="block truncate text-sm font-semibold text-[var(--text)]">{s.label}</span>
+            </span>
+            <Badge tone={isDone ? 'success' : isActive ? 'info' : 'neutral'}>
+              {isDone ? 'Terminée' : isActive ? 'En cours' : 'À venir'}
+            </Badge>
+          </li>
         );
       })}
-    </div>
+    </ol>
   );
 }

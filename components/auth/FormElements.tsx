@@ -21,20 +21,20 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
   ({ icon: Icon, error, label, className = '', ...props }, ref) => {
     return (
       <div>
-        {label && <label className="mb-1.5 block text-[13px] font-medium text-[#C9CBD1]">{label}</label>}
+        {label && <label className="mb-1.5 block text-[13px] font-medium text-[var(--text)]">{label}</label>}
         <div className="group relative">
           {Icon && (
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
               <Icon
                 size={16}
-                className={`transition-colors ${error ? 'text-red-400' : 'text-[#5A5E66] group-focus-within:text-[#10B981]'}`}
+                className={`transition-colors ${error ? 'text-red-400' : 'text-[var(--text-secondary)] group-focus-within:text-[#10B981]'}`}
               />
             </div>
           )}
           <input
             ref={ref}
             {...props}
-            className={`auth-input block w-full rounded-xl border bg-white/[0.03] py-3 text-[14px] text-[#FAFAFA] placeholder-[#5A5E66] outline-none transition-all focus:bg-white/[0.05] ${
+            className={`auth-input block w-full rounded-xl border bg-white/[0.03] py-3 text-[14px] text-[var(--text)] placeholder-[var(--text-secondary)] outline-none transition-all focus:bg-white/[0.05] ${
               Icon ? 'pl-10 pr-3.5' : 'px-3.5'
             } ${
               error
@@ -66,13 +66,13 @@ export const PasswordField = forwardRef<HTMLInputElement, PasswordFieldProps>(
     const [visible, setVisible] = useState(false);
     return (
       <div>
-        {label && <label className="mb-1.5 block text-[13px] font-medium text-[#C9CBD1]">{label}</label>}
+        {label && <label className="mb-1.5 block text-[13px] font-medium text-[var(--text)]">{label}</label>}
         <div className="group relative">
           {Icon && (
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
               <Icon
                 size={16}
-                className={`transition-colors ${error ? 'text-red-400' : 'text-[#5A5E66] group-focus-within:text-[#10B981]'}`}
+                className={`transition-colors ${error ? 'text-red-400' : 'text-[var(--text-secondary)] group-focus-within:text-[#10B981]'}`}
               />
             </div>
           )}
@@ -80,7 +80,7 @@ export const PasswordField = forwardRef<HTMLInputElement, PasswordFieldProps>(
             ref={ref}
             {...props}
             type={visible ? 'text' : 'password'}
-            className={`auth-input block w-full rounded-xl border bg-white/[0.03] py-3 pr-11 text-[14px] text-[#FAFAFA] placeholder-[#5A5E66] outline-none transition-all focus:bg-white/[0.05] ${
+            className={`auth-input block w-full rounded-xl border bg-white/[0.03] py-3 pr-11 text-[14px] text-[var(--text)] placeholder-[var(--text-secondary)] outline-none transition-all focus:bg-white/[0.05] ${
               Icon ? 'pl-10' : 'pl-3.5'
             } ${
               error
@@ -92,7 +92,7 @@ export const PasswordField = forwardRef<HTMLInputElement, PasswordFieldProps>(
             type="button"
             tabIndex={-1}
             onClick={() => setVisible((v) => !v)}
-            className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-[#5A5E66] transition-colors hover:text-[#FAFAFA]"
+            className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-[var(--text-secondary)] transition-colors hover:text-[var(--text)]"
             aria-label={visible ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
           >
             {visible ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -120,7 +120,7 @@ export function PrimaryButton({
     <button
       {...props}
       disabled={loading || props.disabled}
-      className={`flex w-full items-center justify-center gap-2 rounded-xl bg-[#FAFAFA] py-3.5 text-[14px] font-medium text-black transition-all hover:bg-white active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 ${className}`}
+      className={`flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--text)] py-3.5 text-[14px] font-medium text-black transition-all hover:bg-white active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 ${className}`}
     >
       {loading ? <Loader2 size={17} className="animate-spin" /> : children}
     </button>
@@ -136,7 +136,7 @@ export function SecondaryButton({
   return (
     <button
       {...props}
-      className={`flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] py-3.5 text-[14px] font-medium text-[#FAFAFA] transition-colors hover:border-white/20 hover:bg-white/[0.06] disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+      className={`flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] py-3.5 text-[14px] font-medium text-[var(--text)] transition-colors hover:border-white/20 hover:bg-white/[0.06] disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
     >
       {children}
     </button>
@@ -178,7 +178,7 @@ export function Criteria({ met, text }: { met: boolean; text: string }) {
       ) : (
         <div className="h-[13px] w-[13px] shrink-0 rounded-full border border-white/15" />
       )}
-      <span className={met ? 'text-[#FAFAFA]' : 'text-[#5A5E66]'}>{text}</span>
+      <span className={met ? 'text-[var(--text)]' : 'text-[var(--text-secondary)]'}>{text}</span>
     </div>
   );
 }
@@ -213,7 +213,7 @@ export function Divider({ children }: { children?: React.ReactNode }) {
   return (
     <div className="flex items-center gap-3">
       <div className="h-px flex-1 bg-white/[0.08]" />
-      <span className="text-[12px] text-[#5A5E66]">{children}</span>
+      <span className="text-[12px] text-[var(--text-secondary)]">{children}</span>
       <div className="h-px flex-1 bg-white/[0.08]" />
     </div>
   );

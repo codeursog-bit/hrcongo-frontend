@@ -1,0 +1,105 @@
+{
+  "date": "2026-11-18",
+  "files": [
+    {
+      "file": "app/(dashboard)/recrutement/candidat/[id]/page.tsx",
+      "before": 5,
+      "after": 0
+    },
+    {
+      "file": "app/(dashboard)/recrutement/comparer/page.tsx",
+      "before": 1,
+      "after": 0
+    },
+    {
+      "file": "app/(dashboard)/recrutement/customize-career-page/page.tsx",
+      "before": 33,
+      "after": 0
+    },
+    {
+      "file": "app/(dashboard)/recrutement/demandes/page.tsx",
+      "before": 0,
+      "after": 0
+    },
+    {
+      "file": "app/(dashboard)/recrutement/entretiens/page.tsx",
+      "before": 0,
+      "after": 0
+    },
+    {
+      "file": "app/(dashboard)/recrutement/ia/analytics/page.tsx",
+      "before": 0,
+      "after": 0
+    },
+    {
+      "file": "app/(dashboard)/recrutement/ia/candidats/page.tsx",
+      "before": 0,
+      "after": 0
+    },
+    {
+      "file": "app/(dashboard)/recrutement/ia/candidats/[id]/page.tsx",
+      "before": 0,
+      "after": 0
+    },
+    {
+      "file": "app/(dashboard)/recrutement/ia/create/page.tsx",
+      "before": 0,
+      "after": 0
+    },
+    {
+      "file": "app/(dashboard)/recrutement/manuel/candidats/page.tsx",
+      "before": 0,
+      "after": 0
+    },
+    {
+      "file": "app/(dashboard)/recrutement/manuel/candidats/[id]/page.tsx",
+      "before": 0,
+      "after": 0
+    },
+    {
+      "file": "app/(dashboard)/recrutement/manuel/create/page.tsx",
+      "before": 0,
+      "after": 0
+    },
+    {
+      "file": "app/(dashboard)/recrutement/modeles/page.tsx",
+      "before": 0,
+      "after": 0
+    },
+    {
+      "file": "app/(dashboard)/recrutement/ModeSelectionModal.tsx",
+      "before": 0,
+      "after": 0
+    },
+    {
+      "file": "app/(dashboard)/recrutement/offres/[id]/edit/page.tsx",
+      "before": 0,
+      "after": 0
+    },
+    {
+      "file": "app/(dashboard)/recrutement/page.tsx",
+      "before": 0,
+      "after": 0
+    },
+    {
+      "file": "app/(dashboard)/recrutement/pipeline/page.tsx",
+      "before": 1,
+      "after": 0
+    },
+    {
+      "file": "app/(dashboard)/recrutement/tableau-de-bord/page.tsx",
+      "before": 2,
+      "after": 0
+    },
+    {
+      "file": "components/recruitment/recruitment-ui.tsx",
+      "before": 8,
+      "after": 0
+    },
+    {
+      "file": "components/recruitment/RecruitmentModals.tsx",
+      "before": 9,
+      "after": 0
+    }
+  ]
+}

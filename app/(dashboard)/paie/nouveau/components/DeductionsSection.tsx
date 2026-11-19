@@ -42,63 +42,63 @@ export default function DeductionsSection({
     <motion.section 
       initial={{ opacity: 0, y: 20 }} 
       animate={{ opacity: 1, y: 0 }}
-      className="bg-red-50 dark:bg-red-900/10 rounded-2xl border border-red-200 dark:border-red-800 p-6"
+      className="bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  rounded-2xl border border-[var(--border)]  p-6"
     >
-      <h3 className="text-lg font-bold text-red-900 dark:text-red-200 mb-4 flex items-center gap-2">
+      <h3 className="text-lg font-semibold text-[var(--danger-text)]  mb-4 flex items-center gap-2">
         <DollarSign size={20} /> Déductions Programmées
       </h3>
       
       {hasDeductions ? (
         <>
-          <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-900/30">
-            <p className="text-sm text-red-800 dark:text-red-300 font-medium">
+          <div className="mb-4 p-3 bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  rounded-lg border border-[var(--border)] ">
+            <p className="text-sm text-[var(--danger-text)]  font-medium">
               ⚠️ Déductions détectées pour {month} {year}
             </p>
-            <p className="text-xs text-red-600 dark:text-red-400 mt-1">
-              Total à déduire : <span className="font-mono font-bold">{formatNumber(totalLoanDeduction + totalAdvanceDeduction)} FCFA</span>
+            <p className="text-xs text-[var(--danger-text)]  mt-1">
+              Total à déduire : <span className="font-mono font-semibold">{formatNumber(totalLoanDeduction + totalAdvanceDeduction)} FCFA</span>
             </p>
           </div>
           
           <div className="space-y-3">
             {loans.map((loan) => (
-              <div key={loan.id} className="flex items-center justify-between bg-[var(--surface)] p-3 rounded-lg border border-red-100 dark:border-red-900/30">
+              <div key={loan.id} className="flex items-center justify-between bg-[var(--surface)] p-3 rounded-lg border border-[var(--border)] ">
                 <div className="flex items-center gap-3">
-                  <CreditCard size={16} className="text-red-500" />
+                  <CreditCard size={16} className="text-[var(--danger-text)]" />
                   <div>
-                    <p className="text-sm font-bold text-[var(--text)]">Prêt #{loan.id.substring(0, 8)}</p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-sm font-semibold text-[var(--text)]">Prêt #{loan.id.substring(0, 8)}</p>
+                    <p className="text-xs text-[var(--text-secondary)]">
                       Solde restant : {formatNumber(loan.remainingBalance)} FCFA
                     </p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-mono font-bold text-red-600">-{formatNumber(loan.monthlyRepayment)} FCFA</p>
-                  <p className="text-xs text-gray-500">Mensualité</p>
+                  <p className="font-mono font-semibold text-[var(--danger-text)]">-{formatNumber(loan.monthlyRepayment)} FCFA</p>
+                  <p className="text-xs text-[var(--text-secondary)]">Mensualité</p>
                 </div>
               </div>
             ))}
             
             {advances.map((adv) => (
-              <div key={adv.id} className="flex items-center justify-between bg-[var(--surface)] p-3 rounded-lg border border-red-100 dark:border-red-900/30">
+              <div key={adv.id} className="flex items-center justify-between bg-[var(--surface)] p-3 rounded-lg border border-[var(--border)] ">
                 <div className="flex items-center gap-3">
-                  <Wallet size={16} className="text-red-500" />
+                  <Wallet size={16} className="text-[var(--danger-text)]" />
                   <div>
-                    <p className="text-sm font-bold text-[var(--text)]">Avance #{adv.id.substring(0, 8)}</p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-sm font-semibold text-[var(--text)]">Avance #{adv.id.substring(0, 8)}</p>
+                    <p className="text-xs text-[var(--text-secondary)]">
                       Accordée le {new Date(adv.createdAt).toLocaleDateString('fr-FR')}
                     </p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-mono font-bold text-red-600">-{formatNumber(adv.amount)} FCFA</p>
-                  <p className="text-xs text-gray-500">Montant</p>
+                  <p className="font-mono font-semibold text-[var(--danger-text)]">-{formatNumber(adv.amount)} FCFA</p>
+                  <p className="text-xs text-[var(--text-secondary)]">Montant</p>
                 </div>
               </div>
             ))}
           </div>
         </>
       ) : (
-        <div className="text-center py-6 text-gray-400">
+        <div className="text-center py-6 text-[var(--text-secondary)]">
           <p className="text-sm">✅ Aucune déduction programmée pour ce mois</p>
         </div>
       )}

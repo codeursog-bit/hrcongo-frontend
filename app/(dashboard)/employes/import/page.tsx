@@ -228,7 +228,7 @@ export default function EmployeeImportPage() {
   };
 
   return (
-    <ModulePageFrame kind="list"><div className="employee-module-page employee-import-page"><>
+    <ModulePageFrame kind="list"><div data-guide="employes-import-workspace" className="employee-module-page employee-import-page"><>
       <PageBackground /><EmployeeOnboardingStart />
 
       <div className="employee-import-shell">

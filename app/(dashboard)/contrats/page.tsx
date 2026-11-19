@@ -13,6 +13,7 @@ import { api } from '@/services/api';
 import { differenceInDays } from 'date-fns';
 import { useBasePath } from '@/hooks/useBasePath';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import { ModulePageFrame } from '@/components/requests/ModulePageFrame';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface ContractEmployee {
@@ -237,7 +238,7 @@ function TrialModal({ emp, mode, onClose, onDone }: { emp: TrialEmployee; mode: 
 // ═══════════════════════════════════════════════════════════════════════════════
 // PAGE PRINCIPALE
 // ═══════════════════════════════════════════════════════════════════════════════
-export default function ContratsPage() {
+function ContratsPage() {
   const { bp } = useBasePath();
   const router = useRouter();
 
@@ -650,5 +651,14 @@ export default function ContratsPage() {
           onDone={() => { setTrialModal(null); onSuccess(trialModal.mode === 'CONFIRM' ? 'Essai confirmé' : "Rupture d'essai enregistrée"); }} />
       )}
     </div>
+  );
+}
+
+
+export default function ContratsPageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <ContratsPage />
+    </ModulePageFrame>
   );
 }

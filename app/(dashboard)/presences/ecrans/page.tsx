@@ -8,6 +8,7 @@
 //  2) définir / réinitialiser le code secret d'un employé (pointage sans téléphone).
 // « Portefeuille » est réservé aux admins multi-entreprises.
 // ============================================================================
+import { AttendanceModuleFrame } from '@/components/attendance/AttendanceModuleFrame';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   MonitorSmartphone, Plus, Loader2, Trash2, ShieldCheck, Building2, Layers, KeyRound, Search, Pencil, Check, X, RefreshCw, Copy, ExternalLink, Share2,
@@ -19,9 +20,9 @@ import { adminScreensApi, employeeQrApi, secretError, AdminScreen, ScreenScope, 
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 const STATUS_STYLE: Record<string, string> = {
-  APPROVED: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
-  PENDING:  'bg-amber-500/15 text-amber-600 dark:text-amber-400',
-  REVOKED:  'bg-red-500/15 text-red-600 dark:text-red-400',
+  APPROVED: 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)] ',
+  PENDING:  'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)] ',
+  REVOKED:  'bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] text-[var(--danger-text)] ',
 };
 const STATUS_LABEL: Record<string, string> = { APPROVED: 'Actif', PENDING: 'En attente', REVOKED: 'Révoqué' };
 const field = 'w-full rounded-xl border border-[var(--border)] bg-[var(--bg)] px-4 py-3 text-[var(--text)] outline-none focus:border-[var(--brand)]';
@@ -30,7 +31,7 @@ interface Emp { id: string; label: string }
 const empLabel = (e: any): string =>
   e.fullName || `${e.firstName ?? ''} ${e.lastName ?? ''}`.trim() || e.email || e.id;
 
-export default function EcransPage() {
+function EcransPageContent() {
   const { addNotification } = useNotification();
   const [userRole, setUserRole] = useState('');
   const [isMulti, setIsMulti] = useState(false);
@@ -177,8 +178,8 @@ export default function EcransPage() {
   return (
     <div className="p-4 sm:p-6 max-w-5xl mx-auto space-y-6">
       <PresenceSubNav userRole={userRole} />
-      <div>
-        <h1 className="text-2xl font-extrabold text-[var(--text)] flex items-center gap-2"><MonitorSmartphone /> Écrans QR</h1>
+      <div className="attendance-page-heading">
+        <h1 className="text-2xl font-semibold text-[var(--text)] flex items-center gap-2"><MonitorSmartphone /> Écrans QR</h1>
         <p className="text-sm text-[var(--text-muted)] mt-1">
           Ouvrez <code className="px-1.5 py-0.5 rounded bg-[var(--surface-2)]">/ecran</code> sur la tablette, puis saisissez ici le code qu&apos;elle affiche.
           Les employés pointent ensuite en scannant le QR depuis « Ma pointeuse ».
@@ -188,7 +189,7 @@ export default function EcransPage() {
       {/* 🆕 Lien public de l'écran (à ouvrir sur la tablette) */}
       <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5 flex flex-col sm:flex-row gap-3 sm:items-center">
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-bold uppercase text-[var(--text-muted)]">Lien public de l&apos;écran</p>
+          <p className="text-xs font-semibold  text-[var(--text-muted)]">Lien public de l&apos;écran</p>
           <p className="font-mono text-sm text-[var(--text)] truncate mt-0.5" title={publicUrl}>{publicUrl}</p>
           <p className="text-[11px] text-[var(--text-muted)] mt-1">
             À ouvrir sur la tablette (dans son navigateur). Elle affiche un code : saisissez-le ci-dessous pour l&apos;approuver.
@@ -197,7 +198,7 @@ export default function EcransPage() {
         </div>
         <div className="flex gap-2 shrink-0">
           <button type="button" onClick={copyLink}
-            className="inline-flex items-center gap-2 rounded-xl bg-[var(--brand)] text-white font-semibold px-4 py-2.5 text-sm">
+            className="inline-flex items-center gap-2 rounded-xl bg-[var(--brand)] text-[var(--on-brand)] font-semibold px-4 py-2.5 text-sm">
             {copied ? <Check size={16} /> : <Copy size={16} />} {copied ? 'Lien copié' : 'Copier le lien'}
           </button>
           <a href={publicUrl} target="_blank" rel="noopener noreferrer"
@@ -223,7 +224,7 @@ export default function EcransPage() {
           <input value={name} onChange={(e) => setName(e.target.value)} maxLength={100} placeholder="Accueil — Siège" className={`${field} mt-1`} />
         </label>
         <button disabled={saving || code.trim().length < 4 || !name.trim()}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--brand)] text-white font-semibold px-6 py-3 disabled:opacity-50">
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--brand)] text-[var(--on-brand)] font-semibold px-6 py-3 disabled:opacity-50">
           {saving ? <Loader2 className="animate-spin" size={18} /> : <Plus size={18} />} Approuver
         </button>
 
@@ -246,7 +247,7 @@ export default function EcransPage() {
 
       {/* Liste */}
       <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
-        <div className="px-5 py-3 border-b border-[var(--border)] font-bold text-[var(--text)] flex items-center gap-2"><ShieldCheck size={18} /> Écrans appairés</div>
+        <div className="px-5 py-3 border-b border-[var(--border)] font-semibold text-[var(--text)] flex items-center gap-2"><ShieldCheck size={18} /> Écrans appairés</div>
         {loading ? <KonzaLoader variant="section" />
           : screens.length === 0 ? <p className="p-8 text-center text-[var(--text-muted)]">Aucun écran pour le moment.</p>
           : <ul className="divide-y divide-[var(--border)]">
@@ -257,7 +258,7 @@ export default function EcransPage() {
                       <div className="flex items-center gap-2">
                         <input value={editName} onChange={(e) => setEditName(e.target.value)} maxLength={100} autoFocus
                           className={`${field} py-2`} onKeyDown={(e) => { if (e.key === 'Enter') saveName(s.id); if (e.key === 'Escape') setEditingId(null); }} />
-                        <button onClick={() => saveName(s.id)} aria-label="Valider" className="p-2 rounded-lg text-emerald-500 hover:bg-emerald-500/10"><Check size={18} /></button>
+                        <button onClick={() => saveName(s.id)} aria-label="Valider" className="p-2 rounded-lg text-[var(--success-text)] hover:bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]"><Check size={18} /></button>
                         <button onClick={() => setEditingId(null)} aria-label="Annuler" className="p-2 rounded-lg hover:bg-[var(--surface-2)]"><X size={18} /></button>
                       </div>
                     ) : (
@@ -268,12 +269,12 @@ export default function EcransPage() {
                       {s.lastSeenAt ? `vu ${new Date(s.lastSeenAt).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}` : 'jamais vu'}
                     </p>
                   </div>
-                  <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${STATUS_STYLE[s.status]}`}>{STATUS_LABEL[s.status]}</span>
+                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${STATUS_STYLE[s.status]}`}>{STATUS_LABEL[s.status]}</span>
                   {s.status === 'APPROVED' && editingId !== s.id && (
                     <>
                       <button onClick={() => { setEditingId(s.id); setEditName(s.name || ''); }} aria-label="Renommer" className="p-2 rounded-lg hover:bg-[var(--surface-2)] text-[var(--text-muted)]"><Pencil size={17} /></button>
                       <button onClick={() => regenerate(s)} aria-label="Régénérer le QR" title="Régénérer le QR" className="p-2 rounded-lg hover:bg-[var(--surface-2)] text-[var(--text-muted)]"><RefreshCw size={17} /></button>
-                      <button onClick={() => revoke(s)} aria-label="Révoquer" className="p-2 rounded-lg text-red-500 hover:bg-red-500/10"><Trash2 size={18} /></button>
+                      <button onClick={() => revoke(s)} aria-label="Révoquer" className="p-2 rounded-lg text-[var(--danger-text)] hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]"><Trash2 size={18} /></button>
                     </>
                   )}
                 </li>
@@ -284,7 +285,7 @@ export default function EcransPage() {
       {/* Codes secrets */}
       <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5 space-y-4">
         <div>
-          <h2 className="font-bold text-[var(--text)] flex items-center gap-2"><KeyRound size={18} /> Code secret d&apos;un employé</h2>
+          <h2 className="font-semibold text-[var(--text)] flex items-center gap-2"><KeyRound size={18} /> Code secret d&apos;un employé</h2>
           <p className="text-xs text-[var(--text-muted)] mt-1">
             Pour les employés sans smartphone : ils tapent ce code sur la tablette. Seuls l&apos;admin et la RH peuvent le définir ; un employé sans code ne peut pas pointer avec.
             Le code n&apos;est jamais lisible après enregistrement.
@@ -311,26 +312,26 @@ export default function EcransPage() {
                 placeholder="Mot (5+ caractères) ou PIN (6 à 10 chiffres)" className={`${field} mt-1`} />
             </label>
             <button disabled={secretSaving || !newSecret}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--brand)] text-white font-semibold px-5 py-3 disabled:opacity-50">
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--brand)] text-[var(--on-brand)] font-semibold px-5 py-3 disabled:opacity-50">
               {secretSaving && <Loader2 className="animate-spin" size={16} />} {hasSecret ? 'Réinitialiser' : 'Définir'}
             </button>
             {hasSecret && (
-              <button type="button" onClick={removeSecret} className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-500/40 text-red-500 px-4 py-3">
+              <button type="button" onClick={removeSecret} className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--border)] text-[var(--danger-text)] px-4 py-3">
                 <Trash2 size={16} /> Supprimer
               </button>
             )}
             <p className="sm:col-span-3 text-xs text-[var(--text-muted)]">
               {hasSecret === null ? 'Vérification…' : hasSecret ? 'Cet employé a déjà un code secret.' : 'Cet employé n’a pas encore de code secret.'}
             </p>
-            {secretErr && <p className="sm:col-span-3 text-sm text-red-500" role="alert">{secretErr}</p>}
+            {secretErr && <p className="sm:col-span-3 text-sm text-[var(--danger-text)]" role="alert">{secretErr}</p>}
           </form>
         )}
 
         {/* Employés enregistrés avec un code secret */}
         <div className="pt-4 border-t border-[var(--border)]">
-          <h3 className="text-sm font-bold text-[var(--text)] flex items-center gap-2 mb-3">
+          <h3 className="text-sm font-semibold text-[var(--text)] flex items-center gap-2 mb-3">
             Employés avec un code secret
-            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">{enrolled.length}</span>
+            <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)] ">{enrolled.length}</span>
           </h3>
           {enrolledLoading ? (
             <KonzaLoader variant="inline" />
@@ -347,7 +348,7 @@ export default function EcransPage() {
                     </p>
                   </div>
                   {e.status !== 'ACTIVE' && (
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600">
+                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)]">
                       {e.status === 'ON_LEAVE' ? 'En congé' : e.status === 'SUSPENDED' ? 'Suspendu' : 'Inactif'}
                     </span>
                   )}
@@ -364,4 +365,8 @@ export default function EcransPage() {
       </div>
     </div>
   );
+}
+
+export default function EcransPage() {
+  return <AttendanceModuleFrame kind="list"><EcransPageContent /></AttendanceModuleFrame>;
 }

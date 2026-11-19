@@ -112,24 +112,24 @@ export function EchelonSuggestionsPanel() {
 
   if (suggestions.length === 0) {
     return (
-      <p className="text-xs text-gray-400 py-2">
+      <p className="text-xs text-[var(--text-secondary)] py-2">
         Aucune suggestion de changement d'échelon en attente pour le moment.
       </p>
     );
   }
 
   return (
-    <div className="border-t border-purple-100 dark:border-purple-800 pt-5">
+    <div className="border-t border-[var(--border)]  pt-5">
       <div className="flex items-center justify-between mb-4">
-        <h4 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
-          <TrendingUp size={16} className="text-purple-500" />
+        <h4 className="text-sm font-semibold text-[var(--text)] dark:text-[var(--text)] flex items-center gap-2">
+          <TrendingUp size={16} className="text-[var(--action)]" />
           {suggestions.length} suggestion{suggestions.length > 1 ? 's' : ''} en attente
         </h4>
         <button
           type="button"
           onClick={() => setConfirmBulk(true)}
           disabled={bulkBusy}
-          className="flex items-center gap-1.5 text-xs font-bold text-purple-600 hover:text-purple-700 disabled:opacity-50"
+          className="flex items-center gap-1.5 text-xs font-semibold text-[var(--action)] hover:text-[var(--action)] disabled:opacity-50"
         >
           <ListChecks size={14} /> Tout valider
         </button>
@@ -138,21 +138,21 @@ export function EchelonSuggestionsPanel() {
       <div className="space-y-2">
         {suggestions.map(s => (
           <div key={s.id}
-            className="flex items-center justify-between gap-3 p-3 bg-gray-50 dark:bg-gray-700/40 rounded-lg text-sm">
+            className="flex items-center justify-between gap-3 p-3 bg-[var(--surface-2)]  rounded-lg text-sm">
             <div className="min-w-0">
-              <p className="font-semibold text-gray-900 dark:text-white truncate">{s.employeeName}</p>
-              <p className="text-xs text-gray-500">
-                {s.yearsCompleted} ans d'ancienneté — {s.currentEchelonLabel} → <span className="font-semibold text-purple-600">{s.suggestedEchelonLabel}</span>
+              <p className="font-semibold text-[var(--text)] dark:text-[var(--text)] truncate">{s.employeeName}</p>
+              <p className="text-xs text-[var(--text-secondary)]">
+                {s.yearsCompleted} ans d'ancienneté — {s.currentEchelonLabel} → <span className="font-semibold text-[var(--action)]">{s.suggestedEchelonLabel}</span>
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <button type="button" onClick={() => handleReject(s.id)} disabled={busyId === s.id}
-                className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 disabled:opacity-50"
+                className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:text-[var(--danger-text)] hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] disabled:opacity-50"
                 title="Refuser — l'échelon actuel est conservé">
                 <XCircle size={18} />
               </button>
               <button type="button" onClick={() => setConfirmId(s.id)} disabled={busyId === s.id}
-                className="p-1.5 rounded-lg text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 disabled:opacity-50"
+                className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:text-[var(--success-text)] hover:bg-[var(--brand-soft)] disabled:opacity-50"
                 title="Valider ce changement d'échelon">
                 {busyId === s.id ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle2 size={18} />}
               </button>
@@ -202,20 +202,20 @@ function ConfirmDialog({ title, message, onCancel, onConfirm }: {
 }) {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center p-4"
+      className="fixed inset-0 z-[9999] bg-[rgb(0_0_0_/.5)] flex items-center justify-center p-4"
       onClick={onCancel}>
       <motion.div initial={{ scale: 0.95, y: 10 }} animate={{ scale: 1, y: 0 }}
         onClick={e => e.stopPropagation()}
-        className="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-sm w-full shadow-xl">
-        <h4 className="font-bold text-gray-900 dark:text-white mb-2">{title}</h4>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">{message}</p>
+        className="bg-[var(--surface)]  rounded-2xl p-6 max-w-sm w-full shadow-xl">
+        <h4 className="font-semibold text-[var(--text)] dark:text-[var(--text)] mb-2">{title}</h4>
+        <p className="text-sm text-[var(--text-secondary)]  mb-5">{message}</p>
         <div className="flex justify-end gap-2">
           <button onClick={onCancel}
-            className="px-4 py-2 text-sm font-semibold text-gray-600 dark:text-slate-400 hover:bg-gray-100 rounded-lg">
+            className="px-4 py-2 text-sm font-semibold text-[var(--text-secondary)]  hover:bg-[var(--surface-2)] rounded-lg">
             Annuler
           </button>
           <button onClick={onConfirm}
-            className="px-4 py-2 text-sm font-bold text-white bg-purple-600 hover:bg-purple-700 rounded-lg">
+            className="px-4 py-2 text-sm font-semibold text-[var(--on-brand)] bg-[var(--brand)] hover:bg-[var(--brand)] rounded-lg">
             Confirmer
           </button>
         </div>
@@ -227,25 +227,25 @@ function ConfirmDialog({ title, message, onCancel, onConfirm }: {
 function RecapModal({ items, onClose }: { items: BulkAcceptResultItem[]; onClose: () => void }) {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center p-4"
+      className="fixed inset-0 z-[9999] bg-[rgb(0_0_0_/.5)] flex items-center justify-center p-4"
       onClick={onClose}>
       <motion.div initial={{ scale: 0.95, y: 10 }} animate={{ scale: 1, y: 0 }}
         onClick={e => e.stopPropagation()}
-        className="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-md w-full shadow-xl max-h-[80vh] overflow-y-auto">
-        <h4 className="font-bold text-gray-900 dark:text-white mb-1">
+        className="bg-[var(--surface)]  rounded-2xl p-6 max-w-md w-full shadow-xl max-h-[80vh] overflow-y-auto">
+        <h4 className="font-semibold text-[var(--text)] dark:text-[var(--text)] mb-1">
           {items.length} employé{items.length > 1 ? 's' : ''} mis à jour
         </h4>
-        <p className="text-xs text-gray-500 mb-4">Récapitulatif des changements d'échelon appliqués.</p>
+        <p className="text-xs text-[var(--text-secondary)] mb-4">Récapitulatif des changements d'échelon appliqués.</p>
         <div className="space-y-1.5 mb-5">
           {items.map(it => (
-            <div key={it.employeeId} className="text-sm flex justify-between gap-2 py-1 border-b border-gray-100 dark:border-gray-700 last:border-0">
-              <span className="text-gray-700 dark:text-gray-200 truncate">{it.employeeName}</span>
-              <span className="text-gray-400 shrink-0">{it.oldEchelonLabel} → <span className="font-semibold text-purple-600">{it.newEchelonLabel}</span></span>
+            <div key={it.employeeId} className="text-sm flex justify-between gap-2 py-1 border-b border-[var(--border)]  last:border-0">
+              <span className="text-[var(--text-secondary)]  truncate">{it.employeeName}</span>
+              <span className="text-[var(--text-secondary)] shrink-0">{it.oldEchelonLabel} → <span className="font-semibold text-[var(--action)]">{it.newEchelonLabel}</span></span>
             </div>
           ))}
         </div>
         <button onClick={onClose}
-          className="w-full px-4 py-2 text-sm font-bold text-white bg-purple-600 hover:bg-purple-700 rounded-lg">
+          className="w-full px-4 py-2 text-sm font-semibold text-[var(--on-brand)] bg-[var(--brand)] hover:bg-[var(--brand)] rounded-lg">
           Fermer
         </button>
       </motion.div>

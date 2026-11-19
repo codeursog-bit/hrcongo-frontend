@@ -12,23 +12,26 @@ export default function OfflinePage() {
       title="Pas de connexion Internet"
       description="Ne vous inquiétez pas, vos modifications seront synchronisées automatiquement dès le retour de la connexion."
       icon={WifiOff}
-      gradient="from-gray-400 to-gray-600"
     >
       <div className="w-full max-w-md space-y-6">
         
-        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800 p-4 rounded-xl flex items-center gap-3">
-          <Save className="text-amber-500 shrink-0" size={20} />
+        <div
+          className="p-4 rounded-xl flex items-center gap-3"
+          style={{ background: 'var(--surface-2)' }}
+        >
+          <Save className="shrink-0" size={20} strokeWidth={1.5} style={{ color: 'var(--mustard)' }} />
           <div className="text-left">
-            <p className="text-sm font-bold text-amber-800 dark:text-amber-300">Mode Hors-ligne Actif</p>
-            <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">3 modifications en attente de synchronisation.</p>
+            <p className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Mode hors-ligne actif</p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>Vos modifications en attente seront synchronisées dès le retour de la connexion.</p>
           </div>
         </div>
 
         <button 
           onClick={() => window.location.reload()}
-          className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl transition-all shadow-lg hover:scale-105"
+          className="w-full flex items-center justify-center gap-2 px-6 py-3.5 font-semibold rounded-xl transition-colors"
+          style={{ background: 'var(--brand)', color: 'var(--on-brand)' }}
         >
-          <RefreshCw size={20} /> Réessayer la connexion
+          <RefreshCw size={18} strokeWidth={1.75} /> Réessayer la connexion
         </button>
       </div>
     </ErrorLayout>

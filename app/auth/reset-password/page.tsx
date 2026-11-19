@@ -63,8 +63,8 @@ function ResetPasswordContent() {
         <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-red-500/25 bg-red-500/[0.08]">
           <XCircle size={26} className="text-red-400" />
         </div>
-        <h2 className="mb-2 text-[19px] font-semibold text-[#FAFAFA]">Lien invalide</h2>
-        <p className="mb-6 text-[13.5px] text-[#8B8F98]">Ce lien de réinitialisation est invalide ou a expiré.</p>
+        <h2 className="mb-2 text-[19px] font-semibold text-[var(--text)]">Lien invalide</h2>
+        <p className="mb-6 text-[13.5px] text-[var(--text-secondary)]">Ce lien de réinitialisation est invalide ou a expiré.</p>
         <Link
           href="/auth/forgot-password"
           className="inline-block rounded-xl border border-[#10B981]/25 bg-[#10B981]/[0.1] px-6 py-3 text-[13.5px] font-semibold text-[#10B981] transition-colors hover:bg-[#10B981]/[0.16]"
@@ -87,12 +87,12 @@ function ResetPasswordContent() {
           >
             <ShieldCheck size={26} className="text-[#10B981]" />
           </motion.div>
-          <h2 className="mb-2 text-[19px] font-semibold text-[#FAFAFA]">Mot de passe réinitialisé</h2>
-          <p className="mb-1 text-[13.5px] text-[#8B8F98]">Votre mot de passe a été modifié avec succès.</p>
-          <p className="mb-6 text-[12.5px] text-[#5A5E66]">Redirection vers la connexion dans 3 secondes…</p>
+          <h2 className="mb-2 text-[19px] font-semibold text-[var(--text)]">Mot de passe réinitialisé</h2>
+          <p className="mb-1 text-[13.5px] text-[var(--text-secondary)]">Votre mot de passe a été modifié avec succès.</p>
+          <p className="mb-6 text-[12.5px] text-[var(--text-secondary)]">Redirection vers la connexion dans 3 secondes…</p>
           <Link
             href="/auth/login"
-            className="inline-block rounded-xl bg-[#FAFAFA] px-6 py-3 text-[13.5px] font-medium text-black transition-colors hover:bg-white"
+            className="inline-block rounded-xl bg-[var(--text)] px-6 py-3 text-[13.5px] font-medium text-black transition-colors hover:bg-white"
           >
             Se connecter maintenant
           </Link>
@@ -149,7 +149,7 @@ function ResetPasswordContent() {
         </form>
 
         <div className="mt-6 text-center">
-          <Link href="/auth/login" className="text-[13px] text-[#8B8F98] transition-colors hover:text-[#FAFAFA]">
+          <Link href="/auth/login" className="text-[13px] text-[var(--text-secondary)] transition-colors hover:text-[var(--text)]">
             Retour à la connexion
           </Link>
         </div>

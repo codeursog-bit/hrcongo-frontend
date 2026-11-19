@@ -105,26 +105,26 @@ export default function PerformanceStart({ reviews }: Props) {
 
   if (hidden) {
     return (
-      <button onClick={() => toggle(false)} className="print:hidden text-sm font-bold text-purple-600 hover:underline flex items-center gap-1.5">
-        <Compass size={15} /> Afficher le guide « Par où commencer ? »
+      <button onClick={() => toggle(false)} className="print:hidden text-sm font-semibold text-[var(--action)] hover:underline flex items-center gap-1.5">
+        <Compass strokeWidth={1.5} size={15} /> Afficher le guide « Par où commencer ? »
       </button>
     );
   }
 
   return (
-    <section className="print:hidden bg-white dark:bg-gray-800 rounded-2xl border border-purple-100 dark:border-purple-900/40 shadow-sm overflow-hidden">
+    <section className="performance-start print:hidden bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm overflow-hidden performance-card">
       <div className="p-4 sm:p-5 flex items-start justify-between gap-3">
         <div className="flex items-start gap-3 min-w-0">
-          <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/30 text-purple-600 flex items-center justify-center shrink-0"><Compass size={20} /></div>
+          <div className="w-10 h-10 rounded-xl bg-[var(--brand-soft)] text-[var(--action)] flex items-center justify-center shrink-0 performance-icon-wrap"><Compass strokeWidth={1.5} size={20} /></div>
           <div className="min-w-0">
-            <h2 className="font-bold text-gray-900 dark:text-white">{allDone ? 'Tout est à jour 🎉' : 'Par où commencer ?'}</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <h2 className="font-semibold text-[var(--text)]">{allDone ? 'Tout est à jour' : 'Par où commencer ?'}</h2>
+            <p className="text-sm text-[var(--text-secondary)]">
               {allDone ? 'Aucune action en attente. Relancez une campagne quand la prochaine période commence.' : 'Suivez les étapes dans l\'ordre. Le bouton violet vous emmène à la bonne page.'}
             </p>
           </div>
         </div>
-        <button onClick={() => toggle(true)} className="text-xs font-bold text-gray-400 hover:text-gray-600 shrink-0 px-2 py-1 flex items-center gap-1" aria-label="Masquer le guide">
-          Masquer <ChevronDown size={14} className="rotate-180" />
+        <button onClick={() => toggle(true)} className="text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-secondary)] shrink-0 px-2 py-1 flex items-center gap-1" aria-label="Masquer le guide">
+          Masquer <ChevronDown strokeWidth={1.5} size={14} className="rotate-180" />
         </button>
       </div>
 
@@ -132,28 +132,28 @@ export default function PerformanceStart({ reviews }: Props) {
         {steps.map((s, i) => {
           const isCurrent = current?.key === s.key;
           return (
-            <li key={s.key} className={`flex items-start gap-3 rounded-xl p-3 ${isCurrent ? 'bg-purple-50 dark:bg-purple-900/20' : ''}`}>
-              <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5 ${s.done ? 'bg-emerald-500 text-white' : isCurrent ? 'bg-purple-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-500'}`}>
-                {s.done ? <Check size={14} /> : i + 1}
+            <li key={s.key} className={`flex items-start gap-3 rounded-xl p-3 ${isCurrent ? 'bg-[var(--brand-soft)]' : ''}`}>
+              <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 mt-0.5 ${s.done ? 'bg-[var(--green)] text-[var(--on-brand)]' : isCurrent ? 'bg-[var(--brand)] text-[var(--on-brand)]' : 'bg-[var(--surface-2)] text-[var(--text-secondary)]'}`}>
+                {s.done ? <Check strokeWidth={1.5} size={14} /> : i + 1}
               </div>
               <div className="flex-1 min-w-0">
-                <p className={`font-bold text-sm ${s.done ? 'text-gray-400 line-through' : 'text-gray-900 dark:text-white'}`}>
-                  {s.title}{s.optional && <span className="ml-2 text-[11px] font-medium text-gray-400 no-underline">facultatif</span>}
-                  {s.badge && <span className="ml-2 px-1.5 py-0.5 rounded-full bg-amber-400 text-white text-[11px] font-bold">{s.badge}</span>}
+                <p className={`font-semibold text-sm ${s.done ? 'text-[var(--text-secondary)] line-through' : 'text-[var(--text)]'}`}>
+                  {s.title}{s.optional && <span className="ml-2 text-[11px] font-medium text-[var(--text-secondary)] no-underline">facultatif</span>}
+                  {s.badge && <span className="ml-2 px-1.5 py-0.5 rounded-full bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--text)] text-[11px] font-semibold">{s.badge}</span>}
                 </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{s.hint}</p>
+                <p className="text-xs text-[var(--text-secondary)] mt-0.5">{s.hint}</p>
               </div>
               {!s.disabled && !s.done && (
                 <Link href={bp(s.href)}
-                  className={`shrink-0 px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1 min-h-[40px] ${isCurrent ? 'bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-500/20' : 'text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20'}`}>
-                  <span className="hidden sm:inline">{s.cta}</span><span className="sm:hidden">Ouvrir</span> <ChevronRight size={14} />
+                  className={`shrink-0 px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1 min-h-[40px] ${isCurrent ? 'bg-[var(--brand)] hover:bg-[var(--brand)] text-[var(--on-brand)] shadow-lg' : 'text-[var(--action)] hover:bg-[var(--brand-soft)]'}`}>
+                  <span className="hidden sm:inline">{s.cta}</span><span className="sm:hidden">Ouvrir</span> <ChevronRight strokeWidth={1.5} size={14} />
                 </Link>
               )}
             </li>
           );
         })}
       </ol>
-      <div className="px-5 pb-4 text-xs text-gray-400">{doneRequired} étape(s) sur {required.length} terminée(s)</div>
+      <div className="px-5 pb-4 text-xs text-[var(--text-secondary)]">{doneRequired} étape(s) sur {required.length} terminée(s)</div>
     </section>
   );
 }

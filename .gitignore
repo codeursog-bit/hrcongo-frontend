@@ -5,6 +5,7 @@ node_modules/
 /dist
 /build
 /.next/
+/.next-*/
 /out/
 .tsbuildinfo
 tsconfig.tsbuildinfo
@@ -53,3 +54,7 @@ pnpm-debug.log*
 *.njsproj
 *.sln
 *.sw?
+
+
+# Résultats de scripts QA générés localement
+qa-*-results.json

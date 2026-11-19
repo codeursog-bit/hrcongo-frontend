@@ -14,12 +14,13 @@ import { PayrollTableRow } from './components/PayrollTableRow';
 import { PayrollBatchActionsFooter } from './components/PayrollBatchActionsFooter';
 import { PayrollPagination } from './components/PayrollPagination';
 import { usePayrollData } from '@/hooks/usePayrollData';
+import { ModulePageFrame } from '@/components/requests/ModulePageFrame';
 
 type PayrollStatus = 'Draft' | 'Validated' | 'ToPay' | 'Paid' | 'Cancelled';
 
 const ITEMS_PER_PAGE = 25;
 
-export default function PayrollPage() {
+function PayrollPage() {
   const router = useRouter();
   const now    = new Date();
   const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
@@ -344,5 +345,14 @@ export default function PayrollPage() {
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+
+export default function PayrollPageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <PayrollPage />
+    </ModulePageFrame>
   );
 }

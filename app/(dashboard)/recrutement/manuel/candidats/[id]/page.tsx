@@ -2,15 +2,17 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
 import {
-  ArrowLeft, Mail, Phone, Calendar, Download, Loader2,
-  CheckCircle2, XCircle, FileText, MapPin, Briefcase, MessageSquare, User,
+  ArrowLeft, Mail, Phone, Calendar, Download,
+  CheckCircle2, XCircle, FileText, MapPin, Briefcase, User,
 } from 'lucide-react';
 import Link from 'next/link';
 import { api } from '@/services/api';
 import { ToastProvider, useToast } from '@/components/ui/useToast';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import { Badge, Button, Card, EmptyState, Input, Textarea } from '@/components/design-system/primitives';
+import { Modal } from '@/components/design-system/feedback';
+import { RecruitmentDetailPage as DetailPage } from '@/components/recruitment/RecruitmentFrame';
 
 // ─────────────────────────────────────────────
 // TYPES
@@ -41,10 +43,10 @@ interface CandidateManual {
 
 // Statuts sélectionnables (simplifiés)
 const STATUSES: { value: string; label: string; color: string; icon: React.ElementType }[] = [
-  { value: 'APPLIED',   label: 'Nouvelle candidature', color: 'text-emerald-600 dark:text-emerald-400',   icon: User },
-  { value: 'INTERVIEW', label: 'En entretien',         color: 'text-amber-600 dark:text-amber-400', icon: Calendar },
-  { value: 'HIRED',     label: 'Embauché(e)',          color: 'text-emerald-600 dark:text-emerald-400', icon: CheckCircle2 },
-  { value: 'REJECTED',  label: 'Refusé(e)',            color: 'text-red-500 dark:text-red-400',      icon: XCircle },
+  { value: 'APPLIED',   label: 'Nouvelle candidature', color: 'text-[var(--brand-strong)]', icon: User },
+  { value: 'INTERVIEW', label: 'En entretien',         color: 'text-[var(--mustard)]', icon: Calendar },
+  { value: 'HIRED',     label: 'Embauché(e)',          color: 'text-[var(--green)]', icon: CheckCircle2 },
+  { value: 'REJECTED',  label: 'Refusé(e)',            color: 'text-[var(--text-muted)]', icon: XCircle },
 ];
 
 const getStatusConfig = (status: string) =>
@@ -143,22 +145,27 @@ function DetailCandidatManualContent({ id }: { id: string }) {
     }
   };
 
-  // ── LOADING ──
   if (isLoading) {
     return (
-      <KonzaLoader variant="page" label="Chargement du candidat…" />
+      <DetailPage title="Dossier candidat">
+        <KonzaLoader variant="page" label="Chargement du candidat…" />
+      </DetailPage>
     );
   }
 
   if (!candidate) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center">
-        <XCircle size={48} className="text-red-400 mb-4" />
-        <h1 className="text-xl font-bold text-[var(--text)] mb-4">Candidat introuvable</h1>
-        <Link href="/recrutement/manuel/candidats" className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl font-bold">
-          Retour
-        </Link>
-      </div>
+      <DetailPage title="Dossier candidat" action={<Link className="k-button k-button-secondary" href="/recrutement/manuel/candidats">Retour</Link>}>
+        <Card>
+          <EmptyState
+            title="Candidat introuvable"
+            icon={XCircle}
+            action={<Link className="k-button k-button-secondary" href="/recrutement/manuel/candidats">Retour aux candidatures</Link>}
+          >
+            Ce dossier n’est pas disponible.
+          </EmptyState>
+        </Card>
+      </DetailPage>
     );
   }
 
@@ -166,269 +173,173 @@ function DetailCandidatManualContent({ id }: { id: string }) {
   const statusConfig = getStatusConfig(normalizedStatus);
   const StatusIcon = statusConfig.icon;
   const isInInterview = normalizedStatus === 'INTERVIEW';
+  const statusTone = normalizedStatus === 'HIRED'
+    ? 'success'
+    : normalizedStatus === 'INTERVIEW'
+      ? 'warning'
+      : normalizedStatus === 'REJECTED'
+        ? 'neutral'
+        : 'info';
 
   return (
-    <div className="max-w-6xl mx-auto py-8 px-4">
-
-      {/* ── MODAL ENTRETIEN ── */}
-      {showInterviewModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="bg-[var(--surface)] border border-amber-500/30 rounded-2xl p-8 max-w-md w-full shadow-2xl"
-          >
-            <h3 className="text-lg font-bold text-[var(--text)] mb-1 flex items-center gap-2.5">
-              <Calendar className="text-amber-500" size={22} />
-              {isInInterview ? 'Modifier l\'entretien' : 'Planifier un entretien'}
-            </h3>
-            <p className="text-[var(--text-muted)] text-sm mb-6">
-              Pour <span className="font-medium text-[var(--text)]">{candidate.firstName} {candidate.lastName}</span>
-            </p>
-
-            <div className="space-y-4 mb-6">
-              <div>
-                <label className="text-sm font-bold text-[var(--text-muted)] mb-2 block">Date et heure</label>
-                <input
-                  type="datetime-local"
-                  className="w-full border border-[var(--border)] bg-[var(--surface-2)] rounded-xl px-4 py-3 text-[var(--text)] focus:ring-2 focus:ring-amber-500/30 outline-none transition-all"
-                  value={interviewDate}
-                  onChange={(e) => setInterviewDate(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="text-sm font-bold text-[var(--text-muted)] mb-2 block">Notes (lieu, modalités…)</label>
-                <textarea
-                  className="w-full border border-[var(--border)] bg-[var(--surface-2)] rounded-xl px-4 py-3 text-[var(--text)] placeholder:text-[var(--text-muted)] outline-none focus:ring-2 focus:ring-amber-500/30 resize-none min-h-[80px] transition-all text-sm"
-                  placeholder="Ex : Entretien présentiel, bâtiment A…"
-                  value={interviewNotes}
-                  onChange={(e) => setInterviewNotes(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowInterviewModal(false)}
-                className="flex-1 py-3 bg-[var(--surface-2)] text-[var(--text-muted)] rounded-xl font-bold transition-colors hover:bg-[var(--border)]"
-              >
-                Annuler
-              </button>
-              <button
-                onClick={handleScheduleInterview}
-                disabled={isScheduling}
-                className="flex-1 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 disabled:opacity-50 transition-colors shadow-lg"
-              >
-                {isScheduling ? <Loader2 className="animate-spin" size={18} /> : <Calendar size={18} />}
-                Confirmer
-              </button>
-            </div>
-          </motion.div>
+    <>
+      <Modal
+        open={showInterviewModal}
+        onClose={() => setShowInterviewModal(false)}
+        title={isInInterview ? 'Modifier l’entretien' : 'Planifier un entretien'}
+        actions={
+          <>
+            <Button variant="secondary" onClick={() => setShowInterviewModal(false)}>Annuler</Button>
+            <Button onClick={handleScheduleInterview} loading={isScheduling}>
+              <Calendar size={16} strokeWidth={1.5} aria-hidden="true" /> Confirmer
+            </Button>
+          </>
+        }
+      >
+        <p>Pour <strong className="text-[var(--text)]">{candidate.firstName} {candidate.lastName}</strong></p>
+        <div className="mt-5 grid gap-4">
+          <Input
+            label="Date et heure"
+            type="datetime-local"
+            value={interviewDate}
+            onChange={(e) => setInterviewDate(e.target.value)}
+          />
+          <Textarea
+            label="Notes (lieu, modalités…)"
+            placeholder="Ex : Entretien présentiel, bâtiment A…"
+            value={interviewNotes}
+            onChange={(e) => setInterviewNotes(e.target.value)}
+            rows={3}
+          />
         </div>
-      )}
+      </Modal>
 
-      {/* HEADER */}
-      <div className="flex items-center gap-4 mb-8">
-        <button
-          onClick={() => router.back()}
-          className="p-2.5 bg-[var(--surface)] rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)] transition-colors"
-        >
-          <ArrowLeft size={20} />
-        </button>
-        <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-center gap-3 mb-1">
-            <h1 className="text-2xl font-bold text-[var(--text)]">
-              {candidate.firstName} {candidate.lastName}
-            </h1>
-            {isInInterview && (
-              <div className="px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center gap-1.5">
-                <Calendar size={12} className="text-amber-500" />
-                <span className="text-xs font-bold text-amber-500">En entretien</span>
-              </div>
-            )}
-          </div>
-          <p className="text-sm text-[var(--text-muted)]">
-            Postulé le {new Date(candidate.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
-          </p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-        {/* ── SIDEBAR ── */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="lg:col-span-1">
-          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-7 shadow-xl text-center sticky top-8">
-
-            {/* Avatar */}
-            <div className="w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4 shadow-lg">
-              {candidate.firstName[0]}{candidate.lastName[0]}
+      <DetailPage
+        title={`${candidate.firstName} ${candidate.lastName}`}
+        description={`Postulé le ${new Date(candidate.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}`}
+        action={
+          <Button variant="secondary" onClick={() => router.back()} aria-label="Retour à la page précédente">
+            <ArrowLeft size={17} strokeWidth={1.5} aria-hidden="true" /> Retour
+          </Button>
+        }
+        status={<Badge tone={statusTone}><StatusIcon size={13} strokeWidth={1.5} aria-hidden="true" /> {statusConfig.label}</Badge>}
+        aside={
+          <Card className="text-center">
+            <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-full bg-[var(--brand-soft)] text-xl font-semibold text-[var(--text)]" aria-hidden="true">
+              {candidate.firstName?.[0] || ''}{candidate.lastName?.[0] || ''}
             </div>
-            <h2 className="text-xl font-bold text-[var(--text)] mb-1">
-              {candidate.firstName} {candidate.lastName}
-            </h2>
+            <h2 className="text-lg font-semibold text-[var(--text)]">{candidate.firstName} {candidate.lastName}</h2>
+            <Badge tone={statusTone}><StatusIcon size={13} strokeWidth={1.5} aria-hidden="true" /> {statusConfig.label}</Badge>
 
-            {/* Badge statut */}
-            <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border bg-[var(--surface-2)] border-[var(--border)] font-bold text-sm mt-3 mb-5 ${statusConfig.color}`}>
-              <StatusIcon size={14} />
-              {statusConfig.label}
-            </div>
-
-            {/* Entretien planifié */}
             {candidate.interviewDate && (
-              <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-xl p-4 mb-5 text-left">
-                <p className="text-xs font-bold text-amber-600 dark:text-amber-400 mb-1.5 flex items-center gap-1.5">
-                  <Calendar size={11} /> Entretien planifié
+              <div className="my-5 rounded-[var(--radius-control)] bg-[var(--surface-2)] p-4 text-left">
+                <p className="mb-1.5 flex items-center gap-2 text-xs font-semibold text-[var(--mustard)]">
+                  <Calendar size={14} strokeWidth={1.5} aria-hidden="true" /> Entretien planifié
                 </p>
-                <p className="text-sm text-[var(--text)] font-medium">
+                <p className="text-sm font-medium text-[var(--text)]">
                   {new Date(candidate.interviewDate).toLocaleDateString('fr-FR', {
                     weekday: 'short', day: 'numeric', month: 'short',
                     hour: '2-digit', minute: '2-digit',
                   })}
                 </p>
-                {candidate.interviewNotes && (
-                  <p className="text-xs text-[var(--text-muted)] mt-1 leading-relaxed">{candidate.interviewNotes}</p>
-                )}
+                {candidate.interviewNotes && <p className="mt-1 text-xs leading-relaxed text-[var(--text-muted)]">{candidate.interviewNotes}</p>}
               </div>
             )}
 
-            {/* Changer statut */}
-            <div className="mb-5 text-left">
-              <label className="block text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2">Changer le statut</label>
-              <div className="space-y-1.5">
+            <fieldset className="mb-5 text-left">
+              <legend className="mb-2 text-xs font-semibold text-[var(--text-muted)]">Changer le statut</legend>
+              <div className="grid gap-2">
                 {STATUSES.map((s) => {
                   const SIcon = s.icon;
                   const isActive = normalizedStatus === s.value;
                   return (
                     <button
                       key={s.value}
+                      type="button"
                       onClick={() => handleStatusChange(s.value)}
-                      className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-left ${
-                        isActive
-                          ? 'bg-[var(--surface-2)] border-2 border-[var(--border)] font-bold'
-                          : 'bg-[var(--surface-2)] border border-[var(--border)] hover:bg-[var(--surface-2)]'
-                      } ${s.color}`}
+                      aria-pressed={isActive}
+                      className={`k-button k-button-secondary w-full justify-start ${s.color} ${isActive ? 'ring-2 ring-[var(--brand)]' : ''}`}
                     >
-                      <SIcon size={14} className="shrink-0" />
-                      <span>{s.label}</span>
-                      {isActive && (
-                        <CheckCircle2 size={13} className="ml-auto shrink-0" />
-                      )}
+                      <SIcon size={15} strokeWidth={1.5} aria-hidden="true" />
+                      {s.label}
+                      {isActive && <CheckCircle2 size={15} className="ml-auto" aria-hidden="true" />}
                     </button>
                   );
                 })}
               </div>
-            </div>
+            </fieldset>
 
-            {/* Contact */}
-            <div className="space-y-3 mb-6 text-left">
-              <a href={`mailto:${candidate.email}`} className="flex items-center gap-3 text-sm text-[var(--text-muted)] hover:text-emerald-500 transition-colors">
-                <Mail size={14} className="text-[var(--text-muted)] shrink-0" />
+            <div className="mb-5 grid gap-3 text-left">
+              <a href={`mailto:${candidate.email}`} className="flex min-w-0 items-center gap-3 text-sm text-[var(--text-muted)] hover:text-[var(--brand-strong)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--brand)]">
+                <Mail size={15} strokeWidth={1.5} className="shrink-0" aria-hidden="true" />
                 <span className="break-all">{candidate.email}</span>
               </a>
-              <a href={`tel:${candidate.phone}`} className="flex items-center gap-3 text-sm text-[var(--text-muted)] hover:text-emerald-500 transition-colors">
-                <Phone size={14} className="text-[var(--text-muted)] shrink-0" />
+              <a href={`tel:${candidate.phone}`} className="flex items-center gap-3 text-sm text-[var(--text-muted)] hover:text-[var(--brand-strong)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--brand)]">
+                <Phone size={15} strokeWidth={1.5} className="shrink-0" aria-hidden="true" />
                 <span>{candidate.phone}</span>
               </a>
             </div>
 
-            {/* Bouton entretien */}
-            <button
-              onClick={() => setShowInterviewModal(true)}
-              className="w-full py-3 mb-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2 shadow-md"
-            >
-              <Calendar size={16} />
-              {isInInterview ? 'Modifier l\'entretien' : 'Planifier un entretien'}
-            </button>
+            <Button className="mb-2 w-full" variant="secondary" onClick={() => setShowInterviewModal(true)}>
+              <Calendar size={16} strokeWidth={1.5} aria-hidden="true" />
+              {isInInterview ? 'Modifier l’entretien' : 'Planifier un entretien'}
+            </Button>
 
-            {/* ── Documents téléchargeables ── */}
-            <div className="space-y-2">
-              <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">Documents</p>
-
-              {/* CV */}
+            <div className="grid gap-2 border-t border-[var(--border)] pt-4">
+              <p className="text-left text-xs font-semibold text-[var(--text-muted)]">Documents</p>
               <a
                 href={candidate.resumeUrl.replace('/raw/upload/', '/raw/upload/fl_attachment/')}
                 target="_blank"
                 rel="noopener noreferrer"
                 download
-                className="w-full py-3 bg-[#FAFAFA] hover:bg-white text-black font-bold rounded-xl flex items-center justify-center gap-2 transition-opacity shadow-md"
+                className="k-button k-button-secondary w-full"
               >
-                <Download size={16} /> Télécharger le CV
+                <Download size={15} strokeWidth={1.5} aria-hidden="true" /> Télécharger le CV
               </a>
-
-              {/* Document additionnel */}
               {candidate.additionalDocUrl && (
                 <a
                   href={candidate.additionalDocUrl.replace('/raw/upload/', '/raw/upload/fl_attachment/')}
                   target="_blank"
                   rel="noopener noreferrer"
                   download
-                  className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-colors shadow-md shadow-amber-500/20"
+                  className="k-button k-button-secondary w-full"
                 >
-                  <Download size={16} /> Télécharger le document joint
+                  <Download size={15} strokeWidth={1.5} aria-hidden="true" /> Télécharger le document joint
                 </a>
               )}
             </div>
+          </Card>
+        }
+      >
+        <Card title="Poste visé">
+          <p className="mb-4 text-lg font-semibold text-[var(--text)]">{candidate.jobOffer.title}</p>
+          <div className="flex flex-wrap gap-x-5 gap-y-3 text-sm text-[var(--text-muted)]">
+            <span className="inline-flex items-center gap-2"><Briefcase size={15} strokeWidth={1.5} aria-hidden="true" /> {candidate.jobOffer.department?.name ?? 'Sans département'}</span>
+            <span className="inline-flex items-center gap-2"><MapPin size={15} strokeWidth={1.5} aria-hidden="true" /> {candidate.jobOffer.location}</span>
+            <span className="inline-flex items-center gap-2"><FileText size={15} strokeWidth={1.5} aria-hidden="true" /> {candidate.jobOffer.type}</span>
           </div>
-        </motion.div>
+        </Card>
 
-        {/* ── MAIN ── */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="lg:col-span-2 space-y-6">
+        {candidate.coverLetter && (
+          <Card title="Lettre de motivation">
+            <p className="whitespace-pre-line text-sm leading-relaxed text-[var(--text-muted)]">{candidate.coverLetter}</p>
+          </Card>
+        )}
 
-          {/* Poste */}
-          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-7 shadow-xl">
-            <h3 className="text-base font-bold text-[var(--text)] mb-4 flex items-center gap-2">
-              <Briefcase size={18} className="text-emerald-500" /> Poste visé
-            </h3>
-            <p className="text-xl font-bold text-[var(--text)] mb-4">{candidate.jobOffer.title}</p>
-            <div className="flex flex-wrap gap-2.5">
-              <span className="flex items-center gap-1.5 bg-[var(--surface-2)] px-3 py-1.5 rounded-lg text-sm text-[var(--text-muted)]">
-                <Briefcase size={13} className="text-[var(--text-muted)]" /> {candidate.jobOffer.department.name}
-              </span>
-              <span className="flex items-center gap-1.5 bg-[var(--surface-2)] px-3 py-1.5 rounded-lg text-sm text-[var(--text-muted)]">
-                <MapPin size={13} className="text-[var(--text-muted)]" /> {candidate.jobOffer.location}
-              </span>
-              <span className="flex items-center gap-1.5 bg-[var(--surface-2)] px-3 py-1.5 rounded-lg text-sm text-[var(--text-muted)]">
-                <FileText size={13} className="text-[var(--text-muted)]" /> {candidate.jobOffer.type}
-              </span>
-            </div>
-          </div>
-
-          {/* Lettre de motivation */}
-          {candidate.coverLetter && (
-            <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-7 shadow-xl">
-              <h3 className="text-base font-bold text-[var(--text)] mb-4 flex items-center gap-2">
-                <MessageSquare size={18} className="text-emerald-500" /> Lettre de motivation
-              </h3>
-              <p className="text-[var(--text-muted)] whitespace-pre-line leading-relaxed text-sm">
-                {candidate.coverLetter}
-              </p>
-            </div>
-          )}
-
-          {/* Notes RH */}
-          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-7 shadow-xl">
-            <h3 className="text-base font-bold text-[var(--text)] mb-4 flex items-center gap-2">
-              <MessageSquare size={18} className="text-emerald-500" /> Notes RH
-            </h3>
-            <textarea
-              className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl p-4 min-h-[120px] text-[var(--text)] outline-none focus:ring-2 focus:ring-emerald-500/20 resize-none transition-all text-sm placeholder:text-[var(--text-muted)]"
-              placeholder="Ajoutez vos observations sur ce candidat…"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-            />
-            <button
-              onClick={handleSaveNotes}
-              disabled={isSavingNotes}
-              className="mt-3 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-colors flex items-center gap-2 disabled:opacity-50 text-sm shadow-md"
-            >
-              {isSavingNotes ? <Loader2 className="animate-spin" size={16} /> : <CheckCircle2 size={16} />}
-              Sauvegarder les notes
-            </button>
-          </div>
-
-        </motion.div>
-      </div>
-    </div>
+        <Card title="Notes RH">
+          <Textarea
+            label="Observations sur ce candidat"
+            placeholder="Ajoutez vos observations sur ce candidat…"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            rows={5}
+          />
+          <Button className="mt-4" onClick={handleSaveNotes} loading={isSavingNotes}>
+            <CheckCircle2 size={16} strokeWidth={1.5} aria-hidden="true" /> Sauvegarder les notes
+          </Button>
+        </Card>
+      </DetailPage>
+    </>
   );
 }
 

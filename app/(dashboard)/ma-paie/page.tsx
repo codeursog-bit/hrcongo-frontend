@@ -1,4 +1,5 @@
 'use client';
+import { DocumentReader } from '@/components/ui/DocumentReader';
 
 // ============================================================================
 // app/(dashboard)/ma-paie/page.tsx
@@ -370,10 +371,7 @@ export default function MyPayrollsPage() {
               </div>
 
               {/* Zone bulletin — fond gris, bulletin blanc centré en A4 */}
-              <div
-                className="bulletin-modal-scroll"
-                style={{ padding:'24px 20px', overflowY:'auto', maxHeight:'calc(100vh - 140px)' }}
-              >
+              <DocumentReader title="Mon bulletin de paie" fitPage initialZoom={0.72}>
                 {/*
                   ✅ Fix A4 : width: '210mm' fixe (pas width:100% + maxWidth:210mm)
                   Le BulletinDisplay rend lui-même le div #bulletin-root avec width:210mm
@@ -390,7 +388,7 @@ export default function MyPayrollsPage() {
                   )}
                   <BulletinDisplay payroll={viewing} />
                 </div>
-              </div>
+              </DocumentReader>
             </div>
           </div>
         </>

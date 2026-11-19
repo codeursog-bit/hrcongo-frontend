@@ -10,7 +10,7 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
+        sans: ['var(--font-app, var(--font-jakarta))', 'sans-serif'],
       },
       colors: {
         primary: '#0EA5E9', // Sky Blue

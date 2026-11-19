@@ -1,8 +1,7 @@
-
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { LucideIcon } from 'lucide-react';
 
 interface ErrorLayoutProps {
@@ -11,70 +10,58 @@ interface ErrorLayoutProps {
   description: string;
   icon: LucideIcon;
   children?: React.ReactNode;
+  /** Conservé pour compatibilité avec les anciens appels ; ignoré (le rendu utilise les tokens). */
   gradient?: string;
 }
 
-export const ErrorLayout: React.FC<ErrorLayoutProps> = ({ 
-  code, 
-  title, 
-  description, 
-  icon: Icon, 
+export const ErrorLayout: React.FC<ErrorLayoutProps> = ({
+  code,
+  title,
+  description,
+  icon: Icon,
   children,
-  gradient = "from-sky-500 to-emerald-500"
 }) => {
+  const reduceMotion = useReducedMotion();
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-2xl w-full text-center">
-        
-        {/* Illustration Area */}
-        <motion.div 
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.5 }}
-          className="relative w-40 h-40 mx-auto mb-8"
+    <div
+      className="min-h-screen flex items-center justify-center p-4"
+      style={{ background: 'var(--bg)', color: 'var(--text)' }}
+    >
+      <motion.div
+        initial={reduceMotion ? false : { y: 16, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.35, ease: [0.2, 0.8, 0.2, 1] }}
+        className="w-full max-w-xl text-center px-6 py-10 sm:px-10 sm:py-12"
+        style={{
+          background: 'var(--surface)',
+          borderRadius: 'var(--radius-card, 20px)',
+          boxShadow: 'var(--shadow-card)',
+        }}
+      >
+        <div
+          className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full"
+          style={{ background: 'var(--brand-soft)', color: 'var(--brand)' }}
+          aria-hidden="true"
         >
-          <div className={`absolute inset-0 bg-gradient-to-tr ${gradient} opacity-20 rounded-full blur-2xl animate-pulse`}></div>
-          <div className="relative w-full h-full bg-white dark:bg-gray-800 rounded-full shadow-xl flex items-center justify-center border border-gray-100 dark:border-gray-700">
-            <Icon size={64} className={`text-transparent bg-clip-text bg-gradient-to-br ${gradient}`} />
-          </div>
-          {/* Decorative small bubbles */}
-          <motion.div 
-            animate={{ y: [0, -10, 0] }} 
-            transition={{ repeat: Infinity, duration: 3 }}
-            className={`absolute -top-2 -right-2 w-12 h-12 bg-gradient-to-br ${gradient} rounded-full flex items-center justify-center text-white font-bold shadow-lg border-4 border-white dark:border-gray-900 text-sm`}
-          >
-            {code}
-          </motion.div>
-        </motion.div>
+          <Icon size={30} strokeWidth={1.5} />
+        </div>
 
-        {/* Content */}
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2 }}
+        <span
+          className="inline-block mb-4 rounded-full px-3 py-1 text-xs font-semibold tracking-wide"
+          style={{ background: 'var(--surface-2)', color: 'var(--text-muted)' }}
         >
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4 tracking-tight">
-            {title}
-          </h1>
-          <p className="text-lg text-gray-500 dark:text-gray-400 mb-8 max-w-lg mx-auto leading-relaxed">
-            {description}
-          </p>
+          {code}
+        </span>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            {children}
-          </div>
-        </motion.div>
+        <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-3" style={{ color: 'var(--text)' }}>
+          {title}
+        </h1>
+        <p className="text-base leading-relaxed mx-auto mb-8 max-w-md" style={{ color: 'var(--text-muted)' }}>
+          {description}
+        </p>
 
-        {/* Footer Brand */}
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="mt-12 text-gray-300 dark:text-gray-700 font-bold uppercase tracking-widest text-xs"
-        >
-          HRCongo System
-        </motion.div>
-      </div>
+        {children && <div className="flex flex-col items-center gap-4">{children}</div>}
+      </motion.div>
     </div>
   );
 };

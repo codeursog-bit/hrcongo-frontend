@@ -1,4 +1,9 @@
 'use client';
+import '@/components/leave-history/leave-workspace.css';
+import { ModuleSelect } from '@/components/ui/ModuleSelect';
+import { LeaveModuleFrame as ModulePageFrame } from '@/components/leave-history/LeaveModuleFrame';
+import { ModulePageSkeleton } from '@/components/requests/ModulePageFrame';
+import { Button } from '@/components/design-system/primitives';
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
@@ -32,13 +37,13 @@ const TYPE_CONFIG: Record<string, {
   text: string;     // couleur texte
   icon: React.ElementType;
 }> = {
-  ANNUAL:    { label: 'Congés Annuels', dot: 'bg-emerald-400', light: 'bg-emerald-100 dark:bg-emerald-900/40', text: 'text-emerald-700 dark:text-emerald-300', icon: Umbrella },
-  ANNUAL_ANTICIPATED: { label: 'Congé anticipé', dot: 'bg-emerald-300', light: 'bg-emerald-50 dark:bg-emerald-900/20', text: 'text-emerald-600 dark:text-emerald-300', icon: Umbrella },
-  SICK:      { label: 'Maladie',        dot: 'bg-red-400',    light: 'bg-red-100 dark:bg-red-900/40',    text: 'text-red-700 dark:text-red-300',    icon: Stethoscope },
-  MATERNITY: { label: 'Maternité',      dot: 'bg-amber-400',  light: 'bg-amber-100 dark:bg-amber-900/40', text: 'text-amber-700 dark:text-amber-300', icon: Baby },
-  PATERNITY: { label: 'Paternité',      dot: 'bg-emerald-400', light: 'bg-emerald-100 dark:bg-emerald-900/40', text: 'text-emerald-700 dark:text-emerald-300', icon: User },
+  ANNUAL:    { label: 'Congés Annuels', dot: 'bg-[var(--brand)]', light: 'bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))] ', text: 'text-[var(--action)] ', icon: Umbrella },
+  ANNUAL_ANTICIPATED: { label: 'Congé anticipé', dot: 'bg-[var(--brand)]', light: 'bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))] ', text: 'text-[var(--action)] ', icon: Umbrella },
+  SICK:      { label: 'Maladie',        dot: 'bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]',    light: 'bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] ',    text: 'text-[var(--danger-text)] ',    icon: Stethoscope },
+  MATERNITY: { label: 'Maternité',      dot: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]',  light: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] ', text: 'text-[var(--warning-text)] ', icon: Baby },
+  PATERNITY: { label: 'Paternité',      dot: 'bg-[var(--brand)]', light: 'bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))] ', text: 'text-[var(--action)] ', icon: User },
   UNPAID:    { label: 'Sans Solde',     dot: 'bg-[var(--text-muted)]', light: 'bg-[var(--surface-2)]', text: 'text-[var(--text-muted)]', icon: Ban },
-  SPECIAL:   { label: 'Spécial',        dot: 'bg-amber-400', light: 'bg-amber-100 dark:bg-amber-900/40', text: 'text-amber-700 dark:text-amber-300', icon: Star },
+  SPECIAL:   { label: 'Spécial',        dot: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]', light: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] ', text: 'text-[var(--warning-text)] ', icon: Star },
 };
 
 const DAYS_FR = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
@@ -56,6 +61,7 @@ function isInRange(d: string, start: string, end: string): boolean {
 }
 
 export default function CalendarPage() {
+  const [uiLoadError,setUiLoadError]=useState('');
   const router = useRouter();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [leaves, setLeaves] = useState<LeaveEvent[]>([]);
@@ -95,7 +101,7 @@ export default function CalendarPage() {
         }));
         setLeaves(mapped);
       } catch (e) {
-        console.error(e);
+        console.error(e); setUiLoadError('Le chargement a échoué. Réessayez dans un instant.');
       } finally {
         setIsLoading(false);
       }
@@ -156,20 +162,20 @@ export default function CalendarPage() {
   }, [approvedLeaves, year, month, daysInMonth]);
 
   return (
-    <div className="max-w-[1600px] mx-auto pb-20 space-y-6">
+    <ModulePageFrame kind="list" error={uiLoadError}><div className="max-w-[1600px] mx-auto pb-20 space-y-6">
       <CongeSubNav userRole={userRole} />
 
       {/* ── HEADER ── */}
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <button
+        <div className="flex items-center gap-4 leave-header">
+          <Button variant="ghost"
             onClick={() => router.back()}
             className="p-2.5 bg-[var(--surface)] rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)] transition-colors"
           >
             <ArrowLeft size={18} className="text-[var(--text-muted)]" />
-          </button>
+          </Button>
           <div>
-            <h1 className="text-2xl font-bold text-[var(--text)]">
+            <h1 className="text-2xl font-semibold text-[var(--text)]">
               Calendrier des Congés
             </h1>
             <p className="text-sm text-[var(--text-muted)]">
@@ -183,46 +189,46 @@ export default function CalendarPage() {
         <div className="flex items-center gap-3 flex-wrap">
           {/* Filtre département (visible pour ADMIN/HR qui voient plusieurs depts) */}
           {departments.length > 2 && (
-            <select
+            <ModuleSelect
               value={filterDept}
               onChange={(e) => setFilterDept(e.target.value)}
-              className="text-sm border border-[var(--border)] rounded-xl px-3 py-2.5 bg-[var(--surface)] text-[var(--text-muted)] outline-none focus:ring-2 focus:ring-emerald-500/20"
+              className="text-sm border border-[var(--border)] rounded-xl px-3 py-2.5 bg-[var(--surface)] text-[var(--text-muted)] outline-none focus:ring-2 focus:ring-[var(--focus)]"
             >
               {departments.map((d) => (
                 <option key={d} value={d}>{d}</option>
               ))}
-            </select>
+            </ModuleSelect>
           )}
 
           {/* Navigation mois */}
           <div className="flex items-center gap-2 bg-[var(--surface)] border border-[var(--border)] rounded-xl p-1">
-            <button
+            <Button variant="ghost"
               onClick={prevMonth}
               className="p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
             >
               <ChevronLeft size={18} className="text-[var(--text-muted)]" />
-            </button>
-            <button
+            </Button>
+            <Button variant="ghost"
               onClick={goToToday}
               className="px-3 py-1 text-sm font-semibold text-[var(--text-muted)] hover:bg-[var(--surface-2)] rounded-lg transition-colors min-w-[140px] text-center"
             >
               {MONTHS_FR[month]} {year}
-            </button>
-            <button
+            </Button>
+            <Button variant="ghost"
               onClick={nextMonth}
               className="p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
             >
               <ChevronRight size={18} className="text-[var(--text-muted)]" />
-            </button>
+            </Button>
           </div>
         </div>
       </div>
 
       {/* ── INFO MANAGER ── */}
       {userRole === 'MANAGER' && (
-        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800 rounded-xl px-4 py-3 flex items-center gap-3 text-sm">
-          <Info size={16} className="text-amber-500 shrink-0" />
-          <p className="text-amber-700 dark:text-amber-300">
+        <div className="bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  border border-[var(--border)]  rounded-xl px-4 py-3 flex items-center gap-3 text-sm">
+          <Info size={16} className="text-[var(--warning-text)] shrink-0" />
+          <p className="text-[var(--warning-text)] ">
             Vous visualisez uniquement les congés de votre département.
           </p>
         </div>
@@ -234,7 +240,7 @@ export default function CalendarPage() {
         <div className="xl:col-span-3 bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden shadow-sm">
 
           {isLoading ? (
-            <KonzaLoader variant="section" />
+            <ModulePageSkeleton />
           ) : (
             <>
               {/* Jours de semaine */}
@@ -242,7 +248,7 @@ export default function CalendarPage() {
                 {DAYS_FR.map((day) => (
                   <div
                     key={day}
-                    className="py-3 text-xs font-bold text-[var(--text-muted)] uppercase text-center tracking-wider"
+                    className="py-3 text-xs font-semibold text-[var(--text-muted)] uppercase text-center tracking-wider"
                   >
                     {day}
                   </div>
@@ -278,14 +284,14 @@ export default function CalendarPage() {
                         isWeekend
                           ? 'bg-[var(--surface-2)]'
                           : 'bg-[var(--surface)]'
-                      } ${isSelected ? 'ring-2 ring-inset ring-emerald-400' : 'hover:bg-emerald-50/30 dark:hover:bg-[var(--surface-2)]'}`}
+                      } ${isSelected ? 'ring-2 ring-inset ring-[var(--focus)]' : 'hover:bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))] dark:hover:bg-[var(--surface-2)]'}`}
                     >
                       {/* Numéro du jour */}
                       <div className="flex justify-end mb-1">
                         <span
                           className={`w-7 h-7 flex items-center justify-center rounded-full text-sm font-semibold ${
                             isToday
-                              ? 'bg-emerald-500 text-white'
+                              ? 'bg-[var(--brand)] text-[var(--on-brand)]'
                               : isWeekend
                               ? 'text-[var(--text-muted)]'
                               : 'text-[var(--text-muted)]'
@@ -328,11 +334,11 @@ export default function CalendarPage() {
 
           {/* Stat rapide */}
           <div className="bg-[var(--surface)] rounded-2xl p-5 border border-[var(--border)]">
-            <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-3">
+            <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">
               Ce mois
             </p>
             <div className="flex items-end gap-2">
-              <span className="text-3xl font-bold text-[var(--text)]">
+              <span className="text-3xl font-semibold text-[var(--text)]">
                 {monthStats.uniqueEmployees}
               </span>
               <span className="text-sm text-[var(--text-muted)] mb-1">
@@ -343,7 +349,7 @@ export default function CalendarPage() {
 
           {/* Légende */}
           <div className="bg-[var(--surface)] rounded-2xl p-5 border border-[var(--border)]">
-            <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-4">
+            <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-4">
               Légende
             </p>
             <div className="space-y-2.5">
@@ -361,12 +367,12 @@ export default function CalendarPage() {
             <motion.div
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-[var(--surface)] rounded-2xl p-5 border border-emerald-100 dark:border-emerald-900/40 shadow-sm"
+              className="bg-[var(--surface)] rounded-2xl p-5 border border-[var(--border)]  shadow-sm"
             >
-              <p className="text-xs font-bold text-emerald-500 uppercase tracking-wider mb-1">
+              <p className="text-xs font-semibold text-[var(--action)] uppercase tracking-wider mb-1">
                 Absences du
               </p>
-              <p className="font-bold text-[var(--text)] text-sm mb-4">
+              <p className="font-semibold text-[var(--text)] text-sm mb-4">
                 {new Date(selectedDay + 'T00:00:00').toLocaleDateString('fr-FR', {
                   weekday: 'long',
                   day: 'numeric',
@@ -392,7 +398,7 @@ export default function CalendarPage() {
                             className="w-8 h-8 rounded-lg object-cover shrink-0"
                           />
                         ) : (
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${cfg.text} bg-white/60 dark:bg-black/20`}>
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-semibold shrink-0 ${cfg.text} bg-[var(--surface)] dark:bg-[rgb(0_0_0_/.48)]`}>
                             {leave.initials}
                           </div>
                         )}
@@ -411,6 +417,6 @@ export default function CalendarPage() {
           )}
         </div>
       </div>
-    </div>
+    </div></ModulePageFrame>
   );
 }

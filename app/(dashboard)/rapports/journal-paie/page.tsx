@@ -1,4 +1,7 @@
 'use client';
+import { ModuleSelect } from '@/components/ui/ModuleSelect';
+
+import { DocumentPreviewPanel } from '@/components/ui/DocumentReader';
 
 // ============================================================================
 // 📁 app/(dashboard)/rapports/journal-paie/page.tsx
@@ -31,6 +34,7 @@ import JournalDashboard from '@/components/payroll-journal/JournalDashboard';
 import JournalTable from '@/components/payroll-journal/JournalTable';
 import JournalPrintable from '@/components/payroll-journal/JournalPrintable';
 import ForeignPayModal from '@/components/payroll-journal/ForeignPayModal';
+import { ReportsFrame as ModulePageFrame } from '@/components/reports/ReportsFrame';
 
 const REPORT_ID = 'journal-paie-print';
 const CURRENT_YEAR = new Date().getFullYear();
@@ -39,7 +43,7 @@ const YEARS = [CURRENT_YEAR - 1, CURRENT_YEAR, CURRENT_YEAR + 1];
 const selectCls =
   'pl-3 pr-8 py-2 text-sm rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] font-medium appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/50';
 
-export default function JournalPaiePage() {
+function JournalPaiePage() {
   const router = useRouter();
   const { bp } = useBasePath();
 
@@ -129,19 +133,19 @@ export default function JournalPaiePage() {
     <div className="min-h-screen bg-[var(--bg)] p-4 md:p-6">
       {/* ── En-tête ─────────────────────────────────────────────────── */}
       <div className="mb-6">
-        <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center justify-between flex-wrap gap-3 reports-header">
           <div className="flex items-center gap-3">
             <button
               onClick={() => router.push(bp('/rapports'))}
               className="p-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-2)] transition-colors"
             >
-              <ArrowLeft className="w-4 h-4 text-[var(--text-muted)]" />
+              <ArrowLeft strokeWidth={1.5} className="w-4 h-4 text-[var(--text-muted)]" />
             </button>
-            <div className="p-2.5 bg-[var(--brand)] rounded-xl shadow-lg shadow-[var(--brand)]/30">
-              <BookOpen className="w-5 h-5 text-white" />
+            <div className="p-2.5 bg-[var(--surface)] rounded-xl shadow-lg shadow-[var(--brand)]/30">
+              <BookOpen strokeWidth={1.5} className="w-5 h-5 text-[var(--text)]" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-[var(--text)]">Journal de paie</h1>
+              <h1 className="text-lg font-semibold text-[var(--text)]">Journal de paie</h1>
               <p className="text-sm text-[var(--text-muted)]">
                 Récapitulatif, détail par employé et expatriés — {MONTHS_FR[period.month - 1]} {period.year}
               </p>
@@ -152,9 +156,9 @@ export default function JournalPaiePage() {
             <button
               onClick={() => openForeign()}
               disabled={!hasRows}
-              className="px-3 py-2 text-sm font-semibold rounded-xl border border-violet-300 dark:border-violet-700 text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-900/20 hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
+              className="px-3 py-2 text-sm font-semibold rounded-xl border border-[var(--border)] text-[var(--action)] bg-[var(--brand-soft)] hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
             >
-              <Globe2 className="w-4 h-4" /> Paie expatrié
+              <Globe2 strokeWidth={1.5} className="w-4 h-4" /> Paie expatrié
             </button>
 
             {/* Couleur / Noir & blanc — s'applique à l'impression et au PDF */}
@@ -162,16 +166,16 @@ export default function JournalPaiePage() {
               <button
                 onClick={() => setMono(false)}
                 title="Impression en couleur"
-                className={`px-3 py-2 text-sm font-semibold flex items-center gap-1.5 ${!mono ? 'bg-[var(--brand)] text-white' : 'text-[var(--text)]'}`}
+                className={`px-3 py-2 text-sm font-semibold flex items-center gap-1.5 ${!mono ? 'bg-[var(--brand)] text-[var(--text)]' : 'text-[var(--text)]'}`}
               >
-                <Palette className="w-4 h-4" /> Couleur
+                <Palette strokeWidth={1.5} className="w-4 h-4" /> Couleur
               </button>
               <button
                 onClick={() => setMono(true)}
                 title="Impression en noir et blanc"
-                className={`px-3 py-2 text-sm font-semibold flex items-center gap-1.5 ${mono ? 'bg-[var(--brand)] text-white' : 'text-[var(--text)]'}`}
+                className={`px-3 py-2 text-sm font-semibold flex items-center gap-1.5 ${mono ? 'bg-[var(--brand)] text-[var(--text)]' : 'text-[var(--text)]'}`}
               >
-                <Contrast className="w-4 h-4" /> N&amp;B
+                <Contrast strokeWidth={1.5} className="w-4 h-4" /> N&amp;B
               </button>
             </div>
 
@@ -180,22 +184,22 @@ export default function JournalPaiePage() {
               disabled={!hasRows}
               className="px-3 py-2 text-sm font-semibold rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] hover:bg-[var(--surface-2)] disabled:opacity-50 flex items-center gap-1.5"
             >
-              <Printer className="w-4 h-4" /> Imprimer
+              <Printer strokeWidth={1.5} className="w-4 h-4" /> Imprimer
             </button>
             <button
               onClick={handleExcel}
               disabled={!hasRows || excelBusy}
-              className="px-3 py-2 text-sm font-semibold rounded-xl border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
+              className="px-3 py-2 text-sm font-semibold rounded-xl border border-[var(--border)] text-[var(--action)] bg-[var(--brand-soft)] hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
             >
-              {excelBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileSpreadsheet className="w-4 h-4" />}
+              {excelBusy ? <Loader2 strokeWidth={1.5} className="w-4 h-4 animate-spin" /> : <FileSpreadsheet strokeWidth={1.5} className="w-4 h-4" />}
               Excel
             </button>
             <button
               onClick={handlePdf}
               disabled={!hasRows || pdfBusy}
-              className="px-3 py-2 text-sm font-semibold rounded-xl bg-[var(--brand)] text-white shadow-md shadow-[var(--brand)]/30 hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
+              className="px-3 py-2 text-sm font-semibold rounded-xl bg-[var(--brand)] text-[var(--text)] shadow-md shadow-[var(--brand)]/30 hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
             >
-              {pdfBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
+              {pdfBusy ? <Loader2 strokeWidth={1.5} className="w-4 h-4 animate-spin" /> : <FileDown strokeWidth={1.5} className="w-4 h-4" />}
               PDF
             </button>
           </div>
@@ -204,7 +208,7 @@ export default function JournalPaiePage() {
         {/* ── Période ───────────────────────────────────────────────── */}
         <div className="mt-4 flex items-center gap-3 flex-wrap">
           <div className="relative">
-            <select
+            <ModuleSelect
               value={period.month}
               onChange={(e) => setPeriod((p) => ({ ...p, month: Number(e.target.value) }))}
               className={selectCls}
@@ -212,11 +216,11 @@ export default function JournalPaiePage() {
               {MONTHS_FR.map((m, i) => (
                 <option key={m} value={i + 1}>{m}</option>
               ))}
-            </select>
-            <ChevronDown className="w-4 h-4 absolute right-2.5 top-2.5 text-[var(--text-muted)] pointer-events-none" />
+            </ModuleSelect>
+            <ChevronDown strokeWidth={1.5} className="w-4 h-4 absolute right-2.5 top-2.5 text-[var(--text-muted)] pointer-events-none" />
           </div>
           <div className="relative">
-            <select
+            <ModuleSelect
               value={period.year}
               onChange={(e) => setPeriod((p) => ({ ...p, year: Number(e.target.value) }))}
               className={selectCls}
@@ -224,24 +228,24 @@ export default function JournalPaiePage() {
               {YEARS.map((y) => (
                 <option key={y} value={y}>{y}</option>
               ))}
-            </select>
-            <ChevronDown className="w-4 h-4 absolute right-2.5 top-2.5 text-[var(--text-muted)] pointer-events-none" />
+            </ModuleSelect>
+            <ChevronDown strokeWidth={1.5} className="w-4 h-4 absolute right-2.5 top-2.5 text-[var(--text-muted)] pointer-events-none" />
           </div>
         </div>
 
         <RapportsSubNav active="/rapports/journal-paie" />
 
         {actionError && (
-          <div className="mt-4 flex items-start gap-3 p-4 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-2xl">
-            <AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-            <p className="text-sm text-red-700 dark:text-red-300">{actionError}</p>
+          <div className="mt-4 flex items-start gap-3 p-4 bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] border border-[var(--border)] rounded-2xl">
+            <AlertTriangle strokeWidth={1.5} className="w-5 h-5 text-[var(--danger-text)] shrink-0 mt-0.5" />
+            <p className="text-sm text-[var(--danger-text)]">{actionError}</p>
           </div>
         )}
 
         {loadError && (
-          <div className="mt-4 flex items-start gap-3 p-4 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-2xl">
-            <AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-            <p className="text-sm text-red-700 dark:text-red-300">{loadError}</p>
+          <div className="mt-4 flex items-start gap-3 p-4 bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] border border-[var(--border)] rounded-2xl">
+            <AlertTriangle strokeWidth={1.5} className="w-5 h-5 text-[var(--danger-text)] shrink-0 mt-0.5" />
+            <p className="text-sm text-[var(--danger-text)]">{loadError}</p>
           </div>
         )}
       </div>
@@ -250,7 +254,7 @@ export default function JournalPaiePage() {
       {isLoading ? (
         <KonzaLoader variant="section" />
       ) : !journal || journal.rows.length === 0 ? (
-        <div className="bg-[var(--surface)] rounded-2xl p-12 border border-[var(--border)] text-center text-[var(--text-muted)]">
+        <div className="bg-[var(--surface)] rounded-2xl p-12 border border-[var(--border)] text-center text-[var(--text-muted)] reports-card">
           Aucun bulletin trouvé pour cette période.
         </div>
       ) : (
@@ -259,11 +263,11 @@ export default function JournalPaiePage() {
 
           <div>
             <div className="flex items-center justify-between mb-2">
-              <h2 className="text-sm font-bold text-[var(--text)]">
+              <h2 className="text-sm font-semibold text-[var(--text)]">
                 Journal détaillé — du plus payé au moins payé
               </h2>
               <p className="text-xs text-[var(--text-muted)]">
-                Montants en FCFA · l'icône <Globe2 className="w-3 h-3 inline -mt-0.5" /> permet de saisir la paie à l'étranger d'un expatrié
+                Montants en FCFA · l'icône <Globe2 strokeWidth={1.5} className="w-3 h-3 inline -mt-0.5" /> permet de saisir la paie à l'étranger d'un expatrié
               </p>
             </div>
             <JournalTable journal={journal} onEditForeign={openForeign} />
@@ -284,10 +288,19 @@ export default function JournalPaiePage() {
 
       {/* ── Document imprimable : hors écran, généré depuis les données déjà chargées ── */}
       {journal && journal.rows.length > 0 && (
-        <div style={{ position: 'fixed', top: -99999, left: -99999 }}>
+        <DocumentPreviewPanel title="Journal de paie" landscape><div style={{ position: 'fixed', top: -99999, left: -99999 }}>
           <JournalPrintable id={REPORT_ID} journal={journal} mono={mono} />
-        </div>
+        </div></DocumentPreviewPanel>
       )}
     </div>
+  );
+}
+
+
+export default function JournalPaiePageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <JournalPaiePage />
+    </ModulePageFrame>
   );
 }

@@ -1,5 +1,9 @@
 'use client';
 
+import { ModulePageFrame, ModulePageSkeleton } from '@/components/requests/ModulePageFrame';
+import { Button } from '@/components/design-system/primitives';
+import './refonte.css';
+import { Modal, useToast } from '@/components/design-system/feedback';
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Search, Plus, Monitor, Car, HardHat, Smartphone,
@@ -121,7 +125,7 @@ const CategoryInput = ({
       {options.length > 0 && (
         <div className="mt-2 max-h-32 overflow-y-auto overscroll-contain pr-1 flex flex-wrap gap-2">
           {options.map(o => (
-            <button
+            <Button variant="ghost"
               key={o.label}
               type="button"
               onClick={() => onChange(o.label)}
@@ -133,7 +137,7 @@ const CategoryInput = ({
                     : 'bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)] hover:bg-[var(--border)]'}`}
             >
               <o.icon size={12} /> {o.label}
-            </button>
+            </Button>
           ))}
         </div>
       )}
@@ -172,12 +176,12 @@ const AssetActionsMenu = ({
 
   return (
     <div ref={ref} className="relative">
-      <button
+      <Button variant="ghost"
         onClick={e => { e.stopPropagation(); setOpen(o => !o); }}
         className="p-1.5 rounded-lg hover:bg-[var(--surface-2)] text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
       >
         <MoreVertical size={16} />
-      </button>
+      </Button>
 
       <AnimatePresence>
         {open && (
@@ -190,32 +194,32 @@ const AssetActionsMenu = ({
             className="absolute right-0 top-8 w-52 bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-xl z-[100] overflow-hidden py-1"
           >
             {/* Modifier */}
-            <button
+            <Button variant="ghost"
               onClick={() => { setOpen(false); onEdit(); }}
               className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-[var(--surface-2)] transition-colors text-left"
             >
               <Pencil size={15} className="text-sky-500" />
               <span className="text-sm text-[var(--text)]">Modifier</span>
-            </button>
+            </Button>
 
             {/* Assigner / désassigner */}
             {asset.status === 'AVAILABLE' && (
-              <button
+              <Button variant="ghost"
                 onClick={() => { setOpen(false); onAssign(); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-[var(--surface-2)] transition-colors text-left"
               >
                 <UserCheck size={15} className="text-emerald-500" />
                 <span className="text-sm text-[var(--text)]">Assigner à un employé</span>
-              </button>
+              </Button>
             )}
             {asset.status === 'IN_USE' && asset.employee && (
-              <button
+              <Button variant="ghost"
                 onClick={() => { setOpen(false); onUnassign(); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-[var(--surface-2)] transition-colors text-left"
               >
                 <User size={15} className="text-red-500" />
                 <span className="text-sm text-red-500">Retirer à {asset.employee.firstName}</span>
-              </button>
+              </Button>
             )}
 
             {/* Séparateur si actions statut */}
@@ -225,25 +229,25 @@ const AssetActionsMenu = ({
 
             {/* Changer statut */}
             {availableActions.map(action => (
-              <button
+              <Button variant="ghost"
                 key={action.status}
                 onClick={() => { setOpen(false); onStatusChange(asset.id, action.status); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-[var(--surface-2)] transition-colors text-left"
               >
                 <action.icon size={15} className={action.color} />
                 <span className="text-sm text-[var(--text)]">{action.label}</span>
-              </button>
+              </Button>
             ))}
 
             {/* Supprimer */}
             <div className="border-t border-[var(--border)] my-1" />
-            <button
+            <Button variant="ghost"
               onClick={() => { setOpen(false); onDelete(); }}
               className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-red-500/10 transition-colors text-left"
             >
               <Trash2 size={15} className="text-red-500" />
               <span className="text-sm text-red-500">Supprimer</span>
-            </button>
+            </Button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -253,6 +257,8 @@ const AssetActionsMenu = ({
 
 // ── Page principale ───────────────────────────────────────────────────────────
 export default function AssetsPage() {
+  const uiNotify = useToast();
+  const [uiLoadError, setUiLoadError] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -314,6 +320,7 @@ export default function AssetsPage() {
         setEmployees(empList);
       } catch (e) {
         console.error('Erreur chargement:', e);
+        setUiLoadError('Le parc matériel n’a pas pu être chargé. Réessayez dans un instant.');
       } finally {
         setIsLoading(false);
       }
@@ -344,6 +351,7 @@ export default function AssetsPage() {
         setAssets(prev => [created, ...prev]);
       }
       closeForm();
+      uiNotify('success', editingAsset ? 'Matériel mis à jour' : 'Matériel ajouté');
     } catch (e: any) {
       alert(e?.message || (editingAsset ? 'Erreur lors de la modification.' : 'Erreur lors de la création.'));
     } finally {
@@ -358,6 +366,7 @@ export default function AssetsPage() {
       await api.delete(`/assets/${deleteAsset.id}`);
       setAssets(prev => prev.filter(a => a.id !== deleteAsset.id));
       setDeleteAsset(null);
+      uiNotify('success', 'Matériel supprimé');
     } catch (e: any) {
       alert(e?.message || 'Erreur lors de la suppression.');
       setDeleteAsset(null);
@@ -374,6 +383,7 @@ export default function AssetsPage() {
       setAssets(prev => prev.map(a => a.id === assignAsset.id ? updated : a));
       setAssignAsset(null);
       setSelectedEmployeeId('');
+      uiNotify('success', 'Matériel attribué');
     } catch (e: any) {
       alert(e?.message || "Erreur lors de l'assignation.");
     } finally {
@@ -386,6 +396,7 @@ export default function AssetsPage() {
     try {
       const updated = await api.patch<Asset>(`/assets/${asset.id}/assign`, { employeeId: null });
       setAssets(prev => prev.map(a => a.id === asset.id ? updated : a));
+      uiNotify('success', 'Attribution retirée');
     } catch { alert('Erreur technique.'); }
   };
 
@@ -394,6 +405,7 @@ export default function AssetsPage() {
     try {
       const updated = await api.patch<Asset>(`/assets/${assetId}/status`, { status: newStatus });
       setAssets(prev => prev.map(a => a.id === assetId ? updated : a));
+      uiNotify('success', 'Statut mis à jour');
     } catch (e: any) {
       alert(e?.message || 'Erreur lors du changement de statut.');
     }
@@ -451,7 +463,7 @@ export default function AssetsPage() {
   const modalBorder = "border border-[var(--border)]";
 
   return (
-    <div className="max-w-[1600px] mx-auto pb-20 space-y-8 relative">
+    <ModulePageFrame kind="list" error={uiLoadError}><div className="materiel-refonte"><div className="max-w-[1600px] mx-auto pb-20 space-y-8 relative">
 
       {/* Ambiance background — visible surtout en dark */}
       <div className="fixed inset-0 z-0 pointer-events-none">
@@ -472,12 +484,12 @@ export default function AssetsPage() {
             <p className="text-[var(--text-muted)]">Gestion centralisée des actifs et dotations.</p>
           </div>
         </div>
-        <button
+        <Button variant="primary"
           onClick={openCreate}
           className="px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold shadow-lg hover:shadow-emerald-500/30 transition-colors flex items-center gap-2 group"
         >
           <Plus size={20} className="group-hover:rotate-90 transition-transform" /> Nouvelle Dotation
-        </button>
+        </Button>
       </div>
 
       {/* ── MÉTRIQUES ── */}
@@ -508,13 +520,13 @@ export default function AssetsPage() {
         <div className="p-5 border-b border-[var(--border)] flex flex-col md:flex-row gap-4 justify-between items-center">
           <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
             {[{ id: 'All', label: 'Tout', n: assets.length }, ...categoryChips].map(cat => (
-              <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
+              <Button variant="ghost" key={cat.id} onClick={() => setActiveCategory(cat.id)}
                 className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap border transition-colors
                   ${effectiveCategory === cat.id
                     ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/20'
                     : 'bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)] hover:bg-[var(--border)]'}`}>
                 {cat.label} <span className="opacity-60 font-semibold">({cat.n})</span>
-              </button>
+              </Button>
             ))}
           </div>
           <div className="relative w-full md:w-64 group">
@@ -526,11 +538,11 @@ export default function AssetsPage() {
 
         {/* Grid */}
         {isLoading ? (
-          <KonzaLoader variant="section" />
+          <ModulePageSkeleton label="Chargement du matériel" />
         ) : filteredAssets.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-32 text-[var(--text-muted)]">
             <Search size={40} className="mb-3 opacity-30" />
-            <p className="text-sm">Aucun équipement trouvé.</p>
+            <p className="text-sm">{searchQuery ? 'Essayez un autre nom ou numéro de série.' : 'Ajoutez votre premier équipement pour suivre ses attributions.'}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 p-5">
@@ -608,10 +620,10 @@ export default function AssetsPage() {
                           <span className="text-xs text-[var(--text-muted)] italic flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-[var(--border)] inline-block" /> En stock
                           </span>
-                          <button onClick={() => setAssignAsset(asset)}
+                          <Button variant="primary" onClick={() => setAssignAsset(asset)}
                             className="text-xs font-bold text-white bg-emerald-500 hover:bg-emerald-600 px-3 py-1.5 rounded-lg transition-colors shadow-md shadow-emerald-500/20">
                             Assigner
-                          </button>
+                          </Button>
                         </div>
                       )}
                     </div>
@@ -626,20 +638,7 @@ export default function AssetsPage() {
       {/* ── MODAL CRÉER ── */}
       <AnimatePresence>
         {showCreateModal && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 dark:bg-black/80 backdrop-blur-md p-4">
-            <motion.div initial={{ scale: 0.92, y: 16 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.92, y: 16 }}
-              className={`${modalBg} ${modalBorder} rounded-2xl p-7 max-w-lg w-full max-h-[92vh] overflow-y-auto shadow-2xl relative`}>
-
-              <div className="flex justify-between items-center mb-7">
-                <h3 className="text-xl font-bold text-[var(--text)] flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500">{editingAsset ? <Pencil size={18} /> : <Plus size={18} />}</div>
-                  {editingAsset ? 'Modifier le matériel' : 'Nouveau Matériel'}
-                </h3>
-                <button onClick={closeForm} className="p-2 hover:bg-[var(--surface-2)] rounded-full text-[var(--text-muted)] hover:text-[var(--text)] transition-colors">
-                  <X size={18} />
-                </button>
-              </div>
+          <Modal open title={editingAsset ? "Modifier le matériel" : "Nouveau matériel"} onClose={closeForm}>
 
               <div className="space-y-4">
                 <div>
@@ -673,31 +672,23 @@ export default function AssetsPage() {
               </div>
 
               <div className="flex gap-3 mt-7">
-                <button onClick={closeForm}
+                <Button variant="ghost" onClick={closeForm}
                   className="flex-1 py-3.5 border border-[var(--border)] rounded-xl font-bold text-[var(--text-muted)] hover:bg-[var(--surface-2)] transition-colors">
                   Annuler
-                </button>
-                <button onClick={handleCreateAsset} disabled={isCreating || !newAsset.name.trim() || !newAsset.category.trim()}
+                </Button>
+                <Button variant="primary" onClick={handleCreateAsset} disabled={isCreating || !newAsset.name.trim() || !newAsset.category.trim()}
                   className="flex-1 py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl flex justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/20">
                   {isCreating && <Loader2 className="animate-spin" size={18} />} {editingAsset ? 'Enregistrer' : 'Créer'}
-                </button>
+                </Button>
               </div>
-            </motion.div>
-          </motion.div>
+            </Modal>
         )}
       </AnimatePresence>
 
       {/* ── MODAL SUPPRIMER ── */}
       <AnimatePresence>
         {deleteAsset && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 dark:bg-black/80 backdrop-blur-md p-4">
-            <motion.div initial={{ scale: 0.92, y: 16 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.92, y: 16 }}
-              className={`${modalBg} ${modalBorder} rounded-2xl p-7 max-w-md w-full shadow-2xl`}>
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center shrink-0"><Trash2 size={22} /></div>
-                <h3 className="text-xl font-bold text-[var(--text)]">Supprimer ce matériel ?</h3>
-              </div>
+          <Modal open title={"Supprimer ce matériel ?"} onClose={() => setDeleteAsset(null)}>
               <p className="text-sm text-[var(--text-muted)]">
                 <span className="font-bold text-[var(--text)]">« {deleteAsset.name} »</span> sera supprimé définitivement du parc.
               </p>
@@ -707,37 +698,23 @@ export default function AssetsPage() {
                 </div>
               )}
               <div className="flex gap-3 mt-7">
-                <button onClick={() => setDeleteAsset(null)} disabled={isDeleting}
+                <Button variant="ghost" onClick={() => setDeleteAsset(null)} disabled={isDeleting}
                   className="flex-1 py-3.5 border border-[var(--border)] rounded-xl font-bold text-[var(--text-muted)] hover:bg-[var(--surface-2)] transition-colors">
                   Annuler
-                </button>
-                <button onClick={handleDeleteAsset} disabled={isDeleting || deleteAsset.status === 'IN_USE'}
+                </Button>
+                <Button variant="ghost" onClick={handleDeleteAsset} disabled={isDeleting || deleteAsset.status === 'IN_USE'}
                   className="flex-1 py-3.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl flex justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                   {isDeleting ? <Loader2 className="animate-spin" size={18} /> : <Trash2 size={18} />} Supprimer
-                </button>
+                </Button>
               </div>
-            </motion.div>
-          </motion.div>
+            </Modal>
         )}
       </AnimatePresence>
 
       {/* ── MODAL ASSIGNER ── */}
       <AnimatePresence>
         {assignAsset && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 dark:bg-black/80 backdrop-blur-md p-4">
-            <motion.div initial={{ scale: 0.92, y: 16 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.92, y: 16 }}
-              className={`${modalBg} ${modalBorder} rounded-2xl p-7 max-w-lg w-full shadow-2xl`}>
-
-              <div className="flex justify-between items-center mb-6">
-                <div>
-                  <h3 className="text-xl font-bold text-[var(--text)]">Attribuer Matériel</h3>
-                  <p className="text-sm text-[var(--text-muted)]">{assignAsset.name}</p>
-                </div>
-                <button onClick={() => setAssignAsset(null)} className="p-2 hover:bg-[var(--surface-2)] rounded-full text-[var(--text-muted)] hover:text-[var(--text)] transition-colors">
-                  <X size={18} />
-                </button>
-              </div>
+          <Modal open title={"Attribuer le matériel"} onClose={() => setAssignAsset(null)}>
 
               <div className="space-y-5">
                 <div className="bg-[var(--surface-2)] p-4 rounded-xl border border-[var(--border)] flex items-center gap-4">
@@ -767,19 +744,18 @@ export default function AssetsPage() {
               </div>
 
               <div className="flex gap-3 mt-7">
-                <button onClick={() => setAssignAsset(null)}
+                <Button variant="ghost" onClick={() => setAssignAsset(null)}
                   className="flex-1 py-3.5 border border-[var(--border)] rounded-xl font-bold text-[var(--text-muted)] hover:bg-[var(--surface-2)] transition-colors">
                   Annuler
-                </button>
-                <button onClick={handleAssignSubmit} disabled={isAssigning || !selectedEmployeeId}
+                </Button>
+                <Button variant="primary" onClick={handleAssignSubmit} disabled={isAssigning || !selectedEmployeeId}
                   className="flex-1 py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl flex justify-center gap-2 transition-colors disabled:opacity-50 shadow-lg shadow-emerald-500/20">
                   {isAssigning && <Loader2 className="animate-spin" size={18} />} Confirmer
-                </button>
+                </Button>
               </div>
-            </motion.div>
-          </motion.div>
+            </Modal>
         )}
       </AnimatePresence>
-    </div>
+    </div></div></ModulePageFrame>
   );
 }

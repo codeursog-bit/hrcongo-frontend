@@ -1,5 +1,10 @@
+'use client';
+
+// components/ui/StatCard.tsx
+// Carte de chiffre clé : mêmes surfaces que le reste de l'app (sans bordure, ombre douce).
 import React from 'react';
 import { LucideIcon, ArrowUpRight, ArrowDownRight, Eye, EyeOff } from 'lucide-react';
+import '@/components/design-system/design-system.css';
 
 interface StatCardProps {
   label: string;
@@ -7,19 +12,19 @@ interface StatCardProps {
   trend: string;
   isPositive: boolean;
   icon: LucideIcon;
-  /** Couleur unique de l'accent (icône + halo). Ex: 'emerald' | 'amber' | 'sky' | 'red' */
+  /** Couleur de l'icône. Conservé tel quel pour ne pas toucher aux appels existants. */
   color?: 'emerald' | 'amber' | 'sky' | 'red' | 'violet';
   isPrivate?: boolean;
   showValue?: boolean;
   onToggleVisibility?: () => void;
 }
 
-const COLOR_MAP: Record<string, { icon: string; halo: string }> = {
-  emerald: { icon: 'bg-emerald-500', halo: 'bg-emerald-500' },
-  amber:   { icon: 'bg-amber-500',   halo: 'bg-amber-500' },
-  sky:     { icon: 'bg-sky-500',     halo: 'bg-sky-500' },
-  red:     { icon: 'bg-red-500',     halo: 'bg-red-500' },
-  violet:  { icon: 'bg-violet-500',  halo: 'bg-violet-500' },
+const TONES: Record<string, string> = {
+  emerald: 'var(--green)',
+  amber: 'var(--mustard)',
+  sky: 'var(--brand)',
+  red: 'var(--danger)',
+  violet: 'var(--brand)',
 };
 
 export const StatCard: React.FC<StatCardProps> = ({
@@ -33,59 +38,49 @@ export const StatCard: React.FC<StatCardProps> = ({
   showValue = true,
   onToggleVisibility,
 }) => {
-  const c = COLOR_MAP[color] || COLOR_MAP.emerald;
+  const tone = TONES[color] || TONES.emerald;
 
   return (
-    <div className="relative group h-full">
-      <div
-        className="relative h-full rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 overflow-hidden flex flex-col justify-between"
-        style={{
-          background: 'var(--surface)',
-          border: '1px solid var(--border)',
-        }}
-      >
-        {/* Halo décoratif — un seul ton uni, pas de dégradé */}
-        <div className={`absolute top-0 right-0 w-28 h-28 ${c.halo} opacity-[0.06] rounded-full blur-2xl -mr-8 -mt-8 pointer-events-none`} />
-
-        <div className="flex justify-between items-start mb-4 relative z-10">
-          <div className="flex-1">
-            <p className="text-[11px] font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>
-              {label}
-            </p>
-            <div className="flex items-center gap-2">
-              <h3 className="text-2xl lg:text-3xl font-extrabold tracking-tight" style={{ color: 'var(--text)' }}>
-                {isPrivate && !showValue ? '•••• FCFA' : value}
-              </h3>
-              {isPrivate && (
-                <button
-                  onClick={(e) => { e.stopPropagation(); onToggleVisibility && onToggleVisibility(); }}
-                  className="p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-                  style={{ color: 'var(--text-muted)' }}
-                >
-                  {showValue ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              )}
-            </div>
-          </div>
-
-          <div className={`w-12 h-12 rounded-xl ${c.icon} flex items-center justify-center text-white group-hover:scale-110 transition-transform duration-300`}>
-            <Icon size={22} strokeWidth={2.5} />
+    <div
+      className="h-full p-6 flex flex-col justify-between gap-5 transition-shadow duration-200 hover:shadow-[var(--shadow-pop)]"
+      style={{ background: 'var(--surface)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-card)' }}
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-[13px] font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>{label}</p>
+          <div className="flex items-center gap-2">
+            <h3 className="text-2xl lg:text-[28px] font-semibold tracking-tight tabular-nums" style={{ color: 'var(--text)' }}>
+              {isPrivate && !showValue ? '•••• FCFA' : value}
+            </h3>
+            {isPrivate && (
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onToggleVisibility && onToggleVisibility(); }}
+                aria-label={showValue ? 'Masquer le montant' : 'Afficher le montant'}
+                className="shell-icon-btn"
+                style={{ minWidth: 32, minHeight: 32, padding: 0 }}
+              >
+                {showValue ? <EyeOff size={16} strokeWidth={1.5} aria-hidden="true" /> : <Eye size={16} strokeWidth={1.5} aria-hidden="true" />}
+              </button>
+            )}
           </div>
         </div>
 
-        <div className="relative z-10 flex items-center gap-2">
-          <div
-            className={`flex items-center px-2.5 py-1 rounded-lg text-xs font-bold border ${
-              isPositive
-                ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-500/20'
-                : 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border-red-100 dark:border-red-500/20'
-            }`}
-          >
-            {isPositive ? <ArrowUpRight size={14} className="mr-1" /> : <ArrowDownRight size={14} className="mr-1" />}
-            {trend}
-          </div>
-          <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>vs dernier</span>
+        <div
+          className="shrink-0 w-11 h-11 rounded-full flex items-center justify-center"
+          style={{ background: `color-mix(in srgb, ${tone} 14%, transparent)`, color: tone }}
+          aria-hidden="true"
+        >
+          <Icon size={20} strokeWidth={1.5} />
         </div>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <span className={`k-badge ${isPositive ? 'k-tone-success' : 'k-tone-danger'}`} style={{ gap: 4 }}>
+          {isPositive ? <ArrowUpRight size={14} strokeWidth={1.5} aria-hidden="true" /> : <ArrowDownRight size={14} strokeWidth={1.5} aria-hidden="true" />}
+          {trend}
+        </span>
+        <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>vs dernier</span>
       </div>
     </div>
   );

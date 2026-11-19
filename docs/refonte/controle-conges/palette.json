@@ -1,0 +1,85 @@
+{
+  "date": "2026-11-18",
+  "files": [
+    {
+      "file": "app/(dashboard)/conges/analyse/page.tsx",
+      "before": 0,
+      "after": 0
+    },
+    {
+      "file": "app/(dashboard)/conges/calendrier/page.tsx",
+      "before": 44,
+      "after": 0
+    },
+    {
+      "file": "app/(dashboard)/conges/diagrammes/page.tsx",
+      "before": 22,
+      "after": 0
+    },
+    {
+      "file": "app/(dashboard)/conges/gestion/page.tsx",
+      "before": 62,
+      "after": 0
+    },
+    {
+      "file": "app/(dashboard)/conges/historique/page.tsx",
+      "before": 47,
+      "after": 0
+    },
+    {
+      "file": "app/(dashboard)/conges/mon-espace/page.tsx",
+      "before": 110,
+      "after": 0
+    },
+    {
+      "file": "app/(dashboard)/conges/nouveau/page.tsx",
+      "before": 105,
+      "after": 0
+    },
+    {
+      "file": "app/(dashboard)/conges/page.tsx",
+      "before": 110,
+      "after": 0
+    },
+    {
+      "file": "app/(dashboard)/conges/planning/page.tsx",
+      "before": 25,
+      "after": 0
+    },
+    {
+      "file": "app/(dashboard)/conges/programme/page.tsx",
+      "before": 99,
+      "after": 0
+    },
+    {
+      "file": "app/(dashboard)/conges/provision/page.tsx",
+      "before": 64,
+      "after": 0
+    },
+    {
+      "file": "app/(dashboard)/conges/soldes/page.tsx",
+      "before": 97,
+      "after": 0
+    },
+    {
+      "file": "app/(dashboard)/conges/[id]/page.tsx",
+      "before": 93,
+      "after": 0
+    },
+    {
+      "file": "components/leave-history/LeaveCharts.tsx",
+      "before": 14,
+      "after": 0
+    },
+    {
+      "file": "components/leave-history/EmployeeDepartureDrawer.tsx",
+      "before": 8,
+      "after": 0
+    },
+    {
+      "file": "components/absence-analytics/AbsenceAnalyticsBoard.tsx",
+      "before": 261,
+      "after": 0
+    }
+  ]
+}

@@ -19,6 +19,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { authService } from '@/lib/services/authService';
 import { blogApi, BlogPostSummary, BlogCategory, BlogQuota } from '@/services/blog-api';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import { ModulePageFrame } from '@/components/requests/ModulePageFrame';
 
 const CAN_POST = ['HR_MANAGER', 'ADMIN', 'CABINET_ADMIN'];
 
@@ -176,7 +177,7 @@ function DeleteModal({ title, onConfirm, onCancel, loading }: {
 }
 
 // ─── PAGE ─────────────────────────────────────────────────────────────────────
-export default function RhBlogPage() {
+function RhBlogPage() {
   const router = useRouter();
 
   // ✅ FIX PRINCIPAL : on lit user UNE seule fois au montage
@@ -434,5 +435,14 @@ export default function RhBlogPage() {
           onConfirm={handleDelete} onCancel={() => setDelTarget(null)}/>
       )}
     </div>
+  );
+}
+
+
+export default function RhBlogPageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <RhBlogPage />
+    </ModulePageFrame>
   );
 }

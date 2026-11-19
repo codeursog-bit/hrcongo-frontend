@@ -14,12 +14,22 @@ import { SubscriptionBlockedModal } from '@/components/providers/SubscriptionBlo
 import { SubscriptionEndedBanner } from '@/components/providers/SubscriptionEndedBanner';
 import { QueryProvider } from '@/components/providers/QueryProvider';
 import './globals.css';
+import { appearanceBootstrap } from '@/lib/appearance-bootstrap';
+import { RootAppearance } from '@/components/layout/RootAppearance';
+import { DemoProvider } from '@/components/providers/DemoProvider';
 
 const inter = localFont({
   src: '../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2',
   weight: '100 900',
   display: 'swap',
   variable: '--font-inter',
+});
+
+const jakarta = localFont({
+  src: '../node_modules/@fontsource-variable/plus-jakarta-sans/files/plus-jakarta-sans-latin-wght-normal.woff2',
+  weight: '200 800',
+  display: 'swap',
+  variable: '--font-jakarta',
 });
 
 const mono = localFont({
@@ -160,6 +170,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="fr" suppressHydrationWarning>
       <head>
+        {process.env.NODE_ENV === 'development' && <script dangerouslySetInnerHTML={{ __html: `if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(regs){regs.forEach(function(reg){var sw=reg.active;if(sw&&new URL(sw.scriptURL).pathname==='/sw.js'){navigator.serviceWorker.addEventListener('controllerchange',function(){location.reload();},{once:true});reg.update().catch(function(){});}});}).catch(function(){});}` }} />}
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var s=localStorage.getItem('theme');var legacy=['admin','cabinet','portefeuille','kiosk','ecran'].indexOf(location.pathname.split('/')[1])>=0;var p=(s==='light'||s==='dark'||s==='auto')?s:'auto';var d=p==='dark'||(p==='auto'&&(legacy&&!s||window.matchMedia('(prefers-color-scheme: dark)').matches));document.documentElement.classList.add(d?'dark':'light');document.documentElement.style.colorScheme=d?'dark':'light';}catch(e){document.documentElement.classList.add('light');}})();` }} />
+        <script dangerouslySetInnerHTML={{ __html: appearanceBootstrap(process.env.NEXT_PUBLIC_DEMO_MODE === 'true' || process.env.NEXT_PUBLIC_FEATURE_APPEARANCE_API !== 'false', process.env.NEXT_PUBLIC_DEMO_MODE === 'true') }} />
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
         {/* Preconnect pour la perf */}
@@ -171,25 +184,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body
-        className={`${inter.variable} ${mono.variable} font-sans bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-100 antialiased`}
+        className={`${jakarta.variable} ${inter.variable} ${mono.variable} font-sans antialiased`}
       >
-        <ThemeProvider>
+        <DemoProvider><ThemeProvider>
           <QueryProvider>
             <AlertProvider>
               <CompanyReminderProvider>
                 <SubscriptionReminderProvider>
                 <NotificationProvider>
-                  {/* Fond décoratif */}
-                  <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
-                    <div className="absolute inset-0 bg-slate-50 dark:opacity-0 transition-opacity duration-700">
-                      <div className="absolute top-[-20%] left-[-10%] w-[60vw] h-[60vw] bg-blue-100/40 rounded-full blur-[100px] mix-blend-multiply" />
-                      <div className="absolute bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] bg-indigo-100/40 rounded-full blur-[100px] mix-blend-multiply" />
-                    </div>
-                    <div className="absolute inset-0 opacity-0 dark:opacity-100 transition-opacity duration-700">
-                      <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-sky-600/10 rounded-full blur-[120px] animate-aurora-1" />
-                      <div className="absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] bg-indigo-600/10 rounded-full blur-[120px] animate-aurora-2" />
-                    </div>
-                  </div>
+                  <RootAppearance />
                   {children}
                   <SubscriptionBlockedModal />
                   <SubscriptionEndedBanner />
@@ -198,7 +201,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </CompanyReminderProvider>
             </AlertProvider>
           </QueryProvider>
-        </ThemeProvider>
+        </ThemeProvider></DemoProvider>
       </body>
     </html>
   );

@@ -1,0 +1,52 @@
+/* components/ui/select.css
+   Famille « sélecteur » commune : FancySelect, SearchSelect, PeriodSelector et <select> natifs.
+   Même langage que les champs (.k-input) et que les menus de la barre du haut (.shell-menu). */
+
+.k-select { position: relative; }
+.k-select-label { display: block; margin: 0 0 8px; font-size: 13px; font-weight: 600; color: var(--text); }
+
+.k-select-trigger { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 46px; padding: 0 14px; border: 0; border-radius: var(--radius-control); background: var(--surface-2); color: var(--text); font: inherit; font-size: 14px; text-align: left; cursor: pointer; transition: box-shadow .2s, background .2s; box-sizing: border-box; }
+.k-select-trigger:hover { box-shadow: inset 0 0 0 1px var(--border); }
+.k-module-select { display:block; min-inline-size:100px; border:0; padding:0; margin:0; background:transparent; font:inherit; position:relative; }
+.k-module-select:disabled { opacity:.5; }
+.k-module-select + svg { display:none; }
+.k-select-trigger:focus-visible, .k-select-trigger[aria-expanded="true"] { outline: none; box-shadow: 0 0 0 4px var(--brand-soft); }
+.k-select-value { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.k-select-value.is-placeholder { color: var(--text-secondary); }
+.k-select-icon, .k-select-chevron { flex: none; color: var(--text-secondary); }
+.k-select-chevron { transition: transform .2s; }
+.k-select-trigger[aria-expanded="true"] .k-select-chevron { transform: rotate(180deg); color: var(--action); }
+.dark .k-select-trigger[aria-expanded="true"] .k-select-chevron { color: var(--brand); }
+
+.k-select-menu { background: var(--surface); color: var(--text); border-radius: var(--radius-card); box-shadow: var(--shadow-pop); padding: 8px; overflow-y: auto; box-sizing: border-box; }
+.k-select-menu-inline { list-style: none; margin: 6px 0 0; max-height: 240px; }
+.k-select-option { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; padding: 10px 12px; border: 0; border-radius: var(--radius-control); background: transparent; color: var(--text); font: inherit; font-size: 13px; text-align: left; cursor: pointer; transition: background .15s, color .15s; box-sizing: border-box; }
+.k-select-option:hover, .k-select-option[data-active="true"] { background: var(--surface-2); }
+.k-select-option[aria-selected="true"] { background: var(--brand-soft); color: var(--action); font-weight: 600; }
+.dark .k-select-option[aria-selected="true"] { color: var(--brand); }
+.k-select-option svg { flex: none; }
+.k-select-empty { margin: 0; padding: 14px; text-align: center; font-size: 13px; color: var(--text-secondary); }
+
+/* Champ de recherche (SearchSelect) : l'entrée elle-même sert de déclencheur */
+.k-select-field { position: relative; }
+.k-select-field-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); pointer-events: none; }
+.k-select-input { padding-left: 40px; padding-right: 40px; cursor: text; }
+.k-select-input::placeholder { color: var(--text-secondary); }
+.k-select-clear { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border: 0; border-radius: 10px; background: transparent; color: var(--text-secondary); cursor: pointer; }
+.k-select-clear:hover { background: var(--surface); color: var(--text); }
+.k-select-clear:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+/* Groupe de choix court (ex. Mensuel / Annuel) */
+.k-segmented { display: inline-flex; gap: 4px; padding: 4px; min-height: 46px; box-sizing: border-box; border-radius: var(--radius-control); background: var(--surface-2); }
+.k-segmented-item { display: inline-flex; align-items: center; gap: 8px; padding: 0 14px; border: 0; border-radius: 10px; background: transparent; color: var(--text-secondary); font: inherit; font-size: 13px; font-weight: 500; cursor: pointer; text-decoration: none; transition: background .15s, color .15s; }
+.k-segmented-item:hover { background: var(--surface); color: var(--text); }
+.k-segmented-item[aria-pressed="true"], .k-segmented-item[aria-current="page"] { background: var(--brand-soft); color: var(--action); font-weight: 600; }
+.dark .k-segmented-item[aria-pressed="true"], .dark .k-segmented-item[aria-current="page"] { color: var(--brand); }
+.k-segmented-item:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+/* <select> natifs hors des pages encadrées : même aspect de champ (poids de sélecteur nul,
+   donc tout style propre à un composant reste prioritaire ; la flèche native est conservée). */
+:where(select:not([multiple]):not(.loan-document-protected *):not(.theme-legacy *)) { min-height: 44px; padding: 10px 14px; border: 1px solid transparent; border-radius: var(--radius-control); background-color: var(--surface-2); color: var(--text); font: inherit; font-size: 14px; }
+:where(select:not(.loan-document-protected *):not(.theme-legacy *)):focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) { .k-select-trigger, .k-select-chevron, .k-select-option, .k-segmented-item { transition: none; } }

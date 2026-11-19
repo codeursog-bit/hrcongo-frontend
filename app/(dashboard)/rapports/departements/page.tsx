@@ -1,4 +1,6 @@
 'use client';
+import { chartTheme } from '@/lib/chart-theme';
+
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -14,8 +16,9 @@ import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import RapportsSubNav from '@/components/RapportsSubNav';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import { ReportsFrame as ModulePageFrame } from '@/components/reports/ReportsFrame';
 
-const COLORS = ['#0EA5E9', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#6366F1'];
+const COLORS = chartTheme.series;
 
 interface DeptRow {
   id: string;
@@ -43,7 +46,7 @@ interface TraceabilityData {
 
 const fcfa = (v: number) => v >= 1_000_000 ? `${(v / 1_000_000).toFixed(2)} M FCFA` : `${Math.round(v).toLocaleString('fr-FR')} FCFA`;
 
-export default function DepartmentTraceabilityPage() {
+function DepartmentTraceabilityPage() {
   const router = useRouter();
   const { bp } = useBasePath();
   const [data, setData] = useState<TraceabilityData | null>(null);
@@ -78,16 +81,16 @@ export default function DepartmentTraceabilityPage() {
     <div className="max-w-[1600px] mx-auto pb-20 space-y-8">
 
       {/* HEADER */}
-      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 reports-header">
         <div className="flex items-center gap-4">
           <button
             onClick={() => router.push(bp('/rapports'))}
             className="p-2 bg-[var(--surface)] rounded-xl border border-[var(--border)]"
           >
-            <ArrowLeft size={20} className="text-[var(--text-muted)]" />
+            <ArrowLeft strokeWidth={1.5} size={20} className="text-[var(--text-muted)]" />
           </button>
           <div>
-            <h1 className="text-3xl font-bold text-[var(--text)]">
+            <h1 className="text-3xl font-semibold text-[var(--text)]">
               Vue Département
             </h1>
             <p className="text-[var(--text-muted)]">
@@ -102,14 +105,14 @@ export default function DepartmentTraceabilityPage() {
 
       {/* ALERTES */}
       {(data?.alerts?.length || 0) > 0 && (
-        <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-2xl p-5">
-          <h3 className="text-sm font-black uppercase tracking-wide text-amber-700 dark:text-amber-400 mb-3 flex items-center gap-2">
-            <AlertTriangle size={16} /> Départements à surveiller
+        <div className="bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] border border-[var(--border)] rounded-2xl p-5">
+          <h3 className="text-sm font-semibold   text-[var(--warning-text)] mb-3 flex items-center gap-2">
+            <AlertTriangle strokeWidth={1.5} size={16} /> Départements à surveiller
           </h3>
           <div className="space-y-2">
             {data!.alerts.map((a, idx) => (
               <div key={idx} className="flex items-center gap-2 text-sm">
-                <span className="font-bold text-[var(--text)]">{a.department}</span>
+                <span className="font-semibold text-[var(--text)]">{a.department}</span>
                 <span className="text-[var(--text-muted)]">— {a.reason}</span>
               </div>
             ))}
@@ -119,45 +122,45 @@ export default function DepartmentTraceabilityPage() {
 
       {/* KPI RAPIDES */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-sm">
+        <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-sm reports-card">
           <div className="flex items-center gap-2 mb-2">
-            <Clock size={16} className="text-[var(--accent-2)]" />
-            <span className="text-xs font-bold uppercase tracking-wide text-[var(--text-muted)]">Le plus de retards</span>
+            <Clock strokeWidth={1.5} size={16} className="text-[var(--accent-2)]" />
+            <span className="text-xs font-semibold   text-[var(--text-muted)]">Le plus de retards</span>
           </div>
-          <p className="text-xl font-bold text-[var(--text)]">{mostLate?.name ?? '—'}</p>
+          <p className="text-xl font-semibold text-[var(--text)]">{mostLate?.name ?? '—'}</p>
           <p className="text-xs text-[var(--text-muted)] mt-1">{mostLate?.lateCount ?? 0} retard(s) sur la période</p>
         </div>
-        <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-sm">
+        <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-sm reports-card">
           <div className="flex items-center gap-2 mb-2">
-            <UserX size={16} className="text-amber-500" />
-            <span className="text-xs font-bold uppercase tracking-wide text-[var(--text-muted)]">Le plus d'absences</span>
+            <UserX strokeWidth={1.5} size={16} className="text-[var(--warning-text)]" />
+            <span className="text-xs font-semibold   text-[var(--text-muted)]">Le plus d'absences</span>
           </div>
-          <p className="text-xl font-bold text-[var(--text)]">{mostAbsences?.name ?? '—'}</p>
+          <p className="text-xl font-semibold text-[var(--text)]">{mostAbsences?.name ?? '—'}</p>
           <p className="text-xs text-[var(--text-muted)] mt-1">{mostAbsences?.absenceCount ?? 0} absence(s) · {mostAbsences?.absenceDays ?? 0} j.</p>
         </div>
-        <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-sm">
+        <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-sm reports-card">
           <div className="flex items-center gap-2 mb-2">
-            <Wallet size={16} className="text-emerald-500" />
-            <span className="text-xs font-bold uppercase tracking-wide text-[var(--text-muted)]">Salaire moyen le plus élevé</span>
+            <Wallet strokeWidth={1.5} size={16} className="text-[var(--action)]" />
+            <span className="text-xs font-semibold   text-[var(--text-muted)]">Salaire moyen le plus élevé</span>
           </div>
-          <p className="text-xl font-bold text-[var(--text)]">{costliest?.name ?? '—'}</p>
+          <p className="text-xl font-semibold text-[var(--text)]">{costliest?.name ?? '—'}</p>
           <p className="text-xs text-[var(--text-muted)] mt-1">{costliest ? fcfa(costliest.avgSalary) : '—'} / employé</p>
         </div>
       </div>
 
       {/* GRAPHIQUES COMPARATIFS */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
-          <h4 className="text-base font-bold text-[var(--text)] mb-1">Taux de retard par département</h4>
+        <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm reports-card">
+          <h4 className="text-base font-semibold text-[var(--text)] mb-1">Taux de retard par département</h4>
           <p className="text-xs text-[var(--text-muted)] mb-5">Pour 10 employés — moyenne entreprise : {data?.companyAverages?.lateRatePer10 ?? 0}</p>
           <div className="h-[280px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart layout="vertical" data={departments} margin={{ left: 10, right: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+
                 <XAxis type="number" hide />
                 <YAxis dataKey="name" type="category" width={110} axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
-                <Tooltip contentStyle={{ backgroundColor: '#1f2937', color: '#fff', borderRadius: '12px', border: 'none' }} />
-                <Bar dataKey="lateRatePer10" name="Retards / 10 employés" radius={[0, 8, 8, 0]}>
+                <Tooltip contentStyle={chartTheme.tooltip} />
+                <Bar isAnimationActive={false} maxBarSize={32} background={{fill:chartTheme.track,radius:8}} dataKey="lateRatePer10" name="Retards / 10 employés" radius={[0, 8, 8, 0]}>
                   {departments.map((d, idx) => <Cell key={idx} fill={d.color || COLORS[idx % COLORS.length]} />)}
                 </Bar>
               </BarChart>
@@ -165,17 +168,17 @@ export default function DepartmentTraceabilityPage() {
           </div>
         </div>
 
-        <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
-          <h4 className="text-base font-bold text-[var(--text)] mb-1">Taux d'absence par département</h4>
+        <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm reports-card">
+          <h4 className="text-base font-semibold text-[var(--text)] mb-1">Taux d'absence par département</h4>
           <p className="text-xs text-[var(--text-muted)] mb-5">Pour 10 employés — moyenne entreprise : {data?.companyAverages?.absenceRatePer10 ?? 0}</p>
           <div className="h-[280px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart layout="vertical" data={departments} margin={{ left: 10, right: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+
                 <XAxis type="number" hide />
                 <YAxis dataKey="name" type="category" width={110} axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
-                <Tooltip contentStyle={{ backgroundColor: '#1f2937', color: '#fff', borderRadius: '12px', border: 'none' }} />
-                <Bar dataKey="absenceRatePer10" name="Absences / 10 employés" radius={[0, 8, 8, 0]}>
+                <Tooltip contentStyle={chartTheme.tooltip} />
+                <Bar isAnimationActive={false} maxBarSize={32} background={{fill:chartTheme.track,radius:8}} dataKey="absenceRatePer10" name="Absences / 10 employés" radius={[0, 8, 8, 0]}>
                   {departments.map((d, idx) => <Cell key={idx} fill={d.color || COLORS[idx % COLORS.length]} />)}
                 </Bar>
               </BarChart>
@@ -186,57 +189,57 @@ export default function DepartmentTraceabilityPage() {
 
       {/* FICHES PAR DÉPARTEMENT */}
       <div>
-        <h3 className="text-lg font-bold text-[var(--text)] mb-1">Fiches par Département</h3>
+        <h3 className="text-lg font-semibold text-[var(--text)] mb-1">Fiches par Département</h3>
         <p className="text-sm text-[var(--text-muted)] mb-5">Vue complète — coût, absences, retards, turnover</p>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {departments.map((dept, idx) => (
-            <div key={dept.id} className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
+            <div key={dept.id} className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm reports-card">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <span className="w-3 h-3 rounded-full" style={{ backgroundColor: dept.color || COLORS[idx % COLORS.length] }} />
-                  <h4 className="text-base font-bold text-[var(--text)]">{dept.name}</h4>
+                  <h4 className="text-base font-semibold text-[var(--text)]">{dept.name}</h4>
                 </div>
-                <span className="text-xs font-bold text-[var(--text-muted)] flex items-center gap-1"><Users size={12} /> {dept.headcount}</span>
+                <span className="text-xs font-semibold text-[var(--text-muted)] flex items-center gap-1"><Users strokeWidth={1.5} size={12} /> {dept.headcount}</span>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
                 <div>
-                  <p className="text-[10px] font-bold uppercase text-[var(--text-muted)]">Coût employeur</p>
-                  <p className="text-sm font-bold text-[var(--text)]">{fcfa(dept.totalEmployerCost)}</p>
+                  <p className="text-[10px] font-semibold  text-[var(--text-muted)]">Coût employeur</p>
+                  <p className="text-sm font-semibold text-[var(--text)]">{fcfa(dept.totalEmployerCost)}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold uppercase text-[var(--text-muted)]">Salaire moyen</p>
-                  <p className="text-sm font-bold text-[var(--text)]">{fcfa(dept.avgSalary)}</p>
+                  <p className="text-[10px] font-semibold  text-[var(--text-muted)]">Salaire moyen</p>
+                  <p className="text-sm font-semibold text-[var(--text)]">{fcfa(dept.avgSalary)}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold uppercase text-[var(--text-muted)]">H. Sup.</p>
-                  <p className="text-sm font-bold text-[var(--text)]">{dept.totalOvertime}h</p>
+                  <p className="text-[10px] font-semibold  text-[var(--text-muted)]">H. Sup.</p>
+                  <p className="text-sm font-semibold text-[var(--text)]">{dept.totalOvertime}h</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold uppercase text-[var(--text-muted)]">Départs (3 mois)</p>
-                  <p className="text-sm font-bold text-[var(--text)] flex items-center gap-1"><LogOut size={11} className="text-[var(--text-muted)]" />{dept.departureCount}</p>
+                  <p className="text-[10px] font-semibold  text-[var(--text-muted)]">Départs (3 mois)</p>
+                  <p className="text-sm font-semibold text-[var(--text)] flex items-center gap-1"><LogOut strokeWidth={1.5} size={11} className="text-[var(--text-muted)]" />{dept.departureCount}</p>
                 </div>
               </div>
 
               <div className="border-t border-[var(--border)] pt-4 grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-[11px] font-bold text-[var(--text-muted)] mb-1 flex items-center gap-1">
-                    <Clock size={12} /> Retards
+                  <p className="text-[11px] font-semibold text-[var(--text-muted)] mb-1 flex items-center gap-1">
+                    <Clock strokeWidth={1.5} size={12} /> Retards
                     {dept.lateRatePer10 >= (data?.companyAverages?.lateRatePer10 || 0) * 1.5 && dept.headcount > 0 && (
-                      <span className="text-[9px] px-1.5 py-0.5 bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400 rounded-full font-black">au-dessus</span>
+                      <span className="text-[9px] px-1.5 py-0.5 bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] text-[var(--danger-text)] rounded-full font-semibold">au-dessus</span>
                     )}
                   </p>
-                  <p className="text-lg font-black text-[var(--text)]">{dept.lateCount}</p>
+                  <p className="text-lg font-semibold text-[var(--text)]">{dept.lateCount}</p>
                 </div>
                 <div>
-                  <p className="text-[11px] font-bold text-[var(--text-muted)] mb-1 flex items-center gap-1">
-                    <UserX size={12} /> Absences
+                  <p className="text-[11px] font-semibold text-[var(--text-muted)] mb-1 flex items-center gap-1">
+                    <UserX strokeWidth={1.5} size={12} /> Absences
                     {dept.absenceRatePer10 >= (data?.companyAverages?.absenceRatePer10 || 0) * 1.5 && dept.headcount > 0 && (
-                      <span className="text-[9px] px-1.5 py-0.5 bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400 rounded-full font-black">au-dessus</span>
+                      <span className="text-[9px] px-1.5 py-0.5 bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] text-[var(--danger-text)] rounded-full font-semibold">au-dessus</span>
                     )}
                   </p>
-                  <p className="text-lg font-black text-[var(--text)]">{dept.absenceCount} <span className="text-xs font-normal text-[var(--text-muted)]">({dept.absenceDays} j.)</span></p>
+                  <p className="text-lg font-semibold text-[var(--text)]">{dept.absenceCount} <span className="text-xs font-normal text-[var(--text-muted)]">({dept.absenceDays} j.)</span></p>
                 </div>
               </div>
 
@@ -257,5 +260,14 @@ export default function DepartmentTraceabilityPage() {
       </div>
 
     </div>
+  );
+}
+
+
+export default function DepartmentTraceabilityPageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <DepartmentTraceabilityPage />
+    </ModulePageFrame>
   );
 }

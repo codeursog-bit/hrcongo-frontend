@@ -6,12 +6,18 @@
 // → En mode PME cabinet (depuis PmeLayout) : Sidebar affiche le logo/nom du cabinet
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Sidebar } from './Sidebar';
 import { ChatProvider } from '@/components/chat/ChatProvider';
 import { TopNav } from './TopNav';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
 import { authService } from '@/lib/services/authService';
+import { ToastProvider } from '@/components/design-system/feedback';
+import { DemoBadge } from '@/components/providers/DemoProvider';
+import { CompanyBrandProvider } from './CompanyBrand';
+import { AssistantProvider } from '@/components/assistant/AssistantProvider';
+import './shell.css';
+import '@/components/ui/select.css';
 
 interface DashboardShellProps {
   children: React.ReactNode;
@@ -31,6 +37,8 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
   skipAuthCheck = false,
 }) => {
   const router = useRouter();
+  const pathname = usePathname() || '';
+  useEffect(() => setSidebarOpen(false), [pathname]);
   const [sidebarOpen,   setSidebarOpen]   = useState(false);
   const [isAuthorized,  setIsAuthorized]  = useState<boolean | null>(
     skipAuthCheck ? true : null,
@@ -51,8 +59,8 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
       return;
     }
 
-    if (user.role === 'SUPER_ADMIN') {
-      router.push('/admin');
+    if (user.role === 'SUPER_ADMIN' || user.role === 'SUPPORT') {
+      router.push(user.role === 'SUPPORT' ? '/admin/support' : '/admin');
       return;
     }
 
@@ -68,8 +76,9 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
   if (!isAuthorized) return null;
 
   return (
-    <ChatProvider>
-    <div className="flex h-screen font-sans overflow-hidden relative" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
+    <ToastProvider><CompanyBrandProvider enabled={!brandName && !brandLogo}><ChatProvider><AssistantProvider>
+    <div className={`konza-shell ${brandName || brandLogo ? 'shell-brand-legacy' : ''} flex h-screen font-sans overflow-hidden relative`} style={{ background: 'var(--bg)', color: 'var(--text)' }}>
+      <a href="#konza-main" className="shell-skip-link">Aller au contenu</a>
       <Sidebar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
@@ -82,11 +91,12 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
       <div className="flex-1 flex flex-col min-w-0 h-full relative z-10 transition-all duration-300">
         <TopNav onMenuClick={() => setSidebarOpen(true)} />
 
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 scroll-smooth custom-scrollbar">
+        <main id="konza-main" tabIndex={-1} className="shell-main flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 scroll-smooth custom-scrollbar">
+          <DemoBadge />
           {children}
         </main>
       </div>
     </div>
-    </ChatProvider>
+    </AssistantProvider></ChatProvider></CompanyBrandProvider></ToastProvider>
   );
 };

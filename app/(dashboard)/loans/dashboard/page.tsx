@@ -1,4 +1,5 @@
 'use client';
+import { LoanModuleFrame, LoanModuleSkeleton } from '@/components/loans/LoanModuleFrame';
 
 // ============================================================================
 // 📁 app/(dashboard)/loans/dashboard/page.tsx
@@ -30,7 +31,7 @@ export default function LoansDashboardPage() {
   }, []);
 
   return (
-    <div className="space-y-6 min-h-screen pb-20">
+    <LoanModuleFrame kind="dashboard"><div className="space-y-6 min-h-screen pb-20">
       <FinanceSubNav userRole={userRole} />
       <div>
         <h1 className="text-3xl font-bold tracking-tight" style={{ color: 'var(--text)' }}>Tableau de bord prêts & avances</h1>
@@ -43,6 +44,6 @@ export default function LoansDashboardPage() {
       ) : (
         ready && <LoansDashboard scope="COMPANY" companyId={pmeCompanyId || undefined} />
       )}
-    </div>
+    </div></LoanModuleFrame>
   );
 }

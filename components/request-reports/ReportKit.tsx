@@ -1,4 +1,5 @@
 'use client';
+import { AttendanceSelect } from '@/components/attendance/AttendanceSelect';
 
 // ============================================================================
 // 📁 components/request-reports/ReportKit.tsx
@@ -31,17 +32,17 @@ export function KpiTile({ icon: Icon, tone, label, value, hint, delta, invert, o
   const good = delta == null || delta === 0 ? null : invert ? delta < 0 : delta > 0;
   const Tag: any = onClick ? 'button' : 'div';
   return (
-    <Tag onClick={onClick} className={`text-left bg-[var(--surface)] rounded-2xl border p-4 ${active ? 'border-emerald-500 ring-2 ring-emerald-500/20' : 'border-[var(--border)]'} ${onClick ? 'hover:border-emerald-400 cursor-pointer' : ''}`}>
+    <Tag onClick={onClick} className={`text-left bg-[var(--surface)] rounded-2xl border p-4 ${active ? 'border-[var(--border)] ring-2 ring-[var(--focus)]' : 'border-[var(--border)]'} ${onClick ? 'hover:border-[var(--border)] cursor-pointer' : ''}`}>
       <div className="flex items-center justify-between mb-3">
         <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${tone}`}><Icon size={17} /></div>
         {delta !== undefined && (
-          <span className={`text-[11px] font-bold flex items-center gap-0.5 px-1.5 py-0.5 rounded-md ${delta == null || delta === 0 ? 'text-[var(--text-muted)] bg-[var(--surface-2)]' : good ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20' : 'text-red-600 bg-red-50 dark:bg-red-900/20'}`}>
+          <span className={`text-[11px] font-semibold flex items-center gap-0.5 px-1.5 py-0.5 rounded-md ${delta == null || delta === 0 ? 'text-[var(--text-muted)] bg-[var(--surface-2)]' : good ? 'text-[var(--success-text)] bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] ' : 'text-[var(--danger-text)] bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] '}`}>
             {delta == null ? <Minus size={11} /> : delta > 0 ? <ArrowUpRight size={12} /> : delta < 0 ? <ArrowDownRight size={12} /> : <Minus size={11} />}
             {delta == null ? '—' : `${delta > 0 ? '+' : ''}${Math.round(delta)}%`}
           </span>
         )}
       </div>
-      <p className="text-2xl font-bold text-[var(--text)] leading-none">{value}</p>
+      <p className="text-2xl font-semibold text-[var(--text)] leading-none">{value}</p>
       <p className="text-xs text-[var(--text-muted)] mt-1.5">{label}</p>
       {hint && <p className="text-[10px] text-[var(--text-muted)] mt-0.5 opacity-80">{hint}</p>}
     </Tag>
@@ -56,7 +57,7 @@ export function ChartCard({ title, subtitle, children, className = '', action }:
     <div className={`bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5 ${className}`}>
       <div className="flex items-start justify-between gap-3 mb-4">
         <div className="min-w-0">
-          <p className="text-sm font-bold text-[var(--text)]">{title}</p>
+          <p className="text-sm font-semibold text-[var(--text)]">{title}</p>
           {subtitle && <p className="text-[11px] text-[var(--text-muted)] mt-0.5">{subtitle}</p>}
         </div>
         {action}
@@ -73,10 +74,10 @@ export const EmptyChart = ({ h = 220 }: { h?: number }) => (
 export function Insights({ items }: { items: string[] }) {
   if (!items.length) return null;
   return (
-    <div className="rounded-2xl border border-emerald-200 dark:border-emerald-900/40 bg-emerald-50/60 dark:bg-emerald-900/10 p-4">
-      <p className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5 mb-2"><Lightbulb size={14} /> À retenir</p>
+    <div className="rounded-2xl border border-[var(--border)]  bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  p-4">
+      <p className="text-xs font-semibold   text-[var(--success-text)]  flex items-center gap-1.5 mb-2"><Lightbulb size={14} /> À retenir</p>
       <ul className="space-y-1.5">
-        {items.map((t, i) => <li key={i} className="text-sm text-[var(--text)] flex gap-2"><span className="text-emerald-500">•</span>{t}</li>)}
+        {items.map((t, i) => <li key={i} className="text-sm text-[var(--text)] flex gap-2"><span className="text-[var(--success-text)]">•</span>{t}</li>)}
       </ul>
     </div>
   );
@@ -84,7 +85,7 @@ export function Insights({ items }: { items: string[] }) {
 
 export function FilterChip({ label, onClear }: { label: string; onClear: () => void }) {
   return (
-    <button onClick={onClear} className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-500 text-white flex items-center gap-1">
+    <button onClick={onClear} className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[var(--brand)] text-[var(--on-brand)] flex items-center gap-1">
       {label} <X size={11} />
     </button>
   );
@@ -105,30 +106,30 @@ export function PeriodBar({ period, setPeriod, years, types, type, setType, dept
         ))}
       </div>
       {period.mode === 'month' && (
-        <select value={period.month} onChange={e => setPeriod({ ...period, month: Number(e.target.value) })} className={sel}>
+        <AttendanceSelect value={period.month} onChange={e => setPeriod({ ...period, month: Number(e.target.value) })} className={sel}>
           {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
-        </select>
+        </AttendanceSelect>
       )}
       {(period.mode === 'month' || period.mode === 'year') && (
-        <select value={period.year} onChange={e => setPeriod({ ...period, year: Number(e.target.value) })} className={sel}>
+        <AttendanceSelect value={period.year} onChange={e => setPeriod({ ...period, year: Number(e.target.value) })} className={sel}>
           {years.map(y => <option key={y} value={y}>{y}</option>)}
-        </select>
+        </AttendanceSelect>
       )}
       {period.mode === 'custom' && (<>
         <input type="date" value={period.from} onChange={e => setPeriod({ ...period, from: e.target.value })} className={sel} />
         <span className="text-xs text-[var(--text-muted)]">au</span>
         <input type="date" value={period.to} onChange={e => setPeriod({ ...period, to: e.target.value })} className={sel} />
       </>)}
-      <select value={type} onChange={e => setType(e.target.value)} className={sel}>
+      <AttendanceSelect value={type} onChange={e => setType(e.target.value)} className={sel}>
         <option value="">Tous les types</option>
         {Object.entries(types).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-      </select>
-      <select value={dept} onChange={e => setDept(e.target.value)} className={sel}>
+      </AttendanceSelect>
+      <AttendanceSelect value={dept} onChange={e => setDept(e.target.value)} className={sel}>
         <option value="">Tous les départements</option>
         {depts.map(d => <option key={d} value={d}>{d}</option>)}
-      </select>
+      </AttendanceSelect>
       {onExport && (
-        <button onClick={onExport} disabled={exportDisabled} className="ml-auto px-3.5 py-2 rounded-xl text-xs font-semibold bg-emerald-500 text-white flex items-center gap-1.5 disabled:opacity-40">
+        <button onClick={onExport} disabled={exportDisabled} className="ml-auto px-3.5 py-2 rounded-xl text-xs font-semibold bg-[var(--brand)] text-[var(--on-brand)] flex items-center gap-1.5 disabled:opacity-40">
           <Download size={14} /> Exporter CSV
         </button>
       )}
@@ -140,7 +141,7 @@ export function PeriodBar({ period, setPeriod, years, types, type, setType, dept
 export function Heatmap({ cells, hours, rowLabels }: { cells: number[][]; hours: number[]; rowLabels: string[] }) {
   const max = Math.max(1, ...cells.flat());
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto attendance-table-scroll" tabIndex={0} role="region" aria-label="Tableau défilant horizontalement">
       <div className="min-w-[520px]">
         <div className="grid gap-1" style={{ gridTemplateColumns: `44px repeat(${hours.length}, minmax(0, 1fr))` }}>
           <span />
@@ -174,7 +175,7 @@ export function Funnel({ steps }: { steps: { label: string; value: number; color
             <span className="text-[var(--text-muted)]">{s.value}{i > 0 ? ` · ${Math.round((s.value / top) * 100)}%` : ''}</span>
           </div>
           <div className="h-3 rounded-full bg-[var(--surface-2)] overflow-hidden">
-            <div className="h-full rounded-full transition-all" style={{ width: `${(s.value / top) * 100}%`, background: s.color }} />
+            <div className="h-full rounded-full transition-colors" style={{ width: `${(s.value / top) * 100}%`, background: s.color }} />
           </div>
         </div>
       ))}

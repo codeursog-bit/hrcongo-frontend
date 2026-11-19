@@ -1,16 +1,18 @@
 'use client';
+import { RecruitmentFormOutline } from '@/components/recruitment/RecruitmentFrame';
+import { RecruitmentNav } from '@/components/recruitment/recruitment-ui';
+import '@/components/recruitment/recruitment.css';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import {
-  Sparkles, Plus, Trash2, GripVertical, BrainCircuit, Send, X,
-  MapPin, Building2, Loader2, ArrowLeft, CheckCircle2, Copy, Check,
-  Globe, Target, GraduationCap, Zap, Upload, ImageIcon, Calendar, DollarSign, Eye, Clock, FileText
+  Plus, Trash2, GripVertical, BrainCircuit, X, ArrowLeft, Copy, Check, Upload
 } from 'lucide-react';
 import { api } from '@/services/api';
 import { EducationLevel, QuizQuestion, Department } from '@/types/recruitment';
 import Image from 'next/image';
+import { Badge, Button, Card, Input, Select, Textarea } from '@/components/design-system/primitives';
 
 interface CreatedJob {
   id: string;
@@ -52,6 +54,24 @@ export default function CreateIAJobPage() {
 
   useEffect(() => {
     api.get<Department[]>('/departments').then(setDepartments).catch(console.error);
+  }, []);
+
+  // Offre créée depuis une demande de recrutement validée : on préremplit ce qui est connu
+  const [requisitionId, setRequisitionId] = useState<string | null>(null);
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get('requisition');
+    if (!id) return;
+    setRequisitionId(id);
+    api.get<any>(`/recruitment/requisitions/${id}`).then((r) => {
+      setFormData((p) => ({
+        ...p,
+        title: r.title ?? p.title,
+        departmentId: r.departmentId ?? '',
+        contractType: r.contractType ?? p.contractType,
+        salaryMin: r.salaryMin ? String(Math.round(Number(r.salaryMin))) : p.salaryMin,
+        salaryMax: r.salaryMax ? String(Math.round(Number(r.salaryMax))) : p.salaryMax,
+      }));
+    }).catch(() => { /* la page reste utilisable sans préremplissage */ });
   }, []);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -203,6 +223,10 @@ export default function CreateIAJobPage() {
       }
 
       setCreatedJob(jobResponse);
+      if (requisitionId) {
+        // Lie l'offre à la demande : suivi « postes à pourvoir / pourvus »
+        try { await api.post(`/recruitment/requisitions/${requisitionId}/link-job`, { jobOfferId: jobResponse.id }); } catch { /* modifiable depuis « Demandes » */ }
+      }
     } catch (error) {
       const err = error as Error;
       alert(`Erreur: ${err.message || 'Impossible de créer l\'offre'}`);
@@ -220,15 +244,9 @@ export default function CreateIAJobPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] relative overflow-hidden">
+    <div className="recruitment-form-page min-h-screen bg-[var(--bg)] relative overflow-hidden">
       
-      {/* Animated Background */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-emerald-600/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-      </div>
-
-      <div className="max-w-5xl mx-auto pb-20 pt-8 px-4 relative z-10">
+      <div className="recruitment-workspace max-w-6xl mx-auto pb-20 pt-8 px-4 relative z-10">
         
         {/* SUCCESS MODAL */}
         <AnimatePresence>
@@ -236,331 +254,164 @@ export default function CreateIAJobPage() {
             <motion.div 
               initial={{ opacity: 0 }} 
               animate={{ opacity: 1 }}
-              className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-xl p-4"
+              className="fixed inset-0 z-50 flex items-center justify-center bg-[rgb(0_0_0_/.5)] p-4"
             >
               <motion.div 
                 initial={{ scale: 0.9, y: 20 }} 
                 animate={{ scale: 1, y: 0 }}
-                className="bg-[var(--surface)] border border-emerald-500/30 rounded-2xl p-10 max-w-lg w-full shadow-2xl relative overflow-hidden"
+                role="dialog"
+                aria-modal="true"
+                aria-label="Confirmation de publication"
+                className="w-full max-w-lg"
               >
-                <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/20 rounded-full blur-[100px] -mr-20 -mt-20"></div>
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-600/20 rounded-full blur-[100px] -ml-20 -mb-20"></div>
-
-                <div className="text-center mb-8 relative z-10">
-                  <div className="w-24 h-24 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-500/50">
-                    <BrainCircuit size={48} className="text-[var(--text)]" />
+                <Card title="Offre IA activée" action={<Badge tone="success">Succès</Badge>}>
+                  <div className="space-y-6">
+                    <p className="text-sm text-[var(--text-muted)]">Le recrutement intelligent est opérationnel.</p>
+                    <div className="space-y-3 rounded-[var(--radius-control)] bg-[var(--surface-2)] p-4">
+                      <p className="text-sm font-semibold text-[var(--text)]">Lien public de candidature</p>
+                      <p className="break-all text-sm text-[var(--text-muted)]">{`${window.location.origin}/jobs/${createdJob.id}`}</p>
+                      <Button type="button" variant="secondary" onClick={handleCopyLink}>
+                        {isCopied ? <Check size={16} strokeWidth={1.5} /> : <Copy size={16} strokeWidth={1.5} />}
+                        {isCopied ? 'Lien copié' : 'Copier le lien'}
+                      </Button>
+                    </div>
+                    <div className="flex flex-col gap-3 sm:flex-row">
+                      <Button type="button" onClick={() => router.push(`/recrutement/pipeline?job=${createdJob.id}`)}>
+                        Voir les candidatures
+                      </Button>
+                      <Button type="button" variant="secondary" onClick={() => router.push('/recrutement')}>
+                        Retour au recrutement
+                      </Button>
+                    </div>
                   </div>
-                  <h2 className="text-4xl font-black text-[var(--text)] mb-3 tracking-tight">Offre IA Activée !</h2>
-                  <p className="text-[var(--text-muted)]">Le recrutement intelligent est opérationnel.</p>
-                </div>
-
-                <div className="bg-black/40 p-5 rounded-2xl border border-emerald-500/30 mb-8 relative z-10">
-                  <p className="text-xs font-bold text-emerald-400 uppercase mb-3 tracking-wider">Lien Public IA</p>
-                  <div className="flex items-center gap-3 bg-[var(--bg)]/60 p-4 rounded-xl border border-white/5">
-                    <Globe className="text-emerald-400 shrink-0" size={20} />
-                    <p className="text-emerald-300 font-mono text-sm truncate flex-1">
-                      {`${window.location.origin}/jobs/${createdJob.id}`}
-                    </p>
-                  </div>
-                  <button 
-                    onClick={handleCopyLink}
-                    className="w-full mt-4 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg"
-                  >
-                    {isCopied ? <Check size={16}/> : <Copy size={16}/>}
-                    {isCopied ? 'Lien Copié !' : 'Copier le Lien'}
-                  </button>
-                </div>
-
-                <div className="flex gap-3">
-                  <button 
-                    onClick={() => router.push('/recrutement/ia/candidats')} 
-                    className="flex-1 py-4 bg-[#FAFAFA] hover:bg-white text-black font-bold rounded-xl shadow-xl transition-all"
-                  >
-                    Voir les Candidats IA
-                  </button>
-                  <button 
-                    onClick={() => router.push('/recrutement')} 
-                    className="px-4 py-4 bg-white/10 hover:bg-white/20 text-[var(--text)] rounded-xl font-bold"
-                  >
-                    <Eye size={20} />
-                  </button>
-                </div>
+                </Card>
               </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* HEADER */}
-        <div className="flex items-center gap-4 mb-10">
-          <button 
-            onClick={() => router.back()} 
-            className="p-3 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 transition-colors backdrop-blur-sm"
-          >
-            <ArrowLeft size={20} className="text-[var(--text)]" />
-          </button>
+        <div className="flex items-center gap-4">
+          <Button type="button" variant="secondary" onClick={() => router.back()} aria-label="Retour">
+            <ArrowLeft size={18} strokeWidth={1.5} />
+            <span className="sr-only">Retour</span>
+          </Button>
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
-              <BrainCircuit className="text-emerald-400" size={32}/>
-              <h1 className="text-3xl font-black text-[var(--text)] tracking-tight">Créer une Offre IA</h1>
+              <BrainCircuit className="text-[var(--brand)]" size={24} strokeWidth={1.5}/>
+              <h1 className="text-2xl font-semibold text-[var(--text)]">Créer une offre IA</h1>
             </div>
             <p className="text-[var(--text-muted)]">Recrutement intelligent avec sélection automatique</p>
           </div>
         </div>
 
         {/* FORM */}
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <RecruitmentNav /><div className="recruitment-form-layout"><RecruitmentFormOutline sections={[{"id":"recruit-section-1","label":"Informations générales"},{"id":"recruit-section-2","label":"Image de l'offre (optionnel)"},{"id":"recruit-section-3","label":"Critères de sélection IA"},{"id":"recruit-section-4","label":"Questions d'évaluation"}]} /><form data-guide="recrutement-ai-form" onSubmit={handleSubmit} className="space-y-6">
           
           {/* IMAGE UPLOAD */}
-          <div className="bg-[var(--surface)] backdrop-blur-xl border border-[var(--border)] rounded-2xl p-8 shadow-2xl">
-            <h3 className="text-xl font-bold text-[var(--text)] mb-6 flex items-center gap-3">
-              <ImageIcon className="text-emerald-400"/>
-              Image de l'offre (Optionnel)
-            </h3>
-            
-            {imagePreview ? (
-              <div className="relative group">
-                <Image 
-                  src={imagePreview} 
-                  alt="Preview" 
-                  width={800}
-                  height={400}
-                  className="w-full h-64 object-cover rounded-2xl border border-white/10"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setImagePreview(null);
-                    setImageFile(null);
-                  }}
-                  className="absolute top-4 right-4 p-3 bg-red-500/80 hover:bg-red-600 rounded-xl text-[var(--text)] opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <X size={20} />
-                </button>
-              </div>
-            ) : (
-              <label className="block w-full h-64 border-2 border-dashed border-white/20 hover:border-emerald-500/50 rounded-2xl cursor-pointer transition-colors">
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  onChange={handleImageChange}
-                  className="hidden"
-                />
-                <div className="flex flex-col items-center justify-center h-full text-[var(--text-muted)] hover:text-emerald-400 transition-colors">
-                  <Upload size={48} className="mb-4" />
-                  <p className="font-bold text-lg">Cliquez pour uploader une image</p>
-                  <p className="text-sm mt-2">JPG, PNG, WEBP (max 2MB)</p>
-                </div>
-              </label>
-            )}
+
+
+          {requisitionId && (
+          <div role="status" className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-4 text-sm text-[var(--text)]">
+            Offre créée à partir d’une demande de recrutement : les informations connues sont préremplies, vous pouvez les modifier.
           </div>
+          )}
 
           {/* CARD: Info de base */}
-          <div className="bg-[var(--surface)] backdrop-blur-xl border border-[var(--border)] rounded-2xl p-8 shadow-2xl">
-            <h3 className="text-xl font-bold text-[var(--text)] mb-6 flex items-center gap-3">
-              <Zap className="text-amber-400"/>
-              Informations Générales
-            </h3>
+          <Card id="recruit-section-1" title="Informations générales">
             
             <div className="space-y-5">
-              <div>
-                <label className="text-sm font-bold text-[var(--text-muted)] mb-2 block">Intitulé du Poste *</label>
-                <input 
-                  type="text" 
-                  required 
-                  placeholder="ex: Développeur Full-Stack Senior" 
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-[var(--text)] placeholder:text-[var(--text-muted)] focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 outline-none transition-all" 
-                  value={formData.title} 
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })} 
-                />
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="text-sm font-bold text-[var(--text-muted)] mb-2 block flex items-center gap-2">
-                    <Building2 size={16}/> Département *
-                  </label>
-                  <select 
-                    required
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-[var(--text)] focus:ring-2 focus:ring-emerald-500/50 outline-none" 
-                    value={formData.departmentId} 
-                    onChange={(e) => setFormData({ ...formData, departmentId: e.target.value })}
-                  >
-                    <option value="" className="bg-[var(--surface)]">Choisir...</option>
-                    {departments.map(d => <option key={d.id} value={d.id} className="bg-[var(--surface)]">{d.name}</option>)}
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="text-sm font-bold text-[var(--text-muted)] mb-2 block flex items-center gap-2">
-                    <MapPin size={16}/> Lieu
-                  </label>
-                  <input 
-                    type="text" 
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-[var(--text)] focus:ring-2 focus:ring-emerald-500/50 outline-none" 
-                    value={formData.location} 
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })} 
-                  />
-                </div>
-                
-                <div>
-                  <label className="text-sm font-bold text-[var(--text-muted)] mb-2 block">Contrat</label>
-                  <select 
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-[var(--text)] focus:ring-2 focus:ring-emerald-500/50 outline-none" 
-                    value={formData.contractType} 
-                    onChange={(e) => setFormData({ ...formData, contractType: e.target.value })}
-                  >
-                    <option value="CDI" className="bg-[var(--surface)]">CDI</option>
-                    <option value="CDD" className="bg-[var(--surface)]">CDD</option>
-                    <option value="STAGE" className="bg-[var(--surface)]">Stage</option>
-                  </select>
-                </div>
+              <Input
+                label="Intitulé du poste"
+                required
+                placeholder="Ex : Développeur Full-Stack Senior"
+                value={formData.title}
+                onChange={e => setFormData({ ...formData, title: e.target.value })}
+              />
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+                <Select
+                  label="Département (optionnel)"
+                  value={formData.departmentId}
+                  onChange={e => setFormData({ ...formData, departmentId: e.target.value })}
+                >
+                  <option value="">Aucun département pour l’instant</option>
+                  {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                </Select>
+                <Input label="Lieu" value={formData.location} onChange={e => setFormData({ ...formData, location: e.target.value })} />
+                <Select label="Type de contrat" value={formData.contractType} onChange={e => setFormData({ ...formData, contractType: e.target.value })}>
+                  <option value="CDI">CDI</option>
+                  <option value="CDD">CDD</option>
+                  <option value="STAGE">Stage</option>
+                </Select>
               </div>
 
               {/* SALARY */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="text-sm font-bold text-[var(--text-muted)] mb-2 block flex items-center gap-2">
-                    <DollarSign size={16}/> Salaire Min
-                  </label>
-                  <input 
-                    type="number" 
-                    placeholder="Ex: 500000"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-[var(--text)] focus:ring-2 focus:ring-emerald-500/50 outline-none" 
-                    value={formData.salaryMin} 
-                    onChange={(e) => setFormData({ ...formData, salaryMin: e.target.value })} 
-                  />
-                </div>
-                
-                <div>
-                  <label className="text-sm font-bold text-[var(--text-muted)] mb-2 block flex items-center gap-2">
-                    <DollarSign size={16}/> Salaire Max
-                  </label>
-                  <input 
-                    type="number" 
-                    placeholder="Ex: 800000"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-[var(--text)] focus:ring-2 focus:ring-emerald-500/50 outline-none" 
-                    value={formData.salaryMax} 
-                    onChange={(e) => setFormData({ ...formData, salaryMax: e.target.value })} 
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm font-bold text-[var(--text-muted)] mb-2 block">Devise</label>
-                  <select 
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-[var(--text)] focus:ring-2 focus:ring-emerald-500/50 outline-none" 
-                    value={formData.salaryCurrency} 
-                    onChange={(e) => setFormData({ ...formData, salaryCurrency: e.target.value })}
-                  >
-                    <option value="XAF" className="bg-[var(--surface)]">XAF</option>
-                    <option value="EUR" className="bg-[var(--surface)]">EUR</option>
-                    <option value="USD" className="bg-[var(--surface)]">USD</option>
-                  </select>
-                </div>
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+                <Input label="Salaire minimum" type="number" placeholder="Ex : 500000" value={formData.salaryMin} onChange={e => setFormData({ ...formData, salaryMin: e.target.value })} />
+                <Input label="Salaire maximum" type="number" placeholder="Ex : 800000" value={formData.salaryMax} onChange={e => setFormData({ ...formData, salaryMax: e.target.value })} />
+                <Select label="Devise" value={formData.salaryCurrency} onChange={e => setFormData({ ...formData, salaryCurrency: e.target.value })}>
+                  <option value="XAF">XAF</option>
+                  <option value="EUR">EUR</option>
+                  <option value="USD">USD</option>
+                </Select>
               </div>
 
               {/* EXPIRATION */}
-              <div>
-                <label className="text-sm font-bold text-[var(--text-muted)] mb-2 block flex items-center gap-2">
-                  <Calendar size={16}/> Date d'expiration (Optionnel)
-                </label>
-                <input 
-                  type="date" 
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-[var(--text)] focus:ring-2 focus:ring-emerald-500/50 outline-none" 
-                  value={formData.expirationDate} 
-                  onChange={(e) => setFormData({ ...formData, expirationDate: e.target.value })} 
-                />
+              <div className="max-w-sm">
+                <Input label="Date d'expiration (optionnel)" type="date" value={formData.expirationDate} onChange={e => setFormData({ ...formData, expirationDate: e.target.value })} />
               </div>
               
-              <div>
-                <label className="text-sm font-bold text-[var(--text-muted)] mb-2 block">Description *</label>
-                <textarea 
-                  required
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 min-h-[140px] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:ring-2 focus:ring-emerald-500/50 outline-none resize-none" 
-                  value={formData.description} 
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })} 
-                  placeholder="Décrivez le poste et les missions..."
-                />
-              </div>
+              <Textarea
+                label="Description (nécessaire : elle sert à générer les questions du test)"
+                required
+                rows={6}
+                value={formData.description}
+                onChange={e => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Décrivez le poste et les missions..."
+              />
               
-              <div>
-                <label className="text-sm font-bold text-[var(--text-muted)] mb-2 block">Prérequis</label>
-                <textarea 
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 min-h-[100px] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:ring-2 focus:ring-emerald-500/50 outline-none resize-none" 
-                  value={formData.requirements} 
-                  onChange={(e) => setFormData({ ...formData, requirements: e.target.value })} 
-                  placeholder="Compétences et qualifications requises..."
-                />
-              </div>
+              <Textarea
+                label="Prérequis"
+                rows={4}
+                value={formData.requirements}
+                onChange={e => setFormData({ ...formData, requirements: e.target.value })}
+                placeholder="Compétences et qualifications requises..."
+              />
 
               {/* PORTAL TOGGLE */}
-              <div className="flex items-center justify-between p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
-                <div className="flex items-center gap-3">
-                  <Globe className="text-emerald-400" size={20} />
-                  <div>
-                    <p className="font-bold text-emerald-400 text-sm">Publier sur le Portail</p>
-                    <p className="text-xs text-[var(--text-muted)]">Visible par tous les visiteurs</p>
-                  </div>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input 
-                    type="checkbox" 
-                    className="sr-only peer" 
-                    checked={formData.showOnPortal}
-                    onChange={(e) => setFormData({ ...formData, showOnPortal: e.target.checked })}
-                  />
-                  <div className="w-11 h-6 bg-[var(--border)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
-                </label>
-              </div>
+              <label className="flex min-h-16 items-center justify-between gap-4 rounded-[var(--radius-control)] bg-[var(--surface-2)] p-4 cursor-pointer">
+                <span>
+                  <span className="block font-semibold text-[var(--text)]">Publier sur le portail</span>
+                  <span className="block text-sm text-[var(--text-muted)]">Visible par tous les visiteurs</span>
+                </span>
+                <input type="checkbox" className="size-5 shrink-0 accent-[var(--brand)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--focus)]" aria-label="Publier sur le portail" checked={formData.showOnPortal} onChange={e => setFormData({ ...formData, showOnPortal: e.target.checked })} />
+              </label>
 
               {/* ✨ BOUTON BOOSTER */}
-              <div className="flex items-center justify-between p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl">
-                <div className="flex items-center gap-3">
-                  <Zap className="text-amber-400" size={20} />
-                  <div>
-                    <p className="font-bold text-amber-400 text-sm">Booster l'Offre (Premium)</p>
-                    <p className="text-xs text-[var(--text-muted)]">Met l'offre en tête du portail (30 jours)</p>
-                  </div>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input 
-                    type="checkbox" 
-                    className="sr-only peer" 
-                    checked={formData.isPremium}
-                    onChange={(e) => setFormData({ ...formData, isPremium: e.target.checked })}
-                  />
-                  <div className="w-11 h-6 bg-[var(--border)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
-                </label>
-              </div>
+              <label className="flex min-h-16 items-center justify-between gap-4 rounded-[var(--radius-control)] bg-[var(--surface-2)] p-4 cursor-pointer">
+                <span>
+                  <span className="block font-semibold text-[var(--text)]">Offre premium</span>
+                  <span className="block text-sm text-[var(--text-muted)]">Met l'offre en tête du portail pendant 30 jours</span>
+                </span>
+                <input type="checkbox" className="size-5 shrink-0 accent-[var(--brand)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--focus)]" aria-label="Activer l'offre premium" checked={formData.isPremium} onChange={e => setFormData({ ...formData, isPremium: e.target.checked })} />
+              </label>
 
               {/* ⏱ DURÉE DU TEST */}
-              <div className="flex items-center justify-between p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
-                <div className="flex items-center gap-3">
-                  <Clock className="text-emerald-400 shrink-0" size={20} />
-                  <div>
-                    <p className="font-bold text-emerald-300 text-sm">Durée du test (minutes)</p>
-                    <p className="text-xs text-[var(--text-muted)]">Temps accordé aux candidats pour répondre</p>
-                  </div>
-                </div>
-                <input
-                  type="number"
-                  min={1}
-                  max={180}
-                  value={formData.testDurationMinutes}
-                  onChange={e => setFormData({ ...formData, testDurationMinutes: Math.max(1, parseInt(e.target.value) || 10) })}
-                  className="w-20 text-center bg-black/40 border border-emerald-500/40 rounded-xl px-3 py-2 text-[var(--text)] font-bold text-lg focus:ring-2 focus:ring-emerald-500/50 outline-none"
-                />
-              </div>
+              <Input
+                label="Durée du test (minutes)"
+                hint="Temps accordé aux candidats pour répondre."
+                type="number"
+                min={1}
+                max={180}
+                value={formData.testDurationMinutes}
+                onChange={e => setFormData({ ...formData, testDurationMinutes: Math.max(1, parseInt(e.target.value) || 10) })}
+              />
 
               {/* 📄 DOCUMENT SUPPLÉMENTAIRE */}
-              <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl space-y-3">
-                <div className="flex items-center gap-3 mb-1">
-                  <FileText className="text-amber-400 shrink-0" size={20} />
-                  <div>
-                    <p className="font-bold text-amber-300 text-sm">Document supplémentaire (Optionnel)</p>
-                    <p className="text-xs text-[var(--text-muted)]">En plus du CV, exiger un autre document au candidat</p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+              <div className="space-y-3">
+                <h4 className="font-semibold text-[var(--text)]">Document supplémentaire (optionnel)</h4>
+                <p className="text-sm text-[var(--text-muted)]">En plus du CV, demandez un document additionnel au candidat.</p>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                   {([
                     { value: '', label: 'Aucun' },
                     { value: 'CNI', label: "Pièce d'identité (CNI)" },
@@ -570,153 +421,159 @@ export default function CreateIAJobPage() {
                     { value: 'CASIER', label: 'Casier judiciaire' },
                     { value: 'AUTRE', label: 'Autre document' },
                   ] as const).map(opt => (
-                    <button
+                    <Button
                       key={opt.value}
                       type="button"
+                      variant={formData.additionalDocumentType === opt.value ? 'primary' : 'secondary'}
+                      aria-pressed={formData.additionalDocumentType === opt.value}
                       onClick={() => setFormData({ ...formData, additionalDocumentType: opt.value, additionalDocumentLabel: '' })}
-                      className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all ${
-                        formData.additionalDocumentType === opt.value
-                          ? 'bg-amber-500/30 border-amber-400 text-amber-300'
-                          : 'bg-white/5 border-white/10 text-[var(--text-muted)] hover:border-amber-500/40'
-                      }`}
                     >
                       {opt.label}
-                    </button>
+                    </Button>
                   ))}
                 </div>
                 {formData.additionalDocumentType === 'AUTRE' && (
-                  <input
-                    type="text"
+                  <Input
+                    label="Nom du document"
                     placeholder="Ex : Lettre de référence, Casier judiciaire..."
                     value={formData.additionalDocumentLabel}
                     onChange={e => setFormData({ ...formData, additionalDocumentLabel: e.target.value })}
-                    className="w-full bg-black/30 border border-amber-500/30 rounded-xl px-4 py-3 text-[var(--text)] text-sm placeholder:text-[var(--text-muted)] focus:ring-2 focus:ring-amber-500/40 outline-none"
                   />
                 )}
               </div>
             </div>
-          </div>
+          </Card>
+<Card className="recruitment-form-image" id="recruit-section-2" title="Image de l'offre (optionnel)">
+            {imagePreview ? (
+              <div className="relative group">
+                <Image
+                  src={imagePreview}
+                  alt="Aperçu de l’image de l’offre"
+                  width={800}
+                  height={400}
+                  className="w-full max-h-80 rounded-xl object-cover"
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => {
+                    setImagePreview(null);
+                    setImageFile(null);
+                  }}
+                  aria-label="Retirer l’image de l’offre"
+                  className="absolute right-3 top-3"
+                >
+                  <X size={18} strokeWidth={1.5} />
+                </Button>
+              </div>
+            ) : (
+              <label className="flex min-h-48 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl bg-[var(--surface-2)] p-6 text-center text-[var(--text-muted)] focus-within:outline focus-within:outline-2 focus-within:outline-[var(--focus)] focus-within:outline-offset-2">
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleImageChange}
+                  className="sr-only"
+                />
+                <Upload size={32} strokeWidth={1.5} aria-hidden="true" />
+                <span className="font-medium text-[var(--text)]">Choisir une image</span>
+                <span className="text-sm">JPG, PNG ou WEBP · 2 Mo maximum</span>
+              </label>
+            )}
+          </Card>
 
           {/* CARD: Critères IA */}
-          <div className="bg-emerald-500/5 backdrop-blur-xl border border-emerald-500/30 rounded-2xl p-8 shadow-2xl">
-            <h3 className="text-xl font-bold text-[var(--text)] mb-6 flex items-center gap-3">
-              <Sparkles className="text-emerald-400"/>
-              Critères de Sélection IA
-            </h3>
+          <Card id="recruit-section-3" title="Critères de sélection IA">
 
             <div className="space-y-6">
-              {/* Skills */}
-              <div>
-                <label className="text-sm font-bold text-emerald-300 mb-3 block">Compétences Clés (pour analyse CV)</label>
-                <div className="bg-black/30 border border-emerald-500/20 rounded-xl p-4 flex flex-wrap gap-2 min-h-[60px]">
+              <div className="space-y-3">
+                <div className="flex flex-wrap gap-2" aria-label="Compétences sélectionnées">
                   <AnimatePresence>
                     {formData.requiredSkills.map(skill => (
-                      <motion.span 
-                        key={skill}
-                        initial={{ scale: 0.8, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        exit={{ scale: 0.8, opacity: 0 }}
-                        className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 hover:bg-emerald-500/30 transition-colors"
-                      >
-                        {skill}
-                        <X size={14} className="cursor-pointer hover:text-[var(--text)]" onClick={() => removeSkill(skill)} />
+                      <motion.span key={skill} initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }}>
+                        <Badge tone="info">
+                          {skill}
+                          <button type="button" className="ml-2 rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--focus)]" aria-label={`Retirer la compétence ${skill}`} onClick={() => removeSkill(skill)}>
+                            <X size={12} strokeWidth={1.5} />
+                          </button>
+                        </Badge>
                       </motion.span>
                     ))}
                   </AnimatePresence>
-                  <input 
-                    type="text"
-                    className="bg-transparent border-none outline-none text-sm p-2 text-[var(--text)] flex-1 min-w-[150px] placeholder:text-[var(--text-muted)]"
-                    placeholder="Tapez + Entrée..."
-                    value={newSkill}
-                    onChange={(e) => setNewSkill(e.target.value)}
-                    onKeyDown={handleAddSkill}
-                  />
                 </div>
+                <Input
+                  label="Compétences clés pour l'analyse des CV"
+                  hint="Saisissez une compétence et appuyez sur Entrée."
+                  type="text"
+                  placeholder="Ex : gestion de projet"
+                  value={newSkill}
+                  onChange={e => setNewSkill(e.target.value)}
+                  onKeyDown={handleAddSkill}
+                />
               </div>
 
               {/* Sliders */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <div className="flex justify-between mb-3">
-                    <label className="text-sm font-bold text-emerald-300">Expérience Minimale</label>
-                    <span className="text-emerald-400 font-bold text-lg">{formData.minExperience} ans</span>
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                <div className="space-y-3">
+                  <div className="flex justify-between gap-4">
+                    <label htmlFor="minimum-experience" className="text-sm font-semibold text-[var(--text)]">Expérience minimale</label>
+                    <span className="text-sm font-medium text-[var(--text-muted)]">{formData.minExperience} ans</span>
                   </div>
                   <input 
                     type="range" 
+                    id="minimum-experience"
                     min="0" 
                     max="15" 
                     step="1"
-                    className="w-full h-3 bg-[var(--surface-2)] rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                    className="w-full accent-[var(--brand)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--focus)] focus-visible:outline-offset-2"
                     value={formData.minExperience}
                     onChange={(e) => setFormData({ ...formData, minExperience: parseInt(e.target.value) })}
                   />
                 </div>
                 
-                <div>
-                  <label className="text-sm font-bold text-emerald-300 mb-3 block flex items-center gap-2">
-                    <GraduationCap size={16}/> Niveau d'Études
-                  </label>
-                  <select 
-                    className="w-full bg-black/30 border border-emerald-500/20 rounded-xl px-4 py-3 text-[var(--text)] focus:ring-2 focus:ring-emerald-500/50 outline-none" 
-                    value={formData.educationLevel} 
-                    onChange={(e) => setFormData({ ...formData, educationLevel: e.target.value as EducationLevel })}
-                  >
-                    {Object.values(EducationLevel).map(lvl => <option key={lvl} value={lvl} className="bg-[var(--surface)]">{lvl}</option>)}
-                  </select>
-                </div>
+                <Select label="Niveau d'études" value={formData.educationLevel} onChange={e => setFormData({ ...formData, educationLevel: e.target.value as EducationLevel })}>
+                  {Object.values(EducationLevel).map(lvl => <option key={lvl} value={lvl}>{lvl}</option>)}
+                </Select>
               </div>
             </div>
-          </div>
+          </Card>
 
           {/* CARD: MODE QUESTIONS */}
-          <div className="bg-emerald-500/5 backdrop-blur-xl border border-emerald-500/30 rounded-2xl p-8 shadow-2xl">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-[var(--text)] flex items-center gap-3">
-                <Target className="text-emerald-400"/>
-                Questions d'Évaluation
-              </h3>
-              
-              {/* TOGGLE IA/MANUEL */}
-              <div className="flex items-center gap-4 bg-black/40 px-5 py-3 rounded-xl border border-emerald-500/20">
-                <span className="text-sm font-bold text-emerald-300">Génération IA</span>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input 
-                    type="checkbox" 
-                    className="sr-only peer" 
-                    checked={useAIQuestions}
-                    onChange={(e) => setUseAIQuestions(e.target.checked)}
-                  />
-                  <div className="w-14 h-7 bg-[var(--border)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-emerald-500"></div>
-                </label>
-              </div>
-            </div>
+          <Card id="recruit-section-4"
+            title="Questions d'évaluation"
+            action={
+              <label className="flex min-h-11 items-center gap-3 cursor-pointer">
+                <span className="text-sm text-[var(--text-muted)]">Génération IA</span>
+                <input
+                  type="checkbox"
+                  className="size-5 accent-[var(--brand)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--focus)]"
+                  aria-label="Activer la génération des questions par IA"
+                  checked={useAIQuestions}
+                  onChange={e => setUseAIQuestions(e.target.checked)}
+                />
+              </label>
+            }
+          >
 
             {useAIQuestions ? (
-              <div className="bg-black/30 border border-emerald-500/20 rounded-2xl p-8 text-center">
-                <div className="w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-500/50">
-                  <Sparkles size={36} className="text-[var(--text)]" />
-                </div>
-                <h4 className="text-xl font-bold text-[var(--text)] mb-3">Génération Automatique Activée</h4>
-                <p className="text-[var(--text-muted)] max-w-md mx-auto leading-relaxed">
-                  L'IA générera automatiquement <span className="text-emerald-400 font-bold">10 questions pertinentes</span> basées sur les compétences requises et la description du poste.
+              <div className="space-y-3 rounded-[var(--radius-control)] bg-[var(--surface-2)] p-6">
+                <Badge tone="info">Génération IA activée</Badge>
+                <p className="text-sm text-[var(--text-muted)]">
+                  L'IA générera automatiquement 10 questions basées sur les compétences requises et la description du poste.
                 </p>
-                <div className="mt-6 flex items-center justify-center gap-2 text-sm text-emerald-300">
-                  <BrainCircuit size={16} />
-                  <span>Powered by Mistral AI</span>
-                </div>
+                <p className="text-sm text-[var(--text-muted)]">Mistral AI</p>
               </div>
             ) : (
               <>
                 <div className="flex justify-between items-center mb-6">
                   <p className="text-sm text-[var(--text-muted)]">Créez manuellement vos questions ({formData.quiz.length}/10)</p>
-                  <button 
-                    type="button" 
-                    onClick={addQuestion} 
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={addQuestion}
                     disabled={formData.quiz.length >= 10}
-                    className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-bold rounded-xl flex items-center gap-2 transition-all shadow-lg"
                   >
-                    <Plus size={16} /> Ajouter
-                  </button>
+                    <Plus size={16} strokeWidth={1.5} /> Ajouter une question
+                  </Button>
                 </div>
 
                 <Reorder.Group axis="y" values={formData.quiz} onReorder={handleReorder} className="space-y-5">
@@ -724,47 +581,43 @@ export default function CreateIAJobPage() {
                     <Reorder.Item 
                       key={q.id} 
                       value={q} 
-                      className="bg-black/30 border border-emerald-500/20 rounded-2xl p-6 hover:border-emerald-500/40 transition-colors"
+                      className="rounded-[var(--radius-control)] bg-[var(--surface-2)] p-5"
                     >
                       <div className="flex gap-4">
-                        <div className="cursor-grab active:cursor-grabbing text-[var(--text-muted)] hover:text-emerald-400 transition-colors">
-                          <GripVertical size={24}/>
+                        <div className="cursor-grab active:cursor-grabbing text-[var(--text-muted)]" aria-hidden="true">
+                          <GripVertical size={20} strokeWidth={1.5}/>
                         </div>
                         
                         <div className="flex-1 space-y-4">
                           <div className="flex justify-between items-center">
-                            <span className="text-xs font-black text-emerald-400/70 uppercase tracking-widest">Question {idx + 1}</span>
-                            <button 
-                              type="button" 
-                              onClick={() => removeQuestion(q.id)} 
-                              className="text-[var(--text-muted)] hover:text-red-400 transition-colors"
-                            >
-                              <Trash2 size={18} />
-                            </button>
+                            <Badge tone="neutral">Question {idx + 1}</Badge>
+                            <Button type="button" variant="ghost" onClick={() => removeQuestion(q.id)} aria-label={`Supprimer la question ${idx + 1}`}>
+                              <Trash2 size={18} strokeWidth={1.5} />
+                            </Button>
                           </div>
                           
-                          <input 
-                            type="text" 
-                            placeholder="Entrez la question..." 
-                            className="w-full bg-transparent border-b border-emerald-500/20 py-3 text-[var(--text)] outline-none focus:border-emerald-500/50 transition-colors placeholder:text-[var(--text-muted)]"
-                            value={q.text} 
-                            onChange={(e) => updateQuestion(q.id, { text: e.target.value })}
+                          <Input
+                            label={`Question ${idx + 1}`}
+                            placeholder="Entrez la question..."
+                            value={q.text}
+                            onChange={e => updateQuestion(q.id, { text: e.target.value })}
                           />
                           
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             {q.options.map((opt, optIdx) => (
-                              <div key={optIdx} className="flex gap-3 items-center">
-                                <button 
+                              <div key={optIdx} className="flex flex-col gap-2 sm:flex-row sm:items-end">
+                                <Button
                                   type="button"
+                                  variant={q.correctAnswer === optIdx ? 'primary' : 'secondary'}
+                                  aria-pressed={q.correctAnswer === optIdx}
+                                  aria-label={`Définir l’option ${String.fromCharCode(65 + optIdx)} comme bonne réponse à la question ${idx + 1}`}
                                   onClick={() => updateQuestion(q.id, { correctAnswer: optIdx })}
-                                  className={`w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold transition-all ${q.correctAnswer === optIdx ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/50 scale-110' : 'bg-[var(--surface-2)] text-[var(--text-muted)] hover:bg-[var(--border)]'}`}
                                 >
                                   {String.fromCharCode(65 + optIdx)}
-                                </button>
-                                <input 
-                                  type="text" 
+                                </Button>
+                                <Input
+                                  label={`Option ${String.fromCharCode(65 + optIdx)}`}
                                   placeholder={`Option ${String.fromCharCode(65 + optIdx)}`}
-                                  className="flex-1 bg-[var(--bg)]/50 border border-white/5 rounded-xl px-4 py-3 text-sm text-[var(--text)] outline-none focus:border-emerald-500/30 transition-colors placeholder:text-[var(--text-muted)]"
                                   value={opt} 
                                   onChange={(e) => {
                                     const nextOpts = [...q.options];
@@ -776,15 +629,14 @@ export default function CreateIAJobPage() {
                             ))}
                           </div>
 
-                          <div className="flex items-center gap-4 pt-2">
-                            <span className="text-xs text-[var(--text-muted)]">Points :</span>
-                            <input 
-                              type="number" 
-                              min="1" 
+                          <div className="max-w-40">
+                            <Input
+                              label="Points"
+                              type="number"
+                              min="1"
                               max="10"
-                              className="w-20 bg-[var(--bg)]/50 border border-white/5 rounded-lg px-3 py-2 text-sm text-[var(--text)] text-center"
                               value={q.points}
-                              onChange={(e) => updateQuestion(q.id, { points: parseInt(e.target.value) || 1 })}
+                              onChange={e => updateQuestion(q.id, { points: parseInt(e.target.value) || 1 })}
                             />
                           </div>
                         </div>
@@ -794,31 +646,25 @@ export default function CreateIAJobPage() {
                 </Reorder.Group>
                 
                 {formData.quiz.length === 0 && (
-                  <div className="py-16 border-2 border-dashed border-emerald-500/20 rounded-2xl text-center">
-                    <Target size={48} className="mx-auto text-emerald-500/30 mb-4"/>
-                    <p className="text-[var(--text-muted)] italic">Aucune question. Ajoutez-en pour activer le test manuel.</p>
+                  <div className="rounded-[var(--radius-control)] bg-[var(--surface-2)] p-6 text-center">
+                    <p className="font-medium text-[var(--text)]">Aucune question pour le moment</p>
+                    <p className="mt-2 text-sm text-[var(--text-muted)]">Ajoutez une question pour activer le test manuel.</p>
                   </div>
                 )}
               </>
             )}
-          </div>
+          </Card>
 
           {/* SUBMIT */}
-          <button 
+          <Button
             type="submit" 
             disabled={isSubmitting || (!useAIQuestions && formData.quiz.length === 0)} 
-            className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-6 rounded-2xl flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-2xl shadow-emerald-500/20 text-lg"
+            loading={isSubmitting}
+            className="recruitment-form-submit w-full"
           >
-            {isSubmitting ? (
-              <Loader2 className="animate-spin" size={24}/>
-            ) : (
-              <>
-                <BrainCircuit size={24}/>
-                Activer le Recrutement IA
-              </>
-            )}
-          </button>
-        </form>
+            {isSubmitting ? 'Publication…' : 'Activer le recrutement IA'}
+          </Button>
+        </form></div>
       </div>
     </div>
   );

@@ -1,4 +1,6 @@
 'use client';
+import { AttendanceSelect } from '@/components/attendance/AttendanceSelect';
+import { useModuleVisuals } from '@/components/requests/ModulePageFrame';
 
 // ============================================================================
 // 📁 components/permissions/PermissionsOverview.tsx
@@ -14,12 +16,12 @@ import {
   Clock, CheckCircle2, TrendingUp, Filter, ChevronRight, Users2, LineChart as LineChartIcon,
 } from 'lucide-react';
 import {
-  ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, AreaChart, Area, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   Legend, PieChart, Pie, Cell, BarChart, Bar,
 } from 'recharts';
 
 const TYPE_LABEL: Record<string, string> = { URGENCE: 'Urgence', MISSION: 'Mission', AUTRE: 'Autre' };
-const TYPE_COLOR: Record<string, string> = { URGENCE: '#ef4444', MISSION: '#10b981', AUTRE: '#94a3b8' };
+const TYPE_COLOR: Record<string, string> = { URGENCE: 'var(--loan-chart-1)', MISSION: 'var(--loan-chart-2)', AUTRE: 'var(--loan-chart-neutral)' };
 
 type Props = {
   tickets: any[];
@@ -28,6 +30,7 @@ type Props = {
 };
 
 export default function PermissionsOverview({ tickets, onSelectEmployee, onGoToTicket }: Props) {
+ const {refonte:uiRefonte,motion:uiMotion}=useModuleVisuals();
   const { bp } = useBasePath();
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
@@ -88,7 +91,7 @@ export default function PermissionsOverview({ tickets, onSelectEmployee, onGoToT
   return (
     <div className="space-y-6">
       {/* ══════════════════ KPI ══════════════════ */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 attendance-metrics">
         <KpiCard icon={Clock} label="Tickets ce mois-ci" value={String(kpis.countThisMonth)} tone="emerald" />
         <KpiCard icon={CheckCircle2} label="Autorisés ce mois-ci" value={String(kpis.approvedThisMonth)} tone="emerald" />
         <KpiCard icon={TrendingUp} label="Autorisés (toutes périodes)" value={String(kpis.totalApproved)} tone="amber" />
@@ -98,17 +101,17 @@ export default function PermissionsOverview({ tickets, onSelectEmployee, onGoToT
       {/* ══════════════════ DERNIÈRES DEMANDES ══════════════════ */}
       <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
         <div className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-[var(--border)]">
-          <p className="text-sm font-bold text-[var(--text-muted)]">{showAll ? 'Toutes les demandes' : 'Dernières demandes'}</p>
+          <p className="text-sm font-semibold text-[var(--text-muted)]">{showAll ? 'Toutes les demandes' : 'Dernières demandes'}</p>
           <div className="flex flex-wrap items-center gap-2">
             <FilterSelect icon={Filter} value={typeFilter} onChange={setTypeFilter} placeholder="Tous les types" options={Object.entries(TYPE_LABEL)} />
             {departments.length > 0 && <FilterSelect icon={Users2} value={deptFilter} onChange={setDeptFilter} placeholder="Tous les départements" options={departments.map(d => [d, d] as [string, string])} />}
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto attendance-table-scroll" tabIndex={0} role="region" aria-label="Tableau défilant horizontalement">
+          <table className="w-full text-sm attendance-table">
             <thead className="bg-[var(--surface-2)]">
-              <tr>{['Employé', 'Type', 'Sortie', 'Statut', ''].map(h => <th key={h} className="px-4 py-3 text-left text-xs font-bold text-[var(--text-muted)] uppercase whitespace-nowrap">{h}</th>)}</tr>
+              <tr>{['Employé', 'Type', 'Sortie', 'Statut', ''].map(h => <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)]  whitespace-nowrap">{h}</th>)}</tr>
             </thead>
             <tbody className="divide-y divide-[var(--border)]">
               {displayed.length === 0 ? (
@@ -116,7 +119,7 @@ export default function PermissionsOverview({ tickets, onSelectEmployee, onGoToT
               ) : displayed.map(t => (
                 <tr key={t.id} className="hover:bg-[var(--surface-2)]">
                   <td className="px-4 py-3">
-                    <button onClick={() => onSelectEmployee(t.employee)} className="font-semibold text-[var(--text)] hover:text-emerald-600 hover:underline">
+                    <button onClick={() => onSelectEmployee(t.employee)} className="font-semibold text-[var(--text)] hover:text-[var(--success-text)] hover:underline">
                       {t.employee?.firstName} {t.employee?.lastName}
                     </button>
                     {t.employee?.department?.name && <p className="text-xs text-[var(--text-muted)]">{t.employee.department.name}</p>}
@@ -125,7 +128,7 @@ export default function PermissionsOverview({ tickets, onSelectEmployee, onGoToT
                   <td className="px-4 py-3 text-[var(--text-muted)] whitespace-nowrap">{new Date(t.departureTime).toLocaleDateString('fr-FR')}</td>
                   <td className="px-4 py-3"><StatusPill status={t.status} /></td>
                   <td className="px-4 py-3 text-right">
-                    <button onClick={() => onGoToTicket(t.id)} className="text-emerald-600 hover:underline text-xs font-semibold flex items-center gap-0.5 ml-auto">Détail <ChevronRight size={12} /></button>
+                    <button onClick={() => onGoToTicket(t.id)} className="text-[var(--success-text)] hover:underline text-xs font-semibold flex items-center gap-0.5 ml-auto">Détail <ChevronRight size={12} /></button>
                   </td>
                 </tr>
               ))}
@@ -135,7 +138,7 @@ export default function PermissionsOverview({ tickets, onSelectEmployee, onGoToT
 
         {filtered.length > 10 && (
           <div className="p-3 border-t border-[var(--border)] flex justify-center">
-            <button onClick={() => setShowAll(s => !s)} className="text-xs font-semibold text-emerald-600 hover:underline">
+            <button onClick={() => setShowAll(s => !s)} className="text-xs font-semibold text-[var(--success-text)] hover:underline">
               {showAll ? 'Réduire à 10 demandes' : `Voir les ${filtered.length} demandes`}
             </button>
           </div>
@@ -145,7 +148,7 @@ export default function PermissionsOverview({ tickets, onSelectEmployee, onGoToT
       {/* ══════════════════ DERNIERS TICKETS AUTORISÉS ══════════════════ */}
       <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
         <div className="p-4 border-b border-[var(--border)]">
-          <p className="text-sm font-bold text-[var(--text-muted)]">Derniers tickets autorisés</p>
+          <p className="text-sm font-semibold text-[var(--text-muted)]">Derniers tickets autorisés</p>
         </div>
         <div className="divide-y divide-[var(--border)]">
           {recentlyApproved.length === 0 ? (
@@ -156,7 +159,7 @@ export default function PermissionsOverview({ tickets, onSelectEmployee, onGoToT
                 <p className="text-sm font-semibold text-[var(--text)]">{t.employee?.firstName} {t.employee?.lastName}</p>
                 <p className="text-xs text-[var(--text-muted)]">{TYPE_LABEL[t.type] ?? t.type} · autorisé le {new Date(t.reviewedAt ?? t.createdAt).toLocaleDateString('fr-FR')}</p>
               </div>
-              <span className="text-xs font-semibold text-emerald-600 whitespace-nowrap">Autorisé</span>
+              <span className="text-xs font-semibold text-[var(--success-text)] whitespace-nowrap">Autorisé</span>
             </button>
           ))}
         </div>
@@ -164,16 +167,16 @@ export default function PermissionsOverview({ tickets, onSelectEmployee, onGoToT
 
       {/* ══════════════════ NAVIGATION ══════════════════ */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Link href={bp('/presences/permissions/suivi')} className="group relative overflow-hidden rounded-2xl p-5 bg-emerald-500 text-white hover:bg-emerald-600 transition-colors">
-          <LineChartIcon className="absolute -right-3 -bottom-3 opacity-20 group-hover:scale-110 transition-transform" size={110} />
-          <p className="text-xs font-bold uppercase tracking-wider opacity-80 mb-1">Suivi</p>
-          <p className="text-lg font-bold mb-1">Suivi des permissions →</p>
+        <Link href={bp('/presences/permissions/suivi')} className="group relative overflow-hidden rounded-2xl p-5 bg-[var(--brand)] text-[var(--on-brand)] hover:bg-[var(--brand)] transition-colors">
+          <LineChartIcon className="absolute -right-3 -bottom-3 opacity-20  transition-transform" size={110} />
+          <p className="text-xs font-semibold   opacity-80 mb-1">Suivi</p>
+          <p className="text-lg font-semibold mb-1">Suivi des permissions →</p>
           <p className="text-xs opacity-80">Qui sort le plus, par employé, avec historique complet</p>
         </Link>
-        <Link href={bp('/presences/permissions/validations')} className="group relative overflow-hidden rounded-2xl p-5 bg-amber-500 text-white hover:bg-amber-600 transition-colors">
-          <Filter className="absolute -right-3 -bottom-3 opacity-20 group-hover:scale-110 transition-transform" size={110} />
-          <p className="text-xs font-bold uppercase tracking-wider opacity-80 mb-1">Décisions</p>
-          <p className="text-lg font-bold mb-1">Validations →</p>
+        <Link href={bp('/presences/permissions/validations')} className="group relative overflow-hidden rounded-2xl p-5 bg-[var(--mustard)] text-[var(--on-brand)] hover:bg-[var(--mustard)] transition-colors">
+          <Filter className="absolute -right-3 -bottom-3 opacity-20  transition-transform" size={110} />
+          <p className="text-xs font-semibold   opacity-80 mb-1">Décisions</p>
+          <p className="text-lg font-semibold mb-1">Validations →</p>
           <p className="text-xs opacity-80">Tous les tickets, autoriser ou refuser en un clic</p>
         </Link>
       </div>
@@ -181,31 +184,39 @@ export default function PermissionsOverview({ tickets, onSelectEmployee, onGoToT
       {/* ══════════════════ GRAPHIQUES ══════════════════ */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5 lg:col-span-2">
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-sm font-bold text-[var(--text-muted)]">Tickets demandés vs autorisés par mois</p>
-            <select value={year} onChange={e => setYear(Number(e.target.value))} className="text-xs px-2 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+          <div className="flex items-center justify-between mb-4 attendance-filters">
+            <p className="text-sm font-semibold text-[var(--text-muted)]">Tickets demandés vs autorisés par mois</p>
+            <AttendanceSelect value={year} onChange={e => setYear(Number(e.target.value))} className="text-xs px-2 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
               {availableYears.map(y => <option key={y} value={y}>{y}</option>)}
-            </select>
+            </AttendanceSelect>
           </div>
           <ResponsiveContainer width="100%" height={260}>
-            <LineChart data={monthlySeries}>
+            {uiRefonte ? (<AreaChart data={monthlySeries}>
               <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
               <XAxis dataKey="mois" fontSize={12} />
               <YAxis fontSize={12} allowDecimals={false} />
               <Tooltip />
               <Legend />
-              <Line type="monotone" dataKey="Demandés" stroke="#F59E0B" strokeWidth={2.5} dot={false} />
-              <Line type="monotone" dataKey="Autorisés" stroke="#10b981" strokeWidth={2.5} dot={false} />
-            </LineChart>
+              <Area type="monotone" dataKey="Demandés" stroke="var(--loan-chart-1)" strokeWidth={2.5} dot={false}  fill="var(--loan-gradient-1)" fillOpacity={1} isAnimationActive={uiMotion} animationDuration={700}/>
+              <Area type="monotone" dataKey="Autorisés" stroke="var(--loan-chart-2)" strokeWidth={2.5} dot={false}  fill="var(--loan-gradient-2)" fillOpacity={1} isAnimationActive={uiMotion} animationDuration={700}/>
+            </AreaChart>) : (<LineChart data={monthlySeries}>
+              <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+              <XAxis dataKey="mois" fontSize={12} />
+              <YAxis fontSize={12} allowDecimals={false} />
+              <Tooltip />
+              <Legend />
+              <Line type="monotone" dataKey="Demandés" stroke="var(--loan-chart-1)" strokeWidth={2.5} dot={false} />
+              <Line type="monotone" dataKey="Autorisés" stroke="var(--loan-chart-2)" strokeWidth={2.5} dot={false} />
+            </LineChart>)}
           </ResponsiveContainer>
         </div>
 
         <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
-          <p className="text-sm font-bold text-[var(--text-muted)] mb-4">Répartition par type de ticket</p>
+          <p className="text-sm font-semibold text-[var(--text-muted)] mb-4">Répartition par type de ticket</p>
           <ResponsiveContainer width="100%" height={240}>
             <PieChart>
-              <Pie data={byType} dataKey="value" nameKey="name" innerRadius={55} outerRadius={90} paddingAngle={2}>
-                {byType.map((t, i) => <Cell key={i} fill={TYPE_COLOR[t.type] ?? '#10B981'} />)}
+              <Pie data={byType} dataKey="value" nameKey="name" innerRadius={55} outerRadius={90} paddingAngle={uiRefonte ? 5 : 2} cornerRadius={uiRefonte ? 8 : 0} isAnimationActive={uiRefonte ? uiMotion : undefined} animationDuration={uiRefonte ? 700 : undefined}>
+                {byType.map((t, i) => <Cell key={i} fill={TYPE_COLOR[t.type] ?? 'var(--loan-chart-2)'} />)}
               </Pie>
               <Tooltip />
               <Legend />
@@ -214,14 +225,14 @@ export default function PermissionsOverview({ tickets, onSelectEmployee, onGoToT
         </div>
 
         <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
-          <p className="text-sm font-bold text-[var(--text-muted)] mb-4">Top 5 départements par nombre de tickets</p>
+          <p className="text-sm font-semibold text-[var(--text-muted)] mb-4">Top 5 départements par nombre de tickets</p>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={byDept} layout="vertical" margin={{ left: 24 }}>
               <CartesianGrid strokeDasharray="3 3" opacity={0.2} horizontal={false} />
               <XAxis type="number" fontSize={12} allowDecimals={false} />
               <YAxis type="category" dataKey="departement" fontSize={12} width={110} />
               <Tooltip />
-              <Bar dataKey="nombre" fill="#10B981" radius={[0, 6, 6, 0]} />
+              <Bar dataKey="nombre" fill="var(--loan-chart-2)" radius={uiRefonte ? [10,10,10,10] : [0, 6, 6, 0]} maxBarSize={uiRefonte ? 16 : undefined} background={uiRefonte ? {fill:"var(--surface-2)",radius:10} : undefined} isAnimationActive={uiRefonte ? uiMotion : undefined} animationDuration={uiRefonte ? 700 : undefined} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -232,14 +243,14 @@ export default function PermissionsOverview({ tickets, onSelectEmployee, onGoToT
 
 function KpiCard({ icon: Icon, label, value, tone }: { icon: any; label: string; value: string; tone: 'emerald' | 'amber' }) {
   const cls: Record<string, string> = {
-    emerald: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-300',
-    amber: 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-300',
+    emerald: 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)]  ',
+    amber: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)]  ',
   };
   return (
     <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-4">
       <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${cls[tone]}`}><Icon size={18} /></div>
       <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-1">{label}</p>
-      <p className="text-lg font-bold text-[var(--text)] truncate">{value}</p>
+      <p className="text-lg font-semibold text-[var(--text)] truncate">{value}</p>
     </div>
   );
 }
@@ -248,19 +259,19 @@ function FilterSelect({ icon: Icon, value, onChange, placeholder, options }: { i
   return (
     <div className="relative">
       <Icon size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" />
-      <select value={value} onChange={e => onChange(e.target.value)} className="pl-7 pr-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-xs">
+      <AttendanceSelect value={value} onChange={e => onChange(e.target.value)} className="pl-7 pr-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-xs">
         <option value="">{placeholder}</option>
         {options.map(([val, label]) => <option key={val} value={val}>{label}</option>)}
-      </select>
+      </AttendanceSelect>
     </div>
   );
 }
 
 function StatusPill({ status }: { status: string }) {
   const cfg: Record<string, { label: string; cls: string }> = {
-    PENDING: { label: 'En attente', cls: 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300' },
-    APPROVED: { label: 'Autorisé', cls: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300' },
-    REJECTED: { label: 'Refusé', cls: 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300' },
+    PENDING: { label: 'En attente', cls: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)]  ' },
+    APPROVED: { label: 'Autorisé', cls: 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)]  ' },
+    REJECTED: { label: 'Refusé', cls: 'bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] text-[var(--danger-text)]  ' },
     CANCELLED: { label: 'Annulé', cls: 'bg-[var(--surface-2)] text-[var(--text-muted)]' },
   };
   const c = cfg[status] ?? { label: status, cls: 'bg-[var(--surface-2)] text-[var(--text-muted)]' };

@@ -20,6 +20,7 @@ import { useAlert } from '@/components/providers/AlertProvider';
 import type { BonusTemplate } from '@/app/(dashboard)/parametres/primes/page';
 import { useBasePath } from '@/hooks/useBasePath';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import { ModulePageFrame } from '@/components/requests/ModulePageFrame';
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
@@ -94,7 +95,7 @@ const CatalogueLink = ({ backUrl }: { backUrl: string }) => {
 
 // ─── COMPOSANT PRINCIPAL ──────────────────────────────────────────────────────
 
-export default function AssignPrimePage() {
+function AssignPrimePage() {
   const router    = useRouter();
   const { bp } = useBasePath();
   const alert     = useAlert();
@@ -710,5 +711,14 @@ export default function AssignPrimePage() {
       </AnimatePresence>
 
     </div>
+  );
+}
+
+
+export default function AssignPrimePageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <AssignPrimePage />
+    </ModulePageFrame>
   );
 }

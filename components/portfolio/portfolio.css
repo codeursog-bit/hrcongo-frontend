@@ -1,0 +1,304 @@
+@media screen {
+  .portfolio-dashboard .portfolio-content>div>:not([hidden])~:not([hidden]){margin-top:0;margin-bottom:0}
+  .portfolio-report-chart-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+  .portfolio-chart-wide{grid-column:1/-1}
+  @media(max-width:1050px){.portfolio-report-chart-grid{grid-template-columns:minmax(0,1fr)}}
+  .portfolio-workspace,
+  .portfolio-dialog {
+    --portfolio-positive-soft: color-mix(
+      in srgb,
+      var(--green) 12%,
+      var(--surface)
+    );
+    --portfolio-warning-soft: color-mix(
+      in srgb,
+      var(--mustard) 14%,
+      var(--surface)
+    );
+    --portfolio-danger-soft: color-mix(
+      in srgb,
+      var(--danger) 10%,
+      var(--surface)
+    );
+    --portfolio-chart-1: var(--brand);
+    --portfolio-chart-2: color-mix(in srgb, var(--brand) 65%, var(--text));
+    --portfolio-chart-3: var(--mustard);
+    --portfolio-chart-4: var(--green);
+    --portfolio-chart-5: var(--lime);
+    --portfolio-chart-6: color-mix(in srgb, var(--brand) 45%, var(--surface));
+    --portfolio-chart-7: color-mix(in srgb, var(--mustard) 65%, var(--text));
+    --portfolio-chart-8: var(--text-secondary);
+    color: var(--text);
+    min-width: 0;
+  }
+  .portfolio-workspace *,
+  .portfolio-dialog * {
+    box-sizing: border-box;
+  }
+  .portfolio-content > div {
+    min-height: 0 !important;
+    padding-bottom: 32px !important;
+    max-width: 1600px;
+    margin-inline: auto;
+  }
+  .portfolio-content > div > div:has(> div > h1),
+  .portfolio-content > div > div:has(> h1) {
+    margin-bottom: 28px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+    gap: 20px;
+  }
+  .portfolio-content h1 {
+    font-size: clamp(25px, 2.4vw, 34px);
+    line-height: 1.25;
+    font-weight: 600;
+    letter-spacing: -0.035em;
+    margin: 0;
+  }
+  .portfolio-content h1 + p,
+  .portfolio-content h1 ~ p {
+    font-size: 13px;
+    line-height: 1.8;
+    margin-top: 8px;
+    color: var(--text-secondary);
+  }
+  .portfolio-content h1 ~ p > span:empty {
+    display: none;
+  }
+  .portfolio-content h2,
+  .portfolio-content h3 {
+    letter-spacing: -0.015em;
+    font-weight: 600;
+  }
+  .portfolio-content .rounded-2xl {
+    border-radius: var(--radius-card);
+  }
+  .portfolio-content
+    div[style*="background: var(--surface)"]:not(.portfolio-dialog *) {
+    box-shadow: var(--shadow-card);
+  }
+  .portfolio-content :is(button, a) {
+    transition:
+      background 0.16s,
+      color 0.16s,
+      box-shadow 0.16s;
+  }
+  .portfolio-workspace svg.lucide,
+  .portfolio-dialog svg.lucide {
+    stroke-width: 1.5;
+    flex-shrink: 0;
+  }
+  .portfolio-workspace
+    :is(input:not([type="checkbox"]):not([type="radio"]), select),
+  .portfolio-dialog
+    :is(input:not([type="checkbox"]):not([type="radio"]), select) {
+    min-height: 44px;
+    line-height: 1.5;
+    font-size: 13px;
+    border-color: var(--border);
+    border-radius: var(--radius-control);
+    background-color: var(--surface-2);
+    color: var(--text);
+    max-width: 100%;
+  }
+  .portfolio-workspace
+    :is(button, a, input, select, textarea, summary):focus-visible,
+  .portfolio-dialog :is(button, a, input, select, textarea):focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 3px;
+  }
+  .portfolio-content .overflow-x-auto {
+    border-radius: var(--radius-card);
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+  }
+  .portfolio-content .overflow-x-auto > .grid:not(.items-center) {
+    position: sticky;
+    top: 0;
+    background: var(--surface-2);
+  }
+  .portfolio-content .grid[style*="grid-template-columns"] {
+    align-items: center;
+    min-height: 68px;
+  }
+  .portfolio-content .grid[style*="grid-template-columns"] > .min-w-0 {
+    min-width: 0;
+  }
+  .portfolio-content .grid[style*="grid-template-columns"] p {
+    line-height: 1.65;
+    overflow-wrap: normal;
+  }
+  .portfolio-content .grid[style*="grid-template-columns"] :is(button, a) {
+    min-height: 36px;
+  }
+  .portfolio-content .recharts-wrapper {
+    font-family: inherit;
+  }
+  .portfolio-content .recharts-tooltip-wrapper {
+    z-index: 5;
+  }
+  .portfolio-content .recharts-default-tooltip {
+    border-radius: var(--radius-control) !important;
+    border-color: var(--border) !important;
+    box-shadow: var(--shadow-pop);
+    color: var(--text);
+  }
+  .portfolio-dashboard .portfolio-content > div {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .portfolio-company-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+  }
+  .portfolio-company-card {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+    padding: 24px !important;
+    box-shadow: var(--shadow-card);
+    border: 0 !important;
+  }
+  .portfolio-company-card > div {
+    margin-bottom: 0;
+  }
+  .portfolio-company-card > div:last-child {
+    margin-top: auto;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+  }
+  .portfolio-company-avatar {
+    background: var(--brand-soft) !important;
+    color: var(--action) !important;
+  }
+  .portfolio-error {
+    padding: 14px 18px;
+    background: var(--portfolio-danger-soft);
+    color: var(--danger-text);
+    border-radius: var(--radius-control);
+  }
+  .portfolio-dialog {
+    position: fixed;
+    inset: 0;
+    margin: auto;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    box-shadow: var(--shadow-pop);
+    width: fit-content;
+    max-width: calc(100vw - 32px);
+    max-height: calc(100dvh - 40px);
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+  .portfolio-dialog::backdrop {
+    background: rgb(0 0 0 / 0.45);
+  }
+  .portfolio-dialog > div {
+    width: min(680px, calc(100vw - 32px));
+    max-height: calc(100dvh - 40px);
+    overflow-y: auto;
+    box-shadow: none !important;
+    border: 0 !important;
+  }
+  .portfolio-dialog textarea {
+    width: 100%;
+    min-height: 96px;
+    max-height: 240px;
+    resize: vertical;
+    background: var(--surface-2);
+    color: var(--text);
+    border-radius: var(--radius-control);
+    padding: 12px;
+  }
+  .portfolio-dialog button {
+    min-height: 40px;
+  }
+  .portfolio-dialog :is(h2, h3) {
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.6;
+  }
+  @media (min-width: 1600px) {
+    .portfolio-company-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 1100px) {
+    .portfolio-company-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 640px) {
+    .portfolio-company-grid {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 14px;
+    }
+    .portfolio-content > div > div:has(> div > h1) {
+      align-items: stretch;
+      margin-bottom: 20px;
+      padding-bottom: 20px;
+    }
+    .portfolio-content h1 {
+      font-size: 26px;
+    }
+    .portfolio-content h1 ~ p {
+      font-size: 12px;
+    }
+    .portfolio-content > div {
+      padding-bottom: 20px !important;
+    }
+    .portfolio-company-card {
+      padding: 20px !important;
+    }
+    .portfolio-dialog {
+      max-width: calc(100vw - 16px);
+      max-height: calc(100dvh - 24px);
+      border-radius: 18px;
+    }
+    .portfolio-dialog > div {
+      width: calc(100vw - 16px);
+      max-height: calc(100dvh - 24px);
+    }
+  }
+
+  .portfolio-overview-charts {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(280px, 1fr);
+    gap: 24px;
+  }
+  .portfolio-overview-charts > .lg\:col-span-2 {
+    grid-column: auto;
+  }
+  .portfolio-panel {
+    box-shadow: var(--shadow-card);
+    border: 0 !important;
+  }
+  .portfolio-tabs {
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .portfolio-tabs button {
+    min-height: 42px;
+    white-space: nowrap;
+    padding-inline: 18px;
+  }
+  @media (max-width: 1000px) {
+    .portfolio-overview-charts {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+}
+@media print {
+  .portfolio-workspace,
+  .portfolio-content {
+    display: contents !important;
+  }
+  .portfolio-dialog {
+    display: none !important;
+  }
+}

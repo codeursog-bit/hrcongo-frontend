@@ -8,10 +8,12 @@ import { usesStandardData } from '@/lib/document-template';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  Banknote, Package, HelpCircle, Wallet, Send, Loader2, CheckCircle2,
-  ArrowLeft, Search, Eye, Paperclip,
+  Banknote, Package, HelpCircle, Wallet, Eye, Paperclip,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { RequestForm, RequestSummaryCard, RequestSuccessScreen } from '@/components/requests';
+import { Button, Input, Select, Textarea, EmptyState } from '@/components/design-system/primitives';
+import { useToast } from '@/components/design-system/feedback';
+import '@/components/loans/loan-form.css';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import { useImageUpload } from '@/hooks/useImageUpload';
@@ -40,6 +42,8 @@ function nextMonthDefault() {
 
 export default function NouvellePretAvancePage() {
   const router = useRouter();
+  const toast = useToast();
+  const [step, setStep] = useState(0);
   const { bp } = useBasePath();
 
   const [userRole, setUserRole] = useState('');
@@ -198,6 +202,7 @@ export default function NouvellePretAvancePage() {
         });
       }
       setIsDone(true);
+      toast('success', 'Demande envoyée');
     } catch (e: any) {
       setError(e?.message || "Erreur lors de l'envoi de la demande");
     } finally {
@@ -245,210 +250,52 @@ export default function NouvellePretAvancePage() {
     status: 'PENDING',
   };
 
-  if (isDone) {
-    return (
-      <div className="max-w-lg mx-auto py-24 text-center">
-        <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-20 h-20 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
-          <CheckCircle2 size={40} />
-        </motion.div>
-        <h1 className="text-2xl font-bold text-[var(--text)] mb-2">Demande envoyée</h1>
-        <p className="text-[var(--text-muted)] text-sm mb-8">Votre demande a été transmise pour validation.</p>
-        <div className="flex gap-3 justify-center">
-          <button onClick={() => router.push(bp('/loans/mon-espace'))} className="px-5 py-2.5 bg-[var(--text)] text-[var(--bg)] rounded-xl font-semibold text-sm">Voir mes demandes</button>
-          <button onClick={() => { setIsDone(false); setAmount(''); setDurationMonthsInput(''); setReason(''); }} className="px-5 py-2.5 border border-[var(--border)] rounded-xl font-semibold text-sm text-[var(--text-muted)]">Nouvelle demande</button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="max-w-[1300px] mx-auto pb-24 space-y-6">
-      <FinanceSubNav userRole={userRole} />
-
-      <div className="flex items-center gap-3">
-        <button onClick={() => router.push(bp('/loans'))} className="p-2 rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)]"><ArrowLeft size={18} /></button>
-        <div>
-          <h1 className="text-2xl font-bold text-[var(--text)]">Nouvelle demande</h1>
-          <p className="text-[var(--text-muted)] text-sm">Prêt (argent / marchandise) ou avance sur salaire</p>
-        </div>
-      </div>
-
-      <div className="max-w-2xl mx-auto space-y-5">
-        <div className="space-y-5">
-          {isFinance && (
-            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
-              <div className="flex items-center justify-between mb-3">
-                <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Pour qui ?</label>
-                <button onClick={() => { setOnBehalf(!onBehalf); setSelectedEmployeeId(''); }} className={`w-11 h-6 rounded-full transition-colors relative shrink-0 ${onBehalf ? 'bg-emerald-500' : 'bg-[var(--border)]'}`}>
-                  <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-all ${onBehalf ? 'left-5' : 'left-0.5'}`} />
-                </button>
-              </div>
-              {!onBehalf ? <p className="text-sm text-[var(--text-muted)]">Pour moi-même</p> : (
-                <div className="space-y-2">
-                  <div className="relative">
-                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
-                    <input value={employeeSearch} onChange={e => setEmployeeSearch(e.target.value)} placeholder="Rechercher un employé…" className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
-                  </div>
-                  <div className="max-h-40 overflow-y-auto space-y-1">
-                    {filteredEmployees.map(e => (
-                      <button key={e.id} onClick={() => setSelectedEmployeeId(e.id)} className={`w-full text-left px-3 py-2 rounded-lg text-sm ${selectedEmployeeId === e.id ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 font-semibold' : 'hover:bg-[var(--surface-2)]'}`}>
-                        {e.firstName} {e.lastName}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {onBehalf && selectedEmployeeId && (
-                <div className="mt-4 pt-4 border-t border-[var(--border)]">
-                  <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2 block">
-                    Comment sera-t-il remboursé ?
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setRecoverViaPayroll(true)}
-                      className={`p-3 rounded-xl border-2 text-left transition-all ${recoverViaPayroll ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-[var(--border)] hover:border-[var(--border)]'}`}
-                    >
-                      <p className="font-semibold text-sm text-[var(--text)]">Déduit sur la paie</p>
-                      <p className="text-xs text-[var(--text-muted)]">La paie retire automatiquement chaque mois</p>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setRecoverViaPayroll(false)}
-                      className={`p-3 rounded-xl border-2 text-left transition-all ${!recoverViaPayroll ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-[var(--border)] hover:border-[var(--border)]'}`}
-                    >
-                      <p className="font-semibold text-sm text-[var(--text)]">En espèces</p>
-                      <p className="text-xs text-[var(--text-muted)]">La paie ne touche pas à ce prêt</p>
-                    </button>
-                  </div>
-                  {recoverViaPayroll && (
-                    <p className="text-xs text-[var(--text-muted)] mt-2">
-                      S'il reste un solde après la paie, un remboursement en espèces restera possible en complément.
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-
-          {hasKnownEmployee && (
-            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
-              <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2 block">
-                {onBehalf ? `Dette actuelle de ${targetEmployee?.firstName || 'cet employé'}` : 'Ma dette actuelle'}
-              </label>
-              {isLoadingDebt && onBehalf ? (
-                <KonzaLoader variant="inline" />
-              ) : existingDebt > 0 ? (
-                <p className="text-lg font-bold text-amber-600">{existingDebt.toLocaleString('fr-FR')} FCFA <span className="text-xs font-normal text-[var(--text-muted)]">déjà dus (prêts/avances en cours)</span></p>
-              ) : (
-                <p className="text-sm text-emerald-600 font-semibold">Aucune dette en cours</p>
-              )}
-            </div>
-          )}
-
-          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
-            <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-3 block">Type de demande</label>
-            <div className="grid grid-cols-1 gap-2">
-              {TYPE_OPTIONS.map(opt => {
-                const Icon = opt.icon;
-                const active = type === opt.value;
-                return (
-                  <button key={opt.value} onClick={() => setType(opt.value)} className={`flex items-center gap-3 p-3.5 rounded-xl border-2 text-left transition-all ${active ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-[var(--border)] hover:border-[var(--border)]'}`}>
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${active ? 'bg-emerald-500 text-white' : 'bg-[var(--surface-2)] text-[var(--text-muted)]'}`}><Icon size={18} /></div>
-                    <div><p className="font-semibold text-sm text-[var(--text)]">{opt.label}</p><p className="text-xs text-[var(--text-muted)]">{opt.hint}</p></div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5 space-y-4">
-            <div>
-              <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Montant demandé (FCFA)</label>
-              <input type="number" min="1" value={amount} onChange={e => setAmount(e.target.value)} className="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
-              {hasKnownEmployee && Number(amount) > 0 && existingDebt > 0 && (
-                <p className="text-xs text-amber-600 mt-1.5">
-                  + {existingDebt.toLocaleString('fr-FR')} FCFA déjà dus = <strong>{projectedTotal.toLocaleString('fr-FR')} FCFA</strong> au total après cette demande
-                </p>
-              )}
-            </div>
-
-            {!isAdvance ? (
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Durée (en mois)</label>
-                  <input type="number" min="1" value={durationMonthsInput} onChange={e => setDurationMonthsInput(e.target.value)} className="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Date de départ</label>
-                  <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
-                </div>
-                {monthlyRepayment && <p className="text-xs text-emerald-600 dark:text-emerald-400 col-span-2">Mensualité estimée : {monthlyRepayment.toLocaleString('fr-FR')} FCFA/mois (jusqu&apos;au {new Date(endDate).toLocaleDateString('fr-FR')})</p>}
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-3">
-                <div className="col-span-2">
-                  <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Date de la demande</label>
-                  <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
-                  <p className="text-xs text-[var(--text-muted)] mt-1">L&apos;avance apparaît dans le profil et le relevé de l&apos;employé à partir de ce mois.</p>
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Mois de déduction</label>
-                  <select value={deductMonth} onChange={e => setDeductMonth(Number(e.target.value))} className="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm">
-                    {['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'].map((n, i) => <option key={n} value={i + 1}>{n}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Année</label>
-                  <input type="number" value={deductYear} onChange={e => setDeductYear(Number(e.target.value))} className="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
-                </div>
-              </div>
-            )}
-
-            <div>
-              <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Motif</label>
-              <textarea value={reason} onChange={e => setReason(e.target.value)} rows={3} className="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm resize-none" />
-            </div>
-
-            {isStandard && !isAdvance && (
-              <>
-                <div>
-                  <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Nature du prêt</label>
-                  <select value={nature} onChange={e => setNature(e.target.value)} className="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm">
-                    <option value="">— Non précisé —</option>
-                    <option value="SOCIAL">Prêt social</option>
-                    <option value="SCOLARITE">Prêt scolarité</option>
-                    <option value="LOGEMENT">Prêt logement</option>
-                    <option value="EXCEPTIONNEL">Prêt exceptionnel</option>
-                    <option value="AUTRE">Autre</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Pièce jointe (devis, justificatif de scolarité, certificat médical...)</label>
-                  <label className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-dashed border-[var(--border)] text-sm text-[var(--text-muted)] cursor-pointer hover:border-emerald-400 hover:text-emerald-500 transition-colors">
-                    <Paperclip size={16} />
-                    {uploadingAttachment ? 'Envoi en cours…' : attachmentUrl ? 'Pièce jointe ✓' : 'Joindre un document'}
-                    <input type="file" accept="image/*,.pdf" hidden onChange={e => e.target.files?.[0] && handleAttachmentSelect(e.target.files[0])} />
-                  </label>
-                </div>
-              </>
-            )}
-          </div>
-
-          {error && <div className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 px-4 py-3 rounded-xl">{error}</div>}
-
-          <div className="flex gap-2">
-            <button onClick={handleSubmit} disabled={!canSubmit} className="flex-1 py-3.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/30">
-              {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />} Envoyer la demande
-            </button>
-            <button onClick={() => setShowPreviewModal(true)} className="px-4 py-3.5 border border-dashed border-[var(--border)] text-[var(--text-muted)] font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-[var(--surface-2)] shrink-0">
-              <Eye size={18} />
-            </button>
-          </div>
-        </div>
-      </div>
-
+  const entries = [
+    { label: 'Bénéficiaire', value: targetEmployee ? [targetEmployee.firstName, targetEmployee.lastName].filter(Boolean).join(' ') : onBehalf ? 'Sélectionner un employé' : 'Moi-même' },
+    { label: 'Type', value: TYPE_OPTIONS.find(option => option.value === type)?.label },
+    { label: 'Montant demandé', value: amount ? Number(amount).toLocaleString('fr-FR') + ' FCFA' : undefined },
+    ...(!isAdvance ? [
+      { label: 'Durée', value: durationMonthsInput ? durationMonthsInput + ' mois' : undefined },
+      { label: 'Date de départ', value: startDate || undefined },
+    ] : [
+      { label: 'Date de la demande', value: startDate || undefined },
+      { label: 'Déduction', value: deductMonth + ' / ' + deductYear },
+    ]),
+    { label: 'Motif', value: reason || undefined },
+    ...(isFinance && onBehalf ? [{ label: 'Remboursement', value: recoverViaPayroll ? 'Déduit sur la paie' : 'En espèces' }] : []),
+    ...(isStandard && !isAdvance ? [{ label: 'Nature', value: nature || 'Non précisée' }, { label: 'Pièce jointe', value: attachmentUrl ? 'Jointe' : 'Non jointe' }] : []),
+  ];
+  const nextDisabled = step === 0 ? reason.trim().length < 3 || (onBehalf && !selectedEmployeeId)
+    : step === 1 ? !amount || Number(amount) <= 0 || (!isAdvance && (!durationMonthsInput || Number(durationMonthsInput) <= 0)) : false;
+  if (isDone) return <div className="loan-request loan-request-success"><RequestSuccessScreen confirmation={isFinance && onBehalf ? "La demande a suivi le traitement direct prévu pour votre rôle." : undefined} handler="Votre administration" next={isFinance && onBehalf ? 'La demande a été enregistrée pour l’employé sélectionné. Retrouvez son suivi dans le module Prêts et avances.' : 'Vous pourrez suivre la décision et les avis depuis Mon espace.'} onView={() => router.push(bp('/loans/mon-espace'))} onAnother={() => { setIsDone(false); setAmount(''); setDurationMonthsInput(''); setReason(''); setStep(0); }} /></div>;
+  return <div className="loan-request"><RequestForm title="Nouvelle demande" description="Prêt en argent, marchandise ou avance sur salaire." navigation={<FinanceSubNav userRole={userRole} />} noValidate step={step} onStepChange={setStep} onNext={() => setStep(value => Math.min(3, value + 1))} onSubmit={handleSubmit} onCancel={() => router.push(bp('/loans'))} submitting={isSubmitting} submitDisabled={!canSubmit} nextDisabled={nextDisabled} error={error || undefined}
+    summary={<RequestSummaryCard entries={entries}>{hasKnownEmployee && <div className="loan-request-note" style={{ marginTop:24 }}><p>{onBehalf ? 'Dette actuelle de cet employé' : 'Ma dette actuelle'}</p>{isLoadingDebt && onBehalf ? <KonzaLoader variant="inline" /> : existingDebt > 0 ? <p><strong>{existingDebt.toLocaleString('fr-FR')} FCFA</strong> déjà dus (prêts/avances en cours)</p> : <p>Aucune dette en cours</p>}</div>}</RequestSummaryCard>}>
+    <div className="loan-request-fields">
+    {step === 0 && <>
+      <h2>Quel est votre besoin ?</h2>
+      {isFinance && <div className="loan-request-fields"><div className="k-row"><span>Pour qui ?</span><Button variant="secondary" aria-pressed={onBehalf} onClick={() => { setOnBehalf(!onBehalf); setSelectedEmployeeId(''); }}>{onBehalf ? 'Pour un employé' : 'Pour moi-même'}</Button></div>{onBehalf && <><Input label="Rechercher un employé" value={employeeSearch} onChange={e => setEmployeeSearch(e.target.value)} placeholder="Nom ou prénom" /><div className="loan-request-employee-list">{filteredEmployees.length ? filteredEmployees.map(e => <button type="button" key={e.id} className="loan-request-choice" aria-pressed={selectedEmployeeId === e.id} onClick={() => setSelectedEmployeeId(e.id)}>{e.firstName} {e.lastName}</button>) : <EmptyState title="Aucun employé ne correspond à cette recherche">Essayez un autre nom ou attendez le chargement de la liste.</EmptyState>}</div></>}{onBehalf && selectedEmployeeId && <><p className="k-help">Comment sera-t-il remboursé ?</p><div className="loan-request-grid"><button type="button" className="loan-request-choice" aria-pressed={recoverViaPayroll} onClick={() => setRecoverViaPayroll(true)}><span><strong>Déduit sur la paie</strong><small>La paie retire automatiquement chaque mois.</small></span></button><button type="button" className="loan-request-choice" aria-pressed={!recoverViaPayroll} onClick={() => setRecoverViaPayroll(false)}><span><strong>En espèces</strong><small>La paie ne touche pas à ce prêt.</small></span></button></div>{recoverViaPayroll && <p className="k-help">S’il reste un solde après la paie, un remboursement en espèces restera possible en complément.</p>}</>}</div>}
+      <div className="loan-request-types" role="group" aria-label="Type de demande">{TYPE_OPTIONS.map(opt => { const Icon = opt.icon; return <button type="button" key={opt.value} className="loan-request-choice" aria-pressed={type === opt.value} onClick={() => setType(opt.value)}><Icon size={20} strokeWidth={1.5} aria-hidden="true" /><span><strong>{opt.label}</strong><small>{opt.hint}</small></span></button>; })}</div>
+      <Textarea label="Motif" hint="Précisez votre besoin en au moins 3 caractères." value={reason} onChange={e => setReason(e.target.value)} rows={3} />
+    </>}
+    {step === 1 && <>
+      <h2>Quel montant, à quelle date ?</h2>
+      <Input label="Montant demandé (FCFA)" type="number" min="1" value={amount} onChange={e => setAmount(e.target.value)} />
+      {hasKnownEmployee && Number(amount) > 0 && existingDebt > 0 && <p className="loan-request-note">+ {existingDebt.toLocaleString('fr-FR')} FCFA déjà dus = <strong>{projectedTotal.toLocaleString('fr-FR')} FCFA</strong> au total après cette demande</p>}
+      {!isAdvance ? <><div className="loan-request-grid"><Input label="Durée (en mois)" type="number" min="1" value={durationMonthsInput} onChange={e => setDurationMonthsInput(e.target.value)} /><Input label="Date de départ" type="date" value={startDate} onChange={e => setStartDate(e.target.value)} /></div>{monthlyRepayment && <p className="loan-request-estimate">Mensualité estimée : {monthlyRepayment.toLocaleString('fr-FR')} FCFA/mois {endDate && '(jusqu’au ' + new Date(endDate).toLocaleDateString('fr-FR') + ')'}</p>}</> : <><Input label="Date de la demande" type="date" value={startDate} onChange={e => setStartDate(e.target.value)} hint="L’avance apparaît dans le profil et le relevé de l’employé à partir de ce mois." /><div className="loan-request-grid"><Select label="Mois de déduction" value={deductMonth} onChange={e => setDeductMonth(Number(e.target.value))}>{['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'].map((n,i) => <option key={n} value={i+1}>{n}</option>)}</Select><Input label="Année" type="number" value={deductYear} onChange={e => setDeductYear(Number(e.target.value))} /></div></>}
+    </>}
+    {step === 2 && <>
+      <h2>Les détails de votre demande</h2>
+      {isStandard && !isAdvance ? <><Select label="Nature du prêt" value={nature} onChange={e => setNature(e.target.value)}><option value="">— Non précisé —</option><option value="SOCIAL">Prêt social</option><option value="SCOLARITE">Prêt scolarité</option><option value="LOGEMENT">Prêt logement</option><option value="EXCEPTIONNEL">Prêt exceptionnel</option><option value="AUTRE">Autre</option></Select><p className="k-help">Pièce jointe (devis, justificatif de scolarité, certificat médical…)</p><label className="loan-request-upload"><Paperclip size={18} strokeWidth={1.5} />{uploadingAttachment ? 'Envoi en cours…' : attachmentUrl ? 'Pièce jointe ✓' : 'Joindre un document'}<input type="file" accept="image/*,.pdf" className="sr-only" onChange={e => e.target.files?.[0] && handleAttachmentSelect(e.target.files[0])} /></label></> : <p className="loan-request-note">Aucune pièce complémentaire n’est demandée dans ce formulaire. Vous pouvez passer à la relecture.</p>}
+    </>}
+    {step === 3 && <>
+      <h2>Relisez avant d’envoyer</h2>
+      <dl className="loan-request-check">{entries.map(entry => <div key={entry.label}><dt>{entry.label}</dt><dd>{entry.value ?? 'Non renseigné'}</dd></div>)}</dl>
+      {!isAdvance && monthlyRepayment && <p className="loan-request-estimate">Mensualité estimée : {monthlyRepayment.toLocaleString('fr-FR')} FCFA/mois.</p>}
+      <Button variant="secondary" onClick={() => setShowPreviewModal(true)}><Eye size={18} strokeWidth={1.5} /> Aperçu de la fiche</Button>
+      <p className="k-help">{isFinance && onBehalf ? 'Cette création pour un employé suit le traitement direct déjà prévu pour votre rôle.' : 'Votre administration recevra cette demande pour validation.'}</p>
+    </>}
+    </div>
+  </RequestForm>
       <DocumentPreviewModal open={showPreviewModal} onClose={() => setShowPreviewModal(false)}>
         {isStandard ? (
           isAdvance
@@ -458,6 +305,5 @@ export default function NouvellePretAvancePage() {
           <LoanRequestPrintable id="preview-loan" data={previewData as any} />
         )}
       </DocumentPreviewModal>
-    </div>
-  );
+  </div>;
 }

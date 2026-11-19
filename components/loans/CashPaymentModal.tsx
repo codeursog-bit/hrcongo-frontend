@@ -13,6 +13,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, animate, motion, useMotionValue, useTransform } from 'framer-motion';
 import { Calendar, Check, Loader2, PartyPopper, ShieldCheck, Wallet, X } from 'lucide-react';
+import './cash-payment.css';
 
 const fmt = (n: number) => Math.round(n).toLocaleString('fr-FR') + ' FCFA';
 
@@ -111,7 +112,7 @@ export default function CashPaymentModal({ open, onClose, remaining, total, onCo
       {open && (
         <motion.div
           key="cash-backdrop"
-          className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 bg-black/50 backdrop-blur-md"
+          className="cash-payment-backdrop fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 bg-black/50 backdrop-blur-md"
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
           onClick={() => !isPaying && !success && onClose()}
         >
@@ -121,7 +122,8 @@ export default function CashPaymentModal({ open, onClose, remaining, total, onCo
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 24, scale: 0.97 }}
             transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-            className="relative w-full max-w-md overflow-hidden rounded-3xl bg-[var(--surface)] border border-[var(--border)] shadow-2xl shadow-emerald-900/20"
+            role="dialog" aria-modal="true" aria-label="Enregistrer un remboursement"
+            className="cash-payment-panel relative w-full max-w-md overflow-hidden rounded-3xl bg-[var(--surface)] border border-[var(--border)] shadow-2xl shadow-emerald-900/20"
           >
             {/* Halo décoratif */}
             <div className="pointer-events-none absolute -top-24 -right-16 h-56 w-56 rounded-full bg-emerald-400/20 blur-3xl" />
@@ -168,7 +170,7 @@ export default function CashPaymentModal({ open, onClose, remaining, total, onCo
                 </motion.div>
               ) : (
                 /* ───────────── FORMULAIRE ───────────── */
-                <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, scale: 0.97 }} className="relative p-6">
+                <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, scale: 0.97 }} className="cash-payment-form relative p-6">
                   {/* En-tête */}
                   <div className="flex items-start justify-between gap-3 mb-5">
                     <div className="flex items-center gap-3">
@@ -223,9 +225,10 @@ export default function CashPaymentModal({ open, onClose, remaining, total, onCo
                       </div>
 
                       {/* Montant */}
-                      <label className="mb-1.5 block text-xs font-semibold text-[var(--text-muted)]">Montant remboursé</label>
-                      <div className={`flex items-center rounded-2xl border-2 bg-[var(--surface)] px-4 transition-colors focus-within:border-emerald-500 ${overRemaining ? 'border-red-400' : 'border-[var(--border)]'}`}>
+                      <label htmlFor="cash-payment-amount" className="mb-1.5 block text-xs font-semibold text-[var(--text-muted)]">Montant remboursé</label>
+                      <div className={`cash-payment-amount flex items-center rounded-2xl border-2 bg-[var(--surface)] px-4 transition-colors focus-within:border-emerald-500 ${overRemaining ? 'border-red-400' : 'border-[var(--border)]'}`}>
                         <input
+                          id="cash-payment-amount"
                           type="text" inputMode="numeric" autoFocus
                           value={numeric ? numeric.toLocaleString('fr-FR') : ''}
                           onChange={e => setAmount(e.target.value)}
@@ -262,7 +265,7 @@ export default function CashPaymentModal({ open, onClose, remaining, total, onCo
 
                       {/* Période */}
                       <div className="mt-5">
-                        <div className="mb-1.5 flex items-center justify-between">
+                        <div className="cash-payment-period-header mb-1.5 flex items-center justify-between">
                           <label className="flex items-center gap-1.5 text-xs font-semibold text-[var(--text-muted)]"><Calendar size={13} /> Période du remboursement</label>
                           <div className="flex gap-1.5">
                             <button type="button" onClick={() => { setMonth(curM); setYear(curY); }}
@@ -272,11 +275,11 @@ export default function CashPaymentModal({ open, onClose, remaining, total, onCo
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <select value={month} onChange={e => setMonth(Number(e.target.value))}
+                          <select aria-label="Mois du remboursement" value={month} onChange={e => setMonth(Number(e.target.value))}
                             className="flex-1 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 text-sm font-medium text-[var(--text)] outline-none transition-colors focus:border-emerald-500">
                             {MONTHS_LONG.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
                           </select>
-                          <select value={year} onChange={e => setYear(Number(e.target.value))}
+                          <select aria-label="Année du remboursement" value={year} onChange={e => setYear(Number(e.target.value))}
                             className="w-28 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 text-sm font-medium text-[var(--text)] outline-none transition-colors focus:border-emerald-500">
                             {years.map(y => <option key={y} value={y}>{y}</option>)}
                           </select>

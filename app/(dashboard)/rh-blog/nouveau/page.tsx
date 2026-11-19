@@ -10,10 +10,11 @@ import { ArrowLeft } from 'lucide-react';
 import { authService } from '@/lib/services/authService';
 import { blogApi, BlogQuota } from '@/services/blog-api';
 import { BlogEditor } from '@/components/blog/BlogEditor';
+import { ModulePageFrame } from '@/components/requests/ModulePageFrame';
 
 const CAN_POST = ['HR_MANAGER', 'ADMIN', 'CABINET_ADMIN'];
 
-export default function RhBlogNouveauPage() {
+function RhBlogNouveauPage() {
   const router = useRouter();
   const user   = authService.getCurrentUser();
 
@@ -57,5 +58,14 @@ export default function RhBlogNouveauPage() {
         onSuccess={slug => router.push(`/blog/${slug}`)}
       />
     </div>
+  );
+}
+
+
+export default function RhBlogNouveauPageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <RhBlogNouveauPage />
+    </ModulePageFrame>
   );
 }

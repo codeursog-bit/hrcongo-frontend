@@ -1,4 +1,9 @@
 'use client';
+import '@/components/leave-history/leave-workspace.css';
+import { ModuleSelect } from '@/components/ui/ModuleSelect';
+import { LeaveModuleFrame as ModulePageFrame } from '@/components/leave-history/LeaveModuleFrame';
+import { ModulePageSkeleton } from '@/components/requests/ModulePageFrame';
+import { Button } from '@/components/design-system/primitives';
 
 // ============================================================================
 // 📁 app/(dashboard)/conges/diagrammes/page.tsx
@@ -38,7 +43,7 @@ function Kpi({ icon: Icon, tone, value, label, hint }: { icon: any; tone: string
     <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-4 flex items-center gap-3">
       <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${tone}`}><Icon size={20} /></div>
       <div className="min-w-0">
-        <p className="text-2xl font-bold text-[var(--text)]">{value}</p>
+        <p className="text-2xl font-semibold text-[var(--text)]">{value}</p>
         <p className="text-xs text-[var(--text-muted)]">{label}</p>
         {hint && <p className="text-[10px] text-[var(--text-muted)]/80">{hint}</p>}
       </div>
@@ -49,7 +54,7 @@ function Kpi({ icon: Icon, tone, value, label, hint }: { icon: any; tone: string
 function Panel({ title, subtitle, children, className = '' }: { title: string; subtitle?: string; children: React.ReactNode; className?: string }) {
   return (
     <section className={`bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5 print:break-inside-avoid ${className}`}>
-      <h2 className="text-sm font-bold text-[var(--text)]">{title}</h2>
+      <h2 className="text-sm font-semibold text-[var(--text)]">{title}</h2>
       {subtitle && <p className="text-xs text-[var(--text-muted)] mt-0.5 mb-4">{subtitle}</p>}
       {!subtitle && <div className="mb-4" />}
       {children}
@@ -162,35 +167,35 @@ export default function LeaveDiagramsPage() {
   const departments: any[] = data?.departments ?? [];
 
   return (
-    <div className="max-w-[1400px] mx-auto pb-24 space-y-6">
+    <ModulePageFrame kind="dashboard"><div className="max-w-[1400px] mx-auto pb-24 space-y-6">
       <div className="print:hidden"><CongeSubNav userRole={userRole} /></div>
 
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 leave-header">
         <div>
-          <p className="text-xs font-bold tracking-[0.2em] text-[var(--text-muted)] uppercase mb-1">Congés</p>
-          <h1 className="text-3xl font-bold text-[var(--text)]">Vue en diagrammes</h1>
+          <p className="text-xs font-semibold tracking-[0.2em] text-[var(--text-muted)] uppercase mb-1">Congés</p>
+          <h1 className="text-3xl font-semibold text-[var(--text)]">Vue en diagrammes</h1>
           <p className="text-sm text-[var(--text-muted)] mt-1">Qui part, quand, et combien de personnes manquent à chaque période.</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 print:hidden">
           <div className="flex items-center gap-1.5">
-            <button onClick={() => setYear(y => y - 1)} className="p-2.5 rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)]"><ChevronLeft size={18} /></button>
+            <Button variant="ghost" onClick={() => setYear(y => y - 1)} className="p-2.5 rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)]"><ChevronLeft size={18} /></Button>
             <span className="px-4 py-2 rounded-xl bg-[var(--surface)] border border-[var(--border)] font-semibold text-sm min-w-[90px] text-center">{year}</span>
-            <button onClick={() => setYear(y => y + 1)} className="p-2.5 rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)]"><ChevronRight size={18} /></button>
+            <Button variant="ghost" onClick={() => setYear(y => y + 1)} className="p-2.5 rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)]"><ChevronRight size={18} /></Button>
           </div>
           {departments.length > 1 && (
-            <select
+            <ModuleSelect
               value={departmentId}
               onChange={e => setDepartmentId(e.target.value)}
               className="px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm text-[var(--text)]"
             >
               <option value="">Tous les départements</option>
               {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-            </select>
+            </ModuleSelect>
           )}
-          <button onClick={() => window.print()} className="px-4 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center gap-2 hover:bg-[var(--surface-2)]">
+          <Button variant="ghost" onClick={() => window.print()} className="px-4 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center gap-2 hover:bg-[var(--surface-2)]">
             <Printer size={16} /> Imprimer
-          </button>
+          </Button>
           <Link href={bp('/conges/historique')} className="px-4 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center gap-2 hover:bg-[var(--surface-2)]">
             <History size={16} /> Historique
           </Link>
@@ -198,14 +203,14 @@ export default function LeaveDiagramsPage() {
       </div>
 
       {loading ? (
-        <KonzaLoader variant="section" />
+        <ModulePageSkeleton />
       ) : error ? (
-        <div className="bg-red-50 dark:bg-red-900/10 text-red-600 rounded-2xl p-5 text-sm">{error}</div>
+        <div className="bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  text-[var(--danger-text)] rounded-2xl p-5 text-sm">{error}</div>
       ) : (
         <>
           {/* Résumé en langage simple */}
-          <div className="rounded-2xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50/60 dark:bg-emerald-900/10 p-5 flex gap-3">
-            <Lightbulb size={20} className="text-emerald-600 shrink-0 mt-0.5" />
+          <div className="rounded-2xl border border-[var(--border)]  bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))]  p-5 flex gap-3">
+            <Lightbulb size={20} className="text-[var(--action)] shrink-0 mt-0.5" />
             <div className="text-sm text-[var(--text)] space-y-1">
               <p>
                 En <strong>{year}</strong>, <strong>{insights.people}</strong> employé{insights.people > 1 ? 's' : ''} {insights.people > 1 ? 'ont' : 'a'} un congé approuvé,
@@ -219,18 +224,18 @@ export default function LeaveDiagramsPage() {
                 {insights.busiestMonth >= 0 && <>Le mois avec le plus de départs est <strong>{MONTHS[insights.busiestMonth].toLowerCase()}</strong> ({insights.maxStarts} départ{insights.maxStarts > 1 ? 's' : ''}).</>}
               </p>
               {pending.length > 0 && (
-                <p className="text-amber-700 dark:text-amber-400">
+                <p className="text-[var(--warning-text)] ">
                   {pending.length} demande{pending.length > 1 ? 's' : ''} en attente de validation (affichée{pending.length > 1 ? 's' : ''} en hachuré sur le planning).
                 </p>
               )}
             </div>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <Kpi icon={Users} tone="bg-blue-100 dark:bg-blue-900/30 text-blue-600" value={insights.onLeaveNow.length} label="En congé aujourd’hui" hint={headcount ? `sur ${headcount} employés actifs` : undefined} />
-            <Kpi icon={Plane} tone="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600" value={insights.in30.length} label="Départs dans les 30 jours" />
-            <Kpi icon={Hourglass} tone="bg-amber-100 dark:bg-amber-900/30 text-amber-600" value={pending.length} label="Demandes en attente" />
-            <Kpi icon={CalendarCheck} tone="bg-violet-100 dark:bg-violet-900/30 text-violet-600" value={fmtDays(Math.round(insights.totalDays * 10) / 10)} label={`Jours de congé approuvés ${year}`} />
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 leave-metrics">
+            <Kpi icon={Users} tone="bg-[var(--brand-soft)]  text-[var(--action)]" value={insights.onLeaveNow.length} label="En congé aujourd’hui" hint={headcount ? `sur ${headcount} employés actifs` : undefined} />
+            <Kpi icon={Plane} tone="bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))]  text-[var(--action)]" value={insights.in30.length} label="Départs dans les 30 jours" />
+            <Kpi icon={Hourglass} tone="bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  text-[var(--warning-text)]" value={pending.length} label="Demandes en attente" />
+            <Kpi icon={CalendarCheck} tone="bg-[var(--brand-soft)]  text-[var(--action)]" value={fmtDays(Math.round(insights.totalDays * 10) / 10)} label={`Jours de congé approuvés ${year}`} />
           </div>
 
           {/* Gantt */}
@@ -241,13 +246,13 @@ export default function LeaveDiagramsPage() {
             <div className="flex flex-wrap items-center justify-between gap-3 mb-4 print:hidden">
               <div className="flex gap-1 bg-[var(--surface-2)] p-1 rounded-xl">
                 {ZOOMS.map(z => (
-                  <button
+                  <Button variant="ghost"
                     key={z.key}
                     onClick={() => setZoom(z.key)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${zoom === z.key ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}
                   >
                     {z.label}
-                  </button>
+                  </Button>
                 ))}
               </div>
               <label className="flex items-center gap-2 text-xs text-[var(--text-muted)] cursor-pointer">
@@ -316,6 +321,6 @@ export default function LeaveDiagramsPage() {
           </div>
         </>
       )}
-    </div>
+    </div></ModulePageFrame>
   );
 }

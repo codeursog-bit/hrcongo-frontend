@@ -90,15 +90,15 @@ export default function AbsenceCeilingBalance({
   const over = left < 0;
   const pct = Math.min(100, Math.max(0, (used / ceiling) * 100));
   const tone = over
-    ? { bar: 'bg-red-500', text: 'text-red-600 dark:text-red-400', box: 'border-red-200 dark:border-red-800 bg-red-50/60 dark:bg-red-900/10' }
+    ? { bar: 'bg-[var(--danger)]', text: 'text-[var(--danger-text)] ', box: 'border-[var(--border)]  bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] ' }
     : left === 0
-      ? { bar: 'bg-amber-500', text: 'text-amber-600 dark:text-amber-400', box: 'border-amber-200 dark:border-amber-800 bg-amber-50/60 dark:bg-amber-900/10' }
-      : { bar: 'bg-emerald-500', text: 'text-emerald-600 dark:text-emerald-400', box: 'border-[var(--border)] bg-[var(--surface)]' };
+      ? { bar: 'bg-[var(--mustard)]', text: 'text-[var(--warning-text)] ', box: 'border-[var(--border)]  bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] ' }
+      : { bar: 'bg-[var(--brand)]', text: 'text-[var(--success-text)] ', box: 'border-[var(--border)] bg-[var(--surface)]' };
 
   return (
     <div className={`rounded-2xl border p-4 space-y-3 ${tone.box} ${className}`}>
       <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">
+        <div className="flex items-center gap-2 text-xs font-semibold   text-[var(--text-muted)]">
           <CalendarCheck size={14} />
           Permissions exceptionnelles
         </div>
@@ -112,7 +112,7 @@ export default function AbsenceCeilingBalance({
             >
               <ChevronLeft size={16} />
             </button>
-            <span className="text-sm font-bold text-[var(--text)] tabular-nums w-12 text-center">{shownYear}</span>
+            <span className="text-sm font-semibold text-[var(--text)] tabular-nums w-12 text-center">{shownYear}</span>
             <button
               type="button"
               onClick={() => setShownYear(y => y + 1)}
@@ -124,13 +124,13 @@ export default function AbsenceCeilingBalance({
             </button>
           </div>
         ) : (
-          <span className="text-sm font-bold text-[var(--text)] tabular-nums">{shownYear}</span>
+          <span className="text-sm font-semibold text-[var(--text)] tabular-nums">{shownYear}</span>
         )}
       </div>
 
       <div className="flex items-end justify-between gap-3">
         <div>
-          <p className={`text-3xl font-bold leading-none ${tone.text}`}>
+          <p className={`text-3xl font-semibold leading-none ${tone.text}`}>
             {over ? `+${fmtDays(Math.abs(left))}` : fmtDays(left)}
             <span className="text-base font-semibold ml-1">j.</span>
           </p>
@@ -144,7 +144,7 @@ export default function AbsenceCeilingBalance({
       </div>
 
       <div className="h-2 rounded-full bg-[var(--surface-2)] overflow-hidden">
-        <div className={`h-full rounded-full transition-all ${tone.bar}`} style={{ width: `${pct}%` }} />
+        <div className={`h-full rounded-full transition-colors ${tone.bar}`} style={{ width: `${pct}%` }} />
       </div>
 
       <p className="text-[11px] text-[var(--text-muted)] leading-snug">
@@ -153,7 +153,7 @@ export default function AbsenceCeilingBalance({
       </p>
 
       {balance.viewerExempt && (
-        <p className="flex items-start gap-1.5 text-[11px] text-emerald-700 dark:text-emerald-300">
+        <p className="flex items-start gap-1.5 text-[11px] text-[var(--success-text)] ">
           <ShieldCheck size={13} className="shrink-0 mt-px" />
           <span>En tant que RH/Admin, vous n&apos;êtes jamais bloqué par ce plafond : vous pouvez enregistrer des demandes au-delà.</span>
         </p>

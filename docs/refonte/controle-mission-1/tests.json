@@ -1,0 +1,218 @@
+[
+  {
+    "file": "check-absence-http.cjs",
+    "status": "not-run",
+    "reason": "No server/browser requested in this lot."
+  },
+  {
+    "file": "check-absence-module.cjs",
+    "status": "passed",
+    "exit": 0,
+    "summary": [
+      "Absences : 6 routes, API/calculs/droits/justificatifs/documents conservés ; 4 étapes, STANDARD/classique/Autre/plafond, payloads et démo vérifiés."
+    ]
+  },
+  {
+    "file": "check-account.cjs",
+    "status": "passed",
+    "exit": 0,
+    "summary": [
+      "Mon compte : API, validations, calculs et droits inchangés ; rendu, états, champs familiaux en lecture seule et démo mutable vérifiés."
+    ]
+  },
+  {
+    "file": "check-appearance-preparation.cjs",
+    "status": "passed",
+    "exit": 0,
+    "summary": [
+      "Préparation apparence : variantes et focus dérivés, composants/graphiques sur tokens, statuts fixes, contraste des boutons par défaut vérifié."
+    ]
+  },
+  {
+    "file": "check-appearance.cjs",
+    "status": "passed",
+    "exit": 0,
+    "summary": [
+      "Apparence : contrats, priorité entreprise/utilisateur, verrouillage/réactivation, isolation, contrastes, cache avant hydratation, legacy et écrans vérifiés."
+    ]
+  },
+  {
+    "file": "check-attendance-http.cjs",
+    "status": "not-run",
+    "reason": "No server/browser requested in this lot."
+  },
+  {
+    "file": "check-attendance-module.cjs",
+    "status": "passed",
+    "exit": 0,
+    "summary": [
+      "16 attendance pages/views: API, data, calculations, access, device logic and official documents preserved."
+    ]
+  },
+  {
+    "file": "check-client-directives.cjs",
+    "status": "passed",
+    "exit": 0,
+    "summary": [
+      "571 fichiers clients vérifiés : directives correctement placées."
+    ]
+  },
+  {
+    "file": "check-cnss-registration.cjs",
+    "status": "passed",
+    "exit": 0,
+    "summary": [
+      "CNSS : statut explicite indépendant, trois états, sauvegarde ciblée/validation/droits et migration nullable vérifiés ; dashboard refondu, données/export et rendu legacy préservés."
+    ]
+  },
+  {
+    "file": "check-debt-tracking.cjs",
+    "status": "passed",
+    "exit": 0,
+    "summary": [
+      "Suivi des dettes : API/export/calculs conservés ; soldes globaux indépendants de la période, journaux, filtres, données démo et états vérifiés."
+    ]
+  },
+  {
+    "file": "check-employee-summary.cjs",
+    "status": "passed",
+    "exit": 0,
+    "summary": [
+      "Serveur : KPI CNSS/ITS et contrats exacts, espaces/numéros absents, périmètre actif/entreprise/département et refus employé vérifiés."
+    ]
+  },
+  {
+    "file": "check-employees-http.cjs",
+    "status": "not-run",
+    "reason": "No server/browser requested in this lot."
+  },
+  {
+    "file": "check-employees-module.cjs",
+    "status": "passed",
+    "exit": 0,
+    "summary": [
+      "Employés : 8 pages, KPI sur le total serveur, 5 étapes, 7 sections, contrats/droits/payloads/calculs et PDF/ORCA conservés ; filtres, CNSS et démo en mémoire vérifiés."
+    ]
+  },
+  {
+    "file": "check-leave-http.cjs",
+    "status": "not-run",
+    "reason": "No server/browser requested in this lot."
+  },
+  {
+    "file": "check-leave-module.cjs",
+    "status": "passed",
+    "exit": 0,
+    "summary": [
+      "Congés : 13 routes, API/calculs/droits/actions/documents et remboursement conservés ; états, quatre étapes, payload, fixtures et droits démo vérifiés."
+    ]
+  },
+  {
+    "file": "check-loan-form.cjs",
+    "status": "passed",
+    "exit": 0,
+    "summary": [
+      "Nouvelle demande : API, payloads, calculs, droits et aperçu conservés ; quatre étapes, validations, erreurs, succès et créations démo vérifiés."
+    ]
+  },
+  {
+    "file": "check-loan-space.cjs",
+    "status": "passed",
+    "exit": 0,
+    "summary": [
+      "Mon espace Prêts : API, calculs, documents et exports identiques ; filtres/pagination, états, détail/avis, annulation et historique démo vérifiés."
+    ]
+  },
+  {
+    "file": "check-loan-validations.cjs",
+    "status": "passed",
+    "exit": 0,
+    "summary": [
+      "Validations Prêts : API, calculs, orchestrateur, droits et documents conservés ; accord/refus, mode de remboursement, attente/annulation, filtres et démo vérifiés."
+    ]
+  },
+  {
+    "file": "check-loans-http.cjs",
+    "status": "not-run",
+    "reason": "No server/browser requested in this lot."
+  },
+  {
+    "file": "check-loans-module.cjs",
+    "status": "passed",
+    "exit": 0,
+    "summary": [
+      "Prêts : 6 routes, données/actions/permissions, documents/relevé, états/onglets et fixtures vérifiés."
+    ]
+  },
+  {
+    "file": "check-myday.cjs",
+    "status": "passed",
+    "exit": 0,
+    "summary": [
+      "Ma journée vérifiée : API et calculs conservés, vue manager inchangée, calendrier/chrono, salaire masqué, éligibilité congés, états et tâches privées/assignées."
+    ]
+  },
+  {
+    "file": "check-permission-http.cjs",
+    "status": "not-run",
+    "reason": "No server/browser requested in this lot."
+  },
+  {
+    "file": "check-permission-module.cjs",
+    "status": "passed",
+    "exit": 0,
+    "summary": [
+      "Permissions : 8 routes, API/droits/calculs/actions/documents conservés ; formulaire, états, statuts, retours et démo mutable vérifiés."
+    ]
+  },
+  {
+    "file": "check-pilotage.cjs",
+    "status": "passed",
+    "exit": 0,
+    "summary": [
+      "Pilotage vérifié : valeurs backend conservées, 7 indicateurs, raccourcis, données intactes, états vide/erreur/chargement et champs manquants."
+    ]
+  },
+  {
+    "file": "check-presence-demo.cjs",
+    "status": "passed",
+    "exit": 0,
+    "summary": [
+      "Presence demo: snapshot, report, permissions, enterprise isolation, refused mutations and SSR views/modals checked."
+    ]
+  },
+  {
+    "file": "check-refonte-foundations.cjs",
+    "status": "passed",
+    "exit": 0,
+    "summary": [
+      "Fondations vérifiées : thème et script initial, tâches privées et assignées, entreprises isolées, réactions, annonces, notifications privées, transport démo sans fuite réseau, tokens legacy exacts."
+    ]
+  },
+  {
+    "file": "check-service-pages.cjs",
+    "status": "failed",
+    "exit": 1,
+    "summary": [
+      "node:assert:152",
+      "  throw new AssertionError(obj);",
+      "  ^",
+      "AssertionError [ERR_ASSERTION]: app/(dashboard)/formation/page.tsx calculs/droits/handlers/certificats",
+      "+ actual - expected",
+      "... Skipped lines"
+    ]
+  },
+  {
+    "file": "check-service-worker-cache.cjs",
+    "status": "passed",
+    "exit": 0,
+    "summary": [
+      "Cache SW vérifié : chunks dev exclus, chunks de production hashés conservés, ancien cache Konza supprimé sans toucher aux autres caches."
+    ]
+  },
+  {
+    "file": "check-services-http.cjs",
+    "status": "not-run",
+    "reason": "No server/browser requested in this lot."
+  }
+]

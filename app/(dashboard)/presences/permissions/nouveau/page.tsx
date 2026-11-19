@@ -1,4 +1,10 @@
 'use client';
+import { AttendanceSelect } from '@/components/attendance/AttendanceSelect';
+import { RequestForm, RequestSummaryCard, RequestSuccessScreen } from '@/components/requests';
+import { useToast } from '@/components/design-system/feedback';
+import { AttendanceModuleFrame as ModulePageFrame } from '@/components/attendance/AttendanceModuleFrame';
+import { ModulePageSkeleton } from '@/components/requests/ModulePageFrame';
+import { Button } from '@/components/design-system/primitives';
 
 // ============================================================================
 // 📁 app/(dashboard)/presences/permissions/nouveau/page.tsx
@@ -48,6 +54,8 @@ function nowLocal(offsetMinutes = 0) {
 }
 
 export default function NouveauTicketPage() {
+  const [uiStep,setUiStep]=useState(0);
+  const uiToast=useToast();
   const router = useRouter();
   const { bp } = useBasePath();
 
@@ -70,6 +78,7 @@ export default function NouveauTicketPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [isDone, setIsDone] = useState(false);
+  useEffect(()=>{if(isDone)uiToast('success','Permission enregistrée');},[isDone,uiToast]);
   const [error, setError] = useState<string | null>(null);
 
   const isApprover = APPROVER_ROLES.includes(userRole);
@@ -142,54 +151,44 @@ export default function NouveauTicketPage() {
     status: (onBehalf || ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'].includes(userRole)) ? 'APPROVED' : 'PENDING',
   };
 
-  if (isDone) {
-    return (
-      <div className="max-w-lg mx-auto py-24 text-center">
-        <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-20 h-20 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
-          <CheckCircle2 size={40} />
-        </motion.div>
-        <h1 className="text-2xl font-bold text-[var(--text)] mb-2">Ticket créé</h1>
-        <p className="text-[var(--text-muted)] text-sm mb-8">Le ticket de permission a été enregistré{onBehalf ? '' : ' et transmis pour validation'}.</p>
-        <div className="flex gap-3 justify-center">
-          <button onClick={() => router.push(bp(onBehalf ? '/presences/permissions' : '/presences/permissions/mon-espace'))} className="px-5 py-2.5 bg-[var(--text)] text-[var(--bg)] rounded-xl font-semibold text-sm">
-            Voir les tickets
-          </button>
-          <button onClick={() => { setIsDone(false); setReason(''); setDestination(''); }} className="px-5 py-2.5 border border-[var(--border)] rounded-xl font-semibold text-sm text-[var(--text-muted)]">
-            Nouveau ticket
-          </button>
-        </div>
-      </div>
-    );
-  }
+  if(isDone) return <ModulePageFrame><RequestSuccessScreen handler="Votre administration" confirmation={onBehalf ? 'Le ticket de permission a été enregistré.' : 'Le ticket de permission a été enregistré et transmis pour validation.'} next="Retrouvez la décision et le suivi du retour dans votre espace." onView={()=>router.push(bp(onBehalf ? '/presences/permissions' : '/presences/permissions/mon-espace'))} onAnother={()=>{setIsDone(false);setReason('');setDestination('');setUiStep(0);}} /></ModulePageFrame>;
 
   return (
-    <div className="max-w-[1300px] mx-auto pb-24 space-y-6">
+    <ModulePageFrame kind="list"><div className="max-w-[1300px] mx-auto pb-24 space-y-6">
       <PresenceModuleSwitcher />
       <PermissionsSubNav userRole={userRole} />
 
       <div className="flex items-center gap-3">
-        <button onClick={() => router.push(bp('/presences/permissions'))} className="p-2 rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)]">
+        <Button variant="ghost" aria-label="Retour aux permissions" onClick={() => router.push(bp('/presences/permissions'))} className="p-2 rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)]">
           <ArrowLeft size={18} />
-        </button>
+        </Button>
         <div>
-          <h1 className="text-2xl font-bold text-[var(--text)]">Nouveau ticket de permission</h1>
+          <span className="text-sm text-[var(--text-secondary)]">Retour aux permissions</span>
           <p className="text-[var(--text-muted)] text-sm">Urgence en cours de journée ou mission d&apos;entreprise à l&apos;extérieur</p>
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto space-y-5">
-        <div className="space-y-5">
-
-          {isApprover && (
+      <RequestForm title="Nouvelle demande de permission" description="Précisez la sortie, les horaires et le motif, puis relisez avant envoi."
+ step={uiStep} onStepChange={setUiStep} onNext={()=>setUiStep(value=>Math.min(3,value+1))} onSubmit={handleSubmit}
+ onCancel={()=>router.push(bp('/presences/permissions'))} submitting={isSubmitting} submitDisabled={!canSubmit} noValidate
+ nextDisabled={uiStep===0 ? !type || (onBehalf && !selectedEmployeeId) : uiStep===1 ? !departureTime || !expectedReturnTime || new Date(expectedReturnTime)<=new Date(departureTime) : reason.trim().length<3}
+ error={error || undefined} summary={<RequestSummaryCard entries={[
+ {label:'Bénéficiaire',value:selectedTargetEmployee ? [selectedTargetEmployee.firstName,selectedTargetEmployee.lastName].filter(Boolean).join(' ') : 'À sélectionner'},
+ {label:'Type',value:TYPE_OPTIONS.find(option=>option.value===type)?.label},
+ {label:'Sortie',value:departureTime || 'À renseigner'}, {label:'Retour prévu',value:expectedReturnTime || 'À renseigner'},
+ {label:'Destination',value:destination || 'Non renseignée'},{label:'Motif',value:reason || 'À renseigner'}
+ ]}/>}>
+ <div className="leave-request-content">
+ <div hidden={uiStep!==0} className="template-stack">{isApprover && (
             <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
               <div className="flex items-center justify-between mb-3">
-                <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Pour qui ?</label>
-                <button
+                <label className="text-xs font-semibold text-[var(--text-muted)]  ">Pour qui ?</label>
+                <Button variant="ghost"
                   onClick={() => { setOnBehalf(!onBehalf); setSelectedEmployeeId(''); }}
-                  className={`w-11 h-6 rounded-full transition-colors relative shrink-0 ${onBehalf ? 'bg-emerald-500' : 'bg-[var(--border)]'}`}
+                  role="switch" aria-label="Créer pour un employé" aria-checked={onBehalf} className={`permission-beneficiary-switch w-11 h-6 rounded-full transition-colors relative shrink-0 ${onBehalf ? 'bg-[var(--brand)]' : 'bg-[var(--border)]'}`}
                 >
-                  <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-all ${onBehalf ? 'left-5' : 'left-0.5'}`} />
-                </button>
+                  <span className={`absolute top-0.5 w-5 h-5 bg-[var(--surface)] rounded-full transition-colors ${onBehalf ? 'left-5' : 'left-0.5'}`} />
+                </Button>
               </div>
               {!onBehalf ? (
                 <p className="text-sm text-[var(--text-muted)]">Pour moi-même</p>
@@ -201,91 +200,73 @@ export default function NouveauTicketPage() {
                   </div>
                   <div className="max-h-40 overflow-y-auto space-y-1">
                     {filteredEmployees.map(e => (
-                      <button
+                      <Button variant="ghost"
                         key={e.id}
                         onClick={() => setSelectedEmployeeId(e.id)}
-                        className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between ${selectedEmployeeId === e.id ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 font-semibold' : 'hover:bg-[var(--surface-2)]'}`}
+                        className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between ${selectedEmployeeId === e.id ? 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  text-[var(--success-text)]  font-semibold' : 'hover:bg-[var(--surface-2)]'}`}
                       >
                         {e.firstName} {e.lastName}
                         {e.department?.name && <span className="text-xs text-[var(--text-muted)]">{e.department.name}</span>}
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 </div>
               )}
             </div>
-          )}
-
-          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
-            <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-3 block">Type de permission</label>
+          )}<div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
+            <label className="text-xs font-semibold text-[var(--text-muted)]   mb-3 block">Type de permission</label>
             <div className="grid grid-cols-1 gap-2">
               {TYPE_OPTIONS.map(opt => {
                 const Icon = opt.icon;
                 const active = type === opt.value;
                 return (
-                  <button key={opt.value} onClick={() => setType(opt.value)} className={`flex items-center gap-3 p-3.5 rounded-xl border-2 text-left transition-all ${active ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-[var(--border)] hover:border-[var(--text-muted)]'}`}>
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${active ? 'bg-emerald-500 text-white' : 'bg-[var(--surface-2)] text-[var(--text-muted)]'}`}>
+                  <Button variant="ghost" key={opt.value} onClick={() => setType(opt.value)} className={`flex items-center gap-3 p-3.5 rounded-xl border-2 text-left transition-colors ${active ? 'border-[var(--border)] bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] ' : 'border-[var(--border)] hover:border-[var(--text-muted)]'}`}>
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${active ? 'bg-[var(--brand)] text-[var(--on-brand)]' : 'bg-[var(--surface-2)] text-[var(--text-muted)]'}`}>
                       <Icon size={18} />
                     </div>
                     <div>
                       <p className="font-semibold text-sm text-[var(--text)]">{opt.label}</p>
                       <p className="text-xs text-[var(--text-muted)]">{opt.hint}</p>
                     </div>
-                  </button>
+                  </Button>
                 );
               })}
             </div>
 
             {type === 'MISSION' && (
-              <select value={missionType} onChange={e => setMissionType(e.target.value)} className="w-full mt-3 px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm">
+              <AttendanceSelect value={missionType} onChange={e => setMissionType(e.target.value)} className="w-full mt-3 px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm">
                 {MISSION_OPTIONS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
-              </select>
+              </AttendanceSelect>
             )}
-          </div>
-
-          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5 space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+          </div></div>
+ <div hidden={uiStep!==1} className="template-stack"><div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Heure de sortie</label>
+                <label className="text-xs font-semibold text-[var(--text-muted)]   mb-1.5 block">Heure de sortie</label>
                 <input type="datetime-local" value={departureTime} onChange={e => setDepartureTime(e.target.value)} className="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
               </div>
               <div>
-                <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Retour prévu</label>
+                <label className="text-xs font-semibold text-[var(--text-muted)]   mb-1.5 block">Retour prévu</label>
                 <input type="datetime-local" value={expectedReturnTime} onChange={e => setExpectedReturnTime(e.target.value)} className="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
               </div>
-            </div>
-
-            <div>
-              <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Destination (optionnel)</label>
+            </div><div>
+              <label className="text-xs font-semibold text-[var(--text-muted)]   mb-1.5 block">Destination (optionnel)</label>
               <div className="relative">
                 <MapPin size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
                 <input value={destination} onChange={e => setDestination(e.target.value)} placeholder="Ex : Hôpital, chez le client X…" className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
               </div>
-            </div>
-
-            <div>
-              <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Motif</label>
+            </div></div>
+ <div hidden={uiStep!==2} className="template-stack"><div>
+              <label className="text-xs font-semibold text-[var(--text-muted)]   mb-1.5 block">Motif</label>
               <textarea value={reason} onChange={e => setReason(e.target.value)} rows={3} placeholder="Détail de la sortie…" className="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm resize-none" />
-            </div>
-          </div>
-
-          {error && <div className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 px-4 py-3 rounded-xl">{error}</div>}
-
-          <div className="flex gap-2">
-            <button onClick={handleSubmit} disabled={!canSubmit} className="flex-1 py-3.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/30 transition-all">
-              {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
-              {onBehalf ? 'Créer le ticket' : 'Envoyer la demande'}
-            </button>
-            <button onClick={() => setShowPreviewModal(true)} className="px-4 py-3.5 border border-dashed border-[var(--border)] text-[var(--text-muted)] font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-[var(--surface-2)] shrink-0">
+            </div></div>
+ <div hidden={uiStep!==3} className="template-stack"><h2>Relire ma demande</h2><p className="text-sm text-[var(--text-secondary)]">Vérifiez le bénéficiaire, les heures et le motif dans le récapitulatif avant l’envoi.</p><Button variant="ghost" aria-label="Aperçu du ticket" onClick={() => setShowPreviewModal(true)} className="px-4 py-3.5 border border-dashed border-[var(--border)] text-[var(--text-muted)] font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-[var(--surface-2)] shrink-0">
               <Eye size={18} />
-            </button>
-          </div>
-        </div>
-      </div>
+            </Button></div>
+ </div></RequestForm>
 
       <DocumentPreviewModal open={showPreviewModal} onClose={() => setShowPreviewModal(false)}>
         <PermissionTicketPrintable id="preview-ticket" data={previewData as any} />
       </DocumentPreviewModal>
-    </div>
+    </div></ModulePageFrame>
   );
 }

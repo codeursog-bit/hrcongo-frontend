@@ -1,0 +1,54 @@
+{
+  "date": "2026-11-18",
+  "reports": {
+    "sources": 24,
+    "before": {
+      "palette": 601,
+      "hex": 209,
+      "emojis": 22,
+      "gradients": 1
+    },
+    "after": {
+      "palette": 46,
+      "hex": 1,
+      "emojis": 16,
+      "gradients": 0
+    }
+  },
+  "components": {
+    "sources": 27,
+    "before": {
+      "palette": 162,
+      "hex": 8,
+      "emojis": 3,
+      "gradients": 20
+    },
+    "after": {
+      "palette": 0,
+      "hex": 8,
+      "emojis": 3,
+      "gradients": 0
+    }
+  },
+  "notes": [
+    "Palette conservée dans les zones natives imprimables DAS/récapitulatif personnel.",
+    "Dégradés SVG des courbes conservés.",
+    "Couleurs du logo Konza conservées.",
+    "Rendus admin/cabinet déplacés sans refonte vers legacy-feedback.tsx, exclus de l’audit phase 1.",
+    "Titres historiques des notifications inchangés dans les événements ; icônes retirées uniquement à l’affichage moderne."
+  ],
+  "global": {
+    "before": {
+      "palette": 10740,
+      "hex": 1646,
+      "emojis": 399,
+      "gradients": 239
+    },
+    "after": {
+      "palette": 10014,
+      "hex": 1438,
+      "emojis": 393,
+      "gradients": 218
+    }
+  }
+}

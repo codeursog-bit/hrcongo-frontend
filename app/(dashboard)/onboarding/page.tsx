@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
 import { FancySelect } from '@/components/ui/FancySelect';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import { ModulePageFrame } from '@/components/requests/ModulePageFrame';
 
 // --- Types ---
 
@@ -55,7 +56,7 @@ const DEFAULT_TASKS_OFFBOARDING = [
     { title: "Désactivation des accès", assigneeRole: "IT" }
 ];
 
-export default function OnboardingPage() {
+function OnboardingPage() {
   const [activeTab, setActiveTab] = useState<ProcessType>('ONBOARDING');
   const [selectedProcess, setSelectedProcess] = useState<string | null>(null);
   const [processes, setProcesses] = useState<Process[]>([]);
@@ -367,5 +368,14 @@ export default function OnboardingPage() {
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+
+export default function OnboardingPageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <OnboardingPage />
+    </ModulePageFrame>
   );
 }

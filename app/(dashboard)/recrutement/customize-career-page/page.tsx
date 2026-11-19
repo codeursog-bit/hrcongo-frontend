@@ -1,16 +1,16 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import {
-  Palette, Upload, X, Eye, EyeOff, ArrowLeft, Loader2,
-  Building2, ImageIcon, Sparkles, Plus, Trash2, MapPin, Briefcase,
-  Clock, ChevronRight, DollarSign, Check,
+  ArrowLeft, Building2, Check, ChevronRight, Eye, EyeOff, ImageIcon,
+  MapPin, Palette, Plus, Sparkles, Trash2, Upload, X,
 } from 'lucide-react';
 import { api } from '@/services/api';
-import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import { Badge, Button, Card, EmptyState, Input, Textarea } from '@/components/design-system/primitives';
+import { RecruitmentFrame as ModulePageFrame } from '@/components/recruitment/RecruitmentFrame';
 
 interface CareerPageSettings {
   careerPageBanner: string | null;
@@ -21,7 +21,6 @@ interface CareerPageSettings {
   careerPagePhotos: string[] | null;
 }
 
-// ─── PREVIEW : reproduit exactement la page /companies/[slug] ───
 function CompanyPreview({ settings, bannerPreview, companyName }: {
   settings: CareerPageSettings;
   bannerPreview: string | null;
@@ -29,168 +28,72 @@ function CompanyPreview({ settings, bannerPreview, companyName }: {
 }) {
   const [tab, setTab] = useState<'jobs' | 'about'>('about');
   const colors = settings.careerPageColors || { primary: '#06b6d4', secondary: '#0284c7', accent: '#06b6d4' };
-  const logo = settings.careerPageLogo;
   const banner = bannerPreview || settings.careerPageBanner;
-
-  // Faux jobs pour la preview
   const fakeJobs = [
-    { title: 'Développeur Frontend', location: 'Brazzaville', type: 'CDI', salary: '450K – 700K XAF' },
-    { title: 'Chef de projet', location: 'Pointe-Noire', type: 'CDI', salary: null },
+    { title: 'Développeur Frontend', location: 'Brazzaville', type: 'CDI' },
+    { title: 'Chef de projet', location: 'Pointe-Noire', type: 'CDI' },
   ];
 
   return (
-    <div className="bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 text-white text-xs">
-      {/* Barre de navigateur simulée */}
-      <div className="bg-slate-900 border-b border-slate-800 px-4 py-2.5 flex items-center gap-2">
-        <div className="flex gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-full bg-red-500/70" />
-          <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/70" />
-          <div className="w-2.5 h-2.5 rounded-full bg-green-500/70" />
-        </div>
-        <div className="flex-1 bg-slate-800 rounded-md px-3 py-1 text-slate-500 font-mono text-[10px] ml-2">
+    <div className="overflow-hidden rounded-[var(--radius-card)] border border-[var(--border)] bg-[var(--surface-2)] text-xs text-[var(--text)]">
+      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface-2)] px-4 py-3">
+        <span className="h-2.5 w-2.5 rounded-full bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]" />
+        <span className="h-2.5 w-2.5 rounded-full bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]" />
+        <span className="h-2.5 w-2.5 rounded-full bg-[var(--brand-soft)]" />
+        <span className="ml-2 min-w-0 flex-1 truncate rounded bg-[var(--surface-2)] px-3 py-1 font-mono text-[10px] text-[var(--text-secondary)]">
           rhkonza.com/companies/{companyName.toLowerCase().replace(/\s+/g, '-') || 'mon-entreprise'}
-        </div>
+        </span>
       </div>
-
-      <div className="overflow-y-auto max-h-[620px]">
-        {/* Header mini */}
-        <div className="bg-slate-950/90 border-b border-slate-800/60 px-4 py-2.5 flex items-center justify-between">
-          <span className="font-black text-[11px]">RH<span className="text-emerald-400">Konza</span></span>
-          <div className="flex gap-3 text-slate-500 text-[10px]">
-            <span>Offres</span>
-            <span className="text-white font-semibold border-b border-emerald-400">Entreprises</span>
-          </div>
+      <div className="max-h-[620px] overflow-y-auto">
+        <div className="flex items-center justify-between border-b border-[var(--border)] bg-[var(--surface-2)] px-4 py-3">
+          <strong>RH<span style={{ color: colors.accent }}>Konza</span></strong>
+          <span className="text-[var(--text-secondary)]">Offres · Entreprises</span>
         </div>
-
-        {/* Cover */}
-        <div className="relative h-24 overflow-hidden bg-slate-800">
-          {banner ? (
-            <Image src={banner} alt="Banner" fill className="object-cover" />
-          ) : (
-            <div className="w-full h-full" style={{ background: `linear-gradient(135deg, ${colors.accent}25, transparent)` }} />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
+        <div className="relative h-24 overflow-hidden bg-[var(--surface-2)]">
+          {banner ? <Image src={banner} alt="" fill className="object-cover" /> : <div className="h-full w-full" style={{ background: `linear-gradient(135deg, ${colors.accent}40, transparent)` }} />}
+          <div className="absolute inset-0 bg-[var(--brand)]  to-transparent" />
         </div>
-
-        {/* Company header */}
-        <div className="bg-slate-950 border-b border-slate-800/50 px-4">
-          <div className="flex items-end gap-3 -mt-6 pb-0">
-            <div className="w-12 h-12 rounded-xl bg-slate-900 border-2 border-slate-950 shadow-xl flex items-center justify-center overflow-hidden shrink-0">
-              {logo ? (
-                <Image src={logo} alt="Logo" width={48} height={48} className="object-contain" />
-              ) : (
-                <Building2 size={18} className="text-slate-600 dark:text-slate-400" />
-              )}
+        <div className="border-b border-[var(--border)] bg-[var(--surface-2)] px-4">
+          <div className="flex items-end gap-3">
+            <div className="-mt-6 flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border-2 border-[var(--border)] bg-[var(--surface-2)]">
+              {settings.careerPageLogo ? <Image src={settings.careerPageLogo} alt="" width={48} height={48} className="h-full w-full object-contain" /> : <Building2 size={18} className="text-[var(--text-secondary)]" />}
             </div>
-            <div className="pb-3 flex-1">
-              <p className="font-black text-white text-sm leading-tight">{companyName || 'Mon Entreprise'}</p>
-              <p className="text-slate-500 text-[10px] mt-0.5">Brazzaville · Tech</p>
+            <div className="min-w-0 flex-1 pb-2">
+              <p className="truncate text-sm font-semibold">{companyName || 'Mon Entreprise'}</p>
+              <p className="mt-0.5 text-[10px] text-[var(--text-secondary)]">Brazzaville · Tech</p>
             </div>
           </div>
-
-          {/* Tabs */}
-          <div className="flex gap-0 mt-1">
-            {[
-              { id: 'jobs' as const, label: 'Offres (2)' },
-              { id: 'about' as const, label: 'À propos' },
-            ].map(t => (
+          <div className="mt-2 flex gap-2">
+            {([{ id: 'jobs', label: 'Offres (2)' }, { id: 'about', label: 'À propos' }] as const).map(item => (
               <button
-                key={t.id}
-                onClick={() => setTab(t.id)}
-                className={`px-3 py-2 text-[10px] font-bold border-b-2 transition-all ${
-                  tab === t.id ? 'text-white border-emerald-400' : 'text-slate-500 border-transparent'
-                }`}
+                key={item.id}
+                type="button"
+                onClick={() => setTab(item.id)}
+                aria-pressed={tab === item.id}
+                className={`border-b-2 px-3 py-2 text-[10px] font-semibold ${tab === item.id ? 'text-[var(--text)]' : 'border-transparent text-[var(--text-secondary)]'}`}
+                style={tab === item.id ? { borderColor: colors.accent } : undefined}
               >
-                {t.label}
+                {item.label}
               </button>
             ))}
           </div>
         </div>
-
-        {/* Contenu tabs */}
-        <div className="px-4 py-4">
-
-          {/* TAB OFFRES */}
-          {tab === 'jobs' && (
-            <div className="space-y-2">
-              {fakeJobs.map((j, i) => (
-                <div key={i} className="flex items-center justify-between bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5">
-                  <div>
-                    <p className="font-bold text-white text-[11px] mb-0.5">{j.title}</p>
-                    <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
-                      <span>{j.location}</span>
-                      <span>·</span>
-                      <span>{j.type}</span>
-                      {j.salary && <><span>·</span><span style={{ color: colors.accent }}>{j.salary}</span></>}
-                    </div>
-                  </div>
-                  <ChevronRight size={12} className="text-slate-700 dark:text-slate-200 shrink-0" />
-                </div>
-              ))}
+        <div className="space-y-3 px-4 py-4">
+          {tab === 'jobs' ? fakeJobs.map(job => (
+            <div key={job.title} className="flex items-center justify-between gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-3 py-3">
+              <div>
+                <p className="font-semibold">{job.title}</p>
+                <p className="mt-1 flex items-center gap-1 text-[10px] text-[var(--text-secondary)]"><MapPin size={11} />{job.location} · {job.type}</p>
+              </div>
+              <ChevronRight size={14} className="shrink-0 text-[var(--text-secondary)]" />
             </div>
-          )}
-
-          {/* TAB À PROPOS */}
-          {tab === 'about' && (
-            <div className="space-y-4">
-              {/* About */}
-              {settings.careerPageAbout && (
-                <div className="bg-slate-900 border border-slate-800 rounded-xl p-3">
-                  <p className="font-bold text-white text-[11px] mb-1.5">À propos</p>
-                  <p className="text-slate-400 text-[10px] leading-relaxed line-clamp-4">{settings.careerPageAbout}</p>
-                </div>
-              )}
-
-              {/* Valeurs */}
-              {settings.careerPageValues && settings.careerPageValues.length > 0 && (
-                <div className="bg-slate-900 border border-slate-800 rounded-xl p-3">
-                  <p className="font-bold text-white text-[11px] mb-2">Nos valeurs</p>
-                  <div className="grid grid-cols-2 gap-1.5">
-                    {settings.careerPageValues.slice(0, 4).map((v, i) => (
-                      <div
-                        key={i}
-                        className="flex items-center gap-1.5 p-1.5 rounded-lg border text-[10px]"
-                        style={{ borderColor: `${colors.accent}30`, backgroundColor: `${colors.accent}08` }}
-                      >
-                        <div
-                          className="w-4 h-4 rounded flex items-center justify-center text-[9px] font-black shrink-0"
-                          style={{ backgroundColor: `${colors.accent}20`, color: colors.accent }}
-                        >
-                          {i + 1}
-                        </div>
-                        <span className="text-slate-300 truncate">{v}</span>
-                      </div>
-                    ))}
-                    {settings.careerPageValues.length > 4 && (
-                      <p className="text-slate-600 dark:text-slate-400 text-[9px] col-span-2 text-center">
-                        +{settings.careerPageValues.length - 4} autres valeurs
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Photos */}
-              {settings.careerPagePhotos && settings.careerPagePhotos.length > 0 && (
-                <div className="bg-slate-900 border border-slate-800 rounded-xl p-3">
-                  <p className="font-bold text-white text-[11px] mb-2">La vie chez nous</p>
-                  <div className="grid grid-cols-3 gap-1.5">
-                    {settings.careerPagePhotos.slice(0, 6).map((p, i) => (
-                      <div key={i} className="aspect-square rounded-lg overflow-hidden">
-                        <Image src={p} alt={`Photo ${i}`} width={80} height={80} className="w-full h-full object-cover" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {!settings.careerPageAbout && !settings.careerPageValues?.length && !settings.careerPagePhotos?.length && (
-                <div className="text-center py-8 text-slate-600 dark:text-slate-400 text-[10px]">
-                  <Building2 size={20} className="mx-auto mb-2 text-slate-800 dark:text-slate-100" />
-                  Remplissez les champs pour voir la preview
-                </div>
-              )}
-            </div>
+          )) : (
+            <>
+              {settings.careerPageAbout && <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-3"><strong>À propos</strong><p className="mt-2 line-clamp-4 leading-relaxed text-[var(--text-secondary)]">{settings.careerPageAbout}</p></div>}
+              {!!settings.careerPageValues?.length && <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-3"><strong>Nos valeurs</strong><div className="mt-2 flex flex-wrap gap-2">{settings.careerPageValues.slice(0, 4).map((value, index) => <Badge key={`${value}-${index}`} tone="info">{value}</Badge>)}</div></div>}
+              {!!settings.careerPagePhotos?.length && <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-3"><strong>La vie chez nous</strong><div className="mt-2 grid grid-cols-3 gap-2">{settings.careerPagePhotos.slice(0, 6).map((photo, index) => <Image key={`${photo}-${index}`} src={photo} alt={`Photo ${index + 1}`} width={80} height={80} className="aspect-square w-full rounded-lg object-cover" />)}</div></div>}
+              {!settings.careerPageAbout && !settings.careerPageValues?.length && !settings.careerPagePhotos?.length && <p className="py-8 text-center text-[var(--text-secondary)]">Remplissez les champs pour voir l’aperçu.</p>}
+            </>
           )}
         </div>
       </div>
@@ -198,22 +101,17 @@ function CompanyPreview({ settings, bannerPreview, companyName }: {
   );
 }
 
-// ─────────────────────────────────────────────
-// PAGE PRINCIPALE
-// ─────────────────────────────────────────────
-
 export default function CustomizeCareerPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
   const [saved, setSaved] = useState(false);
-
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
-
   const [companyName, setCompanyName] = useState('');
   const [settings, setSettings] = useState<CareerPageSettings>({
     careerPageBanner: null,
@@ -225,7 +123,7 @@ export default function CustomizeCareerPage() {
   });
   const [newValue, setNewValue] = useState('');
 
-  useEffect(() => { fetchSettings(); }, []);
+  useEffect(() => { void fetchSettings(); }, []);
 
   const fetchSettings = async () => {
     try {
@@ -241,364 +139,208 @@ export default function CustomizeCareerPage() {
         setLogoPreview(data.settings.careerPageLogo);
       }
       if (data.companyName) setCompanyName(data.companyName);
-    } catch { } finally { setIsLoading(false); }
+      setLoadError(false);
+    } catch (error) {
+      console.error('Failed to load career page settings', error);
+      setLoadError(true);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleFileChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    type: 'banner' | 'logo',
-    maxMb: number
-  ) => {
-    const file = e.target.files?.[0];
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, type: 'banner' | 'logo', maxMb: number) => {
+    const file = event.target.files?.[0];
     if (!file) return;
-    if (file.size > maxMb * 1024 * 1024) { alert(`Fichier trop lourd (max ${maxMb}MB)`); return; }
+    if (file.size > maxMb * 1024 * 1024) {
+      alert(`Fichier trop lourd (max ${maxMb}MB)`);
+      event.target.value = '';
+      return;
+    }
     const reader = new FileReader();
     reader.onloadend = () => {
-      if (type === 'banner') { setBannerPreview(reader.result as string); setBannerFile(file); }
-      else { setLogoPreview(reader.result as string); setLogoFile(file); }
+      if (typeof reader.result !== 'string') return;
+      if (type === 'banner') { setBannerPreview(reader.result); setBannerFile(file); }
+      else { setLogoPreview(reader.result); setLogoFile(file); }
     };
     reader.readAsDataURL(file);
   };
 
   const handleAddValue = () => {
     if (!newValue.trim()) return;
-    setSettings(p => ({ ...p, careerPageValues: [...(p.careerPageValues || []), newValue.trim()] }));
+    setSettings(previous => ({ ...previous, careerPageValues: [...(previous.careerPageValues || []), newValue.trim()] }));
     setNewValue('');
   };
 
-  const handleRemoveValue = (i: number) => {
-    setSettings(p => ({ ...p, careerPageValues: p.careerPageValues?.filter((_, idx) => idx !== i) || [] }));
+  const handleRemoveValue = (index: number) => {
+    setSettings(previous => ({ ...previous, careerPageValues: previous.careerPageValues?.filter((_, itemIndex) => itemIndex !== index) || [] }));
   };
 
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (!file) return;
-    if (file.size > 3 * 1024 * 1024) { alert('Photo trop lourde (max 3MB)'); return; }
+    if (file.size > 3 * 1024 * 1024) {
+      alert('Photo trop lourde (max 3MB)');
+      event.target.value = '';
+      return;
+    }
     try {
-      const fd = new FormData();
-      fd.append('photo', file);
-      const data = await api.postFormData<{ photoUrl: string }>('/recruitment/company-career-page/photos', fd);
-      setSettings(p => ({ ...p, careerPagePhotos: [...(p.careerPagePhotos || []), data.photoUrl] }));
-    } catch (err) { alert('Erreur upload photo'); }
+      const formData = new FormData();
+      formData.append('photo', file);
+      const data = await api.postFormData<{ photoUrl: string }>('/recruitment/company-career-page/photos', formData);
+      setSettings(previous => ({ ...previous, careerPagePhotos: [...(previous.careerPagePhotos || []), data.photoUrl] }));
+    } catch (error) {
+      console.error('Failed to upload career page photo', error);
+      alert('Erreur upload photo');
+    } finally {
+      event.target.value = '';
+    }
   };
 
-  const handleRemovePhoto = async (i: number) => {
+  const handleRemovePhoto = async (index: number) => {
     try {
-      await api.delete(`/recruitment/company-career-page/photos/${i}`);
-      setSettings(p => ({ ...p, careerPagePhotos: p.careerPagePhotos?.filter((_, idx) => idx !== i) || [] }));
-    } catch { alert('Erreur suppression'); }
+      await api.delete(`/recruitment/company-career-page/photos/${index}`);
+      setSettings(previous => ({ ...previous, careerPagePhotos: previous.careerPagePhotos?.filter((_, itemIndex) => itemIndex !== index) || [] }));
+    } catch (error) {
+      console.error('Failed to remove career page photo', error);
+      alert('Erreur suppression');
+    }
   };
 
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const fd = new FormData();
-      if (bannerFile) fd.append('banner', bannerFile);
-      if (logoFile) fd.append('logo', logoFile);
-      fd.append('colors', JSON.stringify(settings.careerPageColors));
-      fd.append('about', settings.careerPageAbout || '');
-      fd.append('values', JSON.stringify(settings.careerPageValues || []));
-      await api.postFormData('/recruitment/company-career-page', fd);
+      const formData = new FormData();
+      if (bannerFile) formData.append('banner', bannerFile);
+      if (logoFile) formData.append('logo', logoFile);
+      formData.append('colors', JSON.stringify(settings.careerPageColors));
+      formData.append('about', settings.careerPageAbout || '');
+      formData.append('values', JSON.stringify(settings.careerPageValues || []));
+      await api.postFormData('/recruitment/company-career-page', formData);
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
       await fetchSettings();
-    } catch { alert('Erreur lors de la sauvegarde'); } finally { setIsSaving(false); }
+    } catch (error) {
+      console.error('Failed to save career page settings', error);
+      alert('Erreur lors de la sauvegarde');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  if (isLoading) {
+  if (isLoading) return <KonzaLoader variant="page" />;
+  if (loadError) {
     return (
-      <KonzaLoader variant="page" />
+      <ModulePageFrame kind="detail">
+        <EmptyState title="Impossible de charger la page carrière" icon={Building2} action={<Button variant="secondary" onClick={() => { setIsLoading(true); void fetchSettings(); }}>Réessayer</Button>}>
+          Vérifiez votre connexion, puis réessayez. Les paramètres doivent être chargés avant toute modification.
+        </EmptyState>
+      </ModulePageFrame>
     );
   }
 
-  // Preview settings avec le logo courant
-  const previewSettings = {
-    ...settings,
-    careerPageBanner: bannerPreview || settings.careerPageBanner,
-    careerPageLogo: logoPreview || settings.careerPageLogo,
-  };
+  const previewSettings = { ...settings, careerPageBanner: bannerPreview || settings.careerPageBanner, careerPageLogo: logoPreview || settings.careerPageLogo };
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] pb-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-
-        {/* ── HEADER ── */}
-        <div className="flex items-center justify-between mb-8">
+    <ModulePageFrame kind="detail">
+      <div className="mx-auto max-w-7xl space-y-8 pb-20">
+        <header className="flex flex-col justify-between gap-5 md:flex-row md:items-center">
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => router.back()}
-              className="p-2.5 bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--text-muted)] rounded-xl transition-colors"
-            >
-              <ArrowLeft size={18} className="text-[var(--text-muted)]" />
-            </button>
+            <Button type="button" variant="secondary" onClick={() => router.back()} className="!w-11 !p-0" aria-label="Retour"><ArrowLeft size={18} /></Button>
             <div>
-              <div className="flex items-center gap-2.5 mb-1">
-                <Palette size={22} className="text-emerald-400" />
-                <h1 className="text-2xl font-black text-[var(--text)] tracking-tight">Page Carrière</h1>
-              </div>
-              <p className="text-sm text-[var(--text-muted)]">Personnalisez votre vitrine pour les candidats</p>
+              <div className="flex items-center gap-2.5"><Palette size={22} className="text-[var(--brand-strong)]" /><h1 className="text-2xl font-semibold tracking-tight text-[var(--text)]">Page Carrière</h1></div>
+              <p className="mt-1 text-sm text-[var(--text-secondary)]">Personnalisez votre vitrine pour les candidats.</p>
             </div>
           </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setShowPreview(v => !v)}
-              className="hidden sm:flex items-center gap-2 px-4 py-2.5 border border-[var(--border)] hover:border-[var(--text-muted)] text-[var(--text-muted)] hover:text-[var(--text)] rounded-xl text-sm transition-all"
-            >
-              {showPreview ? <EyeOff size={15} /> : <Eye size={15} />}
-              {showPreview ? 'Masquer' : 'Aperçu'}
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-white font-bold rounded-xl text-sm transition-all"
-            >
-              {isSaving ? <Loader2 className="animate-spin" size={15} /> : saved ? <Check size={15} /> : <Save size={15} />}
-              {isSaving ? 'Sauvegarde...' : saved ? 'Sauvegardé !' : 'Sauvegarder'}
-            </button>
+          <div className="flex flex-wrap items-center gap-3">
+            <Button type="button" variant="secondary" onClick={() => setShowPreview(value => !value)} className="inline-flex">
+              {showPreview ? <EyeOff size={16} /> : <Eye size={16} />}{showPreview ? 'Masquer l’aperçu' : 'Afficher l’aperçu'}
+            </Button>
+            <Button onClick={handleSave} loading={isSaving}>{!isSaving && (saved ? <Check size={16} /> : <Check size={16} />)}{isSaving ? 'Sauvegarde…' : saved ? 'Sauvegardé' : 'Sauvegarder'}</Button>
           </div>
-        </div>
+        </header>
 
-        {/* ── TOAST SUCCÈS ── */}
-        <AnimatePresence>
-          {saved && (
-            <motion.div
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="mb-5 flex items-center gap-3 px-4 py-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-sm text-emerald-400 font-medium"
-            >
-              <Check size={16} className="shrink-0" />
-              Page carrière mise à jour avec succès ! Les candidats voient maintenant votre nouveau profil.
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {saved && <p role="status" className="rounded-[var(--radius-control)] border border-[var(--success-text)]/30 bg-[var(--surface-2)] px-4 py-3 text-sm text-[var(--success-text)]">Page carrière mise à jour. Les candidats voient maintenant votre nouveau profil.</p>}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
-          {/* ── COLONNE GAUCHE : FORMULAIRE ── */}
+        <div className="recruitment-career-layout">
           <div className="space-y-5">
-
-            {/* BANNIÈRE */}
-            <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6">
-              <h3 className="text-sm font-bold text-[var(--text)] mb-1 flex items-center gap-2">
-                <ImageIcon size={15} className="text-emerald-400" /> Bannière
-              </h3>
-              <p className="text-xs text-[var(--text-muted)] mb-4">S'affiche en haut de votre page entreprise · 1920×450px recommandé</p>
-
+            <Card className="!p-6">
+              <h2 className="mb-1 flex items-center gap-2 text-base font-semibold"><ImageIcon size={17} className="text-[var(--brand-strong)]" />Bannière</h2>
+              <p className="mb-4 text-sm text-[var(--text-secondary)]">S’affiche en haut de votre page entreprise · 1920×450 px recommandé.</p>
               {bannerPreview ? (
-                <div className="relative group rounded-xl overflow-hidden">
-                  <Image src={bannerPreview} alt="Banner" width={800} height={200} className="w-full h-36 object-cover" />
-                  <button
-                    onClick={() => { setBannerPreview(null); setBannerFile(null); }}
-                    className="absolute top-2 right-2 p-1.5 bg-black/60 hover:bg-red-500 border border-white/10 rounded-lg text-white opacity-0 group-hover:opacity-100 transition-all"
-                  >
-                    <X size={14} />
-                  </button>
+                <div className="relative overflow-hidden rounded-[var(--radius-control)]">
+                  <Image src={bannerPreview} alt="Aperçu de la bannière" width={800} height={200} className="h-36 w-full object-cover" />
+                  <Button type="button" variant="secondary" onClick={() => { setBannerPreview(null); setBannerFile(null); }} className="absolute right-2 top-2 !min-h-9 !w-9 !p-0" aria-label="Supprimer la bannière"><X size={15} /></Button>
                 </div>
               ) : (
-                <label className="flex flex-col items-center justify-center h-36 border-2 border-dashed border-[var(--border)] hover:border-emerald-500/50 rounded-xl cursor-pointer transition-colors">
-                  <input type="file" accept="image/*" onChange={e => handleFileChange(e, 'banner', 5)} className="hidden" />
-                  <Upload size={28} className="text-[var(--text-muted)] mb-2" />
-                  <p className="text-sm text-[var(--text-muted)]">Uploader la bannière</p>
-                  <p className="text-xs text-[var(--text-muted)] mt-0.5">PNG, JPG, WEBP · max 5MB</p>
+                <label className="flex h-36 cursor-pointer flex-col items-center justify-center rounded-[var(--radius-control)] border-2 border-dashed border-[var(--border)] text-center transition-colors hover:border-[var(--brand-strong)]">
+                  <input type="file" accept="image/*" onChange={event => handleFileChange(event, 'banner', 5)} className="sr-only" />
+                  <Upload size={24} className="mb-2 text-[var(--text-secondary)]" /><span className="text-sm font-medium">Uploader la bannière</span><span className="mt-1 text-xs text-[var(--text-secondary)]">PNG, JPG, WEBP · max 5 MB</span>
                 </label>
               )}
-            </div>
+            </Card>
 
-            {/* LOGO */}
-            <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6">
-              <h3 className="text-sm font-bold text-[var(--text)] mb-1 flex items-center gap-2">
-                <Building2 size={15} className="text-emerald-400" /> Logo entreprise
-              </h3>
-              <p className="text-xs text-[var(--text-muted)] mb-4">Apparaît sur votre profil et les cards d'offres</p>
-
-              <div className="flex items-center gap-4">
-                <div className="w-20 h-20 rounded-2xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center overflow-hidden shrink-0">
-                  {logoPreview ? (
-                    <Image src={logoPreview} alt="Logo" width={80} height={80} className="object-contain w-full h-full" />
-                  ) : (
-                    <Building2 size={28} className="text-[var(--text-muted)]" />
-                  )}
+            <Card className="!p-6">
+              <h2 className="mb-1 flex items-center gap-2 text-base font-semibold"><Building2 size={17} className="text-[var(--brand-strong)]" />Logo entreprise</h2>
+              <p className="mb-4 text-sm text-[var(--text-secondary)]">Apparaît sur votre profil et les cartes d’offres.</p>
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-[var(--radius-control)] border border-[var(--border)] bg-[var(--surface-2)]">
+                  {logoPreview ? <Image src={logoPreview} alt="Logo entreprise" width={80} height={80} className="h-full w-full object-contain" /> : <Building2 size={26} className="text-[var(--text-secondary)]" />}
                 </div>
-                <div className="flex flex-col gap-2">
-                  <label className="flex items-center gap-2 px-4 py-2.5 bg-[var(--surface-2)] hover:bg-[var(--border)] border border-[var(--border)] text-[var(--text)] rounded-xl text-sm cursor-pointer transition-colors">
-                    <Upload size={14} /> Choisir un logo
-                    <input type="file" accept="image/*" onChange={e => handleFileChange(e, 'logo', 3)} className="hidden" />
-                  </label>
-                  {logoPreview && (
-                    <button
-                      onClick={() => { setLogoPreview(null); setLogoFile(null); }}
-                      className="flex items-center gap-2 px-4 py-2 text-[var(--text-muted)] hover:text-red-400 text-sm transition-colors"
-                    >
-                      <X size={14} /> Supprimer
-                    </button>
-                  )}
+                <div className="flex flex-wrap items-center gap-2">
+                  <label className="k-button k-button-secondary cursor-pointer"><Upload size={15} />Choisir un logo<input type="file" accept="image/*" onChange={event => handleFileChange(event, 'logo', 3)} className="sr-only" /></label>
+                  {logoPreview && <Button variant="ghost" onClick={() => { setLogoPreview(null); setLogoFile(null); }}><X size={15} />Supprimer</Button>}
                 </div>
               </div>
-            </div>
+            </Card>
 
-            {/* COULEURS */}
-            <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6">
-              <h3 className="text-sm font-bold text-[var(--text)] mb-1 flex items-center gap-2">
-                <Palette size={15} className="text-amber-400" /> Couleurs de la marque
-              </h3>
-              <p className="text-xs text-[var(--text-muted)] mb-5">Utilisées pour les accents, valeurs et liens sur votre page</p>
-
+            <Card className="!p-6">
+              <h2 className="mb-1 flex items-center gap-2 text-base font-semibold"><Palette size={17} className="text-[var(--accent-2)]" />Couleurs de la marque</h2>
+              <p className="mb-5 text-sm text-[var(--text-secondary)]">Utilisées pour les accents, valeurs et liens sur votre page.</p>
               <div className="space-y-4">
                 {([
                   ['primary', 'Couleur principale'],
                   ['secondary', 'Couleur secondaire'],
                   ['accent', 'Couleur accent (liens, badges)'],
                 ] as const).map(([key, label]) => (
-                  <div key={key} className="flex items-center gap-4">
-                    <input
-                      type="color"
-                      className="w-12 h-10 rounded-xl cursor-pointer border border-[var(--border)] bg-transparent shrink-0"
-                      value={settings.careerPageColors?.[key] || '#06b6d4'}
-                      onChange={e => setSettings(p => ({ ...p, careerPageColors: { ...p.careerPageColors!, [key]: e.target.value } }))}
-                    />
-                    <div className="flex-1">
-                      <p className="text-xs text-[var(--text-muted)] mb-1">{label}</p>
-                      <input
-                        type="text"
-                        className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-lg px-3 py-1.5 text-[var(--text)] text-xs font-mono outline-none focus:border-emerald-500"
-                        value={settings.careerPageColors?.[key] || '#06b6d4'}
-                        onChange={e => setSettings(p => ({ ...p, careerPageColors: { ...p.careerPageColors!, [key]: e.target.value } }))}
-                      />
-                    </div>
-                    <div className="w-8 h-8 rounded-lg shrink-0 border border-[var(--border)]" style={{ backgroundColor: settings.careerPageColors?.[key] || '#06b6d4' }} />
+                  <div key={key} className="flex items-end gap-3">
+                    <label className="k-field"><span>{label}</span><input type="color" aria-label={label} className="h-11 w-14 cursor-pointer rounded-[var(--radius-control)] border border-[var(--border)] bg-[var(--surface-2)] p-1" value={settings.careerPageColors?.[key] || '#06b6d4'} onChange={event => setSettings(previous => ({ ...previous, careerPageColors: { ...previous.careerPageColors!, [key]: event.target.value } }))} /></label>
+                    <Input label={`${label} · code hexadécimal`} type="text" className="font-mono text-xs" value={settings.careerPageColors?.[key] || '#06b6d4'} onChange={event => setSettings(previous => ({ ...previous, careerPageColors: { ...previous.careerPageColors!, [key]: event.target.value } }))} />
+                    <span className="mb-1 h-9 w-9 shrink-0 rounded-[var(--radius-control)] border border-[var(--border)]" style={{ backgroundColor: settings.careerPageColors?.[key] || '#06b6d4' }} aria-hidden="true" />
                   </div>
                 ))}
               </div>
-            </div>
+            </Card>
 
-            {/* À PROPOS */}
-            <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6">
-              <h3 className="text-sm font-bold text-[var(--text)] mb-1 flex items-center gap-2">
-                <Building2 size={15} className="text-green-400" /> Description de l'entreprise
-              </h3>
-              <p className="text-xs text-[var(--text-muted)] mb-4">Visible dans l'onglet "À propos" de votre page</p>
-              <textarea
-                className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-4 py-3 text-[var(--text)] text-sm placeholder:text-[var(--text-muted)] focus:border-emerald-500 outline-none resize-none min-h-[120px]"
-                placeholder="Décrivez votre entreprise, votre mission, votre culture..."
-                value={settings.careerPageAbout || ''}
-                onChange={e => setSettings(p => ({ ...p, careerPageAbout: e.target.value }))}
-              />
-            </div>
+            <Card className="!p-6">
+              <h2 className="mb-1 flex items-center gap-2 text-base font-semibold"><Building2 size={17} className="text-[var(--success-text)]" />Description de l’entreprise</h2>
+              <p className="mb-4 text-sm text-[var(--text-secondary)]">Visible dans l’onglet « À propos » de votre page.</p>
+              <Textarea label="Description" rows={5} className="resize-y" placeholder="Décrivez votre entreprise, votre mission, votre culture…" value={settings.careerPageAbout || ''} onChange={event => setSettings(previous => ({ ...previous, careerPageAbout: event.target.value }))} />
+            </Card>
 
-            {/* VALEURS */}
-            <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6">
-              <h3 className="text-sm font-bold text-[var(--text)] mb-1 flex items-center gap-2">
-                <Sparkles size={15} className="text-amber-400" /> Valeurs de l'entreprise
-              </h3>
-              <p className="text-xs text-[var(--text-muted)] mb-4">Affichées sous forme de cartes numérotées</p>
-
-              <div className="flex gap-2 mb-4">
-                <input
-                  type="text"
-                  placeholder="Ex: Innovation, Intégrité..."
-                  className="flex-1 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-4 py-2.5 text-[var(--text)] text-sm placeholder:text-[var(--text-muted)] outline-none focus:border-emerald-500"
-                  value={newValue}
-                  onChange={e => setNewValue(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleAddValue()}
-                />
-                <button
-                  onClick={handleAddValue}
-                  className="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-white rounded-xl font-bold transition-colors"
-                >
-                  <Plus size={16} />
-                </button>
+            <Card className="!p-6">
+              <h2 className="mb-1 flex items-center gap-2 text-base font-semibold"><Sparkles size={17} className="text-[var(--accent-2)]" />Valeurs de l’entreprise</h2>
+              <p className="mb-4 text-sm text-[var(--text-secondary)]">Affichées sous forme de cartes numérotées.</p>
+              <div className="mb-4 flex flex-wrap items-end gap-2">
+                <div className="min-w-[220px] flex-1"><Input label="Ajouter une valeur" type="text" placeholder="Ex. Innovation, intégrité…" value={newValue} onChange={event => setNewValue(event.target.value)} onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); handleAddValue(); } }} /></div>
+                <Button type="button" variant="secondary" onClick={handleAddValue} aria-label="Ajouter une valeur"><Plus size={17} /></Button>
               </div>
+              {(settings.careerPageValues || []).length ? (
+                <ul className="flex flex-wrap gap-2">{settings.careerPageValues?.map((value, index) => <li key={`${value}-${index}`} className="flex items-center gap-1"><Badge tone="info">{index + 1}. {value}</Badge><Button type="button" variant="ghost" className="!min-h-9 !w-9 !p-0" aria-label={`Supprimer la valeur ${value}`} onClick={() => handleRemoveValue(index)}><X size={14} /></Button></li>)}</ul>
+              ) : <p className="py-2 text-sm text-[var(--text-secondary)]">Aucune valeur ajoutée.</p>}
+            </Card>
 
-              {(settings.careerPageValues || []).length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {settings.careerPageValues?.map((v, i) => (
-                    <div key={i} className="flex items-center gap-2 px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 text-amber-300 rounded-full text-xs font-medium">
-                      <span className="text-amber-500 font-black text-[10px]">{i + 1}</span>
-                      {v}
-                      <button onClick={() => handleRemoveValue(i)} className="text-amber-500/60 hover:text-amber-300">
-                        <X size={12} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-[var(--text-muted)] text-center py-2">Aucune valeur ajoutée</p>
-              )}
-            </div>
-
-            {/* PHOTOS */}
-            <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6">
-              <h3 className="text-sm font-bold text-[var(--text)] mb-1 flex items-center gap-2">
-                <ImageIcon size={15} className="text-amber-400" /> Galerie photos
-              </h3>
-              <p className="text-xs text-[var(--text-muted)] mb-4">Jusqu'à 6 photos · Section "La vie chez nous"</p>
-
-              <div className="grid grid-cols-3 gap-3 mb-3">
-                {settings.careerPagePhotos?.map((p, i) => (
-                  <div key={i} className="relative group aspect-square rounded-xl overflow-hidden">
-                    <Image src={p} alt="" width={150} height={150} className="w-full h-full object-cover" />
-                    <button
-                      onClick={() => handleRemovePhoto(i)}
-                      className="absolute top-1.5 right-1.5 p-1 bg-black/60 hover:bg-red-500 rounded-lg text-white opacity-0 group-hover:opacity-100 transition-all"
-                    >
-                      <Trash2 size={12} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-
-              {(settings.careerPagePhotos?.length || 0) < 6 && (
-                <label className="flex items-center justify-center gap-2 h-14 border-2 border-dashed border-[var(--border)] hover:border-amber-500/50 rounded-xl cursor-pointer transition-colors text-[var(--text-muted)] hover:text-amber-400 text-sm">
-                  <Plus size={18} /> Ajouter une photo (max 3MB)
-                  <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
-                </label>
-              )}
-            </div>
-
-            {/* BTN SAVE MOBILE */}
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="w-full flex items-center justify-center gap-2 py-4 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-white font-bold rounded-2xl text-sm transition-all shadow-lg shadow-emerald-500/20 sm:hidden"
-            >
-              {isSaving ? <><Loader2 className="animate-spin" size={16} />Sauvegarde...</> : saved ? <><Check size={16} />Sauvegardé !</> : <><Save size={16} />Sauvegarder</>}
-            </button>
+            <Card className="!p-6">
+              <h2 className="mb-1 flex items-center gap-2 text-base font-semibold"><ImageIcon size={17} className="text-[var(--accent-2)]" />Galerie photos</h2>
+              <p className="mb-4 text-sm text-[var(--text-secondary)]">Jusqu’à 6 photos · section « La vie chez nous ».</p>
+              <div className="mb-3 grid grid-cols-2 gap-3 sm:grid-cols-3">{settings.careerPagePhotos?.map((photo, index) => <div key={`${photo}-${index}`} className="group relative aspect-square overflow-hidden rounded-[var(--radius-control)]"><Image src={photo} alt={`Photo d’entreprise ${index + 1}`} width={150} height={150} className="h-full w-full object-cover" /><Button type="button" variant="secondary" onClick={() => handleRemovePhoto(index)} className="absolute right-2 top-2 !min-h-9 !w-9 !p-0" aria-label={`Supprimer la photo ${index + 1}`}><Trash2 size={14} /></Button></div>)}</div>
+              {(settings.careerPagePhotos?.length || 0) < 6 && <label className="k-button k-button-secondary w-full cursor-pointer"><Plus size={17} />Ajouter une photo (max 3 MB)<input type="file" accept="image/*" onChange={handlePhotoUpload} className="sr-only" /></label>}
+            </Card>
+            <Button onClick={handleSave} loading={isSaving} className="w-full sm:hidden">{!isSaving && <Check size={16} />}{isSaving ? 'Sauvegarde…' : saved ? 'Sauvegardé' : 'Sauvegarder'}</Button>
           </div>
 
-          {/* ── COLONNE DROITE : PREVIEW ── */}
-          {showPreview && (
-            <div className="hidden sm:block">
-              <div className="sticky top-6">
-                <div className="flex items-center gap-2 mb-3">
-                  <Eye size={14} className="text-[var(--text-muted)]" />
-                  <p className="text-xs text-[var(--text-muted)] font-medium">Aperçu en temps réel · vue candidat</p>
-                </div>
-                <CompanyPreview
-                  settings={previewSettings}
-                  bannerPreview={bannerPreview}
-                  companyName={companyName}
-                />
-                <p className="text-center text-[10px] text-slate-700 dark:text-slate-200 mt-3">
-                  Ce que voient les candidats sur rhkonza.com/companies/…
-                </p>
-              </div>
-            </div>
-          )}
+          {showPreview && <aside><div className="sticky top-6"><div className="mb-3 flex items-center gap-2"><Eye size={15} className="text-[var(--text-secondary)]" /><p className="text-sm font-medium text-[var(--text-secondary)]">Aperçu en temps réel · vue candidat</p></div><CompanyPreview settings={previewSettings} bannerPreview={bannerPreview} companyName={companyName} /><p className="mt-3 text-center text-xs text-[var(--text-secondary)]">Ce que voient les candidats sur rhkonza.com/companies/…</p></div></aside>}
         </div>
       </div>
-    </div>
-  );
-}
-
-// Export manquant pour l'icône Save
-function Save({ size, className }: { size: number; className?: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
-      <polyline points="17 21 17 13 7 13 7 21"/>
-      <polyline points="7 3 7 8 15 8"/>
-    </svg>
+    </ModulePageFrame>
   );
 }

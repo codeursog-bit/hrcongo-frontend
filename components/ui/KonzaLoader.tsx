@@ -18,6 +18,9 @@
 
 import React from 'react';
 import { KonzaMark } from './KonzaMark';
+import { usePathname } from 'next/navigation';
+import { useShellBrand } from '@/components/layout/CompanyBrand';
+import { BrandLogo } from './BrandLogo';
 
 type Variant = 'screen' | 'page' | 'section' | 'inline';
 
@@ -52,7 +55,7 @@ const CSS = `
 }
 `;
 
-export const KonzaLoader: React.FC<KonzaLoaderProps> = ({ variant = 'page', label, logoSrc, tone = 'auto', background, className = '' }) => {
+const LegacyKonzaLoader: React.FC<KonzaLoaderProps> = ({ variant = 'page', label, logoSrc, tone = 'auto', background, className = '' }) => {
   const s = SIZES[variant];
   const text = label === undefined ? 'Chargement…' : label;
   const inline = variant === 'inline';
@@ -63,17 +66,16 @@ export const KonzaLoader: React.FC<KonzaLoaderProps> = ({ variant = 'page', labe
       role="status"
       aria-live="polite"
       className={`flex items-center justify-center ${inline ? 'flex-row gap-3' : 'flex-col gap-5'} ${s.wrap} ${className}`}
-      style={variant === 'screen' ? { background: background ?? (dark ? '#0d1117' : 'var(--bg)') } : undefined}
+      style={variant === 'screen' ? { background: background ?? (dark ? '#171717' : 'var(--bg)') } : undefined}
     >
       <style>{CSS}</style>
 
       <div className="relative shrink-0" style={{ width: s.box, height: s.box }}>
-        <span className="konza-loader-glow absolute inset-0 rounded-full blur-xl" style={{ background: 'var(--brand, #10B981)' }} />
         <span
           className="konza-loader-ring absolute inset-0 rounded-full"
           style={{
-            border: `${inline ? 2 : 3}px solid rgba(16,185,129,0.15)`,
-            borderTopColor: 'var(--brand, #10B981)',
+            border: `${inline ? 2 : 3}px solid color-mix(in srgb, var(--brand) 18%, transparent)`,
+            borderTopColor: 'var(--brand)',
           }}
         />
         <span className="konza-loader-mark absolute inset-0 flex items-center justify-center">
@@ -88,7 +90,7 @@ export const KonzaLoader: React.FC<KonzaLoaderProps> = ({ variant = 'page', labe
       {text ? (
         <p
           className={`konza-loader-text font-semibold tracking-wide ${inline ? 'text-xs' : 'text-sm'}`}
-          style={{ color: dark ? '#94A3B8' : 'var(--text-muted)' }}
+          style={{ color: dark ? '#B8B8B8' : 'var(--text-secondary)' }}
         >
           {text}
         </p>
@@ -99,4 +101,16 @@ export const KonzaLoader: React.FC<KonzaLoaderProps> = ({ variant = 'page', labe
   );
 };
 
+export const KonzaLoader: React.FC<KonzaLoaderProps> = (props) => {
+  const pathname = usePathname() || '';
+  const brand = useShellBrand();
+  if (/^\/(admin|cabinet)(\/|$)/.test(pathname) || props.tone === 'dark') return <LegacyKonzaLoader {...props} />;
+  const { variant = 'page', label, className = '', background } = props;
+  const text = label === undefined ? 'Chargement…' : label;
+  return <div role="status" aria-live="polite" className={`brand-loader brand-loader--${variant} ${className}`} style={variant === 'screen' ? { background: background ?? 'var(--bg)' } : undefined}>
+    <BrandLogo src={brand.applicationLogoAllowed===false?null:props.logoSrc ?? brand.logo} name={brand.name} size={variant === 'inline' ? 'compact' : 'loader'} />
+    {variant !== 'inline' && <span className="brand-loader-track" aria-hidden="true" />}
+    {text ? <p>{text}</p> : <span className="sr-only">Chargement</span>}
+  </div>;
+};
 export default KonzaLoader;

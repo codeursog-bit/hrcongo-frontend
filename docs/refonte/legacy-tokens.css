@@ -1,0 +1,34 @@
+/* Copie exacte des 11 tokens avant refonte - 12 novembre 2026. */
+.theme-legacy {
+  /* Fond & surfaces — light mode (confortable, pas de blanc pur agressif) */
+  --bg: #F7F8F9;
+  --surface: #FFFFFF;
+  --surface-2: #F1F2F4;
+  --border: rgba(15, 23, 42, 0.08);
+  --text: #0F172A;
+  --text-muted: #64748B;
+
+  /* Accent de marque — identique partout dans l'app */
+  --brand: #10B981;      /* émeraude — accent principal */
+  --brand-strong: #059669;
+  --brand-soft: rgba(16, 185, 129, 0.1);
+  --accent-2: #F59E0B;   /* ambre — accent secondaire, usage restreint */
+  --accent-2-soft: rgba(245, 158, 11, 0.1);
+
+}
+.dark .theme-legacy, .theme-legacy.dark {
+  /* Fond & surfaces — dark mode (identique au reste du site public) */
+  --bg: #050607;
+  --surface: #0B0C0F;
+  --surface-2: rgba(255, 255, 255, 0.04);
+  --border: rgba(255, 255, 255, 0.08);
+  --text: #FAFAFA;
+  --text-muted: #8B8F98;
+
+  --brand: #10B981;
+  --brand-strong: #34D399;
+  --brand-soft: rgba(16, 185, 129, 0.12);
+  --accent-2: #F59E0B;
+  --accent-2-soft: rgba(245, 158, 11, 0.12);
+
+}

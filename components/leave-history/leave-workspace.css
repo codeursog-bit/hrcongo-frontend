@@ -1,0 +1,62 @@
+@media screen {
+  .leave-workspace { min-width:0; }
+  .leave-document-layout { display:grid; grid-template-columns:minmax(280px,340px) minmax(0,1fr); gap:24px; align-items:start; }
+  .leave-workspace .leave-pending-row { box-shadow:none!important; border-radius:0!important; }
+  .leave-workspace .request-module-page { --leave-type-ANNUAL_ANTICIPATED:var(--brand); --leave-type-MATERNITY:var(--brand); }
+  .leave-pending-list { display:flex; flex-direction:column; overflow:hidden; border:1px solid var(--border); border-radius:var(--radius-card); }
+  .leave-pending-row { border:0; border-radius:0; box-shadow:none; }
+  .leave-pending-row + .leave-pending-row { border-top:1px solid var(--border); }
+  .leave-pending-row > div { padding:20px; }
+  .leave-pending-row > div > div:last-child { display:grid; grid-template-columns:minmax(180px,1.2fr) minmax(220px,1fr) auto; align-items:center; column-gap:20px; row-gap:8px; }
+  .leave-pending-row > div > div:last-child > div:first-child { margin:0; flex-direction:column; gap:8px; }
+  .leave-pending-row > div > div:last-child > div:nth-child(2) { margin:0; background:transparent; padding:0; }
+  .leave-pending-row > div > div:last-child > p { grid-column:2 / -1; margin:0; }
+  .leave-pending-row > div > div:last-child > div:last-child { grid-column:3; grid-row:1; }
+  .leave-pending-row > div > div:last-child > div:last-child button { white-space:nowrap; }
+  .leave-workspace h1:not(.loan-document-protected *) { font-size:clamp(24px,2.3vw,28px); font-weight:600; line-height:1.3; letter-spacing:-.035em; }
+  .leave-workspace :is(h2,h3):not(.loan-document-protected *) { font-weight:600; }
+  .leave-workspace svg.lucide:not(.loan-document-protected *) { stroke-width:1.5; }
+  .leave-workspace .recharts-cartesian-grid { display:none; }
+  .leave-workspace .request-module-page [data-leave-phase=COMPLETED] { background:var(--surface-2)!important; }
+  .leave-workspace .request-module-page [data-leave-phase=IN_PROGRESS] { background:var(--brand-soft)!important; }
+  .leave-workspace .request-module-page [data-leave-phase=UPCOMING] { background:color-mix(in srgb,var(--brand) 18%,var(--surface))!important; }
+  .leave-workspace .request-module-page [data-leave-phase=PENDING] { background:repeating-linear-gradient(45deg,color-mix(in srgb,var(--mustard) 24%,var(--surface)),color-mix(in srgb,var(--mustard) 24%,var(--surface)) 4px,color-mix(in srgb,var(--mustard) 12%,var(--surface)) 4px,color-mix(in srgb,var(--mustard) 12%,var(--surface)) 8px)!important; border-color:var(--border)!important; }
+  .leave-workspace .recharts-default-tooltip { background:var(--surface)!important; color:var(--text); border:0!important; border-radius:var(--radius-control); box-shadow:var(--shadow-pop); }
+  .leave-workspace .recharts-cartesian-axis-tick-value { fill:var(--text-secondary); }
+  .leave-workspace [data-leave-table] { min-width:720px; width:100%; border-collapse:collapse; font-size:13px; font-variant-numeric:tabular-nums; }
+  .leave-workspace [data-leave-table] th { font-size:12px; text-transform:none; letter-spacing:0; font-weight:500; color:var(--text-secondary); white-space:nowrap; }
+  .leave-workspace [data-leave-table] :where(th,td) { padding:14px 16px; line-height:1.6; vertical-align:middle; word-break:normal; overflow-wrap:normal; }
+  .leave-workspace [data-leave-table] tr { transform:none!important; }
+  .leave-workspace [data-leave-table] td:first-child { min-width:180px; }
+  .leave-workspace .leave-period-bar { display:flex; flex-wrap:wrap; align-items:end; gap:12px; padding:18px 20px; background:var(--surface); box-shadow:var(--shadow-card); border-radius:var(--radius-card); }
+  .leave-workspace .leave-header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; padding:8px 0 12px; }
+  .leave-workspace .leave-header:has(>h1) { display:block; }
+  .leave-table-scroll { max-width:100%; min-width:0; overflow-x:auto; overscroll-behavior-x:contain; scrollbar-width:thin; }
+  .leave-workspace .leave-header p { color:var(--text-secondary); font-size:14px; line-height:1.7; margin-top:6px; }
+  .leave-workspace .leave-metrics { gap:16px; }
+  .leave-workspace .leave-metrics > div { background:var(--surface); border:0; box-shadow:var(--shadow-card); border-radius:var(--radius-card); padding:20px; min-width:0; }
+  .leave-workspace .leave-metrics p[class*=text-3xl] { font-size:28px; line-height:1.35; }
+  .leave-workspace :where(button,a):focus-visible { outline:2px solid var(--focus); outline-offset:3px; }
+  .leave-workspace [role=region]:focus-visible { outline:2px solid var(--focus); outline-offset:4px; }
+}
+@media screen and (max-width:700px) {
+  .leave-pending-row > div { padding:16px; gap:12px; }
+  .leave-pending-row > div > div:last-child { display:flex; flex-direction:column; align-items:stretch; gap:12px; }
+  .leave-pending-row > div > div:last-child > div:first-child { flex-direction:row; }
+  .leave-workspace .leave-header { align-items:flex-start; }
+  .leave-workspace .leave-period-bar { padding:16px; }
+  .leave-workspace .leave-period-bar > * { flex:1 1 140px; min-width:0; }
+  .loan-module .loan-module-content.leave-workspace [data-leave-table],.leave-workspace .loan-module .loan-module-content [data-leave-table] { display:table; }
+  .leave-workspace [data-leave-table] thead { display:table-header-group!important; position:static!important; width:auto!important; height:auto!important; overflow:visible!important; clip:auto!important; }
+  .leave-workspace [data-leave-table] tbody { display:table-row-group!important; }
+  .leave-workspace [data-leave-table] tr { display:table-row!important; }
+  .leave-workspace [data-leave-table] td { display:table-cell!important; padding:14px 16px; }
+  .leave-workspace [data-leave-table] td::before { display:none!important; }
+}
+@media screen and (max-width:1050px) { .leave-document-layout { grid-template-columns:minmax(0,1fr); } }
+@media screen and (min-width:701px) and (max-width:1200px) {
+  .leave-pending-row > div > div:last-child { grid-template-columns:minmax(180px,1fr) auto; }
+  .leave-pending-row > div > div:last-child > div:nth-child(2) { grid-column:1; }
+  .leave-pending-row > div > div:last-child > div:last-child { grid-column:2; grid-row:1 / 3; }
+  .leave-pending-row > div > div:last-child > p { grid-column:1 / -1; }
+}

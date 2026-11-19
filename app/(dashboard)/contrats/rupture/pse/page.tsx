@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { api } from '@/services/api';
+import { ModulePageFrame } from '@/components/requests/ModulePageFrame';
 
 interface PSE {id:string;status:'OUVERT'|'EN_COURS'|'CLOTURE'|'ANNULE';motif:string;nbPostesSupprimes:number;dateOuverture:string;dateNotificationInspection?:string;dateReunionDP?:string;dateCloture?:string;notes?:string;etapes:Array<{label:string;done:boolean;requis:boolean;date?:string}>;salariesConcernes:Array<{id:string;nom:string;poste:string;matricule:string;statut:'PREVU'|'CONFIRME'|'MAINTENU'}>;}
 interface Stats{total30j:number;total90j:number;totalAnnee:number;seuil:number;pseRequired:boolean;}
@@ -76,7 +77,7 @@ function PSECard({pse,onUpdate}:{pse:PSE;onUpdate:()=>void}){
   </div>;
 }
 
-export default function PSEPage(){
+function PSEPage(){
   const[procedures,setProcedures]=useState<PSE[]>([]);const[stats,setStats]=useState<Stats|null>(null);const[loading,setLoading]=useState(true);const[showModal,setShowModal]=useState(false);const[tab,setTab]=useState<'actifs'|'historique'>('actifs');
   const load=useCallback(async()=>{setLoading(true);try{const[p,s]=await Promise.all([api.get<PSE[]>('/pse'),api.get<Stats>('/contract-rupture/eco-stats')]);setProcedures(p);setStats(s);}catch{}finally{setLoading(false);}},[]);
   useEffect(()=>{load();},[load]);
@@ -129,4 +130,13 @@ export default function PSEPage(){
       </div>
     </div>
   </div>;
+}
+
+
+export default function PSEPageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <PSEPage />
+    </ModulePageFrame>
+  );
 }

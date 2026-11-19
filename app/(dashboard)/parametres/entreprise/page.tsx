@@ -1,5 +1,7 @@
 'use client';
+import { ModuleSelect } from '@/components/ui/ModuleSelect';
 
+import { AppearanceLink } from '@/components/appearance/AppearanceLink';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -16,6 +18,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAlert } from '@/components/providers/AlertProvider';
 import { api } from '@/services/api';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import { SettingsFrame as ModulePageFrame } from '@/components/settings/SettingsFrame';
 import { EchelonSuggestionsPanel } from '@/components/settings/EchelonSuggestionsPanel'; // 🆕
 import { ConventionPicker } from '@/components/conventions/ConventionPicker'; // 🆕
 import { getConventionCatalogEntry } from '@/lib/conventions/conventions-catalog'; // 🆕
@@ -87,9 +90,9 @@ interface PayrollSettings {
 // ─── CNSS PATRONALE : 3 BRANCHES ─────────────────────────────────────────────
 
 const CNSS_BRANCHES = [
-  { key: 'pension',  label: 'Retraite & Pension',      rate: 8,    plafond: '1 200 000 FCFA', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-900/10',  border: 'border-emerald-200 dark:border-emerald-800' },
-  { key: 'famille',  label: 'Prestations familiales',   rate: 10,   plafond: '600 000 FCFA',   color: 'text-amber-600 dark:text-amber-400',   bg: 'bg-amber-50 dark:bg-amber-900/10',      border: 'border-amber-200 dark:border-amber-800'   },
-  { key: 'accident', label: 'Accidents du travail',     rate: 2.25, plafond: '600 000 FCFA',   color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-900/10', border: 'border-emerald-200 dark:border-emerald-800' },
+  { key: 'pension',  label: 'Retraite & Pension',      rate: 8,    plafond: '1 200 000 FCFA', color: 'text-[var(--success-text)] ', bg: 'bg-[var(--brand-soft)] ',  border: 'border-[var(--border)] ' },
+  { key: 'famille',  label: 'Prestations familiales',   rate: 10,   plafond: '600 000 FCFA',   color: 'text-[var(--warning-text)] ',   bg: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] ',      border: 'border-[var(--border)] '   },
+  { key: 'accident', label: 'Accidents du travail',     rate: 2.25, plafond: '600 000 FCFA',   color: 'text-[var(--success-text)] ', bg: 'bg-[var(--brand-soft)] ', border: 'border-[var(--border)] ' },
 ];
 const CNSS_EMPLOYER_TOTAL = 8 + 10 + 2.25;
 
@@ -148,7 +151,7 @@ type TabId = 'general' | 'fiscal' | 'convention' | 'payroll_calendar' | 'locatio
 
 // ─── COMPOSANT PRINCIPAL ──────────────────────────────────────────────────────
 
-export default function CompanySettingsPage() {
+function CompanySettingsPage() {
   const alert    = useAlert();
   const router   = useRouter();
 
@@ -398,7 +401,8 @@ const handleLogoUpload = async () => {
     
     setCurrentLogo(data.logo);
     setLogoFile(null);
-    alert.success('Logo enregistré', 'Apparaîtra sur les bulletins de paie.');
+    window.dispatchEvent(new Event('konza:company-updated')); // rafraîchit le logo du menu
+    alert.success('Logo enregistré', 'Apparaîtra sur vos bulletins de paie et dans le menu.');
   } catch (e: any) { 
     alert.error('Erreur upload logo', e.message); 
   } finally { 
@@ -416,6 +420,7 @@ const handleLogoDelete = async () => {
     setCurrentLogo(null);
     setLogoPreview(null);
     setLogoFile(null);
+    window.dispatchEvent(new Event('konza:company-updated')); // le menu repasse au logo Konza
     alert.success('Logo supprimé', '');
   } catch (e: any) { 
     alert.error('Erreur', e.message); 
@@ -608,7 +613,7 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
   const TabButton = ({ id, label, icon: Icon }: { id: TabId; label: string; icon: React.ElementType }) => (
     <button
       onClick={() => setActiveTab(id)}
-      className={`px-4 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition-all whitespace-nowrap ${
+      className={`px-4 py-3 rounded-xl font-semibold text-sm flex items-center gap-2 transition-colors whitespace-nowrap ${
         activeTab === id
           ? 'bg-[var(--text)] text-[var(--bg)] shadow-lg'
           : 'bg-[var(--surface)] text-[var(--text-muted)] border border-[var(--border)] hover:bg-[var(--surface-2)]'
@@ -631,15 +636,16 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
   return (
     <div className="max-w-[1200px] mx-auto pb-24 px-4 relative">
 
+      <AppearanceLink company />
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 mt-6">
+      <div className="settings-page-header flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 mt-6">
         <div className="flex items-center gap-4">
           <button onClick={() => router.back()}
             className="p-2 bg-[var(--surface)] rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)] transition-colors">
             <ArrowLeft size={20} className="text-[var(--text-muted)]" />
           </button>
           <div>
-            <h1 className="text-3xl font-bold text-[var(--text)] tracking-tight">
+            <h1 className="text-3xl font-semibold text-[var(--text)] tracking-tight">
               Paramètres Entreprise
             </h1>
             <p className="text-[var(--text-muted)] text-sm">
@@ -655,24 +661,24 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
       ══════════════════════════════════════════════ */}
 
       {/* Ligne 1 — 4 onglets principaux, centrés */}
-      <div className="flex justify-center gap-2 mb-2">
+      <div role="tablist" aria-label="Rubriques des paramètres" className="settings-local-tabs flex justify-center gap-2 mb-2">
         {([
           { id: 'general',    label: 'Général',        icon: Building2,   desc: 'Identité légale' },
           { id: 'fiscal',     label: 'Fiscalité',      icon: ShieldCheck, desc: 'CNSS & Impôts'   },
           { id: 'convention', label: 'Convention',     icon: BookOpen,    desc: 'Barème collectif' },
           { id: 'attendance', label: 'Pointage',       icon: Clock,       desc: 'Horaires & GPS'  },
         ] as { id: TabId; label: string; icon: React.ElementType; desc: string }[]).map(tab => (
-          <button
+          <button role="tab" aria-selected={activeTab === tab.id}
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex flex-col items-center gap-1 px-5 py-3 rounded-2xl font-bold text-sm transition-all min-w-[110px] ${
+            className={`flex flex-col items-center gap-1 px-5 py-3 rounded-2xl font-semibold text-sm transition-colors min-w-[110px] ${
               activeTab === tab.id
                 ? 'bg-[var(--text)] text-[var(--bg)] shadow-lg scale-[1.03]'
                 : 'bg-[var(--surface)] text-[var(--text-muted)] border border-[var(--border)] hover:bg-[var(--surface-2)] hover:scale-[1.01]'
             }`}
           >
             <tab.icon size={20} />
-            <span className="font-black">{tab.label}</span>
+            <span className="font-semibold">{tab.label}</span>
             <span className={`text-[10px] font-normal ${activeTab === tab.id ? 'opacity-70' : 'text-[var(--text-muted)]'}`}>
               {tab.desc}
             </span>
@@ -681,17 +687,17 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
       </div>
 
       {/* Ligne 2 — 3 onglets secondaires, centrés, plus petits */}
-      <div className="flex justify-center gap-2 mb-6">
+      <div role="tablist" aria-label="Rubriques des paramètres" className="settings-local-tabs flex justify-center gap-2 mb-6">
         {([
           { id: 'payroll_calendar', label: 'Calendrier de paie', icon: Banknote },
           { id: 'location',         label: 'Localisation GPS',   icon: MapPin   },
           { id: 'sites',            label: 'Sites de pointage',  icon: Navigation },
           { id: 'contact',          label: 'Coordonnées',        icon: Phone    },
         ] as { id: TabId; label: string; icon: React.ElementType }[]).map(tab => (
-          <button
+          <button role="tab" aria-selected={activeTab === tab.id}
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-xs transition-all whitespace-nowrap ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-xs transition-colors whitespace-nowrap ${
               activeTab === tab.id
                 ? 'bg-[var(--text)] text-[var(--bg)] shadow-md'
                 : 'bg-[var(--surface)] text-[var(--text-muted)] border border-[var(--border)] hover:bg-[var(--surface-2)]'
@@ -703,7 +709,7 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="settings-two-column grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
           <AnimatePresence mode="wait">
 
@@ -713,8 +719,8 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
             {activeTab === 'general' && (
               <motion.div key="general" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
                 <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
-                  <h3 className="font-bold text-[var(--text)] mb-6 flex items-center gap-2">
-                    <Briefcase size={20} className="text-emerald-500" /> Identification
+                  <h3 className="font-semibold text-[var(--text)] mb-6 flex items-center gap-2">
+                    <Briefcase size={20} className="text-[var(--success-text)]" /> Identification
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {[
@@ -725,7 +731,7 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                       { field: 'taxNumber',  label: 'N° Fiscal (NIU)', mono: true  },
                     ].map(({ field, label, mono }) => (
                       <div key={field}>
-                        <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">{label}</label>
+                        <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase mb-1">{label}</label>
                         <input
                           type="text"
                           value={(companyData as any)[field]}
@@ -738,26 +744,26 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                 </div>
 
                 <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
-                  <h3 className="font-bold text-[var(--text)] mb-6 flex items-center gap-2">
-                    <Landmark size={20} className="text-emerald-500" /> Banque Principale
+                  <h3 className="font-semibold text-[var(--text)] mb-6 flex items-center gap-2">
+                    <Landmark size={20} className="text-[var(--success-text)]" /> Banque Principale
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">Banque</label>
-                      <select value={companyData.bankName} onChange={e => handleCompanyChange('bankName', e.target.value)}
+                      <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase mb-1">Banque</label>
+                      <ModuleSelect value={companyData.bankName} onChange={e => handleCompanyChange('bankName', e.target.value)}
                         className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-[var(--text)]">
                         <option value="">Sélectionner...</option>
                         <option>BGFI Bank</option><option>Ecobank</option>
                         <option>LCB</option><option>UBA</option>
-                      </select>
+                      </ModuleSelect>
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">Numéro de Compte</label>
+                      <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase mb-1">Numéro de Compte</label>
                       <input value={companyData.bankAccount} onChange={e => handleCompanyChange('bankAccount', e.target.value)}
                         className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-mono text-[var(--text)]" />
                     </div>
                     <div className="md:col-span-2">
-                      <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">RIB / IBAN</label>
+                      <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase mb-1">RIB / IBAN</label>
                       <input value={companyData.bankRib} onChange={e => handleCompanyChange('bankRib', e.target.value)}
                         className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-mono text-[var(--text)]" />
                     </div>
@@ -766,11 +772,11 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
 
                               {/* ── Logo entreprise ── */}
 <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
-  <h3 className="font-bold text-[var(--text)] mb-2 flex items-center gap-2">
-    <ImageIcon size={20} className="text-emerald-500" /> Logo entreprise
+  <h3 className="font-semibold text-[var(--text)] mb-2 flex items-center gap-2">
+    <ImageIcon size={20} className="text-[var(--success-text)]" /> Logo entreprise
   </h3>
   <p className="text-xs text-[var(--text-muted)] mb-5">
-    Ce logo s'affichera sur vos bulletins de paie. Format JPG, PNG, WEBP ou SVG — max 2 MB.
+    Ce logo s'affichera sur vos bulletins de paie et dans le menu de l'application. Format JPG, PNG, WEBP ou SVG — max 2 MB.
   </p>
   <div className="flex items-start gap-6">
     {/* Preview */}
@@ -785,12 +791,12 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
       {!logoFile ? (
         <div className="flex flex-wrap gap-2">
           <button onClick={() => logoInputRef.current?.click()}
-            className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 rounded-xl text-sm font-bold hover:bg-emerald-100 transition-colors">
+            className="flex items-center gap-2 px-4 py-2.5 bg-[var(--brand-soft)]  text-[var(--success-text)]  border border-[var(--border)]  rounded-xl text-sm font-semibold hover:bg-[var(--brand-soft)] transition-colors">
             <Upload size={15} /> Choisir un logo
           </button>
           {currentLogo && (
             <button onClick={handleLogoDelete} disabled={logoUploading}
-              className="flex items-center gap-2 px-4 py-2.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-xl text-sm font-bold hover:bg-red-100 transition-colors disabled:opacity-50">
+              className="flex items-center gap-2 px-4 py-2.5 bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  text-[var(--danger-text)]  border border-[var(--border)]  rounded-xl text-sm font-semibold hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] transition-colors disabled:opacity-50">
               {logoUploading ? <Loader2 size={15} className="animate-spin" /> : <Trash2 size={15} />}
               Supprimer
             </button>
@@ -801,12 +807,12 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
           <p className="text-xs text-[var(--text-muted)]">Fichier sélectionné : <strong>{logoFile.name}</strong></p>
           <div className="flex gap-2">
             <button onClick={handleLogoUpload} disabled={logoUploading}
-              className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-bold disabled:opacity-50 transition-colors">
+              className="flex items-center gap-2 px-4 py-2.5 bg-[var(--brand)] hover:bg-[var(--brand)] text-[var(--on-brand)] rounded-xl text-sm font-semibold disabled:opacity-50 transition-colors">
               {logoUploading ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />}
               {logoUploading ? 'Upload...' : 'Enregistrer'}
             </button>
             <button onClick={cancelLogoSelection}
-              className="flex items-center gap-2 px-4 py-2.5 bg-[var(--surface-2)] text-[var(--text-muted)] rounded-xl text-sm font-bold hover:bg-[var(--surface-2)] transition-colors">
+              className="flex items-center gap-2 px-4 py-2.5 bg-[var(--surface-2)] text-[var(--text-muted)] rounded-xl text-sm font-semibold hover:bg-[var(--surface-2)] transition-colors">
               <X size={15} /> Annuler
             </button>
           </div>
@@ -821,8 +827,8 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
 
               {/* ── Cachet & signature ── */}
 <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
-  <h3 className="font-bold text-[var(--text)] mb-2 flex items-center gap-2">
-    <ImageIcon size={20} className="text-emerald-500" /> Cachet &amp; signature
+  <h3 className="font-semibold text-[var(--text)] mb-2 flex items-center gap-2">
+    <ImageIcon size={20} className="text-[var(--success-text)]" /> Cachet &amp; signature
   </h3>
   <p className="text-xs text-[var(--text-muted)] mb-5">
     S'affiche automatiquement sur les documents imprimables (congé, absence, prêt...) une fois la demande validée par le RH. Format JPG, PNG ou WEBP — max 2 MB.
@@ -838,12 +844,12 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
       {!cachetFile ? (
         <div className="flex flex-wrap gap-2">
           <button onClick={() => cachetInputRef.current?.click()}
-            className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 rounded-xl text-sm font-bold hover:bg-emerald-100 transition-colors">
+            className="flex items-center gap-2 px-4 py-2.5 bg-[var(--brand-soft)]  text-[var(--success-text)]  border border-[var(--border)]  rounded-xl text-sm font-semibold hover:bg-[var(--brand-soft)] transition-colors">
             <Upload size={15} /> Choisir un cachet
           </button>
           {currentCachet && (
             <button onClick={handleCachetDelete} disabled={cachetUploading}
-              className="flex items-center gap-2 px-4 py-2.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-xl text-sm font-bold hover:bg-red-100 transition-colors disabled:opacity-50">
+              className="flex items-center gap-2 px-4 py-2.5 bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  text-[var(--danger-text)]  border border-[var(--border)]  rounded-xl text-sm font-semibold hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] transition-colors disabled:opacity-50">
               {cachetUploading ? <Loader2 size={15} className="animate-spin" /> : <Trash2 size={15} />}
               Supprimer
             </button>
@@ -854,12 +860,12 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
           <p className="text-xs text-[var(--text-muted)]">Fichier sélectionné : <strong>{cachetFile.name}</strong></p>
           <div className="flex gap-2">
             <button onClick={handleCachetUpload} disabled={cachetUploading}
-              className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-bold disabled:opacity-50 transition-colors">
+              className="flex items-center gap-2 px-4 py-2.5 bg-[var(--brand)] hover:bg-[var(--brand)] text-[var(--on-brand)] rounded-xl text-sm font-semibold disabled:opacity-50 transition-colors">
               {cachetUploading ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />}
               {cachetUploading ? 'Upload...' : 'Enregistrer'}
             </button>
             <button onClick={cancelCachetSelection}
-              className="flex items-center gap-2 px-4 py-2.5 bg-[var(--surface-2)] text-[var(--text-muted)] rounded-xl text-sm font-bold hover:bg-[var(--surface-2)] transition-colors">
+              className="flex items-center gap-2 px-4 py-2.5 bg-[var(--surface-2)] text-[var(--text-muted)] rounded-xl text-sm font-semibold hover:bg-[var(--surface-2)] transition-colors">
               <X size={15} /> Annuler
             </button>
           </div>
@@ -874,13 +880,13 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
 
               {/* ── Modèle de document ── */}
 <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
-  <h3 className="font-bold text-[var(--text)] mb-2 flex items-center gap-2">
-    <FileText size={20} className="text-emerald-500" /> Modèle de document
+  <h3 className="font-semibold text-[var(--text)] mb-2 flex items-center gap-2">
+    <FileText size={20} className="text-[var(--success-text)]" /> Modèle de document
   </h3>
   <p className="text-xs text-[var(--text-muted)] mb-4">
     Mise en page utilisée pour les documents imprimables (congé, absence, prêt, avance...).
   </p>
-  <select
+  <ModuleSelect
     value={companyData.documentTemplate}
     onChange={(e) => setCompanyData({ ...companyData, documentTemplate: e.target.value })}
     className="w-full md:w-72 p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm text-[var(--text)]"
@@ -889,13 +895,13 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
     <option value="ORCA">Modèle 1</option>
     <option value="STANDARD">Modèle 2</option>
     <option value="MODERN">Modèle 3</option>
-  </select>
+  </ModuleSelect>
 </div>
 
               {/* ── Pied de page légal des documents ── */}
 <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
-  <h3 className="font-bold text-[var(--text)] mb-2 flex items-center gap-2">
-    <FileText size={20} className="text-emerald-500" /> Pied de page des documents
+  <h3 className="font-semibold text-[var(--text)] mb-2 flex items-center gap-2">
+    <FileText size={20} className="text-[var(--success-text)]" /> Pied de page des documents
   </h3>
   <p className="text-xs text-[var(--text-muted)] mb-4">
     Texte affiché en bas des documents imprimables (congé, absence, prêt...). Laissez vide pour une composition automatique à partir de la raison sociale, du RCCM, du NIU, de l'adresse et du téléphone ci-dessus.
@@ -911,8 +917,8 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
 
               {/* 🆕 ── Générateur de contrats : représentant légal & lieu de signature ── */}
 <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
-  <h3 className="font-bold text-[var(--text)] mb-2 flex items-center gap-2">
-    <FileText size={20} className="text-emerald-500" /> Générateur de contrats
+  <h3 className="font-semibold text-[var(--text)] mb-2 flex items-center gap-2">
+    <FileText size={20} className="text-[var(--success-text)]" /> Générateur de contrats
   </h3>
   <p className="text-xs text-[var(--text-muted)] mb-4">
     Ces informations sont pré-remplies automatiquement à chaque génération de contrat (CDI/CDD, prestation de services, stage).
@@ -967,19 +973,19 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
 
                 {/* CNSS PATRONALE */}
                 <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
-                  <h3 className="font-bold text-[var(--text)] mb-2 flex items-center gap-2">
-                    <ShieldCheck size={20} className="text-emerald-500" /> CNSS Patronale
+                  <h3 className="font-semibold text-[var(--text)] mb-2 flex items-center gap-2">
+                    <ShieldCheck size={20} className="text-[var(--success-text)]" /> CNSS Patronale
                   </h3>
                   <p className="text-xs text-[var(--text-muted)] mb-5">
                     La CNSS patronale est composée de <strong>3 branches distinctes</strong> avec des plafonds différents, conformément au Décret 2009-392.
                   </p>
 
-                  <label className="flex items-start gap-4 cursor-pointer p-4 bg-emerald-50 dark:bg-emerald-900/10 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 hover:border-emerald-400 transition-all group mb-4">
+                  <label className="flex items-start gap-4 cursor-pointer p-4 bg-[var(--brand-soft)]  rounded-xl border-2 border-[var(--border)]  hover:border-[var(--border)] transition-colors group mb-4">
                     <input type="checkbox" checked={companyData.appliesCnssEmployer}
                       onChange={e => handleCompanyChange('appliesCnssEmployer', e.target.checked)}
-                      className="w-5 h-5 rounded border-emerald-300 text-emerald-600 focus:ring-emerald-500 mt-0.5" />
+                      className="w-5 h-5 rounded border-[var(--border)] text-[var(--success-text)] focus:ring-[var(--focus)] mt-0.5" />
                     <div className="flex-1">
-                      <span className="text-sm font-bold text-[var(--text)] block mb-1">
+                      <span className="text-sm font-semibold text-[var(--text)] block mb-1">
                         L'entreprise est assujettie à la CNSS patronale
                       </span>
                       <p className="text-xs text-[var(--text-muted)]">
@@ -996,22 +1002,22 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                             <div key={branch.key}
                               className={`flex items-center justify-between p-4 rounded-xl border ${branch.bg} ${branch.border}`}>
                               <div>
-                                <p className={`font-bold text-sm ${branch.color}`}>{branch.label}</p>
+                                <p className={`font-semibold text-sm ${branch.color}`}>{branch.label}</p>
                                 <p className="text-xs text-[var(--text-muted)] mt-0.5">Plafond : {branch.plafond}</p>
                               </div>
-                              <span className={`text-2xl font-black font-mono ${branch.color}`}>{branch.rate}%</span>
+                              <span className={`text-2xl font-semibold font-mono ${branch.color}`}>{branch.rate}%</span>
                             </div>
                           ))}
                         </div>
-                        <div className="flex items-center justify-between p-4 bg-[var(--surface-2)] dark:bg-black rounded-xl">
+                        <div className="flex items-center justify-between p-4 bg-[var(--surface-2)] dark:bg-[rgb(0_0_0_/.5)] rounded-xl">
                           <div>
-                            <p className="text-white font-bold text-sm">Total CNSS patronale</p>
+                            <p className="text-[var(--text)] font-semibold text-sm">Total CNSS patronale</p>
                             <p className="text-[var(--text-muted)] text-xs mt-0.5">Taux combiné (bases plafonnées respectives)</p>
                           </div>
-                          <span className="text-2xl font-black font-mono text-white">{CNSS_EMPLOYER_TOTAL}%</span>
+                          <span className="text-2xl font-semibold font-mono text-[var(--text)]">{CNSS_EMPLOYER_TOTAL}%</span>
                         </div>
                         <p className="text-xs text-[var(--text-muted)] mt-3 flex items-center gap-1.5">
-                          <AlertCircle size={12} className="text-amber-400 shrink-0" />
+                          <AlertCircle size={12} className="text-[var(--warning-text)] shrink-0" />
                           Ces taux sont <strong>fixés par la loi congolaise</strong> et ne sont pas modifiables.
                         </p>
                       </motion.div>
@@ -1021,38 +1027,38 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
 
                 {/* PARAMÈTRES PAR DÉFAUT — NOUVEAUX EMPLOYÉS */}
                 <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
-                  <h3 className="font-bold text-[var(--text)] mb-2 flex items-center gap-2">
-                    <ShieldCheck size={20} className="text-emerald-500" /> Paramètres par défaut — Nouveaux employés
+                  <h3 className="font-semibold text-[var(--text)] mb-2 flex items-center gap-2">
+                    <ShieldCheck size={20} className="text-[var(--success-text)]" /> Paramètres par défaut — Nouveaux employés
                   </h3>
                   <p className="text-xs text-[var(--text-muted)] mb-5">
                     Ces valeurs seront pré-remplies à la création d'un nouvel employé.
                   </p>
 
-                  <div className="p-4 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800 rounded-xl mb-5">
-                    <p className="text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-1 flex items-center gap-2">
+                  <div className="p-4 bg-[var(--brand-soft)]  border border-[var(--border)]  rounded-xl mb-5">
+                    <p className="text-sm font-semibold text-[var(--success-text)]  mb-1 flex items-center gap-2">
                       <AlertCircle size={15} className="shrink-0" /> Réforme fiscale 2026 — ITS (ex-IRPP)
                     </p>
-                    <p className="text-xs text-emerald-700 dark:text-emerald-300 leading-relaxed">
+                    <p className="text-xs text-[var(--success-text)]  leading-relaxed">
                       Depuis le 1er janvier 2026, l'IRPP est remplacé par l'<strong>ITS</strong>. L'abattement passe de <strong>30% plafonné</strong> à <strong>20% sans plafond</strong>. Quotient familial supprimé — 1 part unique. Le système bascule automatiquement selon l'année du bulletin.
                     </p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <label className="flex items-center gap-3 cursor-pointer p-4 bg-[var(--surface-2)] rounded-xl border border-[var(--border)] hover:border-emerald-300 transition-all">
+                    <label className="flex items-center gap-3 cursor-pointer p-4 bg-[var(--surface-2)] rounded-xl border border-[var(--border)] hover:border-[var(--border)] transition-colors">
                       <input type="checkbox" checked={companyData.defaultAppliesIrpp}
                         onChange={e => handleCompanyChange('defaultAppliesIrpp', e.target.checked)}
-                        className="w-5 h-5 rounded border-[var(--border)] text-emerald-600 focus:ring-emerald-500" />
+                        className="w-5 h-5 rounded border-[var(--border)] text-[var(--success-text)] focus:ring-[var(--focus)]" />
                       <div>
-                        <span className="text-sm font-bold text-[var(--text)] block mb-0.5">Par défaut, soumis à l'ITS</span>
+                        <span className="text-sm font-semibold text-[var(--text)] block mb-0.5">Par défaut, soumis à l'ITS</span>
                         <p className="text-xs text-[var(--text-muted)]">Barème 1% / 10% / 25% / 40%</p>
                       </div>
                     </label>
-                    <label className="flex items-center gap-3 cursor-pointer p-4 bg-[var(--surface-2)] rounded-xl border border-[var(--border)] hover:border-emerald-300 transition-all">
+                    <label className="flex items-center gap-3 cursor-pointer p-4 bg-[var(--surface-2)] rounded-xl border border-[var(--border)] hover:border-[var(--border)] transition-colors">
                       <input type="checkbox" checked={companyData.defaultAppliesCnss}
                         onChange={e => handleCompanyChange('defaultAppliesCnss', e.target.checked)}
-                        className="w-5 h-5 rounded border-[var(--border)] text-emerald-600 focus:ring-emerald-500" />
+                        className="w-5 h-5 rounded border-[var(--border)] text-[var(--success-text)] focus:ring-[var(--focus)]" />
                       <div>
-                        <span className="text-sm font-bold text-[var(--text)] block mb-0.5">Par défaut, soumis à la CNSS</span>
+                        <span className="text-sm font-semibold text-[var(--text)] block mb-0.5">Par défaut, soumis à la CNSS</span>
                         <p className="text-xs text-[var(--text-muted)]">4% salarié · plafond 1 200 000 F</p>
                       </div>
                     </label>
@@ -1060,8 +1066,8 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
 
                   {/* Mode calcul ITS */}
                   <div className="mt-6 p-5 bg-[var(--surface)] border border-[var(--border)] rounded-xl">
-                    <h4 className="font-bold text-[var(--text)] mb-1 flex items-center gap-2 text-sm">
-                      <ShieldCheck size={16} className="text-emerald-500" /> Mode de calcul ITS / IRPP
+                    <h4 className="font-semibold text-[var(--text)] mb-1 flex items-center gap-2 text-sm">
+                      <ShieldCheck size={16} className="text-[var(--success-text)]" /> Mode de calcul ITS / IRPP
                     </h4>
                     <p className="text-xs text-[var(--text-muted)] mb-4">
                       Choisissez comment l'impôt sur salaires est calculé pour tous les bulletins.
@@ -1072,20 +1078,20 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                         { value: 'ITS_2026',    color: 'violet', label: 'ITS 2026 (nouveau régime)', badge: null,         desc: 'Barème progressif · Abattement 20% sans plafond · 1 part' },
                         { value: 'IRPP_LEGACY', color: 'amber',  label: 'IRPP (avant 2026)',         badge: null,         desc: 'Barème progressif · Abattement 30% plafonné 75 000 F/mois · Quotient familial' },
                       ].map(opt => (
-                        <label key={opt.value} className={`flex items-start gap-4 cursor-pointer p-4 rounded-xl border-2 transition-all ${
+                        <label key={opt.value} className={`flex items-start gap-4 cursor-pointer p-4 rounded-xl border-2 transition-colors ${
                           payrollData.fiscalMode === opt.value
-                            ? `border-${opt.color}-500 bg-${opt.color}-50 dark:bg-${opt.color}-900/20`
-                            : `border-[var(--border)] hover:border-${opt.color}-300`
+                            ? 'border-[var(--action)] bg-[var(--brand-soft)]'
+                            : 'border-[var(--border)] hover:border-[var(--action)]'
                         }`}>
                           <input type="radio" name="fiscalMode" value={opt.value}
                             checked={payrollData.fiscalMode === opt.value}
                             onChange={() => handlePayrollChange('fiscalMode', opt.value)}
-                            className={`mt-1 text-${opt.color}-600`} />
+                            className={'mt-1 accent-[var(--brand)]'} />
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-0.5">
-                              <span className="text-sm font-bold text-[var(--text)]">{opt.label}</span>
+                              <span className="text-sm font-semibold text-[var(--text)]">{opt.label}</span>
                               {opt.badge && (
-                                <span className={`text-xs bg-${opt.color}-100 dark:bg-${opt.color}-900/40 text-${opt.color}-700 dark:text-${opt.color}-300 px-2 py-0.5 rounded-full font-medium`}>
+                                <span className={'text-xs bg-[var(--brand-soft)] text-[var(--action)] px-2 py-0.5 rounded-full font-medium'}>
                                   {opt.badge}
                                 </span>
                               )}
@@ -1096,40 +1102,40 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                       ))}
 
                       {/* Forfait */}
-                      <label className={`flex items-start gap-4 cursor-pointer p-4 rounded-xl border-2 transition-all ${
+                      <label className={`flex items-start gap-4 cursor-pointer p-4 rounded-xl border-2 transition-colors ${
                         payrollData.fiscalMode === 'FORFAIT'
-                          ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
-                          : 'border-[var(--border)] hover:border-emerald-300'
+                          ? 'border-[var(--border)] bg-[var(--brand-soft)] '
+                          : 'border-[var(--border)] hover:border-[var(--border)]'
                       }`}>
                         <input type="radio" name="fiscalMode" value="FORFAIT"
                           checked={payrollData.fiscalMode === 'FORFAIT'}
                           onChange={() => handlePayrollChange('fiscalMode', 'FORFAIT')}
-                          className="mt-1 text-emerald-600" />
+                          className="mt-1 text-[var(--success-text)]" />
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-0.5">
-                            <span className="text-sm font-bold text-[var(--text)]">Taux forfaitaire</span>
-                            <span className="text-xs bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-full font-medium">Pratique terrain</span>
+                            <span className="text-sm font-semibold text-[var(--text)]">Taux forfaitaire</span>
+                            <span className="text-xs bg-[var(--brand-soft)]  text-[var(--success-text)]  px-2 py-0.5 rounded-full font-medium">Pratique terrain</span>
                           </div>
                           <p className="text-xs text-[var(--text-muted)] mb-3">
                             ITS = brut fiscal × taux fixe. Non conforme CGI mais compatible anciens bulletins.
                           </p>
                           {payrollData.fiscalMode === 'FORFAIT' && (
                             <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3">
-                              <label className="text-xs font-bold text-[var(--text)] whitespace-nowrap">Taux ITS :</label>
+                              <label className="text-xs font-semibold text-[var(--text)] whitespace-nowrap">Taux ITS :</label>
                               <div className="flex items-center gap-2">
                                 <input type="number" min="1" max="40" step="0.5"
                                   value={Math.round(payrollData.forfaitItsRate * 100)}
                                   onChange={e => handlePayrollChange('forfaitItsRate', parseFloat(e.target.value) / 100 || 0.08)}
-                                  className="w-20 text-center border border-emerald-300 dark:border-emerald-700 rounded-lg px-2 py-1.5 text-sm font-bold bg-[var(--surface)] text-emerald-700 focus:ring-2 focus:ring-emerald-500" />
-                                <span className="text-sm font-bold text-emerald-600">%</span>
+                                  className="w-20 text-center border border-[var(--border)]  rounded-lg px-2 py-1.5 text-sm font-semibold bg-[var(--surface)] text-[var(--success-text)] focus:ring-2 focus:ring-[var(--focus)]" />
+                                <span className="text-sm font-semibold text-[var(--success-text)]">%</span>
                                 <div className="flex gap-2 ml-2">
                                   {[6, 8, 10].map(pct => (
                                     <button key={pct} type="button"
                                       onClick={() => handlePayrollChange('forfaitItsRate', pct / 100)}
-                                      className={`text-xs px-2 py-1 rounded-lg font-bold border transition-all ${
+                                      className={`text-xs px-2 py-1 rounded-lg font-semibold border transition-colors ${
                                         Math.round(payrollData.forfaitItsRate * 100) === pct
-                                          ? 'bg-emerald-600 text-white border-emerald-600'
-                                          : 'border-emerald-300 text-emerald-600 hover:bg-emerald-50'
+                                          ? 'bg-[var(--brand)] text-[var(--on-brand)] border-[var(--border)]'
+                                          : 'border-[var(--border)] text-[var(--success-text)] hover:bg-[var(--brand-soft)]'
                                       }`}>{pct}%</button>
                                   ))}
                                 </div>
@@ -1151,8 +1157,8 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
               <motion.div key="convention" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
                 <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6 md:p-8">
                   <div className="mb-6">
-                    <h3 className="text-lg font-bold text-[var(--text)] flex items-center gap-2 mb-1">
-                      <BookOpen size={20} className="text-emerald-500" /> Convention Collective
+                    <h3 className="text-lg font-semibold text-[var(--text)] flex items-center gap-2 mb-1">
+                      <BookOpen size={20} className="text-[var(--success-text)]" /> Convention Collective
                     </h3>
                     <p className="text-sm text-[var(--text-muted)]">
                       La convention collective détermine les catégories professionnelles et salaires minimums appliqués à vos employés.
@@ -1168,13 +1174,13 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                   <AnimatePresence>
                     {companyData.collectiveAgreement && getConventionCatalogEntry(companyData.collectiveAgreement) && (
                       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                        className="mt-4 p-4 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-700 rounded-xl flex items-start gap-3">
-                        <Award size={18} className="text-emerald-500 mt-0.5 shrink-0" />
+                        className="mt-4 p-4 bg-[var(--brand-soft)]  border border-[var(--border)]  rounded-xl flex items-start gap-3">
+                        <Award size={18} className="text-[var(--success-text)] mt-0.5 shrink-0" />
                         <div>
-                          <p className="text-sm font-bold text-emerald-900 dark:text-emerald-100">
+                          <p className="text-sm font-semibold text-[var(--success-text)] ">
                             Convention {getConventionCatalogEntry(companyData.collectiveAgreement)?.label} active
                           </p>
-                          <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">
+                          <p className="text-xs text-[var(--success-text)]  mt-0.5">
                             Les nouveaux employés bénéficieront automatiquement des catégories et salaires minimums de cette convention.
                           </p>
                         </div>
@@ -1183,8 +1189,8 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                   </AnimatePresence>
 
                   {!companyData.collectiveAgreement && (
-                    <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-700 rounded-xl">
-                      <p className="text-xs text-amber-700 dark:text-amber-400 flex items-center gap-2">
+                    <div className="mt-4 p-3 bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  border border-[var(--border)]  rounded-xl">
+                      <p className="text-xs text-[var(--warning-text)]  flex items-center gap-2">
                         <AlertCircle size={13} />
                         Aucune convention sélectionnée — les catégories ne seront pas pré-remplies.
                       </p>
@@ -1195,20 +1201,20 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                 {/* 🆕 JOURS DE CONGÉ SUPPLÉMENTAIRES D'ANCIENNETÉ */}
                 <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6 md:p-8">
                   <div className="mb-5">
-                    <h3 className="text-lg font-bold text-[var(--text)] flex items-center gap-2 mb-1">
-                      <Award size={20} className="text-emerald-500" /> Congé supplémentaire d'ancienneté
+                    <h3 className="text-lg font-semibold text-[var(--text)] flex items-center gap-2 mb-1">
+                      <Award size={20} className="text-[var(--success-text)]" /> Congé supplémentaire d'ancienneté
                     </h3>
                     <p className="text-sm text-[var(--text-muted)]">
                       Certaines conventions accordent des jours de congé additionnels selon l'ancienneté de l'employé, en plus des 26 jours de base. Certaines entreprises choisissent de ne pas les appliquer.
                     </p>
                   </div>
 
-                  <label className="flex items-start gap-4 cursor-pointer p-4 bg-emerald-50 dark:bg-emerald-900/10 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 hover:border-emerald-400 transition-all group">
+                  <label className="flex items-start gap-4 cursor-pointer p-4 bg-[var(--brand-soft)]  rounded-xl border-2 border-[var(--border)]  hover:border-[var(--border)] transition-colors group">
                     <input type="checkbox" checked={companyData.appliesSeniorityLeaveBonus}
                       onChange={e => handleCompanyChange('appliesSeniorityLeaveBonus', e.target.checked)}
-                      className="w-5 h-5 rounded border-emerald-300 text-emerald-600 focus:ring-emerald-500 mt-0.5" />
+                      className="w-5 h-5 rounded border-[var(--border)] text-[var(--success-text)] focus:ring-[var(--focus)] mt-0.5" />
                     <div className="flex-1">
-                      <span className="text-sm font-bold text-[var(--text)] block mb-1">
+                      <span className="text-sm font-semibold text-[var(--text)] block mb-1">
                         Accorder les jours de congé supplémentaires d'ancienneté
                       </span>
                       <p className="text-xs text-[var(--text-muted)]">
@@ -1221,8 +1227,8 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                 {/* 🆕 RAPPELS DE CHANGEMENT D'ÉCHELON */}
                 <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6 md:p-8">
                   <div className="mb-5">
-                    <h3 className="text-lg font-bold text-[var(--text)] flex items-center gap-2 mb-1">
-                      <Award size={20} className="text-emerald-500" /> Rappels de changement d'échelon
+                    <h3 className="text-lg font-semibold text-[var(--text)] flex items-center gap-2 mb-1">
+                      <Award size={20} className="text-[var(--success-text)]" /> Rappels de changement d'échelon
                     </h3>
                     <p className="text-sm text-[var(--text-muted)]">
                       Certaines conventions font progresser l'échelon d'un employé selon son ancienneté.
@@ -1232,12 +1238,12 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                     </p>
                   </div>
 
-                  <label className="flex items-start gap-4 cursor-pointer p-4 bg-emerald-50 dark:bg-emerald-900/10 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 hover:border-emerald-400 transition-all group">
+                  <label className="flex items-start gap-4 cursor-pointer p-4 bg-[var(--brand-soft)]  rounded-xl border-2 border-[var(--border)]  hover:border-[var(--border)] transition-colors group">
                     <input type="checkbox" checked={!!companyData.echelonReminderEnabled}
                       onChange={e => handleCompanyChange('echelonReminderEnabled', e.target.checked)}
-                      className="w-5 h-5 rounded border-emerald-300 text-emerald-600 focus:ring-emerald-500 mt-0.5" />
+                      className="w-5 h-5 rounded border-[var(--border)] text-[var(--success-text)] focus:ring-[var(--focus)] mt-0.5" />
                     <div className="flex-1">
-                      <span className="text-sm font-bold text-[var(--text)] block mb-1">
+                      <span className="text-sm font-semibold text-[var(--text)] block mb-1">
                         Activer les rappels de changement d'échelon
                       </span>
                       <p className="text-xs text-[var(--text-muted)]">
@@ -1264,11 +1270,11 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
               <motion.div key="payroll_calendar" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
 
                 {/* Bannière info */}
-                <div className="p-4 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800 rounded-2xl flex gap-3 items-start">
-                  <Info size={20} className="text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                <div className="p-4 bg-[var(--brand-soft)]  border border-[var(--border)]  rounded-2xl flex gap-3 items-start">
+                  <Info size={20} className="text-[var(--success-text)]  shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-sm font-bold text-emerald-800 dark:text-emerald-300">Impact sur le suivi des impayés</p>
-                    <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5 leading-relaxed">
+                    <p className="text-sm font-semibold text-[var(--success-text)] ">Impact sur le suivi des impayés</p>
+                    <p className="text-xs text-[var(--success-text)]  mt-0.5 leading-relaxed">
                       Ces deux dates configurent l'échéance réelle calculée par le service <strong>UnpaidSalaryService</strong>. Le salaire du mois M est considéré <strong>en retard</strong> si non payé après le <strong>jour {companyData.payrollPaymentDay} du mois M+1</strong>.
                     </p>
                   </div>
@@ -1276,27 +1282,27 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
 
                 {/* Aperçu calendrier */}
                 <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
-                  <h3 className="font-bold text-[var(--text)] mb-6 flex items-center gap-2">
-                    <Calendar size={20} className="text-emerald-500" /> Aperçu du cycle de paie
+                  <h3 className="font-semibold text-[var(--text)] mb-6 flex items-center gap-2">
+                    <Calendar size={20} className="text-[var(--success-text)]" /> Aperçu du cycle de paie
                   </h3>
 
                   {/* Timeline visuelle */}
                   <div className="relative flex items-center justify-between gap-2 mb-8 px-2">
                     {/* Ligne de connexion */}
-                    <div className="absolute left-0 right-0 top-6 h-0.5 bg-emerald-200 dark:bg-emerald-700 z-0" />
+                    <div className="absolute left-0 right-0 top-6 h-0.5 bg-[var(--brand-soft)]  z-0" />
 
                     {[
-                      { day: '1er', label: 'Début du mois', sub: 'Mois de travail', color: 'bg-[var(--surface-2)] text-[var(--text-muted)]', icon: '📅' },
-                      { day: `${companyData.payrollCloseDay}`, label: 'Clôture bulletins', sub: 'Mois courant', color: 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300', icon: '📋' },
-                      { day: `${companyData.payrollPaymentDay}`, label: 'Date de paiement', sub: 'Mois suivant', color: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300', icon: '💰' },
+                      { day: '1er', label: 'Début du mois', sub: 'Mois de travail', color: 'bg-[var(--surface-2)] text-[var(--text-muted)]', icon: Calendar },
+                      { day: `${companyData.payrollCloseDay}`, label: 'Clôture bulletins', sub: 'Mois courant', color: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  text-[var(--warning-text)] ', icon: FileText },
+                      { day: `${companyData.payrollPaymentDay}`, label: 'Date de paiement', sub: 'Mois suivant', color: 'bg-[var(--brand-soft)]  text-[var(--success-text)] ', icon: Banknote },
                     ].map((step, i) => (
                       <div key={i} className="relative z-10 flex flex-col items-center gap-2 flex-1">
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-lg ${step.color}`}>
-                          {step.icon}
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center font-semibold text-lg ${step.color}`}>
+                          <step.icon size={18} strokeWidth={1.5} aria-hidden="true" />
                         </div>
                         <div className="text-center">
-                          <p className={`text-xs font-black ${step.color.split(' ')[2]}`}>Jour {step.day}</p>
-                          <p className="text-xs font-bold text-[var(--text)]">{step.label}</p>
+                          <p className="text-xs font-semibold text-[var(--text)]">Jour {step.day}</p>
+                          <p className="text-xs font-semibold text-[var(--text)]">{step.label}</p>
                           <p className="text-xs text-[var(--text-muted)]">{step.sub}</p>
                         </div>
                       </div>
@@ -1304,13 +1310,13 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                   </div>
 
                   {/* Résumé en box */}
-                  <div className="p-4 bg-emerald-50 dark:bg-emerald-950/20 rounded-xl border border-emerald-200 dark:border-emerald-800">
-                    <p className="text-sm text-emerald-800 dark:text-emerald-300">
-                      Le salaire de <strong className="font-black">mois M</strong> est clôturé le{' '}
-                      <strong className="font-black">{calPreview.closeLabel}</strong> et doit être payé
-                      avant le <strong className="font-black">{calPreview.paymentLabel}</strong>.
+                  <div className="p-4 bg-[var(--brand-soft)]  rounded-xl border border-[var(--border)] ">
+                    <p className="text-sm text-[var(--success-text)] ">
+                      Le salaire de <strong className="font-semibold">mois M</strong> est clôturé le{' '}
+                      <strong className="font-semibold">{calPreview.closeLabel}</strong> et doit être payé
+                      avant le <strong className="font-semibold">{calPreview.paymentLabel}</strong>.
                     </p>
-                    <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">
+                    <p className="text-xs text-[var(--success-text)]  mt-1">
                       Délai entre clôture et paiement : environ <strong>{calPreview.daysGap} jours</strong>.
                     </p>
                   </div>
@@ -1318,8 +1324,8 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
 
                 {/* Formulaire */}
                 <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
-                  <h3 className="font-bold text-[var(--text)] mb-2 flex items-center gap-2">
-                    <Banknote size={20} className="text-emerald-500" /> Jours de référence
+                  <h3 className="font-semibold text-[var(--text)] mb-2 flex items-center gap-2">
+                    <Banknote size={20} className="text-[var(--success-text)]" /> Jours de référence
                   </h3>
                   <p className="text-xs text-[var(--text-muted)] mb-6">
                     Ces valeurs sont stockées sur votre entreprise et utilisées automatiquement pour calculer les retards de paie.
@@ -1329,7 +1335,7 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
 
                     {/* Jour de clôture */}
                     <div>
-                      <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1 tracking-wider">
+                      <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase mb-1 tracking-wider">
                         Jour de clôture des bulletins
                       </label>
                       <div className="relative">
@@ -1339,9 +1345,9 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                           max="31"
                           value={companyData.payrollCloseDay}
                           onChange={e => handleCompanyChange('payrollCloseDay', Math.min(31, Math.max(1, parseInt(e.target.value) || 1)))}
-                          className="w-full p-3 pr-16 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-2xl font-black text-amber-600 dark:text-amber-400 text-center focus:ring-2 focus:ring-amber-400 focus:border-transparent"
+                          className="w-full p-3 pr-16 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-2xl font-semibold text-[var(--warning-text)]  text-center focus:ring-2 focus:ring-[var(--focus)] focus:border-transparent"
                         />
-                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-[var(--text-muted)] uppercase">du mois</span>
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-[var(--text-muted)] uppercase">du mois</span>
                       </div>
                       <p className="text-xs text-[var(--text-muted)] mt-2">
                         Jour jusqu'auquel les pointages et absences sont comptabilisés dans les bulletins du mois.
@@ -1351,10 +1357,10 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                         {[20, 25, 28, 31].map(d => (
                           <button key={d} type="button"
                             onClick={() => handleCompanyChange('payrollCloseDay', d)}
-                            className={`text-xs px-3 py-1.5 rounded-lg font-bold border transition-all ${
+                            className={`text-xs px-3 py-1.5 rounded-lg font-semibold border transition-colors ${
                               companyData.payrollCloseDay === d
-                                ? 'bg-amber-500 text-white border-amber-500'
-                                : 'border-[var(--border)] text-[var(--text-muted)] hover:border-amber-300 hover:text-amber-600'
+                                ? 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--text)] border-[var(--border)]'
+                                : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--border)] hover:text-[var(--warning-text)]'
                             }`}
                           >
                             {d}
@@ -1365,7 +1371,7 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
 
                     {/* Jour de paiement */}
                     <div>
-                      <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1 tracking-wider">
+                      <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase mb-1 tracking-wider">
                         Jour de paiement des salaires
                       </label>
                       <div className="relative">
@@ -1375,9 +1381,9 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                           max="31"
                           value={companyData.payrollPaymentDay}
                           onChange={e => handleCompanyChange('payrollPaymentDay', Math.min(31, Math.max(1, parseInt(e.target.value) || 1)))}
-                          className="w-full p-3 pr-16 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-2xl font-black text-emerald-600 dark:text-emerald-400 text-center focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+                          className="w-full p-3 pr-16 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-2xl font-semibold text-[var(--success-text)]  text-center focus:ring-2 focus:ring-[var(--focus)] focus:border-transparent"
                         />
-                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-[var(--text-muted)] uppercase">du M+1</span>
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-[var(--text-muted)] uppercase">du M+1</span>
                       </div>
                       <p className="text-xs text-[var(--text-muted)] mt-2">
                         Jour du mois <strong>suivant</strong> auquel les salaires doivent être versés. Tout retard au-delà déclenche une alerte.
@@ -1387,10 +1393,10 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                         {[5, 10, 15, 20].map(d => (
                           <button key={d} type="button"
                             onClick={() => handleCompanyChange('payrollPaymentDay', d)}
-                            className={`text-xs px-3 py-1.5 rounded-lg font-bold border transition-all ${
+                            className={`text-xs px-3 py-1.5 rounded-lg font-semibold border transition-colors ${
                               companyData.payrollPaymentDay === d
-                                ? 'bg-emerald-500 text-white border-emerald-500'
-                                : 'border-[var(--border)] text-[var(--text-muted)] hover:border-emerald-300 hover:text-emerald-600'
+                                ? 'bg-[var(--brand)] text-[var(--on-brand)] border-[var(--border)]'
+                                : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--border)] hover:text-[var(--success-text)]'
                             }`}
                           >
                             {d}
@@ -1403,11 +1409,11 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                   {/* Avertissement cohérence */}
                   {companyData.payrollCloseDay >= companyData.payrollPaymentDay && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                      className="mt-5 p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-xl flex items-start gap-3">
-                      <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
+                      className="mt-5 p-4 bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  border border-[var(--border)]  rounded-xl flex items-start gap-3">
+                      <AlertTriangle size={18} className="text-[var(--warning-text)] shrink-0 mt-0.5" />
                       <div>
-                        <p className="text-sm font-bold text-amber-800 dark:text-amber-300">Attention — cohérence des dates</p>
-                        <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">
+                        <p className="text-sm font-semibold text-[var(--warning-text)] ">Attention — cohérence des dates</p>
+                        <p className="text-xs text-[var(--warning-text)]  mt-0.5">
                           Le jour de clôture ({companyData.payrollCloseDay}) est ≥ au jour de paiement ({companyData.payrollPaymentDay}).
                           Le paiement se fait le mois <strong>suivant</strong> la clôture, donc c'est correct si vous payez en M+1.
                           Si vous payez dans le même mois, vérifiez vos valeurs.
@@ -1418,7 +1424,7 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
 
                   {/* Note légale Code du Travail */}
                   <div className="mt-5 p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl">
-                    <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2">
+                    <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-2">
                       📋 Art. 95 Code du Travail Congo
                     </p>
                     <p className="text-xs text-[var(--text-muted)] leading-relaxed">
@@ -1434,55 +1440,55 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
             ══════════════════════════════════════════════ */}
             {activeTab === 'location' && (
               <motion.div key="location" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
-                <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-800 p-4 rounded-2xl flex gap-3 items-start">
-                  <Smartphone className="text-amber-500 shrink-0 mt-1" size={20} />
-                  <p className="text-xs text-amber-600 dark:text-amber-400">
+                <div className="bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  border border-[var(--border)]  p-4 rounded-2xl flex gap-3 items-start">
+                  <Smartphone className="text-[var(--warning-text)] shrink-0 mt-1" size={20} />
+                  <p className="text-xs text-[var(--warning-text)] ">
                     Pour la précision GPS optimale, effectuez cette manipulation <strong>depuis un smartphone au bureau</strong>.
                   </p>
                 </div>
 
                 <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
                   <div className="flex justify-between items-center mb-6">
-                    <h3 className="font-bold text-[var(--text)] flex items-center gap-2">
-                      <Navigation size={20} className="text-emerald-500" /> Géolocalisation du Site
+                    <h3 className="font-semibold text-[var(--text)] flex items-center gap-2">
+                      <Navigation size={20} className="text-[var(--success-text)]" /> Géolocalisation du Site
                     </h3>
                     <button onClick={getCurrentLocation} disabled={!!locating}
-                      className="text-xs bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 px-3 py-1.5 rounded-lg border border-emerald-100 dark:border-emerald-800 hover:bg-emerald-100 font-bold flex items-center gap-1">
+                      className="text-xs bg-[var(--brand-soft)]  text-[var(--success-text)]  px-3 py-1.5 rounded-lg border border-[var(--border)]  hover:bg-[var(--brand-soft)] font-semibold flex items-center gap-1">
                       {locating ? <Loader2 size={12} className="animate-spin" /> : <MapPin size={12} />} {locating ?? 'Ma position'}
                     </button>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <div>
-                        <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">Latitude</label>
+                        <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase mb-1">Latitude</label>
                         <input type="number" step="0.000001" value={companyData.latitude}
                           onChange={e => handleCompanyChange('latitude', parseFloat(e.target.value) || 0)}
                           className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-mono text-[var(--text)]" />
                       </div>
                       <div className="mt-4">
-                        <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">Longitude</label>
+                        <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase mb-1">Longitude</label>
                         <input type="number" step="0.000001" value={companyData.longitude}
                           onChange={e => handleCompanyChange('longitude', parseFloat(e.target.value) || 0)}
                           className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-mono text-[var(--text)]" />
                       </div>
                       <div className="mt-4">
-                        <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">Rayon autorisé (mètres)</label>
+                        <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase mb-1">Rayon autorisé (mètres)</label>
                         <input type="number" value={companyData.allowedRadius}
                           onChange={e => handleCompanyChange('allowedRadius', parseFloat(e.target.value) || 0)}
-                          className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-bold text-[var(--text)]" />
+                          className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-semibold text-[var(--text)]" />
                         <p className="text-xs text-[var(--text-muted)] mt-2 flex items-center gap-1">
-                          <AlertTriangle size={12} className="text-amber-500 shrink-0" />
+                          <AlertTriangle size={12} className="text-[var(--warning-text)] shrink-0" />
                           Les employés ne pourront pointer que dans ce rayon.
                         </p>
                         {companyData.allowedRadius > 0 && companyData.allowedRadius < 30 && (
-                          <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 flex items-center gap-1">
+                          <p className="text-xs text-[var(--warning-text)]  mt-1 flex items-center gap-1">
                             <AlertTriangle size={12} className="shrink-0" />
                             Rayon très serré : le GPS d'un téléphone se trompe souvent de 15 à 50 m. Conseillé : 30 m minimum
                             (ou gardez la marge GPS ci-dessous activée).
                           </p>
                         )}
                         {/* ✅ Incertitude GPS rendue explicite, comme demandé */}
-                        <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 flex items-center gap-1">
+                        <p className="text-xs text-[var(--warning-text)]  mt-1 flex items-center gap-1">
                           <AlertTriangle size={12} className="shrink-0" />
                           Le GPS d'un smartphone a une marge d'erreur d'environ ±10m (parfois plus en intérieur).
                           Un rayon trop petit peut refuser des employés pourtant bien sur place.
@@ -1503,9 +1509,9 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                       <button
                         type="button"
                         onClick={() => setWalkTestActive(v => !v)}
-                        className={`mt-3 text-xs px-3 py-1.5 rounded-lg font-bold border transition-colors ${
+                        className={`mt-3 text-xs px-3 py-1.5 rounded-lg font-semibold border transition-colors ${
                           walkTestActive
-                            ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
+                            ? 'bg-[var(--brand-soft)]  text-[var(--success-text)]  border-[var(--border)] '
                             : 'bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)]'
                         }`}
                       >
@@ -1527,29 +1533,29 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
               <motion.div key="sites" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
 
                 {/* Info */}
-                <div className="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800 p-4 rounded-2xl flex gap-3 items-start">
-                  <Navigation className="text-emerald-500 shrink-0 mt-1" size={20} />
-                  <p className="text-xs text-emerald-700 dark:text-emerald-300">
+                <div className="bg-[var(--brand-soft)]  border border-[var(--border)]  p-4 rounded-2xl flex gap-3 items-start">
+                  <Navigation className="text-[var(--success-text)] shrink-0 mt-1" size={20} />
+                  <p className="text-xs text-[var(--success-text)] ">
                     Ajoutez tous vos sites (bureaux, chantiers, entrepôts…). Un employé pourra pointer dès qu'il est dans le rayon de <strong>l'un</strong> des sites actifs. Pas besoin de lui assigner un site spécifique.
                   </p>
                 </div>
 
                 {/* Formulaire ajout / modification */}
                 <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
-                  <h3 className="font-bold text-[var(--text)] mb-4 flex items-center gap-2">
-                    <MapPin size={18} className="text-emerald-500" />
+                  <h3 className="font-semibold text-[var(--text)] mb-4 flex items-center gap-2">
+                    <MapPin size={18} className="text-[var(--success-text)]" />
                     {editingSiteId ? 'Modifier le site' : 'Ajouter un site'}
                   </h3>
 
                   {siteError && (
-                    <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl text-xs flex items-center gap-2">
+                    <div className="mb-4 p-3 bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  text-[var(--danger-text)]  rounded-xl text-xs flex items-center gap-2">
                       <AlertTriangle size={14} /> {siteError}
                     </div>
                   )}
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="md:col-span-2">
-                      <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">Nom du site *</label>
+                      <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase mb-1">Nom du site *</label>
                       <input
                         type="text"
                         placeholder="Ex: Siège Brazzaville, Chantier Pointe-Noire…"
@@ -1560,7 +1566,7 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                     </div>
                     <div>
                       <div>
-                        <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">Latitude</label>
+                        <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase mb-1">Latitude</label>
                         <input
                           type="number" step="0.000001"
                           value={siteForm.latitude}
@@ -1569,7 +1575,7 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                         />
                       </div>
                       <div className="mt-4">
-                        <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">Longitude</label>
+                        <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase mb-1">Longitude</label>
                         <input
                           type="number" step="0.000001"
                           value={siteForm.longitude}
@@ -1578,12 +1584,12 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                         />
                       </div>
                       <div className="mt-4">
-                        <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">Rayon (mètres) — min 1m</label>
+                        <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase mb-1">Rayon (mètres) — min 1m</label>
                         <input
                           type="number" min="1"
                           value={siteForm.radius}
                           onChange={e => setSiteForm(f => ({ ...f, radius: Math.max(1, parseInt(e.target.value) || 1) }))}
-                          className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-bold text-[var(--text)]"
+                          className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-semibold text-[var(--text)]"
                         />
                         <p className="text-xs text-[var(--text-muted)] mt-1">1m = entrée précise · 50m = bureau · 500m = chantier large</p>
                       </div>
@@ -1591,7 +1597,7 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                         <button
                           onClick={getSiteCurrentLocation}
                           disabled={!!locating}
-                          className="w-full p-3 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 hover:bg-amber-100 transition-colors"
+                          className="w-full p-3 bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  text-[var(--warning-text)]  border border-[var(--border)]  rounded-xl text-sm font-semibold flex items-center justify-center gap-2 hover:bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] transition-colors"
                         >
                           {locating ? <Loader2 size={16} className="animate-spin" /> : <MapPin size={16} />} {locating ?? 'Utiliser ma position GPS'}
                         </button>
@@ -1610,9 +1616,9 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                       <button
                         type="button"
                         onClick={() => setSiteWalkTestActive(v => !v)}
-                        className={`mt-3 text-xs px-3 py-1.5 rounded-lg font-bold border transition-colors ${
+                        className={`mt-3 text-xs px-3 py-1.5 rounded-lg font-semibold border transition-colors ${
                           siteWalkTestActive
-                            ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
+                            ? 'bg-[var(--brand-soft)]  text-[var(--success-text)]  border-[var(--border)] '
                             : 'bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)]'
                         }`}
                       >
@@ -1627,7 +1633,7 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                   <div className="flex gap-3 mt-5">
                     <button
                       onClick={handleSaveSite}
-                      className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors"
+                      className="flex-1 py-3 bg-[var(--brand)] hover:bg-[var(--brand)] text-[var(--on-brand)] rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-colors"
                     >
                       <Check size={16} /> {editingSiteId ? 'Enregistrer les modifications' : 'Ajouter ce site'}
                     </button>
@@ -1644,8 +1650,8 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
 
                 {/* Liste des sites */}
                 <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
-                  <h3 className="font-bold text-[var(--text)] mb-4 flex items-center gap-2">
-                    <Navigation size={18} className="text-emerald-500" />
+                  <h3 className="font-semibold text-[var(--text)] mb-4 flex items-center gap-2">
+                    <Navigation size={18} className="text-[var(--success-text)]" />
                     Sites configurés
                     <span className="ml-auto text-xs font-normal text-[var(--text-muted)]">{sites.filter(s => s.isActive).length} actif(s) sur {sites.length}</span>
                   </h3>
@@ -1661,13 +1667,13 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                       {sites.map(site => (
                         <div
                           key={site.id}
-                          className={`flex items-center gap-4 p-4 rounded-xl border transition-all ${
+                          className={`flex items-center gap-4 p-4 rounded-xl border transition-colors ${
                             site.isActive
-                              ? 'border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/10'
+                              ? 'border-[var(--border)]  bg-[var(--brand-soft)] '
                               : 'border-[var(--border)] bg-[var(--surface-2)] opacity-60'
                           }`}
                         >
-                          <div className={`w-3 h-3 rounded-full flex-shrink-0 ${site.isActive ? 'bg-emerald-500' : 'bg-[var(--text-muted)]'}`} />
+                          <div className={`w-3 h-3 rounded-full flex-shrink-0 ${site.isActive ? 'bg-[var(--brand)]' : 'bg-[var(--text-muted)]'}`} />
                           <div className="flex-1 min-w-0">
                             <p className="font-semibold text-sm text-[var(--text)] truncate">{site.name}</p>
                             <p className="text-xs text-[var(--text-muted)] font-mono mt-0.5">
@@ -1681,7 +1687,7 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                               title={site.isActive ? 'Désactiver' : 'Activer'}
                               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
                                 site.isActive
-                                  ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-200'
+                                  ? 'bg-[var(--brand-soft)]  text-[var(--success-text)]  hover:bg-[var(--brand-soft)]'
                                   : 'bg-[var(--surface-2)] text-[var(--text-muted)] hover:bg-[var(--surface-2)]'
                               }`}
                             >
@@ -1690,7 +1696,7 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                             {/* Modifier */}
                             <button
                               onClick={() => handleEditSite(site)}
-                              className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 transition-colors"
+                              className="p-2 rounded-lg bg-[var(--brand-soft)]  text-[var(--success-text)]  hover:bg-[var(--brand-soft)] transition-colors"
                               title="Modifier"
                             >
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -1698,7 +1704,7 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                             {/* Supprimer */}
                             <button
                               onClick={() => handleDeleteSite(site.id)}
-                              className="p-2 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-100 transition-colors"
+                              className="p-2 rounded-lg bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  text-[var(--danger-text)] hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] transition-colors"
                               title="Supprimer"
                             >
                               <Trash2 size={14} />
@@ -1711,8 +1717,8 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                 </div>
                 {/* 🆕 Marge de précision GPS */}
                 <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
-                  <h3 className="font-bold text-[var(--text)] mb-1 flex items-center gap-2">
-                    <Navigation size={18} className="text-emerald-500" /> Marge de précision GPS (mètres)
+                  <h3 className="font-semibold text-[var(--text)] mb-1 flex items-center gap-2">
+                    <Navigation size={18} className="text-[var(--success-text)]" /> Marge de précision GPS (mètres)
                   </h3>
                   <p className="text-xs text-[var(--text-muted)] mb-3">
                     Le GPS d'un téléphone se trompe de 10 à 50 m, surtout en intérieur ou à l'étage.
@@ -1729,13 +1735,13 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                       return (
                         <button key={p.label} type="button"
                           onClick={() => handleCompanyChange('gpsToleranceMeters', p.value)}
-                          className={`px-3 py-2 rounded-xl border text-sm font-bold transition-colors ${
+                          className={`px-3 py-2 rounded-xl border text-sm font-semibold transition-colors ${
                             active
-                              ? 'bg-emerald-500 text-white border-emerald-500'
-                              : 'bg-[var(--surface-2)] text-[var(--text)] border-[var(--border)] hover:border-emerald-500'
+                              ? 'bg-[var(--brand)] text-[var(--on-brand)] border-[var(--border)]'
+                              : 'bg-[var(--surface-2)] text-[var(--text)] border-[var(--border)] hover:border-[var(--border)]'
                           }`}>
                           {p.label} · {p.value} m
-                          <span className={`block text-[10px] font-normal ${active ? 'text-white/80' : 'text-[var(--text-muted)]'}`}>{p.hint}</span>
+                          <span className={`block text-[10px] font-normal ${active ? 'text-[var(--on-brand)]' : 'text-[var(--text-muted)]'}`}>{p.hint}</span>
                         </button>
                       );
                     })}
@@ -1746,7 +1752,7 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                   </p>
                   <input type="number" min={0} max={200} value={companyData.gpsToleranceMeters ?? 0}
                     onChange={e => handleCompanyChange('gpsToleranceMeters', Math.max(0, Math.min(200, parseFloat(e.target.value) || 0)))}
-                    className="w-full md:w-48 p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-bold text-[var(--text)]" />
+                    className="w-full md:w-48 p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-semibold text-[var(--text)]" />
                 </div>
 
                 {/* 🆕 IP de confiance (wifi de l'entreprise) */}
@@ -1761,18 +1767,18 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
               <motion.div key="attendance" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
 
                 <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
-                  <h3 className="font-bold text-[var(--text)] mb-6 flex items-center gap-2">
-                    <Clock size={20} className="text-emerald-500" /> Horaires de Travail
+                  <h3 className="font-semibold text-[var(--text)] mb-6 flex items-center gap-2">
+                    <Clock size={20} className="text-[var(--success-text)]" /> Horaires de Travail
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">Heure de début</label>
+                      <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase mb-1">Heure de début</label>
                       <div className="flex items-center gap-2">
                         <input type="number" inputMode="numeric" min={0} max={23} aria-label="Heure de début"
                           value={payrollData.officialStartHour}
                           onChange={e => handlePayrollChange('officialStartHour', Math.min(23, Math.max(0, parseInt(e.target.value) || 0)))}
                           className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-lg font-semibold text-center text-[var(--text)]" />
-                        <span className="font-bold text-[var(--text-muted)]">h</span>
+                        <span className="font-semibold text-[var(--text-muted)]">h</span>
                         <input type="number" inputMode="numeric" min={0} max={59} aria-label="Minute de début"
                           value={payrollData.officialStartMinute}
                           onChange={e => handlePayrollChange('officialStartMinute', Math.min(59, Math.max(0, parseInt(e.target.value) || 0)))}
@@ -1783,15 +1789,15 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                       </p>
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">Tolérance (minutes)</label>
+                      <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase mb-1">Tolérance (minutes)</label>
                       <input type="number" min="0" max="120" step="5" value={payrollData.lateToleranceMinutes}
                         onChange={e => handlePayrollChange('lateToleranceMinutes', parseInt(e.target.value) || 0)}
                         className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-lg font-semibold text-[var(--text)]" />
                     </div>
                   </div>
-                  <div className="mt-6 p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border-2 border-emerald-200 dark:border-emerald-800">
-                    <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-100 mb-1">Aperçu de la règle</p>
-                    <p className="text-sm text-emerald-700 dark:text-emerald-300">
+                  <div className="mt-6 p-4 bg-[var(--brand-soft)]  rounded-xl border-2 border-[var(--border)] ">
+                    <p className="text-sm font-semibold text-[var(--success-text)]  mb-1">Aperçu de la règle</p>
+                    <p className="text-sm text-[var(--success-text)] ">
                       En retard après <strong>{calculateLateTime()}</strong>
                       {' · '}Pointage à {calculateNextMinute()} → retard
                     </p>
@@ -1800,21 +1806,21 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
 
                 <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
                   <div className="flex justify-between items-center mb-6">
-                    <h3 className="font-bold text-[var(--text)] flex items-center gap-2">
-                      <Users size={20} className="text-amber-500" /> Jours de Travail
+                    <h3 className="font-semibold text-[var(--text)] flex items-center gap-2">
+                      <Users size={20} className="text-[var(--warning-text)]" /> Jours de Travail
                     </h3>
                     <button onClick={() => setPayrollData(p => ({ ...p, workDays: [1, 2, 3, 4, 5, 6, 0] }))}
-                      className="text-xs bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 px-3 py-1.5 rounded-lg border border-amber-100 dark:border-amber-800 hover:bg-amber-100 font-bold">
+                      className="text-xs bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  text-[var(--warning-text)]  px-3 py-1.5 rounded-lg border border-[var(--border)]  hover:bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] font-semibold">
                       Tout sélectionner
                     </button>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {DAYS_OF_WEEK.map(day => (
                       <button key={day.value} onClick={() => toggleWorkDay(day.value)}
-                        className={`p-3 rounded-xl font-bold text-sm transition-all border-2 ${
+                        className={`p-3 rounded-xl font-semibold text-sm transition-colors border-2 ${
                           payrollData.workDays.includes(day.value)
-                            ? 'bg-amber-500 text-white border-amber-500 shadow-lg shadow-amber-500/20'
-                            : 'bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)] hover:border-amber-300'
+                            ? 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--text)] border-[var(--border)] shadow-lg '
+                            : 'bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)] hover:border-[var(--border)]'
                         }`}
                       >{day.label}</button>
                     ))}
@@ -1822,18 +1828,18 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                 </div>
 
                 <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
-                  <h3 className="font-bold text-[var(--text)] mb-6 flex items-center gap-2">
-                    <Calendar size={20} className="text-emerald-500" /> Temps de Travail Mensuel
+                  <h3 className="font-semibold text-[var(--text)] mb-6 flex items-center gap-2">
+                    <Calendar size={20} className="text-[var(--success-text)]" /> Temps de Travail Mensuel
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">Jours ouvrés / mois</label>
+                      <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase mb-1">Jours ouvrés / mois</label>
                       <input type="number" min="20" max="31" value={payrollData.workDaysPerMonth}
                         onChange={e => handlePayrollChange('workDaysPerMonth', parseInt(e.target.value) || 26)}
                         className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-lg font-semibold text-[var(--text)]" />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">Heures normales / jour</label>
+                      <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase mb-1">Heures normales / jour</label>
                       <input type="number" min="6" max="12" step="0.5" value={payrollData.workHoursPerDay}
                         onChange={e => handlePayrollChange('workHoursPerDay', parseFloat(e.target.value) || 8)}
                         className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-lg font-semibold text-[var(--text)]" />
@@ -1842,7 +1848,7 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                   <div className="mt-4 p-4 bg-[var(--surface-2)] rounded-xl border border-[var(--border)]">
                     <p className="text-sm text-[var(--text-muted)]">
                       Heures mensuelles :{' '}
-                      <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                      <span className="text-2xl font-semibold text-[var(--success-text)] ">
                         {(payrollData.workDaysPerMonth * payrollData.workHoursPerDay).toFixed(1)}
                       </span> h
                     </p>
@@ -1857,18 +1863,18 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
             {activeTab === 'contact' && (
               <motion.div key="contact" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
                 <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
-                  <h3 className="font-bold text-[var(--text)] mb-6 flex items-center gap-2">
-                    <MapPin size={20} className="text-emerald-500" /> Adresse Postale
+                  <h3 className="font-semibold text-[var(--text)] mb-6 flex items-center gap-2">
+                    <MapPin size={20} className="text-[var(--success-text)]" /> Adresse Postale
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="md:col-span-2">
-                      <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">Adresse Complète</label>
+                      <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase mb-1">Adresse Complète</label>
                       <input value={companyData.address} onChange={e => handleCompanyChange('address', e.target.value)}
                         placeholder="123 Avenue de la République"
                         className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-[var(--text)]" />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">Ville</label>
+                      <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase mb-1">Ville</label>
                       <input value={companyData.city} onChange={e => handleCompanyChange('city', e.target.value)}
                         placeholder="Pointe-Noire"
                         className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-[var(--text)]" />
@@ -1877,18 +1883,18 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                 </div>
 
                 <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
-                  <h3 className="font-bold text-[var(--text)] mb-6 flex items-center gap-2">
-                    <Phone size={20} className="text-emerald-500" /> Contacts
+                  <h3 className="font-semibold text-[var(--text)] mb-6 flex items-center gap-2">
+                    <Phone size={20} className="text-[var(--success-text)]" /> Contacts
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">Téléphone</label>
+                      <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase mb-1">Téléphone</label>
                       <input value={companyData.phone} onChange={e => handleCompanyChange('phone', e.target.value)}
                         placeholder="+242 06 123 45 67"
                         className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-[var(--text)]" />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">Email</label>
+                      <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase mb-1">Email</label>
                       <input type="email" value={companyData.email} onChange={e => handleCompanyChange('email', e.target.value)}
                         placeholder="contact@entreprise.cg"
                         className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-[var(--text)]" />
@@ -1904,27 +1910,27 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
         {/* ══════════════════════════════════════════════
             SIDEBAR ACTIONS
         ══════════════════════════════════════════════ */}
-        <div className="lg:col-span-1 space-y-6">
+        <div className="settings-policy-summary lg:col-span-1 space-y-6">
           <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6 sticky top-6">
-            <h3 className="font-bold text-[var(--text)] mb-6 flex items-center gap-2">
+            <h3 className="font-semibold text-[var(--text)] mb-6 flex items-center gap-2">
               <History size={20} className="text-[var(--text-muted)]" /> Actions
             </h3>
             <button onClick={() => setShowConfirm(true)}
-              className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2">
+              className="w-full py-3 bg-[var(--brand)] hover:bg-[var(--brand)] text-[var(--on-brand)] font-semibold rounded-xl shadow-lg  transition-colors flex items-center justify-center gap-2">
               <Save size={18} /> Enregistrer
             </button>
 
             {/* Résumé calendrier de paie dans la sidebar */}
-            <div className="mt-6 p-4 bg-emerald-50 dark:bg-emerald-900/10 rounded-xl border border-emerald-200 dark:border-emerald-800">
-              <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+            <div className="mt-6 p-4 bg-[var(--brand-soft)]  rounded-xl border border-[var(--border)] ">
+              <p className="text-xs font-semibold text-[var(--success-text)]  uppercase tracking-wider mb-2 flex items-center gap-1.5">
                 <Banknote size={12} /> Calendrier de paie
               </p>
               <div className="space-y-1">
                 <p className="text-xs text-[var(--text-muted)]">
-                  Clôture : <strong className="text-amber-600 dark:text-amber-400">jour {companyData.payrollCloseDay}</strong>
+                  Clôture : <strong className="text-[var(--warning-text)] ">jour {companyData.payrollCloseDay}</strong>
                 </p>
                 <p className="text-xs text-[var(--text-muted)]">
-                  Paiement : <strong className="text-emerald-600 dark:text-emerald-400">jour {companyData.payrollPaymentDay} (M+1)</strong>
+                  Paiement : <strong className="text-[var(--success-text)] ">jour {companyData.payrollPaymentDay} (M+1)</strong>
                 </p>
               </div>
             </div>
@@ -1944,27 +1950,27 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
       <AnimatePresence>
         {showConfirm && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[rgb(0_0_0_/.5)]  p-4"
             onClick={() => setShowConfirm(false)}>
             <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }}
               onClick={e => e.stopPropagation()}
               className="bg-[var(--surface)] rounded-2xl p-6 max-w-md w-full shadow-2xl">
               <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-500 rounded-full flex items-center justify-center">
+                <div className="w-12 h-12 bg-[var(--brand-soft)]  text-[var(--success-text)] rounded-full flex items-center justify-center">
                   <Lock size={24} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-[var(--text)]">Confirmer les changements</h3>
+                  <h3 className="text-xl font-semibold text-[var(--text)]">Confirmer les changements</h3>
                   <p className="text-sm text-[var(--text-muted)]">Ces modifications impacteront toute l'entreprise.</p>
                 </div>
               </div>
               <div className="flex gap-3">
                 <button onClick={() => setShowConfirm(false)}
-                  className="flex-1 py-3 border border-[var(--border)] rounded-xl font-bold text-[var(--text-muted)] hover:bg-[var(--surface-2)] transition-colors">
+                  className="flex-1 py-3 border border-[var(--border)] rounded-xl font-semibold text-[var(--text-muted)] hover:bg-[var(--surface-2)] transition-colors">
                   Annuler
                 </button>
                 <button onClick={handleSave} disabled={isSaving}
-                  className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl flex justify-center items-center gap-2 disabled:opacity-50 transition-colors">
+                  className="flex-1 py-3 bg-[var(--brand)] hover:bg-[var(--brand)] text-[var(--on-brand)] font-semibold rounded-xl flex justify-center items-center gap-2 disabled:opacity-50 transition-colors">
                   {isSaving ? <><Loader2 className="animate-spin" size={20} /> Sauvegarde...</> : 'Confirmer'}
                 </button>
               </div>
@@ -1974,5 +1980,14 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
       </AnimatePresence>
 
     </div>
+  );
+}
+
+
+export default function CompanySettingsPageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <CompanySettingsPage />
+    </ModulePageFrame>
   );
 }

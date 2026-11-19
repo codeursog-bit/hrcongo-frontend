@@ -1,7 +1,14 @@
 'use client';
+import { SidebarAccount } from '@/components/layout/SidebarAccount';
+import { SidebarCount } from './SidebarCount';
+import { useSubscription } from '@/hooks/useSubscription';
+import { pageEntitlement } from '@/lib/subscription-access';
+import { LockKeyhole } from 'lucide-react';
 import { ProfileAvatar } from '@/components/ui/ProfileAvatar';
 
 import { api } from '@/services/api';
+import { useShellBrand } from './CompanyBrand';
+import { BrandLogo } from '@/components/ui/BrandLogo';
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -11,13 +18,11 @@ import {
   GraduationCap, Flag, Monitor, Fingerprint, FolderHeart,
   UserCircle, Users2, HandCoins, ScanLine, ClipboardEdit, Ticket,
   ChevronDown, ChevronUp, FileCheck, History, UserMinus, AlertCircle, BookOpen, Inbox, PenTool, MessageSquare,
-  MessageCircle, PanelLeftClose, PanelLeftOpen, ShieldCheck
+  MessageCircle, PanelLeftClose, PanelLeftOpen, ShieldCheck, X
 } from 'lucide-react';
 import { NavItem, UserProfile, UserRole } from '../../types';
-import Image from 'next/image';
 import { useMyEmployeePhoto } from '@/hooks/useMyEmployeePhoto';
 import { useChatUnread } from '@/components/chat/ChatProvider';
-import { KonzaMark } from '@/components/ui/KonzaMark';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -42,9 +47,9 @@ const readCount = (res: any): number => {
 
 type AlertTone = 'red' | 'emerald' | 'amber';
 const ALERT_TONES: Record<AlertTone, { solid: string; text: string; tint: string; ring: string }> = {
-  red:     { solid: '#EF4444', text: '#DC2626', tint: 'rgba(239,68,68,0.10)',  ring: 'rgba(239,68,68,0.28)' },
-  emerald: { solid: '#10B981', text: '#059669', tint: 'rgba(16,185,129,0.10)', ring: 'rgba(16,185,129,0.28)' },
-  amber:   { solid: '#F59E0B', text: '#D97706', tint: 'rgba(245,158,11,0.12)', ring: 'rgba(245,158,11,0.32)' },
+  red:     { solid: 'var(--danger)',  text: 'var(--danger)',  tint: 'color-mix(in srgb, var(--danger) 10%, transparent)',  ring: 'color-mix(in srgb, var(--danger) 28%, transparent)' },
+  emerald: { solid: 'var(--green)',   text: 'var(--green)',   tint: 'color-mix(in srgb, var(--green) 10%, transparent)',   ring: 'color-mix(in srgb, var(--green) 28%, transparent)' },
+  amber:   { solid: 'var(--mustard)', text: 'var(--text)',    tint: 'color-mix(in srgb, var(--mustard) 14%, transparent)', ring: 'color-mix(in srgb, var(--mustard) 34%, transparent)' },
 };
 
 // Pastille d'alerte clignotante (compteur + halo qui pulse). Respecte prefers-reduced-motion.
@@ -351,6 +356,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   basePath = '',
 }) => {
   const pathname = usePathname();
+  const {subscription}=useSubscription();
   const router = useRouter();
   const [user, setUser] = useState<UserProfile | null>(null);
   // 🆕 Photo de la fiche employé si la personne connectée en a une (admin
@@ -363,6 +369,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
   // 🆕 Sidebar réductible (desktop) — préférence mémorisée dans le navigateur
   const [collapsed, setCollapsed] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
+  const asideRef = React.useRef<HTMLElement>(null);
+  const closeRef = React.useRef(onClose); closeRef.current = onClose;
+  useEffect(() => { if (asideRef.current) asideRef.current.inert = !isOpen && !isDesktop; }, [isOpen, isDesktop]);
+  useEffect(() => {
+    if (!isOpen || isDesktop) return;
+    const previous = document.activeElement as HTMLElement | null;
+    const focusable = () => [...Array.from(asideRef.current?.querySelectorAll<HTMLElement>('a[href],button:not([disabled]),select,input,[tabindex="0"]') || []),...Array.from(document.querySelectorAll<HTMLElement>('[data-guide-ui="overlay"] button:not([disabled]),[data-guide-ui="overlay"] a[href]'))].filter(el => el.offsetParent !== null);
+    focusable()[0]?.focus();
+    const key = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { e.preventDefault(); closeRef.current(); }
+      if (e.key === 'Tab') { const items = focusable(); const first = items[0], last = items[items.length - 1]; if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); } else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); } }
+    };
+    document.addEventListener('keydown', key);
+    return () => { document.removeEventListener('keydown', key); previous?.focus(); };
+  }, [isOpen, isDesktop]);
   const [animate, setAnimate] = useState(false); // évite l'animation au 1er affichage
   const [tip, setTip] = useState<{ label: string; top: number; left: number } | null>(null);
   const mini = collapsed && isDesktop; // en mobile, le tiroir reste toujours déployé
@@ -385,7 +406,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [leaveEligible, setLeaveEligible] = useState(true);
 
   const isWhiteLabel = !!(brandName || brandLogo);
-  const accentColor = brandColor || '#10B981';
+  const accentColor = brandColor || 'var(--brand)';
+  // Logo de l'entreprise : affiché à la place du logo Konza si elle en a un (hors portail white-label).
+  const { logo: companyLogo, name: companyName } = useShellBrand();
 
   useEffect(() => {
     try { setCollapsed(localStorage.getItem('sidebar_collapsed') === '1'); } catch { /* stockage indisponible */ }
@@ -667,6 +690,30 @@ export const Sidebar: React.FC<SidebarProps> = ({
     : []),
   ];
 
+  const uiProfileCard = (<div className={isWhiteLabel ? (mini ? 'px-3 pb-3 pt-1' : 'px-4 pb-4 pt-2') : `shell-sidebar-profile ${mini ? 'is-mini' : ''}`}>
+          <div className={`rounded-2xl ${mini ? 'p-1.5 justify-center' : 'p-3'} flex items-center gap-3 transition-colors group`} style={{ background: 'var(--surface-2)', border: 'none' }}>
+            <div className="relative shrink-0">
+              {user ? (
+                <ProfileAvatar src={employeePhotoUrl} name={user.name}/>
+              ) : (
+                <div className="w-9 h-9 rounded-xl animate-pulse" style={{ background: 'var(--border)' }} />
+              )}
+            </div>
+            <div className={mini ? 'hidden' : 'flex-1 min-w-0'}>
+              {user ? (
+                <>
+                  <h3 className="text-sm font-bold truncate" style={{ color: 'var(--text)' }}>{user.name}</h3>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold" style={{ color: isWhiteLabel ? accentColor : 'var(--action)' }}>
+                    {roleLabels[user.role] || user.role}
+                  </span>
+                </>
+              ) : (
+                <div className="h-8 w-20 rounded animate-pulse" style={{ background: 'var(--border)' }} />
+              )}
+            </div>
+          </div>
+        </div>);
+
   return (
     <>
       {isOpen && (
@@ -679,11 +726,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
         @media (prefers-reduced-motion: reduce) { .konza-wiggle { animation: none; } }
       `}</style>
 
-      <aside className={`fixed md:static inset-y-0 left-0 z-50 w-[272px] ${collapsed ? 'md:w-[76px]' : 'md:w-[272px]'} shrink-0 flex flex-col overflow-hidden rounded-r-[28px] md:rounded-[28px] md:m-3 md:mr-0 shadow-[0_12px_40px_-14px_rgba(15,23,42,0.22)] dark:shadow-[0_12px_40px_-14px_rgba(0,0,0,0.65)] transform ${animate ? 'transition-[width,transform] duration-300 ease-out' : ''} ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} print:hidden`} style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+      <aside ref={asideRef} role={isOpen && !isDesktop ? 'dialog' : undefined} aria-modal={isOpen && !isDesktop ? true : undefined} aria-label="Navigation principale" className={`shell-sidebar ${!isWhiteLabel ? (mini ? 'shell-sidebar-mini' : 'shell-sidebar-wide') : ''} fixed md:static inset-y-0 left-0 z-50 w-[272px] ${collapsed ? 'md:w-[76px]' : 'md:w-[272px]'} shrink-0 flex flex-col overflow-hidden rounded-r-[28px] md:rounded-[28px] md:m-3 md:mr-0 shadow-[0_12px_40px_-14px_rgba(15,23,42,0.22)] dark:shadow-[0_12px_40px_-14px_rgba(0,0,0,0.65)] transform ${animate ? 'transition-[width,transform] duration-300 ease-out' : ''} ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} print:hidden`} style={{ background: 'var(--surface)', border: 'none' }}>
         <div className="absolute top-0 left-0 right-0 h-px opacity-0 dark:opacity-70" style={{ background: isWhiteLabel ? `linear-gradient(to right, transparent, ${accentColor}, transparent)` : 'linear-gradient(to right, transparent, #10B981, transparent)' }} />
 
+        <button type="button" aria-label="Fermer le menu" onClick={onClose} className="md:hidden self-end m-3 p-2 rounded-xl"><X size={20} strokeWidth={1.5} /></button>
         {/* Logo Section */}
-        <div className={mini ? 'px-3 pt-5 pb-2 flex flex-col items-center gap-3' : 'px-6 pt-5 pb-2 relative'}>
+        <div className={mini ? 'shell-brand-zone is-mini' : 'shell-brand-zone'}>
           {mini ? (
             <Link
               href="/dashboard"
@@ -693,13 +741,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
             >
               {isWhiteLabel && brandLogo ? (
                 <img src={brandLogo} alt={brandName ?? 'Cabinet'} style={{ width: 24, height: 24, objectFit: 'contain' }} />
+              ) : !isWhiteLabel && companyLogo ? (
+                <BrandLogo src={companyLogo} name={companyName} size="compact" />
               ) : (
                 isWhiteLabel ? (
                   <span className="text-sm font-black" style={{ color: accentColor }}>
                     {(brandName ?? 'C').slice(0, 2).toUpperCase()}
                   </span>
                 ) : (
-                  <KonzaMark size={28} />
+                  <BrandLogo size="compact" />
                 )
               )}
             </Link>
@@ -722,11 +772,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
           ) : (
             <Link href="/dashboard" className="inline-flex flex-col items-start group">
-              <Image src="/logos/konza_logo_h_color.png" alt="Konza RH Logo" width={507} height={240} priority className="block dark:hidden transition-opacity duration-300 group-hover:opacity-80" style={{ width: '170px', height: 'auto', objectFit: 'contain' }} />
-              <Image src="/logos/konza_logo_h_white.png" alt="Konza RH Logo" width={507} height={240} priority className="hidden dark:block transition-opacity duration-300 group-hover:opacity-80" style={{ width: '170px', height: 'auto', objectFit: 'contain' }} />
+              <BrandLogo src={companyLogo} name={companyName} />
               <div className="flex items-center gap-1.5 mt-1.5 pl-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_6px_#10b981]" />
-                <span className="text-[10px] text-slate-500 dark:text-emerald-400 font-bold tracking-widest uppercase">Online</span>
+                <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--green)' }} aria-hidden="true" />
+                <span className="text-[11px] font-medium" style={{ color: 'var(--text-secondary)' }}>{companyName || 'Espace entreprise'}</span>
               </div>
             </Link>
           )}
@@ -744,30 +793,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </button>
         </div>
 
-        {/* User Profile Card */}
-        <div className={mini ? 'px-3 pb-3 pt-1' : 'px-4 pb-4 pt-2'}>
-          <div className={`rounded-2xl ${mini ? 'p-1.5 justify-center' : 'p-3'} flex items-center gap-3 transition-colors group`} style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
-            <div className="relative shrink-0">
-              {user ? (
-                <ProfileAvatar src={employeePhotoUrl} name={user.name}/>
-              ) : (
-                <div className="w-9 h-9 rounded-xl animate-pulse" style={{ background: 'var(--border)' }} />
-              )}
-            </div>
-            <div className={mini ? 'hidden' : 'flex-1 min-w-0'}>
-              {user ? (
-                <>
-                  <h3 className="text-sm font-bold truncate" style={{ color: 'var(--text)' }}>{user.name}</h3>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold text-emerald-600 dark:text-emerald-400" style={isWhiteLabel ? { color: accentColor } : {}}>
-                    {roleLabels[user.role] || user.role}
-                  </span>
-                </>
-              ) : (
-                <div className="h-8 w-20 rounded animate-pulse" style={{ background: 'var(--border)' }} />
-              )}
-            </div>
-          </div>
-        </div>
+        {/* User Profile Card — preserve white-label layout */}
+{isWhiteLabel && uiProfileCard}
+
 
         {/* Navigation Menu */}
         <nav className={`flex-1 ${mini ? 'px-2' : 'px-3'} pb-4 overflow-y-auto overflow-x-hidden space-y-0.5 custom-scrollbar`}>
@@ -787,7 +815,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
             const baseItems = navItems.filter(item => user && item.allowedRoles.includes(user.role) && !(item.id === 'messages' && basePath) && !(!leaveEligible && (item.id === 'mes_conges' || item.id === 'mes_conges_manager')));
             const trailingExtras = [...secretaryExtraItems, ...approvalExtraItems, ...financeItems];
-            const TOP_IDS = ['dashboard', 'messages', 'demandes'];
+            const TOP_IDS = isWhiteLabel ? ['dashboard', 'messages', 'demandes'] : ['dashboard', 'demandes', 'messages'];
             const flat: NavItem[] = isAdminLike
               ? [
                   ...baseItems.filter(i => TOP_IDS.includes(i.id)),
@@ -800,12 +828,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
             // 🆕 Chaque thème est regroupé en un seul bloc (ex. Ma Performance avec Formation
             //    dans « Organisation », Ma signature dans « Mon espace »). Ordre des blocs selon le rôle.
             const GROUP_ORDER = isAdminLike
-              ? ['Mon espace', 'Gestion RH', 'Organisation']
+              ? (isWhiteLabel ? ['Mon espace', 'Gestion RH', 'Organisation'] : ['Gestion RH', 'Mon espace', 'Organisation'])
               : user?.role === 'MANAGER'
                 ? ['Mon équipe', 'Mon espace', 'Organisation']
                 : ['Mon espace', 'Gestion RH', 'Organisation'];
             const rank = (id: string) => {
-              if (TOP_IDS.includes(id)) return -1;
+              if (TOP_IDS.includes(id)) return isWhiteLabel ? -1 : -TOP_IDS.length + TOP_IDS.indexOf(id);
               const idx = GROUP_ORDER.indexOf(CATEGORY[id]);
               return idx >= 0 ? idx : GROUP_ORDER.length;
             };
@@ -831,11 +859,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
             let lastCategory: string | null = null;
 
             return items.map(item => {
+              const feature=pageEntitlement(item.path);
+              const locked=!basePath && !!subscription && !!feature && subscription.planDetails?.limits?.[feature]!==true;
               const active = isActive(item.path);
               const alert = alertFor(item.id);
               const tone = alert ? ALERT_TONES[alert.tone] : null;
               const fullPath = buildPath(item.path);
-              const category = CATEGORY[item.id] || null;
+              const category = CATEGORY[item.id] || (!isWhiteLabel && ['dashboard','messages','demandes','avis'].includes(item.id) ? 'Au quotidien' : null);
               const showLabel = category && category !== lastCategory;
               lastCategory = category;
 
@@ -845,34 +875,36 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <div className="mx-3 my-2 h-px" style={{ background: 'var(--border)' }} />
                   ) : (
                     <div className="px-4 pt-4 pb-1.5 first:pt-1">
-                      <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>{category}</span>
+                      <span className="shell-nav-section-title text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>{category}</span>
                     </div>
                   ))}
                   <Link
-                    href={fullPath}
+                    data-guide={['paie','recrutement','employes'].includes(item.id) ? `menu-${item.id}` : undefined}
+                    href={fullPath} aria-current={active ? 'page' : undefined}
                     onClick={() => { setTip(null); if (window.innerWidth < 768) onClose(); }}
                     onMouseEnter={(e) => showTip(e, alert ? `${item.label} (${alert.count})` : item.label)}
                     onMouseLeave={() => setTip(null)}
                     aria-label={mini ? item.label : undefined}
                     className={`relative w-full flex items-center ${mini ? 'justify-center px-0' : 'gap-3 px-3'} py-2.5 rounded-xl text-sm ${alert && !active ? 'font-semibold' : 'font-medium'} transition-all duration-200 group ${active ? '' : 'hover:bg-black/[0.04] dark:hover:bg-white/[0.06]'}`}
                     style={{
-                      color: active ? (isWhiteLabel ? accentColor : 'var(--text)') : tone ? tone.text : 'var(--text-muted)',
-                      background: active ? (isWhiteLabel ? `${accentColor}14` : 'var(--brand-soft)') : tone ? tone.tint : 'transparent',
+                      color: active ? (isWhiteLabel ? accentColor : 'var(--action)') : isWhiteLabel && tone ? tone.text : 'var(--text-secondary)',
+                      background: active ? (isWhiteLabel ? `${accentColor}14` : 'var(--brand-soft)') : isWhiteLabel && tone ? tone.tint : 'transparent',
                       boxShadow: active
-                        ? `inset 0 0 0 1px ${isWhiteLabel ? `${accentColor}26` : 'rgba(16,185,129,0.18)'}`
-                        : tone ? `inset 0 0 0 1px ${tone.ring}` : 'none',
+                        ? `inset 0 0 0 1px ${isWhiteLabel ? `${accentColor}26` : 'transparent'}`
+                        : isWhiteLabel && tone ? `inset 0 0 0 1px ${tone.ring}` : 'none',
                     }}
                   >
                     {active && (
-                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full" style={{ background: isWhiteLabel ? accentColor : '#10B981' }} />
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full" style={{ background: isWhiteLabel ? accentColor : 'var(--brand)' }} />
                     )}
-                    <item.icon
+                    <item.icon strokeWidth={1.5}
                       size={18}
                       className={`transition-transform duration-200 group-hover:scale-105 ${alert && !active ? 'konza-wiggle' : ''}`}
                       style={active && isWhiteLabel ? { color: accentColor } : {}}
                     />
                     {!mini && <span className="flex-1 truncate">{item.label}</span>}
-                    {alert && <AlertBadge count={alert.count} tone={alert.tone} mini={mini} />}
+                    {locked && <LockKeyhole size={12} strokeWidth={1.5} className="shrink-0 opacity-50" aria-label="Disponible avec une offre ou une option supplémentaire" />}
+                    {alert && (isWhiteLabel ? <AlertBadge count={alert.count} tone={alert.tone} mini={mini} /> : <SidebarCount count={alert.count} mini={mini} />)}
                   </Link>
                 </React.Fragment>
               );
@@ -907,6 +939,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
               {isAutreOpen && !mini && (
                 <div className="mt-0.5 ml-[26px] pl-3 space-y-0.5" style={{ borderLeft: '1px solid var(--border)' }}>
                   {autreItems.map((sub) => {
+                    const option=pageEntitlement(sub.path);
+                    const locked=!basePath&&!!subscription&&!!option&&subscription.planDetails?.limits?.[option]!==true;
                     const subHref = sub.scoped ? buildPath(sub.path) : sub.path;
                     const subActive = pathname === subHref;
                     return (
@@ -914,10 +948,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         key={sub.path}
                         href={subHref}
                         className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-colors relative"
-                        style={{ color: subActive ? '#10B981' : 'var(--text-muted)', background: subActive ? 'var(--brand-soft)' : 'transparent' }}
+                        style={{ color: subActive ? 'var(--action)' : 'var(--text-muted)', background: subActive ? 'var(--brand-soft)' : 'transparent' }}
                       >
                         <sub.icon size={14} />
                         {sub.label}
+                        {locked&&<LockKeyhole size={11} strokeWidth={1.5} className="ml-auto opacity-50" aria-label="Disponible en option"/>}
                       </Link>
                     );
                   })}
@@ -927,13 +962,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
           )}
         </nav>
 
-        {/* Logout */}
-        <div className={mini ? 'p-2' : 'p-4'} style={{ borderTop: '1px solid var(--border)' }}>
-          <button onClick={handleLogout} onMouseEnter={(e) => showTip(e, 'Déconnexion')} onMouseLeave={() => setTip(null)} aria-label="Déconnexion" className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all group">
+
+
+        {isWhiteLabel ? (<div className={mini ? 'p-2' : 'p-4'} style={{ borderTop: '1px solid var(--border)' }}>
+          <button onClick={handleLogout} onMouseEnter={(e) => showTip(e, 'Déconnexion')} onMouseLeave={() => setTip(null)} aria-label="Déconnexion" className="shell-nav-danger w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl transition-all group">
             <LogOut size={18} className="group-hover:-translate-x-1 transition-transform" />
             {!mini && <span>Déconnexion</span>}
           </button>
-        </div>
+        </div>) : <SidebarAccount name={user?.name || 'Mon compte'} role={user ? (roleLabels[user.role] || user.role) : ''} photo={employeePhotoUrl} mini={mini} onLogout={handleLogout} />}
       </aside>
 
       {mini && tip && (

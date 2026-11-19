@@ -56,7 +56,7 @@ export default function AdminLayout({
           }
         `}} />
       </head>
-      <body className="flex flex-col h-screen overflow-hidden bg-[#0B0F19] text-gray-200 font-sans selection:bg-brand-red selection:text-white">
+      <body className="theme-legacy flex flex-col h-screen overflow-hidden bg-[#0B0F19] text-gray-200 font-sans selection:bg-brand-red selection:text-white">
         {/* ✅ DÉCOMMENTER LAYOUTWRAPPER */}
         <LayoutWrapper>
           {children}

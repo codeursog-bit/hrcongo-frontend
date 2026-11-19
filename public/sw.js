@@ -18,7 +18,7 @@
 //   4. Un cache minimal pour un usage hors-ligne basique des pages/app
 // ============================================================================
 
-const CACHE_NAME = 'konza-rh-cache-v1';
+const CACHE_NAME = 'konza-rh-cache-v2';
 const OFFLINE_URL = '/';
 
 // ─── Cycle de vie ────────────────────────────────────────────────────────────
@@ -52,8 +52,11 @@ self.addEventListener('fetch', (event) => {
   // API : toujours réseau (jamais de données de paie/pointage périmées)
   if (url.pathname.startsWith('/api/')) return;
 
-  // Assets statiques Next.js : cache-first (immuables, hashés par build)
+  // Only content-hashed production chunks are immutable. Development URLs
+  // such as webpack.js and app/.../page.js are reused after every compilation.
   if (url.pathname.startsWith('/_next/static/')) {
+    const immutableAsset = /(?:^|\/)[^/]+-[a-f0-9]{8,}(?:\.js|\.css|\.[a-z0-9]+)$/i.test(url.pathname);
+    if (!immutableAsset) return;
     event.respondWith(
       caches.open(CACHE_NAME).then(async (cache) => {
         const cached = await cache.match(request);

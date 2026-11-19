@@ -19,29 +19,23 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
   ArrowDown, ArrowLeft, Check, CheckCheck, Loader2, MessageCircle, PenSquare, RotateCcw, Search, SendHorizontal, X,
 } from 'lucide-react';
+import { Badge, Button as DesignButton, EmptyState } from '@/components/design-system/primitives';
 import {
   ChatContact, ChatConversation, ChatMessage, ChatPeer, ChatRole, MAX_MESSAGE_LENGTH, chatApi,
 } from '@/services/chat-api';
 import { useChat } from './ChatProvider';
 
 // ─── Présentation ────────────────────────────────────────────────────────────
-const ROLE_META: Record<ChatRole, { label: string; section: string; cls: string }> = {
-  ADMIN:      { label: 'Admin',      section: 'Administration',       cls: 'text-violet-600 bg-violet-100 dark:text-violet-300 dark:bg-violet-900/30' },
-  HR_MANAGER: { label: 'Manager RH', section: 'Ressources humaines',  cls: 'text-amber-600 bg-amber-100 dark:text-amber-300 dark:bg-amber-900/30' },
-  MANAGER:    { label: 'Manager',    section: 'Managers',             cls: 'text-emerald-600 bg-emerald-100 dark:text-emerald-300 dark:bg-emerald-900/30' },
-  EMPLOYEE:   { label: 'Employé',    section: 'Employés',             cls: 'text-slate-600 bg-slate-100 dark:text-slate-300 dark:bg-slate-700/40' },
+const ROLE_META: Record<ChatRole, { label: string; section: string }> = {
+  ADMIN:      { label: 'Admin',      section: 'Administration' },
+  HR_MANAGER: { label: 'Manager RH', section: 'Ressources humaines' },
+  MANAGER:    { label: 'Manager',    section: 'Managers' },
+  EMPLOYEE:   { label: 'Employé',   section: 'Employés' },
 };
 const SECTION_ORDER: ChatRole[] = ['ADMIN', 'HR_MANAGER', 'MANAGER', 'EMPLOYEE'];
 
 const initials = (name: string) =>
   name.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? '').join('') || '?';
-
-const AVATAR_COLORS = ['#10B981', '#0EA5E9', '#8B5CF6', '#F59E0B', '#EF4444', '#14B8A6', '#6366F1'];
-const colorFor = (id: string) => {
-  let sum = 0;
-  for (let i = 0; i < id.length; i++) sum += id.charCodeAt(i);
-  return AVATAR_COLORS[sum % AVATAR_COLORS.length];
-};
 
 /**
  * Miniature Cloudinary à la volée (visage recadré, WebP/AVIF auto, qualité auto) :
@@ -107,7 +101,7 @@ function Ticks({ status, onBubble = false }: { status: Receipt; onBubble?: boole
   // Dans la liste (fond clair/sombre) : gris (envoyé / reçu) → vert (lu).
   const color = onBubble
     ? status === 'read' ? '#FFFFFF' : 'rgba(255,255,255,0.6)'
-    : status === 'read' ? '#10B981' : 'var(--text-muted)';
+    : status === 'read' ? 'var(--success-text)' : 'var(--text-muted)';
   const Icon = status === 'sent' ? Check : CheckCheck;
   return (
     <span title={label} aria-label={label} className="inline-flex shrink-0">
@@ -124,13 +118,13 @@ function normalize(list: ChatMessage[]): ChatMessage[] {
   return [...confirmed, ...pending];
 }
 
-function Avatar({ id, name, photoUrl, size = 40 }: { id: string; name: string; photoUrl?: string | null; size?: number }) {
+function Avatar({ name, photoUrl, size = 40 }: { name: string; photoUrl?: string | null; size?: number }) {
   const [failed, setFailed] = useState(false);
   const showPhoto = !!photoUrl && !failed;
   return (
     <div
-      className="shrink-0 rounded-full flex items-center justify-center font-bold text-white select-none overflow-hidden"
-      style={{ width: size, height: size, background: colorFor(id), fontSize: size * 0.36 }}
+      className="flex shrink-0 select-none items-center justify-center overflow-hidden rounded-full font-semibold text-[var(--brand-strong)]"
+      style={{ width: size, height: size, background: 'var(--brand-soft)', fontSize: size * 0.36 }}
       aria-hidden
     >
       {showPhoto ? (
@@ -151,8 +145,7 @@ function Avatar({ id, name, photoUrl, size = 40 }: { id: string; name: string; p
 }
 
 function RoleBadge({ role }: { role: ChatRole }) {
-  const m = ROLE_META[role];
-  return <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold ${m.cls}`}>{m.label}</span>;
+  return <Badge tone="neutral">{ROLE_META[role].label}</Badge>;
 }
 
 // ─── Hauteur : la messagerie remplit EXACTEMENT l'espace visible ─────────────
@@ -211,12 +204,15 @@ export default function ChatPage() {
 
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
   const [loadingList, setLoadingList] = useState(true);
+  const [listError, setListError] = useState(false);
   // 🆕 ?new=1 (lien « Contacter l'administration ») : on arrive directement sur la liste des contacts
   const [mode, setMode] = useState<'chats' | 'contacts'>(params.get('new') === '1' ? 'contacts' : 'chats');
   const [search, setSearch] = useState('');
   const [debounced, setDebounced] = useState('');
   const [contacts, setContacts] = useState<ChatContact[]>([]);
   const [loadingContacts, setLoadingContacts] = useState(false);
+  const [contactsError, setContactsError] = useState(false);
+  const [contactsAttempt, setContactsAttempt] = useState(0);
 
   const [activeId, setActiveId] = useState<string | null>(params.get('c'));
   const [activeOther, setActiveOther] = useState<ChatContact | null>(null);
@@ -254,8 +250,9 @@ export default function ChatPage() {
   const loadConversations = useCallback(async () => {
     try {
       setConversations(await chatApi.conversations());
+      setListError(false);
     } catch {
-      /* silencieux : le prochain changement réessaiera */
+      setListError(true);
     } finally {
       setLoadingList(false);
     }
@@ -294,13 +291,14 @@ export default function ChatPage() {
     if (mode !== 'contacts') return;
     let cancelled = false;
     setLoadingContacts(true);
+    setContactsError(false);
     chatApi
       .contacts(debounced || undefined)
-      .then((r) => { if (!cancelled) setContacts(r); })
-      .catch(() => { if (!cancelled) setContacts([]); })
+      .then((r) => { if (!cancelled) { setContacts(r); setContactsError(false); } })
+      .catch(() => { if (!cancelled) { setContacts([]); setContactsError(true); } })
       .finally(() => { if (!cancelled) setLoadingContacts(false); });
     return () => { cancelled = true; };
-  }, [mode, debounced]);
+  }, [mode, debounced, contactsAttempt]);
 
   // ── Ouverture d'une conversation ───────────────────────────────────────────
   const markReadLocal = useCallback((id: string) => {
@@ -515,10 +513,9 @@ export default function ChatPage() {
   return (
     <div
       ref={rootRef}
-      className="flex -mx-4 -mt-4 -mb-4 sm:mx-0 sm:mt-0 sm:mb-0 h-[calc(100dvh-5rem)] sm:h-[calc(100dvh-8.5rem)] overflow-hidden rounded-none sm:rounded-2xl border-y sm:border"
+      className="flex -mx-4 -mt-4 -mb-4 h-[calc(100dvh-5rem)] overflow-hidden rounded-none sm:mx-0 sm:my-0 sm:h-[calc(100dvh-8.5rem)] sm:rounded-[var(--radius-card)] sm:shadow-[var(--shadow-card)]"
       style={{
         background: 'var(--surface)',
-        borderColor: 'var(--border)',
         ...(fillHeight ? { height: fillHeight } : {}),
       }}
     >
@@ -528,38 +525,40 @@ export default function ChatPage() {
         style={{ borderRight: '1px solid var(--border)' }}
       >
         <div className="p-4 pb-3 flex items-center justify-between gap-2">
-          <h1 className="text-lg font-black" style={{ color: 'var(--text)' }}>
+          <h1 className="text-lg font-semibold" style={{ color: 'var(--text)' }}>
             {mode === 'contacts' ? 'Nouveau message' : 'Messages'}
           </h1>
           {mode === 'chats' ? (
-            <button
+            <DesignButton
               onClick={() => { setMode('contacts'); setSearch(''); }}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold text-white bg-emerald-500 hover:bg-emerald-600 transition-colors"
+              className="!min-h-0 !px-3 !py-2 !text-xs"
             >
-              <PenSquare size={14} /> Nouveau
-            </button>
+              <PenSquare size={14} strokeWidth={1.5} /> Nouveau
+            </DesignButton>
           ) : (
-            <button
+            <DesignButton
+              variant="ghost"
               onClick={() => { setMode('chats'); setSearch(''); }}
-              className="p-2 rounded-lg transition-colors hover:bg-black/5 dark:hover:bg-white/5"
+              className="!min-h-0 !p-2"
               style={{ color: 'var(--text-muted)' }}
               aria-label="Retour aux discussions"
             >
-              <X size={18} />
-            </button>
+              <X size={18} strokeWidth={1.5} />
+            </DesignButton>
           )}
         </div>
 
         <div className="px-4 pb-3">
           <div
-            className="flex items-center gap-2 px-3 py-2.5 rounded-xl"
-            style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}
+            className="flex items-center gap-2 rounded-xl bg-[var(--surface-2)] px-3 py-2.5 focus-within:ring-2 focus-within:ring-[var(--brand-soft)]"
           >
-            <Search size={16} style={{ color: 'var(--text-muted)' }} />
+            <Search size={16} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} aria-hidden="true" />
             <input
+              type="search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={mode === 'contacts' ? 'Rechercher une personne…' : 'Rechercher une discussion…'}
+              aria-label={mode === 'contacts' ? 'Rechercher une personne' : 'Rechercher une discussion'}
               maxLength={60}
               className="flex-1 bg-transparent outline-none text-base sm:text-sm min-w-0"
               style={{ color: 'var(--text)' }}
@@ -576,6 +575,12 @@ export default function ChatPage() {
           {mode === 'chats' ? (
             loadingList ? (
               <ListSkeleton />
+            ) : listError && conversations.length === 0 ? (
+              <EmptyList
+                title="Impossible de charger les discussions"
+                hint="Vérifiez votre connexion, puis réessayez."
+                action={<DesignButton variant="secondary" onClick={() => void loadConversations()}>Réessayer</DesignButton>}
+              />
             ) : filteredConversations.length === 0 ? (
               <EmptyList
                 title={search ? 'Aucune discussion trouvée' : 'Aucune discussion pour le moment'}
@@ -586,16 +591,16 @@ export default function ChatPage() {
                 <button
                   key={c.id}
                   onClick={() => openConversation(c.id)}
-                  className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left transition-colors hover:bg-black/5 dark:hover:bg-white/5"
+                  className="w-full flex items-center gap-3 rounded-xl px-3 py-3 text-left transition-colors hover:bg-[var(--surface-2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--focus)]"
                   style={c.id === activeId ? { background: 'var(--brand-soft)' } : undefined}
                 >
-                  <Avatar id={c.other.id} name={c.other.name} photoUrl={c.other.photoUrl} />
+                  <Avatar name={c.other.name} photoUrl={c.other.photoUrl} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
-                      <span className={`text-sm truncate ${c.unreadCount ? 'font-black' : 'font-semibold'}`} style={{ color: 'var(--text)' }}>
+                      <span className={`truncate text-sm ${c.unreadCount ? 'font-semibold' : 'font-medium'}`} style={{ color: 'var(--text)' }}>
                         {c.other.name}
                       </span>
-                      <span className="text-[11px] shrink-0" style={{ color: c.unreadCount ? '#10B981' : 'var(--text-muted)' }}>
+                      <span className="shrink-0 text-[11px]" style={{ color: c.unreadCount ? 'var(--success-text)' : 'var(--text-muted)' }}>
                         {shortWhen(c.lastMessageAt)}
                       </span>
                     </div>
@@ -604,7 +609,7 @@ export default function ChatPage() {
                         {c.lastFromMe && <span className="inline-flex align-middle mr-1"><Ticks status={c.lastStatus ?? 'sent'} /></span>}{c.lastFromMe ? 'Vous : ' : ''}{c.lastPreview}
                       </span>
                       {c.unreadCount > 0 && (
-                        <span className="shrink-0 min-w-[20px] h-5 px-1.5 rounded-full bg-emerald-500 text-white text-[11px] font-bold flex items-center justify-center">
+                        <span className="flex h-5 min-w-[20px] shrink-0 items-center justify-center rounded-full bg-[var(--brand-strong)] px-1.5 text-[11px] font-semibold text-[var(--on-brand)]">
                           {c.unreadCount > 99 ? '99+' : c.unreadCount}
                         </span>
                       )}
@@ -615,6 +620,12 @@ export default function ChatPage() {
             )
           ) : loadingContacts && contacts.length === 0 ? (
             <ListSkeleton />
+          ) : contactsError ? (
+            <EmptyList
+              title="Impossible de charger les contacts"
+              hint="Vérifiez votre connexion, puis réessayez."
+              action={<DesignButton variant="secondary" onClick={() => setContactsAttempt((attempt) => attempt + 1)}>Réessayer</DesignButton>}
+            />
           ) : groupedContacts.length === 0 ? (
             <EmptyList
               title={debounced ? 'Aucune personne trouvée' : 'Personne à qui écrire'}
@@ -630,9 +641,9 @@ export default function ChatPage() {
                   <button
                     key={c.id}
                     onClick={() => void startWith(c)}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors hover:bg-black/5 dark:hover:bg-white/5"
+                    className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-[var(--surface-2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--focus)]"
                   >
-                    <Avatar id={c.id} name={c.name} photoUrl={c.photoUrl} size={38} />
+                    <Avatar name={c.name} photoUrl={c.photoUrl} size={38} />
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-semibold truncate" style={{ color: 'var(--text)' }}>{c.name}</div>
                       <div className="flex items-center gap-2 mt-0.5 min-w-0">
@@ -654,13 +665,9 @@ export default function ChatPage() {
       <section className={`${activeId ? 'flex' : 'hidden md:flex'} flex-1 min-w-0 flex-col`}>
         {!activeId || !other ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center p-8 gap-3">
-            <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: 'var(--brand-soft)' }}>
-              <MessageCircle size={30} className="text-emerald-500" />
-            </div>
-            <h2 className="text-base font-bold" style={{ color: 'var(--text)' }}>Vos messages</h2>
-            <p className="text-sm max-w-xs" style={{ color: 'var(--text-muted)' }}>
+            <EmptyState icon={MessageCircle} title="Vos messages">
               Sélectionnez une discussion ou démarrez-en une nouvelle. Vos échanges sont privés : seuls vous et votre interlocuteur les voient.
-            </p>
+            </EmptyState>
             {error && <p className="text-xs text-red-500">{error}</p>}
           </div>
         ) : (
@@ -668,13 +675,13 @@ export default function ChatPage() {
             <header className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 shrink-0" style={{ borderBottom: '1px solid var(--border)' }}>
               <button
                 onClick={closeConversation}
-                className="md:hidden shrink-0 w-10 h-10 -ml-1 rounded-lg flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/5"
+                className="md:hidden -ml-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg hover:bg-[var(--surface-2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--focus)]"
                 style={{ color: 'var(--text)' }}
                 aria-label="Retour"
               >
-                <ArrowLeft size={20} />
+                <ArrowLeft size={20} strokeWidth={1.5} />
               </button>
-              <Avatar id={other.id} name={other.name} photoUrl={other.photoUrl} size={40} />
+              <Avatar name={other.name} photoUrl={other.photoUrl} size={40} />
               <div className="min-w-0 flex-1">
                 <div className="text-sm font-bold truncate" style={{ color: 'var(--text)' }}>{other.name}</div>
                 <div className="flex items-center gap-2 mt-0.5 min-w-0">
@@ -688,7 +695,7 @@ export default function ChatPage() {
               <div ref={scrollRef} onScroll={onScroll} className="absolute inset-0 overflow-y-auto overscroll-contain custom-scrollbar px-3 sm:px-4 py-3 sm:py-4">
                 {loadingThread && messages.length === 0 ? (
                   <div className="h-full flex items-center justify-center">
-                    <Loader2 className="animate-spin text-emerald-500" />
+                    <Loader2 className="animate-spin text-[var(--brand-strong)]" aria-label="Chargement des messages" />
                   </div>
                 ) : (
                   <>
@@ -697,7 +704,7 @@ export default function ChatPage() {
                         <button
                           onClick={() => void loadOlder()}
                           disabled={loadingOlder}
-                          className="text-xs font-semibold px-3 py-1.5 rounded-full transition-colors hover:bg-black/5 dark:hover:bg-white/5"
+                          className="rounded-full bg-[var(--surface-2)] px-3 py-1.5 text-xs font-semibold text-[var(--text)] transition-colors hover:bg-[var(--brand-soft)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--focus)]"
                           style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}
                         >
                           {loadingOlder ? 'Chargement…' : 'Messages précédents'}
@@ -727,12 +734,14 @@ export default function ChatPage() {
                           <div className={`flex ${m.mine ? 'justify-end' : 'justify-start items-end gap-2'} ${grouped ? 'mt-0.5' : 'mt-2.5'}`}>
                             {!m.mine && (
                               lastOfSeries
-                                ? <Avatar id={other.id} name={other.name} photoUrl={other.photoUrl} size={28} />
+                                ? <Avatar name={other.name} photoUrl={other.photoUrl} size={28} />
                                 : <div className="w-7 shrink-0" />
                             )}
                             <div
                               className={`max-w-[80%] sm:max-w-[70%] px-3.5 py-2 text-sm rounded-2xl ${m.mine ? 'rounded-br-md text-white' : 'rounded-bl-md'} ${m.status === 'sending' ? 'opacity-70' : ''}`}
-                              style={m.mine ? { background: m.status === 'failed' ? '#EF4444' : '#10B981' } : { background: 'var(--surface-2)', color: 'var(--text)' }}
+                              style={m.mine
+                                ? { background: m.status === 'failed' ? 'var(--danger-text)' : 'var(--success-text)' }
+                                : { background: 'var(--surface-2)', color: 'var(--text)' }}
                             >
                               <div className="whitespace-pre-wrap break-words">{m.body}</div>
                               <div className={`flex items-center justify-end gap-1.5 mt-1 text-[10px] ${m.mine ? 'text-white/80' : ''}`} style={m.mine ? undefined : { color: 'var(--text-muted)' }}>
@@ -761,17 +770,18 @@ export default function ChatPage() {
               {unseen && (
                 <button
                   onClick={scrollToBottom}
-                  className="absolute bottom-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-bold text-white bg-emerald-500 shadow-lg"
+                  className="absolute bottom-3 left-1/2 inline-flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-[var(--action)] px-3.5 py-2 text-xs font-semibold text-[var(--on-brand)] shadow-[var(--shadow-pop)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--focus)]"
                 >
-                  <ArrowDown size={14} /> Nouveau message
+                  <ArrowDown size={14} strokeWidth={1.5} /> Nouveau message
                 </button>
               )}
             </div>
 
             {error && (
-              <div className="mx-4 mb-2 px-3 py-2 rounded-lg text-xs font-medium text-red-600 bg-red-50 dark:bg-red-500/10 dark:text-red-300 flex items-center justify-between gap-2">
+              <div className="mx-4 mb-2 flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-xs font-medium"
+                style={{ color: 'var(--danger-text)', background: 'color-mix(in srgb, var(--danger) 12%, transparent)' }}>
                 <span>{error}</span>
-                <button onClick={() => setError(null)} aria-label="Fermer"><X size={14} /></button>
+                <button onClick={() => setError(null)} aria-label="Fermer" className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--focus)]"><X size={14} strokeWidth={1.5} /></button>
               </div>
             )}
 
@@ -788,17 +798,17 @@ export default function ChatPage() {
                   rows={1}
                   maxLength={MAX_MESSAGE_LENGTH}
                   placeholder="Écrire un message…"
-                  className="flex-1 min-w-0 resize-none rounded-xl px-3.5 py-2.5 text-base sm:text-sm outline-none max-h-[120px] sm:max-h-[140px]"
-                  style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)' }}
+                  className="k-input !min-h-0 max-h-[120px] min-w-0 flex-1 resize-none !px-3.5 !py-2.5 text-base outline-none sm:max-h-[140px] sm:text-sm"
                 />
-                <button
+                <DesignButton
+                  variant="primary"
                   onClick={send}
                   disabled={!draft.trim()}
-                  className="shrink-0 w-11 h-11 rounded-xl flex items-center justify-center text-white bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 disabled:hover:bg-emerald-500 transition-colors"
+                  className="!h-11 !w-11 !min-h-0 !shrink-0 !rounded-xl !p-0"
                   aria-label="Envoyer"
                 >
-                  <SendHorizontal size={18} />
-                </button>
+                  <SendHorizontal size={18} strokeWidth={1.5} />
+                </DesignButton>
               </div>
               {draft.length > MAX_MESSAGE_LENGTH - 200 && (
                 <p className="text-[10px] text-right mt-1" style={{ color: 'var(--text-muted)' }}>
@@ -818,7 +828,7 @@ function ListSkeleton() {
   return (
     <div className="space-y-1 px-1 pt-1">
       {[0, 1, 2, 3, 4].map((i) => (
-        <div key={i} className="flex items-center gap-3 px-3 py-3 animate-pulse">
+        <div key={i} className="motion-safe:animate-pulse flex items-center gap-3 px-3 py-3">
           <div className="w-10 h-10 rounded-full" style={{ background: 'var(--border)' }} />
           <div className="flex-1 space-y-2">
             <div className="h-3 w-1/2 rounded" style={{ background: 'var(--border)' }} />
@@ -830,11 +840,10 @@ function ListSkeleton() {
   );
 }
 
-function EmptyList({ title, hint }: { title: string; hint: string }) {
+function EmptyList({ title, hint, action }: { title: string; hint: string; action?: React.ReactNode }) {
   return (
-    <div className="text-center px-6 py-12">
-      <p className="text-sm font-bold" style={{ color: 'var(--text)' }}>{title}</p>
-      <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>{hint}</p>
-    </div>
+    <EmptyState title={title} icon={MessageCircle} action={action}>
+      {hint}
+    </EmptyState>
   );
 }

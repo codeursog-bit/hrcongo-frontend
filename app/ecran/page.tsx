@@ -12,6 +12,7 @@
 // 4) « Mon code secret » : l'employé tape son mot ou PIN (aucun micro).
 // Dépendance : npm install qrcode.react
 // ============================================================================
+import { AttendanceDisplayFrame } from '@/components/attendance/AttendanceDisplayFrame';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Moon, Sun,
@@ -41,7 +42,7 @@ function failureTitle(code?: string): string {
   return titles[code || ''] || 'Pointage impossible';
 }
 
-export default function EcranPage() {
+function EcranPageContent() {
   const [view, setView] = useState<View>('boot');
   const [info, setInfo] = useState<ScreenInfo | null>(null);
   const [code, setCode] = useState('');
@@ -345,3 +346,4 @@ export default function EcranPage() {
     </div>
   );
 }
+export default function EcranPage(){return <AttendanceDisplayFrame kind="qr"><EcranPageContent /></AttendanceDisplayFrame>;}

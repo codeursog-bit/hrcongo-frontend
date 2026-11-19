@@ -1,4 +1,8 @@
 'use client';
+import { DocumentReader } from '@/components/ui/DocumentReader';
+import { AttendanceModuleFrame as ModulePageFrame } from '@/components/attendance/AttendanceModuleFrame';
+import { ModulePageSkeleton } from '@/components/requests/ModulePageFrame';
+import { Button } from '@/components/design-system/primitives';
 
 // ============================================================================
 // 📁 app/(dashboard)/presences/absences/page.tsx
@@ -35,16 +39,16 @@ import { KonzaLoader } from '@/components/ui/KonzaLoader';
 type Status = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
 
 const STATUS_CONFIG: Record<Status, { label: string; badge: string; icon: any }> = {
-  PENDING:   { label: 'En attente', badge: 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800', icon: Clock },
-  APPROVED:  { label: 'Approuvée',  badge: 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800', icon: CheckCircle2 },
-  REJECTED:  { label: 'Refusée',    badge: 'bg-red-50 text-red-700 border-red-100 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800', icon: XCircle },
+  PENDING:   { label: 'En attente', badge: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)] border-[var(--border)]   ', icon: Clock },
+  APPROVED:  { label: 'Approuvée',  badge: 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)] border-[var(--border)]   ', icon: CheckCircle2 },
+  REJECTED:  { label: 'Refusée',    badge: 'bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] text-[var(--danger-text)] border-[var(--border)]   ', icon: XCircle },
   CANCELLED: { label: 'Annulée',    badge: 'bg-[var(--surface-2)] text-[var(--text-muted)]', icon: Ban },
 };
 
 const TYPE_CONFIG: Record<string, { label: string; icon: any; dot: string }> = {
-  MALADIE:         { label: 'Maladie',         icon: Stethoscope, dot: 'bg-red-400' },
-  CONVENTIONNELLE: { label: 'Conventionnelle', icon: FileText,    dot: 'bg-amber-400' },
-  EXCEPTIONNELLE:  { label: 'Exceptionnelle',  icon: Sparkles,    dot: 'bg-amber-400' },
+  MALADIE:         { label: 'Maladie',         icon: Stethoscope, dot: 'bg-[var(--danger)]' },
+  CONVENTIONNELLE: { label: 'Conventionnelle', icon: FileText,    dot: 'bg-[var(--mustard)]' },
+  EXCEPTIONNELLE:  { label: 'Exceptionnelle',  icon: Sparkles,    dot: 'bg-[var(--mustard)]' },
 };
 
 export default function AbsenceManagementPage() {
@@ -233,39 +237,39 @@ export default function AbsenceManagementPage() {
   } : null;
 
   if (isLoading) {
-    return <KonzaLoader variant="page" />;
+    return <ModulePageSkeleton label="Chargement des absences" />;
   }
 
   return (
-    <div className="max-w-[1600px] mx-auto pb-24 space-y-6">
+    <ModulePageFrame kind="list"><div className="max-w-[1600px] mx-auto pb-24 space-y-6">
       <PresenceModuleSwitcher />
       <AbsenceSubNav userRole={userRole} />
 
       {/* ── HEADER ── */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
-          <p className="text-xs font-bold tracking-[0.2em] text-[var(--text-muted)] uppercase mb-1">Ressources Humaines</p>
-          <h1 className="text-3xl font-bold text-[var(--text)]">Demandes d&apos;absence</h1>
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 attendance-page-header">
+        <div className="attendance-page-heading">
+          <p className="text-xs font-semibold tracking-[0.2em] text-[var(--text-muted)]  mb-1">Ressources Humaines</p>
+          <h1 className="text-3xl font-semibold text-[var(--text)]">Demandes d&apos;absence</h1>
           <p className="text-[var(--text-muted)] text-sm mt-1">Maladie · Conventionnelle · Exceptionnelle</p>
         </div>
         <div className="flex gap-3">
           <Link href={bp('/presences/absences/mon-espace')} className="px-4 py-2.5 rounded-xl border border-[var(--border)] font-semibold text-sm hover:bg-[var(--surface-2)] flex items-center gap-2 text-[var(--text-muted)]">
             <UserCircle size={18} /> Mon espace
           </Link>
-          <Link href={bp('/presences/absences/nouveau')} className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-sm flex items-center gap-2 ">
+          <Link href={bp('/presences/absences/nouveau')} className="px-4 py-2.5 rounded-xl bg-[var(--brand)] hover:bg-[var(--brand)] text-[var(--on-brand)] font-semibold text-sm flex items-center gap-2 ">
             <Plus size={18} /> Nouvelle demande
           </Link>
         </div>
       </div>
 
       <div className="flex gap-1 bg-[var(--surface-2)] p-1 rounded-xl w-fit">
-        <button onClick={() => setTab('overview')} className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all ${tab === 'overview' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
+        <Button variant="ghost" onClick={() => setTab('overview')} className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-colors ${tab === 'overview' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
           <LayoutDashboard size={14} /> Vue d&apos;ensemble
-        </button>
-        <button onClick={() => setTab('demandes')} className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all ${tab === 'demandes' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
+        </Button>
+        <Button variant="ghost" onClick={() => setTab('demandes')} className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-colors ${tab === 'demandes' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
           <ListChecks size={14} /> Demandes
-          {pendingCount > 0 && <span className="bg-amber-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">{pendingCount}</span>}
-        </button>
+          {pendingCount > 0 && <span className="bg-[var(--mustard)] text-[var(--on-brand)] text-[10px] font-semibold w-5 h-5 rounded-full flex items-center justify-center">{pendingCount}</span>}
+        </Button>
       </div>
 
       {tab === 'overview' && (
@@ -282,13 +286,13 @@ export default function AbsenceManagementPage() {
         {/* ── LISTE (MAÎTRE) ── */}
         <div className="lg:col-span-4 space-y-4">
           <div className="flex gap-1 bg-[var(--surface-2)] p-1 rounded-xl w-fit">
-            <button onClick={() => setFilter('PENDING')} className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all ${filter === 'PENDING' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
+            <Button variant="ghost" onClick={() => setFilter('PENDING')} className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-colors ${filter === 'PENDING' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
               À traiter
-              {pendingCount > 0 && <span className="bg-amber-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">{pendingCount}</span>}
-            </button>
-            <button onClick={() => setFilter('ALL')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${filter === 'ALL' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
+              {pendingCount > 0 && <span className="bg-[var(--mustard)] text-[var(--on-brand)] text-[10px] font-semibold w-5 h-5 rounded-full flex items-center justify-center">{pendingCount}</span>}
+            </Button>
+            <Button variant="ghost" onClick={() => setFilter('ALL')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${filter === 'ALL' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
               Toutes
-            </button>
+            </Button>
           </div>
 
           <div className="relative">
@@ -304,7 +308,7 @@ export default function AbsenceManagementPage() {
           <div className="space-y-2 max-h-[70vh] overflow-y-auto pr-1">
             {filtered.length === 0 ? (
               <div className="text-center py-16 bg-[var(--surface)] rounded-2xl border border-[var(--border)]">
-                <CheckCircle2 size={28} className="text-emerald-400 mx-auto mb-2" />
+                <CheckCircle2 size={28} className="text-[var(--success-text)] mx-auto mb-2" />
                 <p className="text-sm text-[var(--text-muted)]">Rien à afficher ici.</p>
               </div>
             ) : paginated.map(r => {
@@ -313,14 +317,14 @@ export default function AbsenceManagementPage() {
               const initials = `${r.employee?.firstName?.[0] ?? ''}${r.employee?.lastName?.[0] ?? ''}`;
               const active = r.id === selectedId;
               return (
-                <button
+                <Button variant="ghost"
                   key={r.id}
                   onClick={() => { setSelectedId(r.id); setRejectMode(false); setRejectionReason(''); }}
-                  className={`w-full text-left p-4 rounded-2xl border transition-all flex gap-3 items-start ${
-                    active ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 shadow-sm' : 'border-[var(--border)] bg-[var(--surface)] hover:border-[var(--text-muted)]'
+                  className={`w-full text-left p-4 rounded-2xl border transition-colors flex gap-3 items-start ${
+                    active ? 'border-[var(--border)] bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  shadow-sm' : 'border-[var(--border)] bg-[var(--surface)] hover:border-[var(--text-muted)]'
                   }`}
                 >
-                  <div className="w-10 h-10 rounded-xl bg-[var(--surface-2)] flex items-center justify-center font-bold text-[var(--text-muted)] text-xs shrink-0 overflow-hidden">
+                  <div className="w-10 h-10 rounded-xl bg-[var(--surface-2)] flex items-center justify-center font-semibold text-[var(--text-muted)] text-xs shrink-0 overflow-hidden">
                     {r.employee?.photoUrl ? <img src={r.employee.photoUrl} className="w-full h-full object-cover" alt={initials} /> : initials}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -333,28 +337,28 @@ export default function AbsenceManagementPage() {
                       <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border ${sCfg.badge}`}>{sCfg.label}</span>
                     </div>
                   </div>
-                </button>
+                </Button>
               );
             })}
           </div>
 
           {filtered.length > PAGE_SIZE && (
             <div className="flex items-center justify-between pt-1">
-              <button
+              <Button variant="ghost"
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
                 className="px-3 py-2 rounded-lg text-xs font-semibold border border-[var(--border)] text-[var(--text-muted)] disabled:opacity-30"
               >
                 Précédent
-              </button>
+              </Button>
               <span className="text-xs text-[var(--text-muted)]">Page {page} / {totalPages} · {filtered.length} demande{filtered.length > 1 ? 's' : ''}</span>
-              <button
+              <Button variant="ghost"
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
                 className="px-3 py-2 rounded-lg text-xs font-semibold border border-[var(--border)] text-[var(--text-muted)] disabled:opacity-30"
               >
                 Suivant
-              </button>
+              </Button>
             </div>
           )}
         </div>
@@ -369,7 +373,7 @@ export default function AbsenceManagementPage() {
             <motion.div key={selected.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
               <div className="p-6 border-b border-[var(--border)] flex items-start justify-between gap-4">
                 <div>
-                  <h2 className="text-xl font-bold text-[var(--text)]">{selected.employee?.firstName} {selected.employee?.lastName}</h2>
+                  <h2 className="text-xl font-semibold text-[var(--text)]">{selected.employee?.firstName} {selected.employee?.lastName}</h2>
                   <p className="text-sm text-[var(--text-muted)]">{selected.employee?.position}{selected.employee?.department ? ` · ${selected.employee.department.name}` : ''}</p>
                 </div>
                 <span className={`text-xs font-semibold px-3 py-1.5 rounded-lg border shrink-0 ${(STATUS_CONFIG[selected.status as Status] ?? STATUS_CONFIG.PENDING).badge}`}>
@@ -384,7 +388,7 @@ export default function AbsenceManagementPage() {
                     <span className="font-mono text-xs">{new Date(selected.startDate).toLocaleDateString('fr-FR')}</span>
                     <ArrowRight size={12} className="text-[var(--text-muted)]" />
                     <span className="font-mono text-xs">{new Date(selected.endDate).toLocaleDateString('fr-FR')}</span>
-                    <span className="ml-auto font-bold text-xs text-[var(--text-muted)]">{Number(selected.workingDays)}j ouvrables</span>
+                    <span className="ml-auto font-semibold text-xs text-[var(--text-muted)]">{Number(selected.workingDays)}j ouvrables</span>
                   </div>
 
                   {selected.returnDate && (
@@ -404,31 +408,31 @@ export default function AbsenceManagementPage() {
                   </div>
 
                   {selected.status === 'PENDING' && canApprove && selected.subType === 'AUTRE' && (
-                    <div className="p-3.5 rounded-xl border-2 border-amber-200 dark:border-amber-800 bg-amber-50/60 dark:bg-amber-900/10 space-y-2">
-                      <p className="text-xs font-bold text-amber-700 dark:text-amber-300">Cette période sera-t-elle payée ? (obligatoire pour valider)</p>
+                    <div className="p-3.5 rounded-xl border-2 border-[var(--border)]  bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  space-y-2">
+                      <p className="text-xs font-semibold text-[var(--warning-text)] ">Cette période sera-t-elle payée ? (obligatoire pour valider)</p>
                       <div className="grid grid-cols-2 gap-2">
                         {([[true, 'Payée'], [false, 'Non payée']] as const).map(([v, l]) => (
-                          <button
+                          <Button variant="ghost"
                             key={String(v)}
                             type="button"
                             onClick={() => setPaidDecision(v)}
-                            className={`py-2 rounded-lg text-sm font-semibold border-2 ${paidDecision === v ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300' : 'border-[var(--border)] text-[var(--text-muted)] bg-[var(--surface)]'}`}
+                            className={`py-2 rounded-lg text-sm font-semibold border-2 ${paidDecision === v ? 'border-[var(--border)] bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  text-[var(--success-text)] ' : 'border-[var(--border)] text-[var(--text-muted)] bg-[var(--surface)]'}`}
                           >
                             {l}
-                          </button>
+                          </Button>
                         ))}
                       </div>
                     </div>
                   )}
 
                   {selected.attachmentUrl && (
-                    <a href={selected.attachmentUrl} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm px-3.5 py-2.5 rounded-xl border border-[var(--border)] text-emerald-600 hover:underline">
+                    <a href={selected.attachmentUrl} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm px-3.5 py-2.5 rounded-xl border border-[var(--border)] text-[var(--success-text)] hover:underline">
                       <Paperclip size={14} /> Voir le justificatif joint
                     </a>
                   )}
 
                   <div className="text-sm">
-                    <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Motif</p>
+                    <p className="text-xs font-semibold text-[var(--text-muted)]   mb-1.5">Motif</p>
                     <p className="text-[var(--text-muted)] bg-[var(--surface-2)] p-3.5 rounded-xl">{selected.reason}</p>
                   </div>
 
@@ -443,7 +447,7 @@ export default function AbsenceManagementPage() {
                   )}
 
                   {selected.status === 'REJECTED' && selected.rejectionReason && (
-                    <div className="text-sm flex items-start gap-2 text-red-600 bg-red-50 dark:bg-red-900/20 p-3.5 rounded-xl">
+                    <div className="text-sm flex items-start gap-2 text-[var(--danger-text)] bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  p-3.5 rounded-xl">
                       <Info size={14} className="shrink-0 mt-0.5" /> {selected.rejectionReason}
                     </div>
                   )}
@@ -452,12 +456,12 @@ export default function AbsenceManagementPage() {
                     <div className="pt-2 space-y-3">
                       {!rejectMode ? (
                         <div className="flex gap-2">
-                          <button onClick={() => handleDecision('APPROVED')} disabled={isProcessing || (selected.subType === 'AUTRE' && paidDecision === null)} className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2">
+                          <Button variant="primary" onClick={() => handleDecision('APPROVED')} disabled={isProcessing || (selected.subType === 'AUTRE' && paidDecision === null)} className="flex-1 py-3 bg-[var(--brand)] hover:bg-[var(--brand)] disabled:opacity-50 text-[var(--on-brand)] text-sm font-semibold rounded-xl flex items-center justify-center gap-2">
                             <Check size={16} /> Valider
-                          </button>
-                          <button onClick={() => setRejectMode(true)} disabled={isProcessing} className="flex-1 py-3 border border-[var(--border)] hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-200 hover:text-red-600 text-[var(--text-muted)] text-sm font-bold rounded-xl flex items-center justify-center gap-2">
+                          </Button>
+                          <Button variant="ghost" onClick={() => setRejectMode(true)} disabled={isProcessing} className="flex-1 py-3 border border-[var(--border)] hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] dark:hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] hover:border-[var(--border)] hover:text-[var(--danger-text)] text-[var(--text-muted)] text-sm font-semibold rounded-xl flex items-center justify-center gap-2">
                             <X size={16} /> Refuser
-                          </button>
+                          </Button>
                         </div>
                       ) : (
                         <div className="space-y-2">
@@ -466,16 +470,16 @@ export default function AbsenceManagementPage() {
                             onChange={e => setRejectionReason(e.target.value)}
                             placeholder="Motif du refus…"
                             rows={2}
-                            className="w-full px-3 py-2.5 rounded-xl border border-red-200 dark:border-red-800 text-sm resize-none"
+                            className="w-full px-3 py-2.5 rounded-xl border border-[var(--border)]  text-sm resize-none"
                             autoFocus
                           />
                           <div className="flex gap-2">
-                            <button onClick={() => handleDecision('REJECTED')} disabled={isProcessing || !rejectionReason.trim()} className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 disabled:opacity-40 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2">
+                            <Button variant="ghost" onClick={() => handleDecision('REJECTED')} disabled={isProcessing || !rejectionReason.trim()} className="flex-1 py-2.5 bg-[var(--danger)] hover:bg-[var(--danger)] disabled:opacity-40 text-[var(--on-brand)] text-sm font-semibold rounded-xl flex items-center justify-center gap-2">
                               {isProcessing ? <Loader2 size={16} className="animate-spin" /> : <X size={16} />} Confirmer le refus
-                            </button>
-                            <button onClick={() => { setRejectMode(false); setRejectionReason(''); }} className="px-4 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)]">
+                            </Button>
+                            <Button variant="ghost" onClick={() => { setRejectMode(false); setRejectionReason(''); }} className="px-4 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)]">
                               Annuler
-                            </button>
+                            </Button>
                           </div>
                         </div>
                       )}
@@ -485,29 +489,29 @@ export default function AbsenceManagementPage() {
                   {selected.status === 'APPROVED' && canApprove && (
                     <div className="pt-1 pb-1 flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2 text-sm">
-                        {selected.printAuthorized ? <Unlock size={14} className="text-emerald-500" /> : <Lock size={14} className="text-[var(--text-muted)]" />}
+                        {selected.printAuthorized ? <Unlock size={14} className="text-[var(--success-text)]" /> : <Lock size={14} className="text-[var(--text-muted)]" />}
                         <span className="text-[var(--text-muted)]">
                           {selected.printAuthorized ? "Impression autorisée pour l'employé" : 'Impression non autorisée'}
                         </span>
                       </div>
-                      <button
+                      <Button variant="ghost"
                         onClick={() => setShowPrintAuthModal(true)}
                         disabled={isTogglingPrintAuth}
                         className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)] disabled:opacity-40"
                       >
                         {selected.printAuthorized ? 'Modifier' : 'Autoriser'}
-                      </button>
+                      </Button>
                     </div>
                   )}
 
                   <div className="flex gap-2">
-                    <button
+                    <Button variant="ghost"
                       onClick={() => setTimeout(() => printAbsenceRequest(), 50)}
                       className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)]"
                     >
                       <Printer size={16} /> Imprimer
-                    </button>
-                    <button
+                    </Button>
+                    <Button variant="ghost"
                       onClick={async () => {
                         setIsExportingPdf(true);
                         try { await downloadAbsenceRequestPDF(`absence-${selected.id.slice(0, 8)}.pdf`); }
@@ -517,33 +521,33 @@ export default function AbsenceManagementPage() {
                       className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)] disabled:opacity-40"
                     >
                       {isExportingPdf ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} PDF
-                    </button>
+                    </Button>
                     {canApprove && (
-                      <button
+                      <Button variant="ghost"
                         onClick={handleDelete}
                         disabled={isDeleting}
                         title="Supprimer définitivement"
-                        className="px-3.5 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-red-500 flex items-center justify-center hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-200 disabled:opacity-40"
+                        className="px-3.5 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--danger-text)] flex items-center justify-center hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] dark:hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] hover:border-[var(--border)] disabled:opacity-40"
                       >
                         {isDeleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
-                      </button>
+                      </Button>
                     )}
                   </div>
 
                   {docData?.company?.documentTemplate === 'ORCA' && (
-                    <button
+                    <Button variant="ghost"
                       onClick={() => window.open(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/absence-requests/${selected.id}/document.docx`, '_blank')}
-                      className="w-full py-2.5 border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 text-sm font-semibold rounded-xl text-emerald-700 dark:text-emerald-300 flex items-center justify-center gap-2 hover:bg-emerald-100 dark:hover:bg-emerald-900/40"
+                      className="w-full py-2.5 border border-[var(--border)]  bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  text-sm font-semibold rounded-xl text-[var(--success-text)]  flex items-center justify-center gap-2 hover:bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] dark:hover:bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]"
                       title="Télécharger le fichier Word original rempli"
                     >
                       <FileDown size={16} /> Télécharger .docx
-                    </button>
+                    </Button>
                   )}
                 </div>
 
                 {/* Aperçu imprimable */}
-                <div className="bg-[var(--surface-2)] rounded-2xl p-3 overflow-hidden border border-[var(--border)]">
-                  <div className="scale-[0.42] origin-top-left -mb-[58%]" style={{ width: '238%' }}>
+                <DocumentReader title="Demande d’absence">
+                  <div className="loan-document-protected scale-[0.42] origin-top-left -mb-[58%]" style={{ width: '238%' }}>
                     {docData?.company?.documentTemplate === 'ORCA' ? (
                       <OrcaLeaveAbsenceDocument
                         id="absence-print-root"
@@ -567,7 +571,7 @@ export default function AbsenceManagementPage() {
                       printData && <AbsenceRequestPrintable data={printData as any} />
                     )}
                   </div>
-                </div>
+                </DocumentReader>
               </div>
             </motion.div>
           )}
@@ -581,6 +585,6 @@ export default function AbsenceManagementPage() {
         onConfirm={handleSetPrintAuthorization}
         employeeName={`${selected?.employee?.firstName || ''} ${selected?.employee?.lastName || ''}`.trim()}
       />
-    </div>
+    </div></ModulePageFrame>
   );
 }

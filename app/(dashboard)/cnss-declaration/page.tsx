@@ -1,4 +1,8 @@
 'use client';
+import { ModulePageFrame, ModulePageSkeleton } from '@/components/requests/ModulePageFrame';
+import { Button } from '@/components/design-system/primitives';
+import '@/components/requests/service-pages.css';
+
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -240,7 +244,7 @@ export default function CnssDeclarationPage() {
   const affil    = recap?.company?.cnssAffiliationNumber || recap?.company?.cnssNumber || '—';
 
   return (
-    <div className="min-h-screen bg-[var(--surface-2)] p-4 md:p-6">
+    <ModulePageFrame kind="dashboard"><div className="service-module-page" data-service="cnss-declaration"><div className="min-h-screen bg-[var(--surface-2)] p-4 md:p-6">
 
       {/* ── HEADER ──────────────────────────────────────────────────── */}
       <div className="mb-6">
@@ -269,10 +273,10 @@ export default function CnssDeclarationPage() {
               </select>
               <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"/>
             </div>
-            <button onClick={loadRecap}
+            <Button variant="ghost" onClick={loadRecap}
               className="p-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-2)] transition-colors">
               <RefreshCw className={`w-4 h-4 text-gray-500 ${loading?'animate-spin':''}`}/>
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -310,14 +314,14 @@ export default function CnssDeclarationPage() {
           {id:'historique', label:'Historique',          icon:Calendar},
           {id:'taux',       label:'Taux & Règles',       icon:Info},
         ] as const).map(t=>(
-          <button key={t.id} onClick={()=>setTab(t.id)}
+          <Button variant="ghost" key={t.id} onClick={()=>setTab(t.id)}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
               tab===t.id
                 ?'bg-emerald-600 text-white shadow-md shadow-emerald-500/30'
                 :'text-[var(--text-muted)] hover:text-[var(--text)]'
             }`}>
             <t.icon className="w-4 h-4"/>{t.label}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -326,7 +330,7 @@ export default function CnssDeclarationPage() {
       ════════════════════════════════════════════════════════════════ */}
       {tab==='dnms' && (
         <div className="space-y-6">
-          {loading && <KonzaLoader variant="section" />}
+          {loading && <ModulePageSkeleton label="Chargement de la déclaration CNSS" />}
           {error && !loading && (
             <div className="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-2xl">
               <XCircle className="w-5 h-5 text-red-500 flex-shrink-0"/>
@@ -353,13 +357,13 @@ export default function CnssDeclarationPage() {
               {/* Détail par branche */}
               <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden shadow-sm">
                 <div className="p-4 border-b border-[var(--border)]">
-                  <button onClick={()=>setShowDetail(!showDetail)}
+                  <Button variant="ghost" onClick={()=>setShowDetail(!showDetail)}
                     className="flex items-center justify-between w-full">
                     <h3 className="font-semibold text-[var(--text)] text-sm">
                       Détail des cotisations
                     </h3>
                     {showDetail?<EyeOff className="w-4 h-4 text-gray-400"/>:<Eye className="w-4 h-4 text-gray-400"/>}
-                  </button>
+                  </Button>
                 </div>
                 {showDetail && (
                   <div className="p-4 space-y-1 text-sm">
@@ -454,44 +458,44 @@ export default function CnssDeclarationPage() {
 
             {/* Boutons export — chaque déclaration officielle dans son propre fichier */}
             <div className="flex flex-wrap gap-3">
-              <button onClick={()=>doExport('dnms',setDnmsLoad)} disabled={dnmsLoad||recap.employees.length===0}
+              <Button variant="primary" onClick={()=>doExport('dnms',setDnmsLoad)} disabled={dnmsLoad||recap.employees.length===0}
                 className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow-md shadow-emerald-500/30 transition-all">
                 {dnmsLoad?<Loader2 className="w-4 h-4 animate-spin"/>:<FileSpreadsheet className="w-4 h-4"/>}
                 Exporter DNMS (modèle officiel)
-              </button>
-              <button onClick={()=>doExport('tus',setTusLoad)} disabled={tusLoad||recap.employees.length===0}
+              </Button>
+              <Button variant="ghost" onClick={()=>doExport('tus',setTusLoad)} disabled={tusLoad||recap.employees.length===0}
                 className="flex items-center gap-2 px-5 py-2.5 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow-md shadow-amber-500/30 transition-all">
                 {tusLoad?<Loader2 className="w-4 h-4 animate-spin"/>:<FileSpreadsheet className="w-4 h-4"/>}
                 Exporter TUS (modèle officiel)
-              </button>
-              <button onClick={()=>doExport('dgc',setDgcLoad)} disabled={dgcLoad||recap.employees.length===0}
+              </Button>
+              <Button variant="ghost" onClick={()=>doExport('dgc',setDgcLoad)} disabled={dgcLoad||recap.employees.length===0}
                 className="flex items-center gap-2 px-5 py-2.5 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow-md shadow-amber-500/30 transition-all">
                 {dgcLoad?<Loader2 className="w-4 h-4 animate-spin"/>:<FileText className="w-4 h-4"/>}
                 Exporter Déclaration Globale (DGC, .docx officiel)
-              </button>
+              </Button>
               {recap.declaration?.status && ['DECLAREE','PAYEE','REGULARISEE'].includes(recap.declaration.status) ? (
-                <button onClick={handleCancelDeclare} disabled={declareLoad}
+                <Button variant="ghost" onClick={handleCancelDeclare} disabled={declareLoad}
                   className="flex items-center gap-2 px-5 py-2.5 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 disabled:opacity-50 border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-400 text-sm font-semibold rounded-xl transition-all">
                   {declareLoad?<Loader2 className="w-4 h-4 animate-spin"/>:<CheckCircle2 className="w-4 h-4"/>}
                   Déclarée le {recap.declaration.declaredAt ? new Date(recap.declaration.declaredAt).toLocaleDateString('fr-FR') : ''} — Annuler
-                </button>
+                </Button>
               ) : (
-                <button onClick={handleDeclare} disabled={declareLoad||recap.employees.length===0}
+                <Button variant="primary" onClick={handleDeclare} disabled={declareLoad||recap.employees.length===0}
                   className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow-md shadow-emerald-500/30 transition-all">
                   {declareLoad?<Loader2 className="w-4 h-4 animate-spin"/>:<CheckCircle2 className="w-4 h-4"/>}
                   Je déclare la CNSS
-                </button>
+                </Button>
               )}
               <a href="https://edeclaration.cnss.cg" target="_blank" rel="noopener noreferrer"
                 className="flex items-center gap-2 px-5 py-2.5 bg-[var(--surface)] hover:bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text)] text-sm font-semibold rounded-xl shadow-sm transition-all">
                 <ChevronRight className="w-4 h-4"/>Portail e-Déclaration CNSS
               </a>
             </div>
-            <button onClick={()=>doExport('excel',setXlsxLoad)} disabled={xlsxLoad||recap.employees.length===0}
+            <Button variant="ghost" onClick={()=>doExport('excel',setXlsxLoad)} disabled={xlsxLoad||recap.employees.length===0}
               className="flex items-center gap-2 px-4 py-2 bg-transparent hover:bg-[var(--surface-2)] disabled:opacity-50 border border-dashed border-gray-300 dark:border-gray-700 text-[var(--text-muted)] text-xs font-medium rounded-lg transition-all">
               {xlsxLoad?<Loader2 className="w-3.5 h-3.5 animate-spin"/>:<FileSpreadsheet className="w-3.5 h-3.5"/>}
               Récap interne (3 feuilles, non officiel — usage archive uniquement)
-            </button>
+            </Button>
 
             {/* Tableau nominatif — tous les champs séparés */}
             <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden shadow-sm">
@@ -504,12 +508,12 @@ export default function CnssDeclarationPage() {
                   <input type="text" placeholder="Rechercher…" value={search} onChange={e=>setSearch(e.target.value)}
                     className="text-sm px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 w-44"/>
                   {recap.missingCnssCount>0 && (
-                    <button onClick={()=>setMissingOnly(!missingOnly)}
+                    <Button variant="ghost" onClick={()=>setMissingOnly(!missingOnly)}
                       className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all ${
                         missingOnly?'bg-amber-500 border-amber-500 text-white':'border-amber-300 dark:border-amber-700 text-amber-600 dark:text-amber-400'
                       }`}>
                       <AlertCircle className="w-3 h-3"/>Sans CNSS ({recap.missingCnssCount})
-                    </button>
+                    </Button>
                   )}
                 </div>
               </div>
@@ -620,7 +624,7 @@ export default function CnssDeclarationPage() {
           ONGLET DGC
       ════════════════════════════════════════════════════════════════ */}
       {tab==='dgc' && (
-        <div className="max-w-2xl">
+        <div className="loan-document-protected"><div className="max-w-2xl">
           {!recap && <p className="text-sm text-gray-500">Sélectionnez un mois pour charger les données.</p>}
           {recap && (
             <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden shadow-sm">
@@ -758,7 +762,7 @@ export default function CnssDeclarationPage() {
               </div>
             </div>
           )}
-        </div>
+        </div></div>
       )}
 
       {/* ════════════════════════════════════════════════════════════════
@@ -788,12 +792,12 @@ export default function CnssDeclarationPage() {
                 'À VENIR':   'bg-[var(--surface)]',
               };
               return (
-                <button key={idx} onClick={()=>{setMonth(idx+1);setTab('dnms');}}
+                <Button variant="ghost" key={idx} onClick={()=>{setMonth(idx+1);setTab('dnms');}}
                   className={`p-3 rounded-xl border transition-all text-left hover:shadow-md ${borders[status]} ${bgs[status]} ${isCurr?'ring-2 ring-emerald-500 ring-offset-2 ring-offset-[var(--bg)]':''}`}>
                   <p className="font-semibold text-[var(--text)] text-sm">{label}</p>
                   <Badge status={status}/>
                   {item && item.payrollCount>0 && <p className="text-xs text-[var(--text-muted)] mt-1">{item.payrollCount} bulletins</p>}
-                </button>
+                </Button>
               );
             })}
           </div>
@@ -911,6 +915,6 @@ export default function CnssDeclarationPage() {
           </div>
         </div>
       )}
-    </div>
+    </div></div></ModulePageFrame>
   );
 }

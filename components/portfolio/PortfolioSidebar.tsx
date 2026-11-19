@@ -1,4 +1,6 @@
 'use client';
+import { SidebarAccount } from '@/components/layout/SidebarAccount';
+import { SidebarCount } from '@/components/layout/SidebarCount';
 
 // components/portfolio/PortfolioSidebar.tsx
 // Sidebar de l'espace "Mon portefeuille" (admin multi-entreprises).
@@ -13,7 +15,6 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard, Building2, Users, Wallet, HandCoins,
@@ -21,7 +22,9 @@ import {
   FileClock, MessageSquare, MessageCircle, PanelLeftClose, PanelLeftOpen,
   type LucideIcon,
 } from 'lucide-react';
-import { KonzaMark } from '@/components/ui/KonzaMark';
+import { ProfileAvatar } from '@/components/ui/ProfileAvatar';
+import { BrandLogo } from '@/components/ui/BrandLogo';
+import { useShellBrand } from '@/components/layout/CompanyBrand';
 import { AlertBadge, ALERT_TONES } from '@/components/ui/AlertBadge';
 import { useChatUnread } from '@/components/chat/ChatProvider';
 import { usePortfolioAlerts } from './usePortfolioAlerts';
@@ -71,6 +74,7 @@ interface PortfolioSidebarProps {
 
 export default function PortfolioSidebar({ userName, userEmail, userRoleLabel, userPhotoUrl, open = false, onClose }: PortfolioSidebarProps) {
   const pathname = usePathname();
+  const brand = useShellBrand();
   const router = useRouter();
 
   // ─── Mode réduit (mêmes clés / mêmes réglages que le dashboard) ──────────────
@@ -141,8 +145,6 @@ export default function PortfolioSidebar({ userName, userEmail, userRoleLabel, u
   };
 
   const displayName = userName ?? 'Mon compte';
-  const avatarSrc = userPhotoUrl
-    || `https://ui-avatars.com/api/?name=${encodeURIComponent(userName || userEmail || 'Mon compte')}&background=random&color=fff`;
 
   let lastCategory: string | null = null;
 
@@ -160,13 +162,14 @@ export default function PortfolioSidebar({ userName, userEmail, userRoleLabel, u
       `}</style>
 
       <aside
-        className={`fixed md:static inset-y-0 left-0 z-50 w-[272px] ${collapsed ? 'md:w-[76px]' : 'md:w-[272px]'} shrink-0 flex flex-col overflow-hidden rounded-r-[28px] md:rounded-[28px] md:m-3 md:mr-0 shadow-[0_12px_40px_-14px_rgba(15,23,42,0.22)] dark:shadow-[0_12px_40px_-14px_rgba(0,0,0,0.65)] transform ${animate ? 'transition-[width,transform] duration-300 ease-out' : ''} ${open ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} print:hidden`}
+        aria-label="Navigation du portefeuille"
+        className={`shell-sidebar ${mini ? 'shell-sidebar-mini' : 'shell-sidebar-wide'} fixed md:static inset-y-0 left-0 z-50 w-[272px] ${collapsed ? 'md:w-[76px]' : 'md:w-[272px]'} shrink-0 flex flex-col overflow-hidden rounded-r-[28px] md:rounded-[28px] md:m-3 md:mr-0 shadow-[0_12px_40px_-14px_rgba(15,23,42,0.22)] dark:shadow-[0_12px_40px_-14px_rgba(0,0,0,0.65)] transform ${animate ? 'transition-[width,transform] duration-300 ease-out' : ''} ${open ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} print:hidden`}
         style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
       >
-        <div className="absolute top-0 left-0 right-0 h-px opacity-0 dark:opacity-70" style={{ background: 'linear-gradient(to right, transparent, #10B981, transparent)' }} />
+        <div className="absolute top-0 left-0 right-0 h-px opacity-0 dark:opacity-70" style={{ background: 'linear-gradient(to right, transparent, var(--brand), transparent)' }} />
 
         {/* Logo */}
-        <div className={mini ? 'px-3 pt-5 pb-2 flex flex-col items-center gap-3' : 'px-6 pt-5 pb-2 relative'}>
+        <div className={mini ? 'shell-brand-zone is-mini' : 'shell-brand-zone'}>
           {mini ? (
             <Link
               href="/portefeuille/dashboard"
@@ -174,15 +177,14 @@ export default function PortfolioSidebar({ userName, userEmail, userRoleLabel, u
               className="flex items-center justify-center rounded-2xl shrink-0"
               style={{ width: 44, height: 44, background: 'var(--brand-soft)', border: '1.5px solid var(--border)' }}
             >
-              <KonzaMark size={28} />
+              <BrandLogo src={brand.logo} name={brand.name} size="compact" />
             </Link>
           ) : (
             <Link href="/portefeuille/dashboard" className="inline-flex flex-col items-start group">
-              <Image src="/logos/konza_logo_h_color.png" alt="Konza RH Logo" width={507} height={240} priority className="block dark:hidden transition-opacity duration-300 group-hover:opacity-80" style={{ width: '170px', height: 'auto', objectFit: 'contain' }} />
-              <Image src="/logos/konza_logo_h_white.png" alt="Konza RH Logo" width={507} height={240} priority className="hidden dark:block transition-opacity duration-300 group-hover:opacity-80" style={{ width: '170px', height: 'auto', objectFit: 'contain' }} />
+              <BrandLogo src={brand.logo} name={brand.name} />
               <div className="flex items-center gap-1.5 mt-1.5 pl-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_6px_#10b981]" />
-                <span className="text-[10px] text-slate-500 dark:text-emerald-400 font-bold tracking-widest uppercase">Portefeuille</span>
+                <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--green)' }} aria-hidden="true" />
+                <span className="text-[11px] font-medium" style={{ color: 'var(--text-secondary)' }}>Portefeuille</span>
               </div>
             </Link>
           )}
@@ -201,19 +203,7 @@ export default function PortfolioSidebar({ userName, userEmail, userRoleLabel, u
         </div>
 
         {/* Carte profil */}
-        <div className={mini ? 'px-3 pb-3 pt-1' : 'px-4 pb-4 pt-2'}>
-          <div className={`rounded-2xl ${mini ? 'p-1.5 justify-center' : 'p-3'} flex items-center gap-3 transition-colors group`} style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
-            <div className="relative shrink-0">
-              <img src={avatarSrc} alt={displayName} className="w-9 h-9 rounded-xl object-cover" />
-            </div>
-            <div className={mini ? 'hidden' : 'flex-1 min-w-0'}>
-              <h3 className="text-sm font-bold truncate" style={{ color: 'var(--text)' }}>{displayName}</h3>
-              <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
-                {userRoleLabel ?? 'Portefeuille'}
-              </span>
-            </div>
-          </div>
-        </div>
+
 
         {/* Navigation */}
         <nav className={`flex-1 ${mini ? 'px-2' : 'px-3'} pb-4 overflow-y-auto overflow-x-hidden space-y-0.5 custom-scrollbar`}>
@@ -222,7 +212,7 @@ export default function PortfolioSidebar({ userName, userEmail, userRoleLabel, u
             const count = item.alertKey ? alertCounts[item.alertKey] : 0;
             const hasAlert = count > 0;
             const tone = hasAlert ? ALERT_TONES.red : null;
-            const category = item.category ?? null;
+            const category = item.category ?? 'Au quotidien';
             const showLabel = category && category !== lastCategory;
             lastCategory = category;
 
@@ -232,52 +222,39 @@ export default function PortfolioSidebar({ userName, userEmail, userRoleLabel, u
                   <div className="mx-3 my-2 h-px" style={{ background: 'var(--border)' }} />
                 ) : (
                   <div className="px-4 pt-4 pb-1.5 first:pt-1">
-                    <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>{category}</span>
+                    <span className="shell-nav-section-title text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>{category}</span>
                   </div>
                 ))}
                 <Link
                   href={item.path}
+                  aria-current={active ? 'page' : undefined}
                   onClick={() => { setTip(null); if (window.innerWidth < 768) onClose?.(); }}
                   onMouseEnter={(e) => showTip(e, hasAlert ? `${item.label} (${count})` : item.label)}
                   onMouseLeave={() => setTip(null)}
                   aria-label={mini ? (hasAlert ? `${item.label} (${count})` : item.label) : undefined}
                   className={`relative w-full flex items-center ${mini ? 'justify-center px-0' : 'gap-3 px-3'} py-2.5 rounded-xl text-sm ${hasAlert && !active ? 'font-semibold' : 'font-medium'} transition-all duration-200 group ${active ? '' : 'hover:bg-black/[0.04] dark:hover:bg-white/[0.06]'}`}
                   style={{
-                    color: active ? 'var(--text)' : tone ? tone.text : 'var(--text-muted)',
-                    background: active ? 'var(--brand-soft)' : tone ? tone.tint : 'transparent',
-                    boxShadow: active
-                      ? 'inset 0 0 0 1px rgba(16,185,129,0.18)'
-                      : tone ? `inset 0 0 0 1px ${tone.ring}` : 'none',
+                    color: active ? 'var(--action)' : 'var(--text-secondary)',
+                    background: active ? 'var(--brand-soft)' : 'transparent',
+                    boxShadow: 'none',
                   }}
                 >
                   {active && (
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full" style={{ background: '#10B981' }} />
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full" style={{ background: 'var(--brand)' }} />
                   )}
                   <item.icon
                     size={18}
                     className={`transition-transform duration-200 group-hover:scale-105 ${hasAlert && !active ? 'konza-wiggle' : ''}`}
                   />
                   {!mini && <span className="flex-1 truncate">{item.label}</span>}
-                  {hasAlert && <AlertBadge count={count} tone="red" mini={mini} />}
+                  {hasAlert && <SidebarCount count={count} mini={mini} />}
                 </Link>
               </React.Fragment>
             );
           })}
         </nav>
 
-        {/* Déconnexion */}
-        <div className={mini ? 'p-2' : 'p-4'} style={{ borderTop: '1px solid var(--border)' }}>
-          <button
-            onClick={handleLogout}
-            onMouseEnter={(e) => showTip(e, 'Déconnexion')}
-            onMouseLeave={() => setTip(null)}
-            aria-label="Déconnexion"
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all group"
-          >
-            <LogOut size={18} className="group-hover:-translate-x-1 transition-transform" />
-            {!mini && <span>Déconnexion</span>}
-          </button>
-        </div>
+        <SidebarAccount name={displayName} role={userRoleLabel ?? 'Portefeuille'} email={userEmail} photo={userPhotoUrl} mini={mini} onLogout={handleLogout} />
       </aside>
 
       {mini && tip && (

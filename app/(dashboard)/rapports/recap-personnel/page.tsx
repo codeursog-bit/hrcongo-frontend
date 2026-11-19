@@ -1,4 +1,6 @@
 'use client';
+import { ModuleSelect } from '@/components/ui/ModuleSelect';
+
 
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
@@ -11,6 +13,7 @@ import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import RapportsSubNav from '@/components/RapportsSubNav';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import { ReportsFrame as ModulePageFrame } from '@/components/reports/ReportsFrame';
 
 // ─── Types (miroir de payroll-recap.service.ts côté backend) ───────────────
 
@@ -116,7 +119,7 @@ function downloadBlob(blob: Blob, filename: string) {
   window.URL.revokeObjectURL(url);
 }
 
-export default function RecapPersonnelPage() {
+function RecapPersonnelPage() {
   const router = useRouter();
   const { bp } = useBasePath();
 
@@ -201,19 +204,19 @@ export default function RecapPersonnelPage() {
     <div className="min-h-screen bg-[var(--bg)] p-4 md:p-6 print:bg-white print:p-0">
       {/* ── En-tête ─────────────────────────────────────────────────────── */}
       <div className="mb-6 print:hidden">
-        <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center justify-between flex-wrap gap-3 reports-header">
           <div className="flex items-center gap-3">
             <button
               onClick={() => router.push(bp('/rapports'))}
               className="p-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-2)] transition-colors"
             >
-              <ArrowLeft className="w-4 h-4 text-[var(--text-muted)]" />
+              <ArrowLeft strokeWidth={1.5} className="w-4 h-4 text-[var(--text-muted)]" />
             </button>
-            <div className="p-2.5 bg-[var(--brand)] rounded-xl shadow-lg shadow-[var(--brand)]/30">
-              <Users className="w-5 h-5 text-white" />
+            <div className="p-2.5 bg-[var(--surface)] rounded-xl shadow-lg shadow-[var(--brand)]/30">
+              <Users strokeWidth={1.5} className="w-5 h-5 text-[var(--text)]" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-[var(--text)]">
+              <h1 className="text-lg font-semibold text-[var(--text)]">
                 Récapitulatif du Personnel
               </h1>
               <p className="text-sm text-[var(--text-muted)]">
@@ -227,21 +230,21 @@ export default function RecapPersonnelPage() {
               onClick={() => setMode('mensuel')}
               className={`px-3 py-2 text-sm font-semibold rounded-xl transition-colors flex items-center gap-1.5 ${
                 mode === 'mensuel'
-                  ? 'bg-[var(--brand)] text-white shadow-md shadow-[var(--brand)]/30'
+                  ? 'bg-[var(--brand)] text-[var(--text)] shadow-md shadow-[var(--brand)]/30'
                   : 'bg-[var(--surface)] border border-[var(--border)] text-[var(--text)]'
               }`}
             >
-              <CalendarDays className="w-4 h-4" /> Mensuel
+              <CalendarDays strokeWidth={1.5} className="w-4 h-4" /> Mensuel
             </button>
             <button
               onClick={() => setMode('annuel')}
               className={`px-3 py-2 text-sm font-semibold rounded-xl transition-colors flex items-center gap-1.5 ${
                 mode === 'annuel'
-                  ? 'bg-[var(--brand)] text-white shadow-md shadow-[var(--brand)]/30'
+                  ? 'bg-[var(--brand)] text-[var(--text)] shadow-md shadow-[var(--brand)]/30'
                   : 'bg-[var(--surface)] border border-[var(--border)] text-[var(--text)]'
               }`}
             >
-              <CalendarRange className="w-4 h-4" /> Annuel
+              <CalendarRange strokeWidth={1.5} className="w-4 h-4" /> Annuel
             </button>
           </div>
         </div>
@@ -250,7 +253,7 @@ export default function RecapPersonnelPage() {
         <div className="mt-4 flex items-center gap-3 flex-wrap">
           {mode === 'mensuel' && (
             <div className="relative">
-              <select
+              <ModuleSelect
                 value={period.month}
                 onChange={(e) => setPeriod((p) => ({ ...p, month: Number(e.target.value) }))}
                 className="pl-3 pr-8 py-2 text-sm rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] font-medium appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/50"
@@ -258,12 +261,12 @@ export default function RecapPersonnelPage() {
                 {MONTHS.map((m, i) => (
                   <option key={m} value={i + 1}>{m}</option>
                 ))}
-              </select>
-              <ChevronDown className="w-4 h-4 absolute right-2.5 top-2.5 text-[var(--text-muted)] pointer-events-none" />
+              </ModuleSelect>
+              <ChevronDown strokeWidth={1.5} className="w-4 h-4 absolute right-2.5 top-2.5 text-[var(--text-muted)] pointer-events-none" />
             </div>
           )}
           <div className="relative">
-            <select
+            <ModuleSelect
               value={period.year}
               onChange={(e) => setPeriod((p) => ({ ...p, year: Number(e.target.value) }))}
               className="pl-3 pr-8 py-2 text-sm rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] font-medium appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/50"
@@ -271,17 +274,17 @@ export default function RecapPersonnelPage() {
               {YEARS.map((y) => (
                 <option key={y} value={y}>{y}</option>
               ))}
-            </select>
-            <ChevronDown className="w-4 h-4 absolute right-2.5 top-2.5 text-[var(--text-muted)] pointer-events-none" />
+            </ModuleSelect>
+            <ChevronDown strokeWidth={1.5} className="w-4 h-4 absolute right-2.5 top-2.5 text-[var(--text-muted)] pointer-events-none" />
           </div>
         </div>
 
         <RapportsSubNav active="/rapports/recap-personnel" />
 
         {loadError && (
-          <div className="mt-4 flex items-start gap-3 p-4 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-2xl">
-            <AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-            <p className="text-sm text-red-700 dark:text-red-300">{loadError}</p>
+          <div className="mt-4 flex items-start gap-3 p-4 bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] border border-[var(--border)] rounded-2xl">
+            <AlertTriangle strokeWidth={1.5} className="w-5 h-5 text-[var(--danger-text)] shrink-0 mt-0.5" />
+            <p className="text-sm text-[var(--danger-text)]">{loadError}</p>
           </div>
         )}
       </div>
@@ -296,35 +299,35 @@ export default function RecapPersonnelPage() {
         <>
           {/* ── Indicateurs ─────────────────────────────────────────────── */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4 print:hidden">
-            <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm">
+            <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm reports-card">
               <div>
                 <p className="text-xs text-[var(--text-muted)]">Salariés payés</p>
-                <p className="text-lg font-bold text-[var(--text)]">
+                <p className="text-lg font-semibold text-[var(--text)]">
                   {effectifPaye} / {rows.length}
                 </p>
               </div>
-              <Users className="w-5 h-5 text-[var(--brand)]" />
+              <Users strokeWidth={1.5} className="w-5 h-5 text-[var(--brand)]" />
             </div>
-            <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm">
+            <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm reports-card">
               <div>
                 <p className="text-xs text-[var(--text-muted)]">Masse salariale brute</p>
-                <p className="text-lg font-bold text-[var(--text)]">{fmt(totals?.salBrut)} F</p>
+                <p className="text-lg font-semibold text-[var(--text)]">{fmt(totals?.salBrut)} F</p>
               </div>
-              <Wallet className="w-5 h-5 text-emerald-500" />
+              <Wallet strokeWidth={1.5} className="w-5 h-5 text-[var(--action)]" />
             </div>
-            <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm">
+            <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm reports-card">
               <div>
                 <p className="text-xs text-[var(--text-muted)]">Charges &amp; retenues (CNSS+IRPP+TOL+Dépt)</p>
-                <p className="text-lg font-bold text-[var(--text)]">{fmt(totalCharges)} F</p>
+                <p className="text-lg font-semibold text-[var(--text)]">{fmt(totalCharges)} F</p>
               </div>
-              <Landmark className="w-5 h-5 text-red-500" />
+              <Landmark strokeWidth={1.5} className="w-5 h-5 text-[var(--danger-text)]" />
             </div>
-            <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm">
+            <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm reports-card">
               <div>
                 <p className="text-xs text-[var(--text-muted)]">Net à payer</p>
-                <p className="text-lg font-bold text-[var(--text)]">{fmt(totals?.netAPayer)} F</p>
+                <p className="text-lg font-semibold text-[var(--text)]">{fmt(totals?.netAPayer)} F</p>
               </div>
-              <TrendingDown className="w-5 h-5 text-[var(--accent-2)]" />
+              <TrendingDown strokeWidth={1.5} className="w-5 h-5 text-[var(--accent-2)]" />
             </div>
           </div>
 
@@ -477,20 +480,20 @@ export default function RecapPersonnelPage() {
             <button
               onClick={() => setPendingExport(true)}
               disabled={exporting || !current}
-              className="flex items-center gap-2 px-5 py-2.5 bg-[var(--brand)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow-md shadow-[var(--brand)]/30 transition-all"
+              className="flex items-center gap-2 px-5 py-2.5 bg-[var(--brand)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-[var(--text)] text-sm font-semibold rounded-xl shadow-md shadow-[var(--brand)]/30 transition-colors"
             >
               {exporting ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 strokeWidth={1.5} className="w-4 h-4 animate-spin" />
               ) : (
-                <Download className="w-4 h-4" />
+                <Download strokeWidth={1.5} className="w-4 h-4" />
               )}
               Exporter Excel
             </button>
             <button
               onClick={handlePrint}
-              className="flex items-center gap-2 px-5 py-2.5 bg-[var(--surface)] hover:bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text)] text-sm font-semibold rounded-xl transition-all"
+              className="flex items-center gap-2 px-5 py-2.5 bg-[var(--surface)] hover:bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text)] text-sm font-semibold rounded-xl transition-colors"
             >
-              <Printer className="w-4 h-4" />
+              <Printer strokeWidth={1.5} className="w-4 h-4" />
               Imprimer
             </button>
           </div>
@@ -499,11 +502,11 @@ export default function RecapPersonnelPage() {
 
       {/* ── Modale de revue avant export ────────────────────────────────── */}
       {pendingExport && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm print:hidden">
-          <div className="w-full max-w-md bg-[var(--surface)] rounded-2xl shadow-2xl border border-[var(--border)] overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[color-mix(in_srgb,var(--surface-2)_50%,transparent)] print:hidden">
+          <div className="w-full max-w-md bg-[var(--surface)] rounded-2xl shadow-2xl border border-[var(--border)] overflow-hidden reports-card">
             <div className="p-5 flex items-start gap-3 border-b border-[var(--border)]">
               <div className="p-2 bg-[var(--brand-soft)] rounded-xl shrink-0">
-                <ShieldCheck className="w-5 h-5 text-[var(--brand)]" />
+                <ShieldCheck strokeWidth={1.5} className="w-5 h-5 text-[var(--brand)]" />
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold text-[var(--text)]">
@@ -518,7 +521,7 @@ export default function RecapPersonnelPage() {
                 className="p-1 rounded-lg text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
                 aria-label="Fermer"
               >
-                <X className="w-4 h-4" />
+                <X strokeWidth={1.5} className="w-4 h-4" />
               </button>
             </div>
 
@@ -529,7 +532,7 @@ export default function RecapPersonnelPage() {
                 modifiables à la main une fois ouvertes dans Excel.
               </p>
               {hasEcart && (
-                <p className="text-sm text-amber-700 dark:text-amber-400 leading-relaxed">
+                <p className="text-sm text-[var(--warning-text)] leading-relaxed">
                   Certains employés ont d'autres retenues (prêt, etc.) non
                   détaillées dans ce tableau — pensez à les vérifier avant de
                   diffuser le fichier.
@@ -547,12 +550,12 @@ export default function RecapPersonnelPage() {
               <button
                 onClick={runExport}
                 disabled={exporting}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--brand)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow-md shadow-[var(--brand)]/30 transition-all"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--brand)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-[var(--text)] text-sm font-semibold rounded-xl shadow-md shadow-[var(--brand)]/30 transition-colors"
               >
                 {exporting ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 strokeWidth={1.5} className="w-4 h-4 animate-spin" />
                 ) : (
-                  <Download className="w-4 h-4" />
+                  <Download strokeWidth={1.5} className="w-4 h-4" />
                 )}
                 C'est vérifié, télécharger
               </button>
@@ -561,5 +564,14 @@ export default function RecapPersonnelPage() {
         </div>
       )}
     </div>
+  );
+}
+
+
+export default function RecapPersonnelPageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <RecapPersonnelPage />
+    </ModulePageFrame>
   );
 }

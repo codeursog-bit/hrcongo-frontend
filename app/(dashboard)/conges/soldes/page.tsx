@@ -1,4 +1,9 @@
 'use client';
+import '@/components/leave-history/leave-workspace.css';
+import { ModuleSelect } from '@/components/ui/ModuleSelect';
+import { LeaveModuleFrame as ModulePageFrame } from '@/components/leave-history/LeaveModuleFrame';
+import { ModulePageSkeleton } from '@/components/requests/ModulePageFrame';
+import { Button } from '@/components/design-system/primitives';
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
@@ -56,9 +61,9 @@ const alertLevel = (bal: EmployeeBalance): 'CRITICAL' | 'WARNING' | 'OK' | 'LOCK
 };
 
 const ALERT_CONFIG = {
-  CRITICAL: { label: 'Plafond proche', icon: AlertTriangle,  color: 'text-red-500',    badge: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300',    bar: 'bg-red-500' },
-  WARNING:  { label: 'À surveiller',   icon: AlertCircle,    color: 'text-amber-500',  badge: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300', bar: 'bg-amber-500' },
-  OK:       { label: 'Normal',         icon: CheckCircle2,   color: 'text-emerald-500',badge: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300', bar: 'bg-emerald-500' },
+  CRITICAL: { label: 'Plafond proche', icon: AlertTriangle,  color: 'text-[var(--danger-text)]',    badge: 'bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  text-[var(--danger-text)] ',    bar: 'bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]' },
+  WARNING:  { label: 'À surveiller',   icon: AlertCircle,    color: 'text-[var(--warning-text)]',  badge: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  text-[var(--warning-text)] ', bar: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]' },
+  OK:       { label: 'Normal',         icon: CheckCircle2,   color: 'text-[var(--action)]',badge: 'bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))]  text-[var(--action)] ', bar: 'bg-[var(--brand)]' },
   LOCKED:   { label: 'Pas encore éligible', icon: Lock,      color: 'text-[var(--text-muted)]',   badge: 'bg-[var(--surface-2)] text-[var(--text-muted)]', bar: 'bg-[var(--border)]' },
 };
 
@@ -68,9 +73,9 @@ const TYPE_LABELS: Record<string, string> = { ANNUAL: 'Annuel', ANNUAL_ANTICIPAT
 const TYPE_ICONS: Record<string, any> = { ANNUAL: Umbrella, ANNUAL_ANTICIPATED: Zap };
 const STATUS_LABELS: Record<string, string> = { PENDING: 'En attente', APPROVED: 'Approuvé', REJECTED: 'Refusé', CANCELLED: 'Annulé' };
 const STATUS_COLORS: Record<string, string> = {
-  PENDING: 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400',
-  APPROVED: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400',
-  REJECTED: 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400',
+  PENDING: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)]  ',
+  APPROVED: 'bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))] text-[var(--action)]  ',
+  REJECTED: 'bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] text-[var(--danger-text)]  ',
   CANCELLED: 'bg-[var(--surface-2)] text-[var(--text-muted)]',
 };
 function fmtDate(d: string) { return new Date(d).toLocaleDateString('fr-FR'); }
@@ -78,6 +83,7 @@ function fmtDate(d: string) { return new Date(d).toLocaleDateString('fr-FR'); }
 // ─── Composant principal ─────────────────────────────────────────────────────
 
 export default function LeaveBalancesAdminPage() {
+  const [uiLoadError,setUiLoadError]=useState('');
   const router = useRouter();
   const { bp } = useBasePath();
   const [balances, setBalances]    = useState<EmployeeBalance[]>([]);
@@ -243,7 +249,7 @@ export default function LeaveBalancesAdminPage() {
 
       setBalances(valid);
     } catch (e) {
-      console.error('Erreur chargement soldes:', e);
+      console.error('Erreur chargement soldes:', e); setUiLoadError('Le chargement a échoué. Réessayez dans un instant.');
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -284,30 +290,30 @@ export default function LeaveBalancesAdminPage() {
 
   if (isLoading) {
     return (
-      <KonzaLoader variant="page" />
+      <ModulePageSkeleton />
     );
   }
 
   return (
-    <div className="max-w-[1400px] mx-auto pb-24 space-y-8">
+    <ModulePageFrame kind="list" error={uiLoadError}><div className="max-w-[1400px] mx-auto pb-24 space-y-8">
       <CongeSubNav userRole={userRole} />
 
       {/* ── HEADER ── */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2.5 bg-[var(--surface)] rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)] transition-colors">
+        <div className="flex items-center gap-4 leave-header">
+          <Button variant="ghost" onClick={() => router.back()} className="p-2.5 bg-[var(--surface)] rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)] transition-colors">
             <ArrowLeft size={18} className="text-[var(--text-muted)]" />
-          </button>
+          </Button>
           <div>
-            <p className="text-xs font-bold tracking-[0.2em] text-[var(--text-muted)] uppercase mb-1">Congés · Vue Admin</p>
-            <h1 className="text-3xl font-bold text-[var(--text)]">Soldes des Employés</h1>
+            <p className="text-xs font-semibold tracking-[0.2em] text-[var(--text-muted)] uppercase mb-1">Congés · Vue Admin</p>
+            <h1 className="text-3xl font-semibold text-[var(--text)]">Soldes des Employés</h1>
             <p className="text-sm text-[var(--text-muted)] mt-1">Année {new Date().getFullYear()} · {balances.length} employés</p>
           </div>
         </div>
         <div className="flex gap-3">
-          <button onClick={refresh} disabled={isRefreshing} className="px-4 py-2.5 rounded-xl border border-[var(--border)] text-sm font-semibold text-[var(--text-muted)] hover:bg-[var(--surface-2)] transition-colors flex items-center gap-2 disabled:opacity-50">
+          <Button variant="ghost" onClick={refresh} disabled={isRefreshing} className="px-4 py-2.5 rounded-xl border border-[var(--border)] text-sm font-semibold text-[var(--text-muted)] hover:bg-[var(--surface-2)] transition-colors flex items-center gap-2 disabled:opacity-50">
             <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} /> Actualiser
-          </button>
+          </Button>
           <Link href={bp('/conges/provision')} className="px-4 py-2.5 rounded-xl bg-[var(--text)] text-[var(--bg)] text-sm font-semibold flex items-center gap-2 hover:opacity-90 transition-opacity">
             <TrendingUp size={16} /> Voir la Provision
           </Link>
@@ -315,12 +321,12 @@ export default function LeaveBalancesAdminPage() {
       </div>
 
       {/* ── STATS ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 leave-metrics">
         {[
-          { label: 'Critique (plafond proche)', value: stats.critical, color: 'text-red-600', bg: 'bg-red-50 dark:bg-red-900/20', border: 'border-red-100 dark:border-red-800', click: () => setFilterAlert('CRITICAL') },
-          { label: 'À surveiller (>75%)',        value: stats.warning,  color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/20', border: 'border-amber-100 dark:border-amber-800', click: () => setFilterAlert('WARNING') },
+          { label: 'Critique (plafond proche)', value: stats.critical, color: 'text-[var(--danger-text)]', bg: 'bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] ', border: 'border-[var(--border)] ', click: () => setFilterAlert('CRITICAL') },
+          { label: 'À surveiller (>75%)',        value: stats.warning,  color: 'text-[var(--warning-text)]', bg: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] ', border: 'border-[var(--border)] ', click: () => setFilterAlert('WARNING') },
           { label: 'Pas encore éligibles',        value: stats.locked,   color: 'text-[var(--text-muted)]', bg: 'bg-[var(--surface-2)]', border: 'border-[var(--border)]', click: () => setFilterAlert('LOCKED') },
-          { label: 'Total jours restants',        value: `${stats.totalDays.toFixed(0)}j`, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-900/20', border: 'border-emerald-100 dark:border-emerald-800', click: () => setFilterAlert('ALL') },
+          { label: 'Total jours restants',        value: `${stats.totalDays.toFixed(0)}j`, color: 'text-[var(--action)]', bg: 'bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))] ', border: 'border-[var(--border)] ', click: () => setFilterAlert('ALL') },
         ].map((s, i) => (
           <motion.div
             key={i}
@@ -330,7 +336,7 @@ export default function LeaveBalancesAdminPage() {
             onClick={s.click}
             className={`${s.bg} border ${s.border} rounded-2xl p-5 cursor-pointer hover:shadow-md transition-shadow`}
           >
-            <p className={`text-3xl font-bold ${s.color}`}>{s.value}</p>
+            <p className={`text-3xl font-semibold ${s.color}`}>{s.value}</p>
             <p className="text-xs text-[var(--text-muted)] mt-1">{s.label}</p>
           </motion.div>
         ))}
@@ -338,13 +344,13 @@ export default function LeaveBalancesAdminPage() {
 
       {/* ── ALERTE : employés dont le solde n'a pas pu être calculé ── */}
       {balances.some(b => b.loadError) && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-4 flex items-start gap-3">
-          <AlertTriangle size={18} className="text-red-500 mt-0.5 shrink-0" />
+        <div className="bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  border border-[var(--border)]  rounded-2xl p-4 flex items-start gap-3">
+          <AlertTriangle size={18} className="text-[var(--danger-text)] mt-0.5 shrink-0" />
           <div className="text-sm">
-            <p className="font-bold text-red-700 dark:text-red-300">
+            <p className="font-semibold text-[var(--danger-text)] ">
               {balances.filter(b => b.loadError).length} employé(s) sur {balances.length} ont un solde en erreur
             </p>
-            <p className="text-red-600/80 dark:text-red-400/80 mt-0.5">
+            <p className="text-[var(--danger-text)]  mt-0.5">
               Ils restent affichés ci-dessous avec un badge "Erreur" — voir les logs backend (Coolify) pour le détail exact de chaque erreur.
             </p>
           </div>
@@ -360,12 +366,12 @@ export default function LeaveBalancesAdminPage() {
             placeholder="Rechercher un employé, département..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 border border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm text-[var(--text)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+            className="w-full pl-9 pr-4 py-2.5 border border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm text-[var(--text)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
           />
         </div>
         <div className="flex gap-1 bg-[var(--surface-2)] p-1 rounded-xl">
           {(['ALL', 'CRITICAL', 'WARNING', 'LOCKED'] as const).map(f => (
-            <button
+            <Button variant="ghost"
               key={f}
               onClick={() => setFilterAlert(f)}
               className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
@@ -375,18 +381,18 @@ export default function LeaveBalancesAdminPage() {
               }`}
             >
               {f === 'ALL' ? 'Tous' : f === 'CRITICAL' ? 'Critique' : f === 'WARNING' ? 'Alerte' : 'Verrouillé'}
-            </button>
+            </Button>
           ))}
         </div>
       </div>
 
       {/* ── TABLE ── */}
       <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden shadow-sm">
-        <table className="w-full">
+        <div className="leave-table-scroll" tabIndex={0} role="region" aria-label="Tableau des congés défilant horizontalement"><table data-leave-table="true" className="w-full">
           <thead className="bg-[var(--surface-2)] border-b border-[var(--border)]">
             <tr>
               {['Employé', 'Département', 'Ancienneté', 'Acquis / Pris / Restant', 'Report', 'Statut', ''].map(h => (
-                <th key={h} className="px-5 py-4 text-left text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">{h}</th>
+                <th key={h} className="px-5 py-4 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">{h}</th>
               ))}
             </tr>
           </thead>
@@ -430,7 +436,7 @@ export default function LeaveBalancesAdminPage() {
                       {Math.round(bal.monthsWorked)}m
                     </p>
                     {!bal.canTakeAnnualLeave && (
-                      <p className="text-xs text-amber-500">{Math.round(bal.monthsUntilEligible)}m restants</p>
+                      <p className="text-xs text-[var(--warning-text)]">{Math.round(bal.monthsUntilEligible)}m restants</p>
                     )}
                   </td>
 
@@ -459,7 +465,7 @@ export default function LeaveBalancesAdminPage() {
                       const gapToFullBase = Math.max(0, 26 - baseAccrued);
                       if (gapToFullBase <= 0) return null;
                       return (
-                        <p className="text-xs text-emerald-500 dark:text-emerald-400 mt-0.5">
+                        <p className="text-xs text-[var(--action)]  mt-0.5">
                           Encore {Math.round(gapToFullBase * 10) / 10}j avant d'atteindre les 26j légaux
                         </p>
                       );
@@ -474,7 +480,7 @@ export default function LeaveBalancesAdminPage() {
                   {/* Report */}
                   <td className="px-5 py-4">
                     {bal.carriedForward > 0 ? (
-                      <span className="text-xs font-semibold bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 px-2 py-1 rounded-full">
+                      <span className="text-xs font-semibold bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))]  text-[var(--action)]  px-2 py-1 rounded-full">
                         +{Math.round(bal.carriedForward)}j reportés
                       </span>
                     ) : (
@@ -487,7 +493,7 @@ export default function LeaveBalancesAdminPage() {
                     {bal.loadError ? (
                       <span
                         title={bal.loadError}
-                        className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 cursor-help"
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  text-[var(--danger-text)]  cursor-help"
                       >
                         <AlertTriangle size={12} /> Erreur
                       </span>
@@ -503,22 +509,22 @@ export default function LeaveBalancesAdminPage() {
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-2">
                       {canAdjust && (
-                        <button
+                        <Button variant="ghost"
                           onClick={() => openHistory(bal)}
                           title="Voir l'historique de ses congés (modifier / supprimer)"
                           className="p-2 rounded-lg border border-[var(--border)] hover:bg-[var(--surface-2)] transition-colors flex items-center"
                         >
                           <History size={14} className="text-[var(--text-muted)]" />
-                        </button>
+                        </Button>
                       )}
                       {canAdjust && (
-                        <button
+                        <Button variant="ghost"
                           onClick={() => openAdjust(bal)}
                           title="Ajuster le solde"
                           className="p-2 rounded-lg border border-[var(--border)] hover:bg-[var(--surface-2)] transition-colors flex items-center"
                         >
                           <Pencil size={14} className="text-[var(--text-muted)]" />
-                        </button>
+                        </Button>
                       )}
                       <Link
                         href={bp(`/employes/${bal.employeeId}`)}
@@ -532,12 +538,12 @@ export default function LeaveBalancesAdminPage() {
               );
             })}
           </tbody>
-        </table>
+        </table></div>
       </div>
 
       {/* ── Modale de reprise du solde (dernier congé connu) ── */}
       {adjusting && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgb(0_0_0_/.48)] p-4">
           <div className="bg-[var(--surface)] rounded-2xl p-6 w-full max-w-sm shadow-xl">
             <h3 className="text-lg font-semibold text-[var(--text)] mb-1">Reprendre le solde</h3>
             <p className="text-sm text-[var(--text-muted)] mb-5">
@@ -547,20 +553,20 @@ export default function LeaveBalancesAdminPage() {
               <div>
                 <label className="text-xs font-semibold text-[var(--text-muted)] mb-1 block">Type de ce dernier congé</label>
                 <div className="flex gap-2">
-                  <button
+                  <Button variant="ghost"
                     type="button"
                     onClick={() => setLastLeaveType('ANNUAL')}
-                    className={`flex-1 py-2 rounded-xl text-xs font-semibold border ${lastLeaveType === 'ANNUAL' ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-[var(--border)] text-[var(--text-muted)]'}`}
+                    className={`flex-1 py-2 rounded-xl text-xs font-semibold border ${lastLeaveType === 'ANNUAL' ? 'bg-[var(--brand)] border-[var(--border)] text-[var(--on-brand)]' : 'border-[var(--border)] text-[var(--text-muted)]'}`}
                   >
                     Normal
-                  </button>
-                  <button
+                  </Button>
+                  <Button variant="ghost"
                     type="button"
                     onClick={() => setLastLeaveType('ANNUAL_ANTICIPATED')}
-                    className={`flex-1 py-2 rounded-xl text-xs font-semibold border ${lastLeaveType === 'ANNUAL_ANTICIPATED' ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-[var(--border)] text-[var(--text-muted)]'}`}
+                    className={`flex-1 py-2 rounded-xl text-xs font-semibold border ${lastLeaveType === 'ANNUAL_ANTICIPATED' ? 'bg-[var(--brand)] border-[var(--border)] text-[var(--on-brand)]' : 'border-[var(--border)] text-[var(--text-muted)]'}`}
                   >
                     Anticipé
-                  </button>
+                  </Button>
                 </div>
                 <p className="text-[11px] text-[var(--text-muted)] mt-1">
                   {lastLeaveType === 'ANNUAL'
@@ -602,20 +608,20 @@ export default function LeaveBalancesAdminPage() {
               )}
             </div>
             <div className="flex gap-3 justify-end mt-6">
-              <button
+              <Button variant="ghost"
                 onClick={() => setAdjusting(null)}
                 disabled={isSavingAdjust}
                 className="px-4 py-2 rounded-xl border border-[var(--border)] text-[var(--text-muted)] text-sm font-semibold disabled:opacity-50"
               >
                 <X size={15} className="inline mr-1" /> Annuler
-              </button>
-              <button
+              </Button>
+              <Button variant="primary"
                 onClick={saveAdjust}
                 disabled={isSavingAdjust}
-                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold disabled:opacity-50 flex items-center gap-2"
+                className="px-4 py-2 rounded-xl bg-[var(--brand)] hover:bg-[var(--brand)] text-[var(--on-brand)] text-sm font-semibold disabled:opacity-50 flex items-center gap-2"
               >
                 {isSavingAdjust ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />} Enregistrer
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -626,7 +632,7 @@ export default function LeaveBalancesAdminPage() {
         {historyEmployee && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/40 flex justify-end"
+            className="fixed inset-0 z-50 bg-[rgb(0_0_0_/.48)] flex justify-end"
             onClick={() => setHistoryEmployee(null)}
           >
             <motion.div
@@ -637,16 +643,16 @@ export default function LeaveBalancesAdminPage() {
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-lg font-bold text-[var(--text)]">{historyEmployee.employeeName}</h2>
+                  <h2 className="text-lg font-semibold text-[var(--text)]">{historyEmployee.employeeName}</h2>
                   <p className="text-xs text-[var(--text-muted)]">Historique des congés</p>
                 </div>
-                <button onClick={() => setHistoryEmployee(null)} className="text-[var(--text-muted)] hover:text-[var(--text)]">
+                <Button variant="ghost" onClick={() => setHistoryEmployee(null)} className="text-[var(--text-muted)] hover:text-[var(--text)]">
                   <X size={20} />
-                </button>
+                </Button>
               </div>
 
               {isLoadingHistory ? (
-                <KonzaLoader variant="section" />
+                <ModulePageSkeleton />
               ) : !history?.history?.length ? (
                 <p className="text-sm text-[var(--text-muted)] text-center py-16">Aucun congé enregistré pour cet employé.</p>
               ) : (
@@ -667,29 +673,29 @@ export default function LeaveBalancesAdminPage() {
                         <p className="text-xs text-[var(--text-muted)]">{fmtDate(h.startDate)} → {fmtDate(h.endDate)} · {Math.round(Number(h.daysCount))}j</p>
                         {h.reason && <p className="text-xs text-[var(--text-muted)] mt-1 italic">"{h.reason}"</p>}
                         {h.kind === 'LEAVE' && h.returnConfirmed && Number(h.forfeitedDays) > 0 && (
-                          <p className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 inline-block px-1.5 py-0.5 rounded mt-1">
+                          <p className="text-[11px] font-semibold text-[var(--warning-text)]  bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  inline-block px-1.5 py-0.5 rounded mt-1">
                             ↩ Retour anticipé le {fmtDate(h.actualReturnDate)} · {Math.round(Number(h.forfeitedDays))}j non pris
                           </p>
                         )}
                         {h.kind === 'LEAVE' && h.isCarryover && (
-                          <p className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 inline-block px-1.5 py-0.5 rounded mt-1 ml-1">
+                          <p className="text-[11px] font-semibold text-[var(--action)]  bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))]  inline-block px-1.5 py-0.5 rounded mt-1 ml-1">
                             Rattrapage — non payé
                           </p>
                         )}
                         {h.kind === 'LEAVE' && (
                           <div className="flex items-center gap-1 mt-2 pt-2 border-t border-[var(--border)]">
-                            <button
+                            <Button variant="ghost"
                               onClick={() => openEditItem(h)}
-                              className="text-xs font-semibold px-2 py-1 rounded-lg text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 flex items-center gap-1"
+                              className="text-xs font-semibold px-2 py-1 rounded-lg text-[var(--action)]  hover:bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))]  flex items-center gap-1"
                             >
                               <Pencil size={12} /> Modifier
-                            </button>
-                            <button
+                            </Button>
+                            <Button variant="ghost"
                               onClick={() => { setDeleteError(''); setDeletingItem(h); }}
-                              className="text-xs font-semibold px-2 py-1 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-1"
+                              className="text-xs font-semibold px-2 py-1 rounded-lg text-[var(--danger-text)]  hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  flex items-center gap-1"
                             >
                               <Trash2 size={12} /> Supprimer
-                            </button>
+                            </Button>
                           </div>
                         )}
                       </div>
@@ -703,13 +709,13 @@ export default function LeaveBalancesAdminPage() {
       </AnimatePresence>
 
       {editingItem && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[60] p-4">
+        <div className="fixed inset-0 bg-[rgb(0_0_0_/.48)] flex items-center justify-center z-[60] p-4">
           <div className="bg-[var(--surface)] rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-[var(--text)]">Modifier ce congé</h2>
-              <button onClick={() => setEditingItem(null)} className="text-[var(--text-muted)] hover:text-[var(--text)]">
+              <h2 className="text-lg font-semibold text-[var(--text)]">Modifier ce congé</h2>
+              <Button variant="ghost" onClick={() => setEditingItem(null)} className="text-[var(--text-muted)] hover:text-[var(--text)]">
                 <X size={20} />
-              </button>
+              </Button>
             </div>
             <p className="text-xs text-[var(--text-muted)]">
               Modifie directement cette demande — dates/type ajustés sur la même ligne, sans jamais en créer une nouvelle ni impacter le calendrier en double.
@@ -717,14 +723,14 @@ export default function LeaveBalancesAdminPage() {
             <div className="space-y-3">
               <div>
                 <label className="text-xs font-semibold text-[var(--text-muted)]">Type</label>
-                <select
+                <ModuleSelect
                   value={editForm.type}
                   onChange={e => setEditForm(f => ({ ...f, type: e.target.value as any }))}
                   className="mt-1 w-full text-sm border border-[var(--border)] bg-[var(--surface)] rounded-lg px-3 py-2"
                 >
                   <option value="ANNUAL">Annuel</option>
                   <option value="ANNUAL_ANTICIPATED">Annuel anticipé</option>
-                </select>
+                </ModuleSelect>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -747,51 +753,51 @@ export default function LeaveBalancesAdminPage() {
                 </div>
               </div>
             </div>
-            {editError && <div className="text-xs text-red-500">{editError}</div>}
+            {editError && <div className="text-xs text-[var(--danger-text)]">{editError}</div>}
             <div className="flex justify-end gap-2 pt-2">
-              <button onClick={() => setEditingItem(null)} className="px-4 py-2 text-sm font-semibold rounded-lg text-[var(--text-muted)] hover:bg-[var(--surface-2)]">
+              <Button variant="ghost" onClick={() => setEditingItem(null)} className="px-4 py-2 text-sm font-semibold rounded-lg text-[var(--text-muted)] hover:bg-[var(--surface-2)]">
                 Annuler
-              </button>
-              <button
+              </Button>
+              <Button variant="primary"
                 onClick={saveEditItem}
                 disabled={isSavingEdit}
-                className="px-4 py-2 text-sm font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-2 disabled:opacity-40"
+                className="px-4 py-2 text-sm font-semibold rounded-lg bg-[var(--brand)] hover:bg-[var(--brand)] text-[var(--on-brand)] flex items-center gap-2 disabled:opacity-40"
               >
                 {isSavingEdit ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Enregistrer
-              </button>
+              </Button>
             </div>
           </div>
         </div>
       )}
 
       {deletingItem && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[60] p-4">
+        <div className="fixed inset-0 bg-[rgb(0_0_0_/.48)] flex items-center justify-center z-[60] p-4">
           <div className="bg-[var(--surface)] rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-900/30 text-red-600 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  text-[var(--danger-text)] flex items-center justify-center shrink-0">
                 <AlertTriangle size={20} />
               </div>
-              <h2 className="text-lg font-bold text-[var(--text)]">Supprimer ce congé ?</h2>
+              <h2 className="text-lg font-semibold text-[var(--text)]">Supprimer ce congé ?</h2>
             </div>
             <p className="text-sm text-[var(--text-muted)]">
               Le congé du {fmtDate(deletingItem.startDate)} au {fmtDate(deletingItem.endDate)} sera définitivement supprimé et le solde restauré s'il avait déjà été approuvé. Cette action est irréversible.
             </p>
-            {deleteError && <div className="text-xs text-red-500">{deleteError}</div>}
+            {deleteError && <div className="text-xs text-[var(--danger-text)]">{deleteError}</div>}
             <div className="flex justify-end gap-2 pt-2">
-              <button onClick={() => setDeletingItem(null)} className="px-4 py-2 text-sm font-semibold rounded-lg text-[var(--text-muted)] hover:bg-[var(--surface-2)]">
+              <Button variant="ghost" onClick={() => setDeletingItem(null)} className="px-4 py-2 text-sm font-semibold rounded-lg text-[var(--text-muted)] hover:bg-[var(--surface-2)]">
                 Annuler
-              </button>
-              <button
+              </Button>
+              <Button variant="ghost"
                 onClick={confirmDeleteItem}
                 disabled={isDeletingItem}
-                className="px-4 py-2 text-sm font-bold rounded-lg bg-red-600 hover:bg-red-700 text-white flex items-center gap-2 disabled:opacity-40"
+                className="px-4 py-2 text-sm font-semibold rounded-lg bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] text-[var(--danger-text)] flex items-center gap-2 disabled:opacity-40"
               >
                 {isDeletingItem ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />} Supprimer
-              </button>
+              </Button>
             </div>
           </div>
         </div>
       )}
-    </div>
+    </div></ModulePageFrame>
   );
 }

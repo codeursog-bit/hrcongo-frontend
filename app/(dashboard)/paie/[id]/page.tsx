@@ -1,4 +1,6 @@
 'use client';
+import { PayrollAmounts } from '@/components/ui/PayrollAmounts';
+import { DocumentReader } from '@/components/ui/DocumentReader';
 
 // ============================================================================
 // app/(dashboard)/paie/[id]/page.tsx
@@ -19,7 +21,9 @@ import AuditBlockedModal from '@/components/audit/AuditBlockedModal';
 import { auditBlockedOf, type AuditBlocked } from '@/services/audit-engine';
 import BulletinDisplay from '@/components/BulletinDisplay';
 import { printBulletin, downloadBulletinPDF, getBulletinRootId } from '@/lib/bulletin-print';
-import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import { Modal } from '@/components/design-system/feedback';
+import './payroll-detail.css';
+import { ModulePageFrame, ModulePageSkeleton } from '@/components/requests/ModulePageFrame';
 
 interface PayrollData {
   employee?: {
@@ -49,7 +53,7 @@ interface PayrollData {
   status: string;
   month: number; year: number;
   grossSalary: number; netSalary: number;
-  totalDeductions: number; totalEmployerCost?: number;
+  totalDeductions: number; totalEmployerCost?: number; employerCustomTaxTotal?: number;
   workDays?: number; workedDays?: number; absenceDays?: number;
   daysOnLeave?: number; daysRemote?: number;
   overtimeHours10?: number; overtimeHours25?: number;
@@ -65,19 +69,19 @@ interface PayrollData {
 const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 
 const STATUS_INFO: Record<string, { label: string; dot: string; border: string; text: string }> = {
-  DRAFT:     { label:'Brouillon', dot:'#94a3b8', border:'#e2e8f0', text:'#64748b' },
-  VALIDATED: { label:'Validé',    dot:'#10b981', border:'#a7f3d0', text:'#059669' },
-  TO_PAY:    { label:'À payer',   dot:'#f97316', border:'#fed7aa', text:'#c2410c' },
-  PAID:      { label:'Payé',      dot:'#f59e0b', border:'#fde68a', text:'#b45309' },
-  CANCELLED: { label:'Annulé',    dot:'#ef4444', border:'#fecaca', text:'#dc2626' },
+  DRAFT: { label:'Brouillon', dot:'var(--text-secondary)', border:'var(--border)', text:'var(--text-secondary)' },
+  VALIDATED: { label:'Validé', dot:'var(--green)', border:'var(--border)', text:'var(--success-text)' },
+  TO_PAY: { label:'À payer', dot:'var(--mustard)', border:'var(--border)', text:'var(--warning-text)' },
+  PAID: { label:'Payé', dot:'var(--green)', border:'var(--border)', text:'var(--success-text)' },
+  CANCELLED: { label:'Annulé', dot:'var(--text-secondary)', border:'var(--border)', text:'var(--text-secondary)' },
 };
 
 const CONFIRM_CONFIG = {
-  validate: { title:'Valider le bulletin ?',      sub:'Vous pourrez encore le corriger avant de le passer à payer.', btnLabel:'Valider', btnColor:'#10b981', icon: Check      },
-  pay:      { title:'Passer le bulletin à payer ?', sub:'Le bulletin sera verrouillé puis transmis à Compta.', btnLabel:'À payer', btnColor:'#d97706', icon: DollarSign },
-  cancel:   { title:'Annuler ce bulletin ?',      sub:'Le bulletin sera invalidé.',               btnLabel:'Annuler',   btnColor:'#d97706', icon: Ban        },
-  restore:  { title:'Remettre en brouillon ?',    sub:'Repassera en statut Brouillon.',           btnLabel:'Restaurer', btnColor:'#6b7280', icon: RotateCcw  },
-  delete:   { title:'Supprimer définitivement ?', sub:'Action irréversible.',                     btnLabel:'Supprimer', btnColor:'#dc2626', icon: Trash2     },
+  validate: { title:'Valider le bulletin ?',      sub:'Vous pourrez encore le corriger avant de le passer à payer.', btnLabel:'Valider', btnColor:'var(--action)', icon: Check      },
+  pay:      { title:'Passer le bulletin à payer ?', sub:'Le bulletin sera verrouillé puis transmis à Compta.', btnLabel:'À payer', btnColor:'var(--action)', icon: DollarSign },
+  cancel:   { title:'Annuler ce bulletin ?',      sub:'Le bulletin sera invalidé.',               btnLabel:'Annuler',   btnColor:'var(--action)', icon: Ban        },
+  restore:  { title:'Remettre en brouillon ?',    sub:'Repassera en statut Brouillon.',           btnLabel:'Restaurer', btnColor:'var(--action)', icon: RotateCcw  },
+  delete:   { title:'Supprimer définitivement ?', sub:'Action irréversible.',                     btnLabel:'Supprimer', btnColor:'var(--danger-text)', icon: Trash2     },
 };
 
 export default function PayslipPage({ params }: { params: { id: string } }) {
@@ -140,16 +144,16 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
   const isAdmin = ['SUPER_ADMIN','ADMIN','HR_MANAGER'].includes(userRole || '');
   const isDraft = data?.status === 'DRAFT';
 
-  if (isLoading) return (
-    <KonzaLoader variant="page" />
-  );
+  if (isLoading) return <ModulePageSkeleton label="Chargement du bulletin de paie…" />;
 
   if (!data) return (
-    <div className="p-8 text-center">
-      <AlertCircle size={48} className="mx-auto text-red-500 mb-4" />
-      <p className="text-gray-500">Bulletin introuvable</p>
-      <button onClick={() => router.push(bp('/paie'))} className="mt-4 px-6 py-2 bg-gray-900 text-white rounded-xl font-bold">Retour</button>
-    </div>
+    <ModulePageFrame kind="detail">
+      <div className="p-8 text-center">
+        <AlertCircle size={48} className="mx-auto text-[var(--danger-text)] mb-4" />
+        <p className="text-[var(--text-secondary)]">Bulletin introuvable</p>
+        <button onClick={() => router.push(bp('/paie'))} className="mt-4 px-6 py-2 bg-[var(--surface-2)] text-[var(--on-brand)] rounded-xl font-semibold">Retour</button>
+      </div>
+    </ModulePageFrame>
   );
 
   const cnssItem = (data.items || []).find(i => i.code === 'CNSS_SAL');
@@ -171,7 +175,8 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
   };
 
   return (
-    <>
+    <ModulePageFrame kind="detail">
+      <>
       <style jsx global>{`
         @media print {
           html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
@@ -182,41 +187,42 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
         }
       `}</style>
 
-      <div className="max-w-[1280px] mx-auto pb-20 px-4 print:p-0 print:max-w-none">
+      <div className="payroll-detail-page max-w-[1440px] mx-auto pb-20 print:p-0 print:max-w-none">
 
         {/* ── BARRE D'ACTIONS ── */}
-        <div className="no-print mb-6 space-y-3">
+        <div className="no-print payroll-detail-heading">
 
           {/* Ligne titre */}
           <div className="flex items-center gap-3">
             <button onClick={() => router.back()}
               className="flex-shrink-0 p-2.5 rounded-xl bg-[var(--surface)] border border-[var(--border)] hover:bg-[var(--surface-2)] transition-colors">
-              <ArrowLeft size={18} className="text-gray-500" />
+              <ArrowLeft size={18} className="text-[var(--text-secondary)]" />
             </button>
-            <div className="flex items-center gap-3 min-w-0 flex-1">
-              <h1 className="font-bold text-[var(--text)] text-lg truncate">
-                Bulletin — {data.employee?.firstName} {data.employee?.lastName}
+            <div className="payroll-detail-identity">
+              <p className="payroll-detail-label">Bulletin de paie · {monthLabel} {data.year}</p>
+              <h1 className="font-semibold text-[var(--text)] text-2xl">
+                {data.employee?.firstName} {data.employee?.lastName}
               </h1>
               <span style={{ display:'inline-flex', alignItems:'center', gap:5, padding:'3px 10px', borderRadius:20, fontSize:11, fontWeight:700, border:`1.5px solid ${statusInfo.border}`, color:statusInfo.text, background:'var(--surface)', flexShrink:0 }}>
                 <span style={{ width:7, height:7, borderRadius:'50%', background:statusInfo.dot }} />
                 {statusInfo.label}
               </span>
-              <span className="text-sm text-gray-400 flex-shrink-0">{monthLabel} {data.year}</span>
+              <span className="text-sm text-[var(--text-secondary)]">{data.employee?.employeeNumber} {data.employee?.position}</span>
             </div>
           </div>
 
           {/* Actions */}
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="payroll-detail-actions">
             {isAdmin && isDraft && (
               <button onClick={() => router.push(bp(`/paie/${params.id}/modifier`))}
-                style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 20px', borderRadius:12, fontWeight:700, fontSize:14, background:'#10b981', color:'#fff', border:'none', cursor:'pointer', boxShadow:'0 4px 14px rgba(16,185,129,0.35)' }}>
+                className="k-button k-button-secondary">
                 <Pencil size={16} /> Modifier
               </button>
             )}
-            {isAdmin && data.status==='DRAFT'     && <button onClick={()=>setConfirm('validate')} className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl text-sm"><Check size={15}/> Valider</button>}
-            {isAdmin && data.status==='VALIDATED' && <button onClick={()=>setConfirm('pay')}      className="flex items-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-sm"><DollarSign size={15}/> À payer</button>}
-            {isAdmin && !['CANCELLED','PAID'].includes(data.status) && <button onClick={()=>setConfirm('cancel')}  className="flex items-center gap-2 px-4 py-2.5 border border-amber-200 dark:border-amber-700 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 font-bold rounded-xl text-sm"><Ban size={15}/> Annuler</button>}
-            {isAdmin && data.status==='CANCELLED' && <button onClick={()=>setConfirm('restore')} className="flex items-center gap-2 px-4 py-2.5 border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)] font-bold rounded-xl text-sm"><RotateCcw size={15}/> Restaurer</button>}
+            {isAdmin && data.status==='DRAFT'     && <button onClick={()=>setConfirm('validate')} className="flex items-center gap-2 px-4 py-2.5 bg-[var(--brand-soft)] hover:bg-[var(--brand-soft)] text-[var(--action)] font-semibold rounded-xl text-sm"><Check size={15}/> Valider</button>}
+            {isAdmin && data.status==='VALIDATED' && <button onClick={()=>setConfirm('pay')}      className="flex items-center gap-2 px-4 py-2.5 bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] hover:bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)] font-semibold rounded-xl text-sm"><DollarSign size={15}/> À payer</button>}
+            {isAdmin && !['CANCELLED','PAID'].includes(data.status) && <button onClick={()=>setConfirm('cancel')}  className="flex items-center gap-2 px-4 py-2.5 border border-[var(--border)]  text-[var(--warning-text)] hover:bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  font-semibold rounded-xl text-sm"><Ban size={15}/> Annuler</button>}
+            {isAdmin && data.status==='CANCELLED' && <button onClick={()=>setConfirm('restore')} className="flex items-center gap-2 px-4 py-2.5 border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)] font-semibold rounded-xl text-sm"><RotateCcw size={15}/> Restaurer</button>}
             <div className="w-px h-7 bg-[var(--border)] hidden sm:block mx-1" />
             <button
               disabled={pdfLoading}
@@ -231,67 +237,59 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
                   setPdfLoading(false);
                 }
               }}
-              style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 20px', borderRadius:12, fontWeight:700, fontSize:13, background: pdfLoading ? '#6b7280' : '#111827', color:'#fff', border:'none', cursor: pdfLoading ? 'not-allowed' : 'pointer', opacity: pdfLoading ? 0.7 : 1, transition:'all .2s' }}
+              className="k-button k-button-secondary"
             >
               <Download size={15}/>
               {pdfLoading ? 'Génération PDF…' : 'Télécharger PDF'}
             </button>
             <button
               onClick={() => printBulletin(getBulletinRootId(data?.company?.bulletinTemplateId ?? 'default'))}
-              className="flex items-center gap-2 px-4 py-2.5 bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] font-bold rounded-xl text-sm hover:bg-[var(--surface-2)] transition-colors"
+              className="flex items-center gap-2 px-4 py-2.5 bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] font-semibold rounded-xl text-sm hover:bg-[var(--surface-2)] transition-colors"
             >
               <Printer size={15}/> Imprimer
             </button>
-            {isAdmin && !['TO_PAY','PAID'].includes(data.status) && <button onClick={()=>setConfirm('delete')} className="ml-auto flex items-center gap-2 px-3 py-2.5 border border-red-200 dark:border-red-800 text-red-500 hover:bg-red-50 font-bold rounded-xl text-sm"><Trash2 size={14}/> Supprimer</button>}
+            {isAdmin && !['TO_PAY','PAID'].includes(data.status) && <button onClick={()=>setConfirm('delete')} className="ml-auto flex items-center gap-2 px-3 py-2.5 border border-[var(--border)]  text-[var(--danger-text)] hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] font-semibold rounded-xl text-sm"><Trash2 size={14}/> Supprimer</button>}
           </div>
 
           {/* Bandeau modifiable */}
-          {isAdmin && isDraft && (
-            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 16px', borderRadius:12, background:'#ecfdf5', border:'1.5px solid #6ee7b7' }}>
-              <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                <Pencil size={15} style={{ color:'#10b981', flexShrink:0 }} />
-                <div>
-                  <p style={{ fontSize:13, fontWeight:700, color:'#047857', margin:0 }}>Ce bulletin est modifiable</p>
-                  <p style={{ fontSize:11, color:'#10b981', margin:0 }}>Statut Brouillon — jours et heures supplémentaires modifiables</p>
-                </div>
-              </div>
-              <button onClick={() => router.push(bp(`/paie/${params.id}/modifier`))}
-                style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:8, fontWeight:700, fontSize:12, background:'#10b981', color:'#fff', border:'none', cursor:'pointer', flexShrink:0 }}>
-                <Pencil size={13} /> Modifier
-              </button>
-            </div>
-          )}
+
         </div>
 
+        <section className="payroll-pay-summary no-print" aria-label="Rémunération du bulletin">
+          <div><span>Salaire brut</span><strong>{fmt(data.grossSalary)} <small>FCFA</small></strong></div>
+          <div><span>Total des retenues</span><strong>{fmt(data.totalDeductions)} <small>FCFA</small></strong></div>
+          <div className="is-net"><span>Net à payer</span><strong>{fmt(data.netSalary)} <small>FCFA</small></strong></div>
+        </section>
         {/* ── LAYOUT ── */}
-        <div className="grid grid-cols-1 xl:grid-cols-[1fr_290px] gap-6 items-start print:block">
+        <div className="payroll-detail-layout print:block">
 
           {/* ✅ BULLETIN A4 */}
-          <div className="payslip-sheet-wrap">
+          <section className="payroll-preview">
+          <div className="no-print payroll-preview-title"><h2>Bulletin officiel</h2><p>Aperçu du document transmis à l’employé.</p></div>
+          <DocumentReader title="Bulletin officiel" fitPage initialZoom={0.72}>
+          <div className="loan-document-protected">
+            <div className="payslip-sheet-wrap">
               <BulletinDisplay payroll={payrollForDisplay as any} />
+            </div>
           </div>
 
+          </DocumentReader></section>
           {/* ── SIDEBAR ── */}
-          <div className="no-print space-y-4">
+          <div className="no-print payroll-detail-context space-y-5">
 
-            {isAdmin && isDraft && (
-              <button onClick={() => router.push(bp(`/paie/${params.id}/modifier`))}
-                style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'center', gap:8, padding:'13px 16px', borderRadius:14, fontWeight:700, fontSize:14, background:'#10b981', color:'#fff', border:'none', cursor:'pointer', boxShadow:'0 4px 20px rgba(16,185,129,0.3)' }}>
-                <Pencil size={17} /> Modifier ce bulletin
-              </button>
-            )}
+
 
             {bonuses.length > 0 && (
               <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] overflow-hidden">
                 <div className="p-4 border-b border-[var(--border)] flex items-center gap-2">
-                  <Gift size={15} className="text-emerald-500" />
-                  <h3 className="font-bold text-[var(--text)] text-sm">Primes ce mois</h3>
+                  <Gift size={15} className="text-[var(--success-text)]" />
+                  <h3 className="font-semibold text-[var(--text)] text-sm">Primes ce mois</h3>
                 </div>
                 <div className="p-4 space-y-2">
                   {bonuses.map((b: any) => (
                     <div key={b.id} className="flex justify-between text-sm">
                       <span className="text-[var(--text-muted)] truncate flex-1 mr-2">{b.bonusType || b.label}</span>
-                      <span className="font-mono font-bold text-emerald-600 flex-shrink-0">+{fmt(b.amount || 0)} F</span>
+                      <span className="font-mono font-semibold text-[var(--success-text)] flex-shrink-0">+{fmt(b.amount || 0)} F</span>
                     </div>
                   ))}
                 </div>
@@ -299,18 +297,18 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
             )}
 
             {(!isSubjectToCnss || !isSubjectToIrpp) && (
-              <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 rounded-2xl p-4">
-                <p className="font-bold text-amber-800 dark:text-amber-400 text-sm flex items-center gap-2 mb-2"><AlertCircle size={14}/> Exemptions actives</p>
-                {!isSubjectToCnss && <p className="text-xs text-amber-600">• CNSS : exempté</p>}
-                {!isSubjectToIrpp && <p className="text-xs text-amber-600">• ITS : exempté</p>}
+              <div className="bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  border border-[var(--border)] rounded-2xl p-4">
+                <p className="font-semibold text-[var(--warning-text)]  text-sm flex items-center gap-2 mb-2"><AlertCircle size={14}/> Exemptions actives</p>
+                {!isSubjectToCnss && <p className="text-xs text-[var(--warning-text)]">• CNSS : exempté</p>}
+                {!isSubjectToIrpp && <p className="text-xs text-[var(--warning-text)]">• ITS : exempté</p>}
               </div>
             )}
 
             {isAdmin && (
               <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] overflow-hidden">
                 <button onClick={() => setShowEmployer(!showEmployer)}
-                  className="w-full flex items-center justify-between p-4 font-bold text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors">
-                  <span className="flex items-center gap-2 text-sm"><Building2 size={15} className="text-emerald-500"/> Coût Employeur</span>
+                  className="w-full flex items-center justify-between p-4 font-semibold text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors">
+                  <span className="flex items-center gap-2 text-sm"><Building2 size={15} className="text-[var(--success-text)]"/> Coût Employeur</span>
                   {showEmployer ? <ChevronUp size={15}/> : <ChevronDown size={15}/>}
                 </button>
                 <AnimatePresence>
@@ -318,22 +316,10 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
                     <motion.div initial={{ height:0 }} animate={{ height:'auto' }} exit={{ height:0 }}
                       className="border-t border-[var(--border)] overflow-hidden">
                       <div className="p-4 space-y-2 text-sm bg-[var(--surface-2)]">
-                        {[
-                          ['Brut',             `+${fmt(data.grossSalary)} F`,              'text-[var(--text-muted)]'],
-                          ['CNSS Pensions 8%',  `+${fmt(data.cnssEmployerPension ?? 0)} F`, 'font-mono font-bold text-amber-500'],
-                          ['CNSS Famille',      `+${fmt(data.cnssEmployerFamily   ?? 0)} F`, 'font-mono font-bold text-amber-500'],
-                          ['CNSS Accident',     `+${fmt(data.cnssEmployerAccident ?? 0)} F`, 'font-mono font-bold text-amber-500'],
-                          ['TUS FISC 2,025%',    `+${fmt(tusDgiAmount)} F`,                  'font-mono font-bold text-amber-500'],
-                          ['TUS CNSS 5,475%',   `+${fmt(tusCnssAmount)} F`,                 'font-mono font-bold text-amber-500'],
-                        ].map(([l,v,cls]) => (
-                          <div key={l} className="flex justify-between">
-                            <span className="text-[var(--text-muted)]">{l}</span>
-                            <span className={cls as string}>{v}</span>
-                          </div>
-                        ))}
-                        <div className="flex justify-between font-bold pt-2 border-t border-[var(--border)] text-[var(--text)]">
+                        <PayrollAmounts payroll={data} side="employer" />
+                        <div className="flex justify-between font-semibold pt-2 border-t border-[var(--border)] text-[var(--text)]">
                           <span>Coût Total</span>
-                          <span className="font-mono">{fmt(data.totalEmployerCost ?? 0)} F</span>
+                          <span className="font-mono">{data.totalEmployerCost == null ? '—' : `${fmt(data.totalEmployerCost)} F`}</span>
                         </div>
                       </div>
                     </motion.div>
@@ -343,35 +329,38 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
             )}
 
             <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-5">
-              <h3 className="font-bold text-[var(--text)] mb-4 text-sm">Récapitulatif</h3>
+              <h3 className="font-semibold text-[var(--text)] mb-4 text-sm">Récapitulatif</h3>
               <div className="space-y-2.5 text-sm">
                 {[
-                  { label:'Brut', val:`+${fmt(data.grossSalary)} F`,       cls:'text-emerald-600 font-mono font-bold' },
-                  { label:'CNSS', val:`−${fmt(cnssItem?.amount ?? 0)} F`,  cls:'font-mono text-red-500'              },
-                  { label:'ITS',  val:`−${fmt(irppItem?.amount ?? 0)} F`,  cls:'font-mono text-red-500'              },
+                  { label:'Brut', val:`+${fmt(data.grossSalary)} F`,       cls:'text-[var(--success-text)] font-mono font-semibold' },
                 ].map(r => (
                   <div key={r.label} className="flex justify-between">
                     <span className="text-[var(--text-muted)]">{r.label}</span>
                     <span className={r.cls}>{r.val}</span>
                   </div>
                 ))}
+                <PayrollAmounts payroll={data} side="employee" />
                 <div className="flex justify-between pt-2.5 border-t border-[var(--border)]">
-                  <span className="font-bold text-[var(--text)]">Net</span>
-                  <span className="font-mono font-bold text-[var(--text)]">{fmt(data.netSalary)} F</span>
+                  <span className="font-semibold text-[var(--text)]">Total des retenues</span>
+                  <span className="font-mono text-[var(--text)]">{fmt(data.totalDeductions)} F</span>
+                </div>
+                <div className="flex justify-between pt-2.5 border-t border-[var(--border)]">
+                  <span className="font-semibold text-[var(--text)]">Net</span>
+                  <span className="font-mono font-semibold text-[var(--text)]">{fmt(data.netSalary)} F</span>
                 </div>
               </div>
             </div>
 
-            <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl p-4 border border-emerald-200 dark:border-emerald-800">
-              <h3 className="font-bold text-[var(--text)] mb-3 flex items-center gap-2 text-sm">
-                <Info size={14} className="text-emerald-500"/> Congo 2026
+            <div className="bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  rounded-2xl p-4 border border-[var(--border)] ">
+              <h3 className="font-semibold text-[var(--text)] mb-3 flex items-center gap-2 text-sm">
+                <Info size={14} className="text-[var(--success-text)]"/> Congo 2026
               </h3>
               <div className="space-y-1 text-xs text-[var(--text-muted)]">
                 <p>• ITS 2026 — barème progressif — Abattement 20%</p>
                 <p>• CNSS salarié : 4% (plafond 1 200 000 F)</p>
                 <p>• CNSS patronale : 8% + 10,03% + 2,25%</p>
-                <p className="font-semibold text-amber-600 dark:text-amber-400">• TUS FISC : 2,025% sur brut</p>
-                <p className="font-semibold text-amber-600 dark:text-amber-400">• TUS CNSS : 5,475% sur brut</p>
+                <p className="font-semibold text-[var(--warning-text)] ">• TUS FISC : 2,025% sur brut</p>
+                <p className="font-semibold text-[var(--warning-text)] ">• TUS CNSS : 5,475% sur brut</p>
                 <p>• SMIG : 70 400 FCFA/mois</p>
               </div>
             </div>
@@ -391,34 +380,32 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
         {/* ── MODAL CONFIRMATION ── */}
         <AnimatePresence>
           {confirm && (
-            <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
-              className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 no-print">
+            <Modal open onClose={() => { !isBusy && setConfirm(null); }} title={CONFIRM_CONFIG[confirm].title}>
               <motion.div initial={{ scale:0.92, y:16 }} animate={{ scale:1, y:0 }} exit={{ scale:0.92, y:16 }}
-                className="bg-[var(--surface)] rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+                className="payroll-confirm-body">
                 {(() => {
                   const cfg  = CONFIRM_CONFIG[confirm];
                   const Icon = cfg.icon;
                   const isDel = confirm === 'delete';
                   return (
                     <div className="flex flex-col items-center text-center">
-                      <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
-                        style={{ background:isDel?'#fee2e2':'var(--surface-2)', color:isDel?'#dc2626':'var(--text-muted)' }}>
+                      <div className="payroll-confirm-icon"
+                        style={{ background:isDel?'var(--surface-2)':'var(--surface-2)', color:isDel?'var(--danger-text)':'var(--text-muted)' }}>
                         <Icon size={30}/>
                       </div>
-                      <h3 className="text-xl font-bold text-[var(--text)] mb-2">{cfg.title}</h3>
                       <p className="text-sm text-[var(--text-muted)] mb-5">{cfg.sub}</p>
                       {isDel && (
-                        <div className="w-full mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-left">
-                          <p className="text-xs text-red-700 dark:text-red-300 font-bold">⚠️ Cette action est irréversible.</p>
+                        <div className="w-full mb-4 p-3 bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  border border-[var(--border)]  rounded-xl text-left">
+                          <p className="text-xs text-[var(--danger-text)]  font-semibold">Cette action est irréversible.</p>
                         </div>
                       )}
                       <div className="flex gap-3 w-full">
                         <button onClick={() => setConfirm(null)}
-                          className="flex-1 py-3 border border-[var(--border)] rounded-xl font-bold text-sm hover:bg-[var(--surface-2)] transition-colors">
+                          className="flex-1 py-3 border border-[var(--border)] rounded-xl font-semibold text-sm hover:bg-[var(--surface-2)] transition-colors">
                           Retour
                         </button>
                         <button onClick={handleConfirm} disabled={isBusy}
-                          className="flex-1 py-3 text-white font-bold rounded-xl flex justify-center items-center gap-2 text-sm disabled:opacity-50"
+                          className="flex-1 py-3 text-[var(--on-brand)] font-semibold rounded-xl flex justify-center items-center gap-2 text-sm disabled:opacity-50"
                           style={{ background:cfg.btnColor }}>
                           {isBusy ? <Loader2 className="animate-spin" size={18}/> : <Icon size={16}/>}
                           {isBusy ? '…' : cfg.btnLabel}
@@ -428,10 +415,11 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
                   );
                 })()}
               </motion.div>
-            </motion.div>
+            </Modal>
           )}
         </AnimatePresence>
       </div>
-    </>
+      </>
+    </ModulePageFrame>
   );
 }

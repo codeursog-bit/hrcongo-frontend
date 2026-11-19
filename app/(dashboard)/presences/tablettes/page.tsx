@@ -1,4 +1,6 @@
 'use client';
+import { AttendanceDialog } from '@/components/attendance/AttendanceDialog';
+import { AttendanceSelect } from '@/components/attendance/AttendanceSelect';
 
 // ============================================================================
 // 📁 app/(dashboard)/presences/tablettes/page.tsx
@@ -7,6 +9,7 @@
 // ✅ Consomme le module backend checkin-devices livré précédemment.
 // ============================================================================
 
+import { AttendanceModuleFrame } from '@/components/attendance/AttendanceModuleFrame';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
@@ -86,7 +89,7 @@ interface Credential {
   employee: { id: string; firstName: string; lastName: string };
 }
 
-export default function TablettesPage() {
+function TablettesPageContent() {
   const { bp } = useBasePath();
   const router = useRouter();
   const { addNotification } = useNotification();
@@ -440,8 +443,8 @@ export default function TablettesPage() {
   if (!isAuthorized) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
-        <ShieldAlert size={40} className="text-red-500 mb-4" />
-        <h2 className="text-lg font-bold text-[var(--text)]">Accès réservé</h2>
+        <ShieldAlert size={40} className="text-[var(--danger-text)] mb-4" />
+        <h2 className="text-lg font-semibold text-[var(--text)]">Accès réservé</h2>
         <p className="text-sm text-[var(--text-muted)] mt-1">
           Seuls les administrateurs et responsables RH peuvent gérer les tablettes de pointage.
         </p>
@@ -453,10 +456,10 @@ export default function TablettesPage() {
     <div className="max-w-5xl mx-auto px-4 py-6">
       <PresenceSubNav userRole={currentUser?.role || ''} />
 
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-xl font-bold text-[var(--text)] flex items-center gap-2">
-            <Tablet size={20} className="text-emerald-500" /> Tablettes de pointage
+      <div className="flex items-center justify-between mb-6 attendance-page-header">
+        <div className="attendance-page-heading">
+          <h1 className="text-xl font-semibold text-[var(--text)] flex items-center gap-2">
+            <Tablet size={20} className="text-[var(--success-text)]" /> Tablettes de pointage
           </h1>
           <p className="text-sm text-[var(--text-muted)] mt-1">
             Badge NFC ou QR code — sans matériel dédié, juste une tablette ou un vieux téléphone Android.
@@ -467,12 +470,12 @@ export default function TablettesPage() {
       {/* ══════════════════════ TABLETTES ══════════════════════ */}
       <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 mb-8">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-bold uppercase tracking-widest text-[var(--text-muted)]">
+          <h2 className="text-sm font-semibold   text-[var(--text-muted)]">
             Vos tablettes
           </h2>
           <button
             onClick={() => setShowDeviceForm((v) => !v)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-emerald-500 text-white hover:bg-emerald-600 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-[var(--brand)] text-[var(--on-brand)] hover:bg-[var(--brand)] transition-colors"
           >
             <Plus size={14} /> Nouvelle tablette
           </button>
@@ -488,12 +491,12 @@ export default function TablettesPage() {
                 value={deviceName}
                 onChange={(e) => setDeviceName(e.target.value)}
                 placeholder="Ex : Accueil Brazzaville"
-                className="flex-1 px-3 py-2 rounded-lg bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] text-sm outline-none focus:border-emerald-500/50"
+                className="flex-1 px-3 py-2 rounded-lg bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] text-sm outline-none focus:border-[var(--border)]"
               />
               <button
                 onClick={handleCreateDevice}
                 disabled={creatingDevice || !deviceName.trim()}
-                className="px-4 py-2 rounded-lg bg-emerald-500 text-white text-sm font-bold hover:bg-emerald-600 disabled:opacity-50 flex items-center gap-2"
+                className="px-4 py-2 rounded-lg bg-[var(--brand)] text-[var(--on-brand)] text-sm font-semibold hover:bg-[var(--brand)] disabled:opacity-50 flex items-center gap-2"
               >
                 {creatingDevice && <Loader2 size={14} className="animate-spin" />} Créer
               </button>
@@ -513,7 +516,7 @@ export default function TablettesPage() {
                   value={midDayStart}
                   onChange={(e) => setMidDayStart(e.target.value)}
                   placeholder="12"
-                  className="w-20 px-3 py-2 rounded-lg bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] text-sm outline-none focus:border-emerald-500/50"
+                  className="w-20 px-3 py-2 rounded-lg bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] text-sm outline-none focus:border-[var(--border)]"
                 />
                 <span className="text-xs text-[var(--text-muted)]">à</span>
                 <input
@@ -521,7 +524,7 @@ export default function TablettesPage() {
                   value={midDayEnd}
                   onChange={(e) => setMidDayEnd(e.target.value)}
                   placeholder="14"
-                  className="w-20 px-3 py-2 rounded-lg bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] text-sm outline-none focus:border-emerald-500/50"
+                  className="w-20 px-3 py-2 rounded-lg bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] text-sm outline-none focus:border-[var(--border)]"
                 />
                 <span className="text-xs text-[var(--text-muted)]">heures</span>
               </div>
@@ -537,11 +540,11 @@ export default function TablettesPage() {
               <div key={d.id} className="rounded-xl bg-[var(--surface-2)] border border-[var(--border)] overflow-hidden">
                 <div className="flex items-center justify-between p-3">
                   <div className="flex items-center gap-3">
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${d.isActive ? 'bg-emerald-500/15 text-emerald-500' : 'bg-red-500/15 text-red-500'}`}>
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${d.isActive ? 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)]' : 'bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] text-[var(--danger-text)]'}`}>
                       <Tablet size={16} />
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-[var(--text)]">{d.name}</p>
+                      <p className="text-sm font-semibold text-[var(--text)]">{d.name}</p>
                       <p className="text-[11px] text-[var(--text-muted)]">
                         {d.lastSeenAt ? `Vue pour la dernière fois le ${new Date(d.lastSeenAt).toLocaleString('fr-FR')}` : 'Jamais utilisée'}
                         {d.midDayStartHour != null && d.midDayEndHour != null && (
@@ -554,18 +557,18 @@ export default function TablettesPage() {
                     {portfolioCompanies.length > 0 && (
                       <button
                         onClick={() => toggleSharingPanel(d.id)}
-                        className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-[var(--text-muted)] hover:bg-[var(--border)] transition-colors"
+                        className="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-[var(--text-muted)] hover:bg-[var(--border)] transition-colors"
                       >
                         Entreprises ({1 + (d._count?.additionalCompanies ?? 0)})
                       </button>
                     )}
                     <button
                       onClick={() => (editingMidDay === d.id ? setEditingMidDay(null) : openMidDayEdit(d))}
-                      className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-[var(--text-muted)] hover:bg-[var(--border)] transition-colors"
+                      className="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-[var(--text-muted)] hover:bg-[var(--border)] transition-colors"
                     >
                       Pause déjeuner
                     </button>
-                    <button onClick={() => handleDeleteDevice(d.id, d.name)} className="p-2 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors">
+                    <button onClick={() => handleDeleteDevice(d.id, d.name)} className="p-2 rounded-lg text-[var(--danger-text)] hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] transition-colors" aria-label="Supprimer">
                       <Trash2 size={16} />
                     </button>
                   </div>
@@ -580,10 +583,10 @@ export default function TablettesPage() {
                       {(sharingLinks[d.id] ?? []).map((link) => (
                         <div key={link.id} className="flex items-center justify-between p-2 rounded-lg bg-[var(--surface)] border border-[var(--border)]">
                           <div>
-                            <p className="text-xs font-bold text-[var(--text)]">{link.company.tradeName || link.company.legalName}</p>
+                            <p className="text-xs font-semibold text-[var(--text)]">{link.company.tradeName || link.company.legalName}</p>
                             <p className="text-[10px] text-[var(--text-muted)]">Porteur : {link.actingUser.firstName} {link.actingUser.lastName}</p>
                           </div>
-                          <button onClick={() => removeSharedCompany(d.id, link.id)} className="p-1.5 rounded-lg text-red-500 hover:bg-red-500/10">
+                          <button onClick={() => removeSharedCompany(d.id, link.id)} className="p-1.5 rounded-lg text-[var(--danger-text)] hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]" aria-label="Supprimer">
                             <Trash2 size={13} />
                           </button>
                         </div>
@@ -593,8 +596,8 @@ export default function TablettesPage() {
                       )}
                     </div>
 
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <select
+                    <div className="flex items-center gap-2 flex-wrap attendance-filters">
+                      <AttendanceSelect
                         value={newShareCompanyId}
                         onChange={(e) => handleShareCompanyChange(e.target.value)}
                         className="px-2.5 py-1.5 rounded-lg bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] text-xs outline-none"
@@ -603,9 +606,9 @@ export default function TablettesPage() {
                         {portfolioCompanies.map((c) => (
                           <option key={c.id} value={c.id}>{c.name}</option>
                         ))}
-                      </select>
+                      </AttendanceSelect>
 
-                      <select
+                      <AttendanceSelect
                         value={newShareActingUserId}
                         onChange={(e) => setNewShareActingUserId(e.target.value)}
                         disabled={!newShareCompanyId || loadingShareAdmins}
@@ -623,18 +626,18 @@ export default function TablettesPage() {
                         {shareCompanyAdmins.map((u) => (
                           <option key={u.id} value={u.id}>{u.firstName} {u.lastName}</option>
                         ))}
-                      </select>
+                      </AttendanceSelect>
 
                       <button
                         onClick={() => addSharedCompany(d.id)}
                         disabled={savingShare || !newShareCompanyId || !newShareActingUserId}
-                        className="px-3 py-1.5 rounded-lg bg-emerald-500 text-white text-xs font-bold hover:bg-emerald-600 disabled:opacity-50 flex items-center gap-1.5"
+                        className="px-3 py-1.5 rounded-lg bg-[var(--brand)] text-[var(--on-brand)] text-xs font-semibold hover:bg-[var(--brand)] disabled:opacity-50 flex items-center gap-1.5"
                       >
                         {savingShare && <Loader2 size={12} className="animate-spin" />} Ajouter
                       </button>
                     </div>
                     <p className="text-[10px] text-[var(--text-muted)] mt-2">
-                      ⚠️ Le porteur doit être un compte RH/admin qui appartient fixement à cette entreprise-là — pas un compte portefeuille qui bascule d'une société à l'autre.
+                       Le porteur doit être un compte RH/admin qui appartient fixement à cette entreprise-là — pas un compte portefeuille qui bascule d'une société à l'autre.
                     </p>
                   </div>
                 )}
@@ -646,7 +649,7 @@ export default function TablettesPage() {
                       value={editMidDayStart}
                       onChange={(e) => setEditMidDayStart(e.target.value)}
                       placeholder="Aucune"
-                      className="w-20 px-2.5 py-1.5 rounded-lg bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] text-xs outline-none focus:border-emerald-500/50"
+                      className="w-20 px-2.5 py-1.5 rounded-lg bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] text-xs outline-none focus:border-[var(--border)]"
                     />
                     <span className="text-xs text-[var(--text-muted)]">à</span>
                     <input
@@ -654,12 +657,12 @@ export default function TablettesPage() {
                       value={editMidDayEnd}
                       onChange={(e) => setEditMidDayEnd(e.target.value)}
                       placeholder="Aucune"
-                      className="w-20 px-2.5 py-1.5 rounded-lg bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] text-xs outline-none focus:border-emerald-500/50"
+                      className="w-20 px-2.5 py-1.5 rounded-lg bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] text-xs outline-none focus:border-[var(--border)]"
                     />
                     <button
                       onClick={() => saveMidDayEdit(d.id)}
                       disabled={savingMidDay}
-                      className="px-3 py-1.5 rounded-lg bg-emerald-500 text-white text-xs font-bold hover:bg-emerald-600 disabled:opacity-50 flex items-center gap-1.5"
+                      className="px-3 py-1.5 rounded-lg bg-[var(--brand)] text-[var(--on-brand)] text-xs font-semibold hover:bg-[var(--brand)] disabled:opacity-50 flex items-center gap-1.5"
                     >
                       {savingMidDay && <Loader2 size={12} className="animate-spin" />} Enregistrer
                     </button>
@@ -674,7 +677,7 @@ export default function TablettesPage() {
 
       {/* ══════════════════════ BADGES & QR ══════════════════════ */}
       <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6">
-        <h2 className="text-sm font-bold uppercase tracking-widest text-[var(--text-muted)] mb-4">
+        <h2 className="text-sm font-semibold   text-[var(--text-muted)] mb-4">
           Badges &amp; QR codes employés
         </h2>
 
@@ -684,7 +687,7 @@ export default function TablettesPage() {
             value={employeeQuery}
             onChange={(e) => setEmployeeQuery(e.target.value)}
             placeholder="Chercher un employé..."
-            className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text)] text-sm outline-none focus:border-emerald-500/50"
+            className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text)] text-sm outline-none focus:border-[var(--border)]"
           />
         </div>
 
@@ -697,12 +700,12 @@ export default function TablettesPage() {
                 onClick={() => { stopBadgeScan(); setScanFeedback(null); setBadgeIdentifier(''); setSelectedEmployee(emp); setQrImage(null); }}
                 className={`w-full flex items-center justify-between p-3 rounded-xl border text-left transition-colors ${
                   selectedEmployee?.id === emp.id
-                    ? 'bg-emerald-500/10 border-emerald-500/40'
+                    ? 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] border-[var(--border)]'
                     : 'bg-[var(--surface-2)] border-[var(--border)] hover:bg-[var(--border)]'
                 }`}
               >
                 <div>
-                  <p className="text-sm font-bold text-[var(--text)]">{emp.firstName} {emp.lastName}</p>
+                  <p className="text-sm font-semibold text-[var(--text)]">{emp.firstName} {emp.lastName}</p>
                   <p className="text-[11px] text-[var(--text-muted)]">{emp.employeeNumber} {emp.position ? `· ${emp.position}` : ''}</p>
                 </div>
               </button>
@@ -715,25 +718,25 @@ export default function TablettesPage() {
               <p className="text-sm text-[var(--text-muted)] text-center py-10">Choisis un employé à gauche.</p>
             ) : (
               <div className="space-y-5">
-                <p className="text-sm font-bold text-[var(--text)]">{selectedEmployee.firstName} {selectedEmployee.lastName}</p>
+                <p className="text-sm font-semibold text-[var(--text)]">{selectedEmployee.firstName} {selectedEmployee.lastName}</p>
 
                 {/* QR */}
                 <div>
                   <button
                     onClick={() => handleGenerateQr(selectedEmployee)}
                     disabled={generatingQr}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-500 text-white text-sm font-bold hover:bg-emerald-600 disabled:opacity-50"
+                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[var(--brand)] text-[var(--on-brand)] text-sm font-semibold hover:bg-[var(--brand)] disabled:opacity-50"
                   >
                     {generatingQr ? <Loader2 size={16} className="animate-spin" /> : <QrCode size={16} />}
                     Générer / afficher le QR code
                   </button>
                   {qrImage && (
-                    <div className="mt-3 flex flex-col items-center gap-2 bg-white rounded-xl p-3">
+                    <div className="mt-3 flex flex-col items-center gap-2 bg-[var(--surface)] rounded-xl p-3">
                       <img src={qrImage} alt="QR code de pointage" className="w-40 h-40" />
                       <a
                         href={qrImage}
                         download={`qr-${selectedEmployee.firstName}-${selectedEmployee.lastName}.png`}
-                        className="flex items-center gap-1.5 text-xs font-bold text-emerald-600"
+                        className="flex items-center gap-1.5 text-xs font-semibold text-[var(--success-text)]"
                       >
                         <Download size={14} /> Télécharger
                       </a>
@@ -750,16 +753,16 @@ export default function TablettesPage() {
                   {!scanningBadge ? (
                     <button
                       onClick={startBadgeScan}
-                      className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-[var(--surface)] border border-dashed border-[var(--border)] text-[var(--text)] text-sm font-semibold hover:border-emerald-500/50 hover:text-emerald-500 transition-colors mb-2"
+                      className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-[var(--surface)] border border-dashed border-[var(--border)] text-[var(--text)] text-sm font-semibold hover:border-[var(--border)] hover:text-[var(--success-text)] transition-colors mb-2"
                     >
                       <Camera size={15} /> Scanner ce badge avec la caméra
                     </button>
                   ) : (
-                    <div className="relative rounded-lg overflow-hidden bg-black mb-2 aspect-video">
+                    <div className="relative rounded-lg overflow-hidden bg-[var(--text)] mb-2 aspect-video">
                       <div id={BADGE_SCAN_REGION_ID} className="w-full h-full [&_video]:w-full [&_video]:h-full [&_video]:object-cover" />
                       <button
                         onClick={stopBadgeScan}
-                        className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/60 text-white hover:bg-black/80"
+                        className="absolute top-2 right-2 p-1.5 rounded-lg bg-[var(--text)] text-[var(--on-brand)] hover:bg-[var(--text)]"
                       >
                         <CameraOff size={14} />
                       </button>
@@ -767,7 +770,7 @@ export default function TablettesPage() {
                   )}
 
                   {scanFeedback && (
-                    <p className="text-[11px] text-emerald-500 mb-2">{scanFeedback}</p>
+                    <p className="text-[11px] text-[var(--success-text)] mb-2">{scanFeedback}</p>
                   )}
 
                   <div className="flex gap-2">
@@ -776,12 +779,12 @@ export default function TablettesPage() {
                       onChange={(e) => setBadgeIdentifier(e.target.value)}
                       onKeyDown={(e) => { if (e.key === 'Enter' && badgeIdentifier.trim()) handleRegisterBadge(); }}
                       placeholder="Ou pose le badge sur un lecteur RFID USB / saisis à la main"
-                      className="flex-1 px-3 py-2 rounded-lg bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] text-sm outline-none focus:border-emerald-500/50"
+                      className="flex-1 px-3 py-2 rounded-lg bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] text-sm outline-none focus:border-[var(--border)]"
                     />
                     <button
                       onClick={handleRegisterBadge}
                       disabled={registeringBadge || !badgeIdentifier.trim()}
-                      className="px-3 py-2 rounded-lg bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] text-sm font-bold hover:bg-[var(--border)] disabled:opacity-50"
+                      className="px-3 py-2 rounded-lg bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] text-sm font-semibold hover:bg-[var(--border)] disabled:opacity-50"
                     >
                       {registeringBadge ? <Loader2 size={14} className="animate-spin" /> : 'Associer'}
                     </button>
@@ -798,20 +801,20 @@ export default function TablettesPage() {
         {/* ── Table des identifiants existants ── */}
         {credentials.length > 0 && (
           <div className="mt-6">
-            <h3 className="text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-3">
+            <h3 className="text-xs font-semibold   text-[var(--text-muted)] mb-3">
               Identifiants actifs
             </h3>
             <div className="space-y-1.5">
               {credentials.map((c) => (
                 <div key={c.id} className="flex items-center justify-between p-3 rounded-xl bg-[var(--surface-2)] border border-[var(--border)]">
                   <div className="flex items-center gap-3">
-                    {c.type === 'NFC_BADGE' ? <Radio size={15} className="text-sky-500" /> : <QrCode size={15} className="text-emerald-500" />}
+                    {c.type === 'NFC_BADGE' ? <Radio size={15} className="text-[var(--action)]" /> : <QrCode size={15} className="text-[var(--success-text)]" />}
                     <div>
-                      <p className="text-sm font-bold text-[var(--text)]">{c.employee.firstName} {c.employee.lastName}</p>
+                      <p className="text-sm font-semibold text-[var(--text)]">{c.employee.firstName} {c.employee.lastName}</p>
                       <p className="text-[11px] text-[var(--text-muted)] font-mono">{c.identifier.slice(0, 18)}...</p>
                     </div>
                   </div>
-                  <button onClick={() => handleDeleteCredential(c.id, `${c.employee.firstName} ${c.employee.lastName}`)} className="p-2 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors">
+                  <button onClick={() => handleDeleteCredential(c.id, `${c.employee.firstName} ${c.employee.lastName}`)} className="p-2 rounded-lg text-[var(--danger-text)] hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] transition-colors" aria-label="Supprimer">
                     <Trash2 size={15} />
                   </button>
                 </div>
@@ -823,27 +826,31 @@ export default function TablettesPage() {
 
       {/* ══════════════════════ MODALE CLÉ API (une seule fois) ══════════════════════ */}
       {revealedKey && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-[var(--surface)] border border-emerald-500/30 rounded-2xl p-6 max-w-md w-full">
+        <AttendanceDialog title="Clé de la tablette" onClose={() => setRevealedKey(null)}>
+          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 max-w-md w-full">
             <div className="flex items-start justify-between mb-3">
-              <h3 className="text-base font-bold text-[var(--text)]">Tablette "{revealedKey.name}" créée</h3>
-              <button onClick={() => setRevealedKey(null)}><X size={18} className="text-[var(--text-muted)]" /></button>
+              <h3 className="text-base font-semibold text-[var(--text)]">Tablette "{revealedKey.name}" créée</h3>
+              <button onClick={() => setRevealedKey(null)} aria-label="Fermer"><X size={18} className="text-[var(--text-muted)]" /></button>
             </div>
-            <p className="text-xs text-amber-500 font-semibold mb-3">
-              ⚠️ Cette clé ne sera plus jamais affichée. Copie-la maintenant et colle-la dans l'écran de configuration de la tablette (/kiosk).
+            <p className="text-xs text-[var(--warning-text)] font-semibold mb-3">
+               Cette clé ne sera plus jamais affichée. Copie-la maintenant et colle-la dans l'écran de configuration de la tablette (/kiosk).
             </p>
             <div className="flex items-center gap-2 bg-[var(--surface-2)] rounded-xl p-3 font-mono text-xs break-all text-[var(--text)]">
               {revealedKey.apiKey}
             </div>
             <button
               onClick={copyKey}
-              className="w-full mt-3 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-500 text-white text-sm font-bold hover:bg-emerald-600"
+              className="w-full mt-3 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[var(--brand)] text-[var(--on-brand)] text-sm font-semibold hover:bg-[var(--brand)]"
             >
               {copied ? <Check size={16} /> : <Copy size={16} />} {copied ? 'Copié !' : 'Copier la clé'}
             </button>
           </div>
-        </div>
+        </AttendanceDialog>
       )}
     </div>
   );
+}
+
+export default function TablettesPage() {
+  return <AttendanceModuleFrame kind="list"><TablettesPageContent /></AttendanceModuleFrame>;
 }

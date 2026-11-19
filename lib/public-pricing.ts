@@ -33,24 +33,38 @@ const featureLabels = [
   ['hasTraining', 'Formations'],
   ['hasPerformanceReviews', 'Évaluations'],
   ['hasPayrollAccountingExport', 'Export comptable'],
+  ['hasCNSSDeclaration', 'Déclarations CNSS'],
+  ['hasDASDeclaration', 'Déclarations DAS'],
+  ['hasAnnualPayroll', 'Bulletins annuels'],
+  ['hasContractAlerts', 'Alertes de fin de contrat'],
+  ['hasContractGeneration', 'Génération des contrats'],
+  ['hasAppearanceCustomization', 'Couleurs personnalisées'],
+  ['hasWhiteLabel', 'Logo dans l’application'],
 ] as const;
 
 export function buildPublicPlans(catalog: Record<string, CatalogPlan>): PublicPricingPlan[] {
-  return ['FREE', 'BASIC', 'PRO', 'ENTERPRISE'].flatMap(key => {
+  return ['STARTER', 'BASIC', 'PRO', 'ENTERPRISE'].flatMap(key => {
     const plan = catalog[key];
     if (!plan) return [];
     const configured = plan.priceMonthly !== null && plan.priceYearly !== null;
-    const accent = key === 'PRO' ? '#10B981' : key === 'BASIC' ? '#34D399' : '#94A3B8';
+    const accent = 'var(--brand)';
     return [{
       id: key.toLowerCase(), name: plan.name, tagline: plan.description,
       price: plan.priceMonthly, priceYearly: plan.priceYearly, currency: plan.currency,
       priceNote: configured ? 'Sans engagement' : 'Tarif en cours de configuration',
-      employees: plan.limits.maxEmployees === -1 ? 'Employés illimités' : `Jusqu’à ${plan.limits.maxEmployees} employés`,
-      users: plan.limits.maxUsers === -1 ? 'Utilisateurs illimités' : `${plan.limits.maxUsers} utilisateur${plan.limits.maxUsers > 1 ? 's' : ''}`,
-      color: `${accent}0D`, accent, textAccent: accent, popular: plan.popular,
+      employees: plan.limits.maxEmployees === -1 ? 'Plus de 100 employés' : `Jusqu’à ${plan.limits.maxEmployees} employés`,
+      users: plan.limits.maxUsers === -1 ? 'Administrateurs illimités' : `${plan.limits.maxUsers} administrateur${plan.limits.maxUsers > 1 ? 's' : ''}`,
+      color: 'var(--brand-soft)', accent, textAccent: 'var(--action)', popular: plan.popular,
       cta: configured ? (key === 'FREE' ? 'Démarrer gratuitement' : 'Essai 30 jours gratuit') : 'Nous contacter',
       ctaHref: configured ? `/auth/register?plan=${key}` : '/contact',
-      features: featureLabels.map(([flag, label]) => ({ label, included: plan.limits[flag] === true })),
+      features: [
+        ...featureLabels.map(([flag, label]) => ({ label, included: plan.limits[flag] === true })),
+        ...(['maxLoansAdvances','maxPermissionTickets','maxAbsenceRequests'] as const).flatMap((key,index)=>{
+          const value=plan.limits[key];if(typeof value!=='number')return [];
+          const label=['prêts et avances','tickets de permission','demandes d’absence'][index];
+          return [{label:value===-1?`${label} illimités`:`${value} ${label} / mois`,included:value!==0}];
+        }),
+      ],
     }];
   });
 }

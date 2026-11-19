@@ -1,4 +1,5 @@
 'use client';
+import { useLoanVisuals } from '@/components/loans/LoanModuleFrame';
 
 // ============================================================================
 // 📁 components/request-reports/LoansRequestsPanel.tsx
@@ -15,7 +16,7 @@ import { KpiTile, ChartCard, EmptyChart, Insights, deltaPct } from './ReportKit'
 import { MONTHS, MONTHS_SHORT, STATUS_COLORS, avg, fmtMinutes, minutesBetween, pct } from '@/lib/request-history';
 
 type Group = 'Accordées' | 'En attente' | 'Refusées' | 'Annulées';
-const GROUP_COLOR: Record<Group, string> = { Accordées: STATUS_COLORS.APPROVED, 'En attente': STATUS_COLORS.PENDING, Refusées: STATUS_COLORS.REJECTED, Annulées: STATUS_COLORS.CANCELLED };
+const GROUP_COLOR: Record<Group, string> = { Accordées: `var(--loan-chart-2, ${STATUS_COLORS.APPROVED})`, 'En attente': `var(--loan-chart-3, ${STATUS_COLORS.PENDING})`, Refusées: `var(--loan-chart-danger, ${STATUS_COLORS.REJECTED})`, Annulées: `var(--loan-chart-neutral, ${STATUS_COLORS.CANCELLED})` };
 const fmt = (n: number) => Math.round(n).toLocaleString('fr-FR') + ' FCFA';
 
 const groupOf = (s: string): Group =>
@@ -35,6 +36,7 @@ const normalize = (loans: any[], advances: any[]): Req[] => [
 });
 
 export default function LoansRequestsPanel({ loans, advances, month, year }: { loans: any[]; advances: any[]; month: number; year: number }) {
+  const {refonte,motion}=useLoanVisuals();
   const all = useMemo(() => normalize(loans, advances), [loans, advances]);
   const inM = (r: Req, y: number, m: number) => r.createdAt.getFullYear() === y && r.createdAt.getMonth() + 1 === m;
   const cur = useMemo(() => all.filter(r => inM(r, year, month)), [all, year, month]);
@@ -94,14 +96,14 @@ export default function LoansRequestsPanel({ loans, advances, month, year }: { l
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={yearly}>
               <CartesianGrid strokeDasharray="3 3" opacity={0.2} /><XAxis dataKey="mois" fontSize={12} /><YAxis fontSize={12} allowDecimals={false} /><Tooltip /><Legend />
-              {(Object.keys(GROUP_COLOR) as Group[]).map(g => <Bar key={g} dataKey={g} stackId="a" fill={GROUP_COLOR[g]} />)}
+              {(Object.keys(GROUP_COLOR) as Group[]).map(g => <Bar key={g} dataKey={g} stackId="a" fill={GROUP_COLOR[g]} maxBarSize={refonte ? 16 : undefined} background={refonte ? {fill:"var(--surface-2)",radius:10} : undefined} animationDuration={refonte ? 700 : undefined} isAnimationActive={refonte ? motion : undefined} />)}
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
         <ChartCard title="Décisions du mois">
           {byGroup.length === 0 ? <EmptyChart h={240} /> : (
             <ResponsiveContainer width="100%" height={240}>
-              <PieChart><Pie data={byGroup} dataKey="value" nameKey="name" innerRadius={50} outerRadius={85} label={(d: any) => `${pct(d.value, S.total)}%`}>
+              <PieChart><Pie data={byGroup} dataKey="value" nameKey="name" innerRadius={50} outerRadius={85} label={(d: any) => `${pct(d.value, S.total)}%`} cornerRadius={refonte ? 8 : 0} animationDuration={refonte ? 700 : undefined} isAnimationActive={refonte ? motion : undefined}>
                 {byGroup.map(d => <Cell key={d.name} fill={GROUP_COLOR[d.name as Group]} />)}
               </Pie><Tooltip /><Legend /></PieChart>
             </ResponsiveContainer>
@@ -110,7 +112,7 @@ export default function LoansRequestsPanel({ loans, advances, month, year }: { l
         <ChartCard title="Délai de décision" subtitle="Demandes décidées sur le mois">
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={buckets}><CartesianGrid strokeDasharray="3 3" opacity={0.2} /><XAxis dataKey="name" fontSize={11} /><YAxis fontSize={12} allowDecimals={false} /><Tooltip />
-              <Bar dataKey="value" name="Demandes" fill="#8b5cf6" radius={[6, 6, 0, 0]} /></BarChart>
+              <Bar dataKey="value" name="Demandes" fill="var(--loan-chart-2, #8b5cf6)" radius={refonte ? [10,10,10,10] : [6, 6, 0, 0]} maxBarSize={refonte ? 16 : undefined} background={refonte ? {fill:"var(--surface-2)",radius:10} : undefined} animationDuration={refonte ? 700 : undefined} isAnimationActive={refonte ? motion : undefined} /></BarChart>
           </ResponsiveContainer>
         </ChartCard>
       </div>

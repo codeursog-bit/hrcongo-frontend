@@ -1,4 +1,5 @@
 'use client';
+import { ModuleSelect } from '@/components/ui/ModuleSelect';
 
 // ============================================================================
 // 📁 app/(dashboard)/parametres/paie/page.tsx
@@ -32,6 +33,7 @@ import {
 import { api } from '@/services/api';
  import { useBasePath } from '@/hooks/useBasePath';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import { SettingsFrame as ModulePageFrame } from '@/components/settings/SettingsFrame';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type TabId = 'cnss' | 'overtime' | 'nightshift' | 'its' | 'calendar' | 'conges';
@@ -126,9 +128,9 @@ function SavedBanner({ onDismiss }: { onDismiss: () => void }) {
     return () => clearTimeout(t);
   }, [onDismiss]);
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 bg-emerald-500 text-white rounded-2xl shadow-2xl shadow-emerald-500/30">
+    <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 bg-[var(--brand)] text-[var(--on-brand)] rounded-2xl shadow-2xl ">
       <CheckCircle2 size={18} />
-      <span className="font-bold text-sm">Paramètres enregistrés !</span>
+      <span className="font-semibold text-sm">Paramètres enregistrés !</span>
       <button onClick={onDismiss}><X size={14} /></button>
     </div>
   );
@@ -137,19 +139,19 @@ function SavedBanner({ onDismiss }: { onDismiss: () => void }) {
 // ─── Composant : Raccourcis vers autres pages ─────────────────────────────────
 function QuickLinks({ router }: { router: any }) {
   const links = [
-    { icon: <Calendar size={16} />,    label: 'Plannings & Shifts',    href: '/presences/shifts',      color: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' },
-    { icon: <Gift size={16} />,        label: 'Primes',                href: '/parametres/primes',     color: 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800' },
-    { icon: <Users size={16} />,       label: 'Congés',                href: '/conges',                color: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' },
-    { icon: <Percent size={16} />,     label: 'Taxes entreprise',      href: '/parametres/taxes',      color: 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800' },
-    { icon: <ClipboardList size={16} />,label: 'Déclaration CNSS',     href: '/cnss-declaration',      color: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' },
-    { icon: <FileText size={16} />,    label: 'Contrats',              href: '/contrats',              color: 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800' },
-    { icon: <Banknote size={16} />,    label: 'Bulletins de paie',     href: '/paie',                  color: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' },
+    { icon: <Calendar size={16} />,    label: 'Plannings & Shifts',    href: '/presences/shifts',      color: 'bg-[var(--brand-soft)]  text-[var(--success-text)]  border-[var(--border)] ' },
+    { icon: <Gift size={16} />,        label: 'Primes',                href: '/parametres/primes',     color: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  text-[var(--warning-text)]  border-[var(--border)] ' },
+    { icon: <Users size={16} />,       label: 'Congés',                href: '/conges',                color: 'bg-[var(--brand-soft)]  text-[var(--success-text)]  border-[var(--border)] ' },
+    { icon: <Percent size={16} />,     label: 'Taxes entreprise',      href: '/parametres/taxes',      color: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  text-[var(--warning-text)]  border-[var(--border)] ' },
+    { icon: <ClipboardList size={16} />,label: 'Déclaration CNSS',     href: '/cnss-declaration',      color: 'bg-[var(--brand-soft)]  text-[var(--success-text)]  border-[var(--border)] ' },
+    { icon: <FileText size={16} />,    label: 'Contrats',              href: '/contrats',              color: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  text-[var(--warning-text)]  border-[var(--border)] ' },
+    { icon: <Banknote size={16} />,    label: 'Bulletins de paie',     href: '/paie',                  color: 'bg-[var(--brand-soft)]  text-[var(--success-text)]  border-[var(--border)] ' },
     { icon: <Landmark size={16} />,    label: 'Conventions collectives',href: '/parametres/entreprise', color: 'bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)]' },
   ];
 
   return (
     <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5">
-      <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-3">
+      <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">
         Accès rapide
       </p>
       <div className="grid grid-cols-2 gap-2">
@@ -157,7 +159,7 @@ function QuickLinks({ router }: { router: any }) {
           <button
             key={l.href}
             onClick={() => router.push(l.href)}
-            className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-xs font-semibold transition-all hover:-translate-y-0.5 ${l.color}`}
+            className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-xs font-semibold transition-colors  ${l.color}`}
           >
             {l.icon}
             <span className="truncate">{l.label}</span>
@@ -170,7 +172,7 @@ function QuickLinks({ router }: { router: any }) {
 }
 
 // ─── Page principale ──────────────────────────────────────────────────────────
-export default function PayrollSettingsPage() {
+function PayrollSettingsPage() {
   const router = useRouter();
   const { bp } = useBasePath();
   const [activeTab, setActiveTab]   = useState<TabId>('cnss');
@@ -356,7 +358,7 @@ const handleSave = async () => {
       {saved && <SavedBanner onDismiss={() => setSaved(false)} />}
 
       {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-4 mb-6 mt-6">
+      <div className="settings-page-header flex items-center gap-4 mb-6 mt-6">
         <button
           onClick={() => router.back()}
           className="p-2 bg-[var(--surface)] rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)] transition-colors"
@@ -364,26 +366,26 @@ const handleSave = async () => {
           <ArrowLeft size={20} className="text-[var(--text-muted)]" />
         </button>
         <div className="flex-1">
-          <h1 className="text-2xl font-black text-[var(--text)]">Paramètres de Paie</h1>
+          <h1 className="text-2xl font-semibold text-[var(--text)]">Paramètres de Paie</h1>
           <p className="text-sm text-[var(--text-muted)] mt-0.5">
             CNSS · Heures sup · Nuit · ITS · Calendrier
           </p>
         </div>
         <button
           onClick={() => setShowConfirm(true)}
-          className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold shadow-lg shadow-emerald-500/20 hover:-translate-y-0.5 transition-all"
+          className="flex items-center gap-2 px-5 py-2.5 bg-[var(--brand)] hover:bg-[var(--brand)] text-[var(--on-brand)] rounded-xl text-sm font-semibold shadow-lg   transition-colors"
         >
           <Save size={16} /> Enregistrer
         </button>
       </div>
 
       {/* ── Tabs ────────────────────────────────────────────────────────────── */}
-      <div className="flex gap-2 overflow-x-auto pb-3 mb-5 no-scrollbar">
+      <div role="tablist" aria-label="Rubriques des paramètres" className="settings-local-tabs flex gap-2 overflow-x-auto pb-3 mb-5 no-scrollbar">
         {TABS.map((tab) => (
-          <button
+          <button role="tab" aria-selected={activeTab === tab.id}
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`relative flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap flex-shrink-0 ${
+            className={`relative flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-colors whitespace-nowrap flex-shrink-0 ${
               activeTab === tab.id
                 ? 'bg-[var(--text)] text-[var(--bg)] shadow-lg'
                 : 'bg-[var(--surface)] text-[var(--text-muted)] border border-[var(--border)] hover:bg-[var(--surface-2)]'
@@ -392,10 +394,10 @@ const handleSave = async () => {
             <tab.icon size={15} />
             {tab.label}
             {tab.badge && (
-              <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-black ${
+              <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-semibold ${
                 tab.badge === 'OFF'
                   ? 'bg-[var(--surface-2)] text-[var(--text-muted)]'
-                  : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400'
+                  : 'bg-[var(--brand-soft)]  text-[var(--success-text)] '
               }`}>
                 {tab.badge}
               </span>
@@ -404,7 +406,7 @@ const handleSave = async () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="settings-two-column grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* ── Contenu principal ─────────────────────────────────────────────── */}
         <div className="lg:col-span-2 space-y-5">
 
@@ -414,31 +416,31 @@ const handleSave = async () => {
               {/* Part salariale */}
               <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6">
                 <div className="flex items-center justify-between mb-5">
-                  <h3 className="font-bold text-[var(--text)] flex items-center gap-2">
-                    <Shield size={18} className="text-emerald-500" /> CNSS Salariale
+                  <h3 className="font-semibold text-[var(--text)] flex items-center gap-2">
+                    <Shield size={18} className="text-[var(--success-text)]" /> CNSS Salariale
                   </h3>
-                  <span className="text-[10px] bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800 rounded-full px-2 py-0.5 font-bold">
+                  <span className="text-[10px] bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  text-[var(--warning-text)]  border border-[var(--border)]  rounded-full px-2 py-0.5 font-semibold">
                     Taux légaux — lecture seule
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1.5">Taux salarié (%)</label>
+                    <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase mb-1.5">Taux salarié (%)</label>
                     <div className="relative">
                       <input type="number" readOnly disabled
                         value={settings.cnssSalarialRate}
-                        className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-bold text-[var(--text-muted)] cursor-not-allowed"
+                        className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-semibold text-[var(--text-muted)] cursor-not-allowed"
                       />
                       <span className="absolute right-3 top-3 text-[10px] text-[var(--text-muted)]">% — fixe</span>
                     </div>
                     <p className="text-xs text-[var(--text-muted)] mt-1">Décret Congo — non modifiable</p>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1.5">Taux patronal (%)</label>
+                    <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase mb-1.5">Taux patronal (%)</label>
                     <div className="relative">
                       <input type="number" readOnly disabled
                         value={settings.cnssEmployerRate}
-                        className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-bold text-[var(--text-muted)] cursor-not-allowed"
+                        className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-semibold text-[var(--text-muted)] cursor-not-allowed"
                       />
                       <span className="absolute right-3 top-3 text-[10px] text-[var(--text-muted)]">% — fixe</span>
                     </div>
@@ -449,8 +451,8 @@ const handleSave = async () => {
 
               {/* Plafonds */}
               <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6">
-                <h3 className="font-bold text-[var(--text)] mb-2 flex items-center gap-2">
-                  <Shield size={18} className="text-emerald-500" /> Plafonds de cotisation
+                <h3 className="font-semibold text-[var(--text)] mb-2 flex items-center gap-2">
+                  <Shield size={18} className="text-[var(--success-text)]" /> Plafonds de cotisation
                 </h3>
                 <p className="text-xs text-[var(--text-muted)] mb-5">
                   Conformes au Décret n°99-284 du Congo
@@ -461,14 +463,14 @@ const handleSave = async () => {
                     { key: 'cnssSocialCeiling',  label: 'Plafond Famille & Accidents', sub: '12.28% patronal — branches famille + AT' },
                   ].map(({ key, label, sub }) => (
                     <div key={key}>
-                      <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1.5">{label}</label>
+                      <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase mb-1.5">{label}</label>
                       <div className="relative">
                         <input type="number"
                           value={(settings as any)[key]}
                           onChange={e => set(key as any, +e.target.value)}
-                          className="w-full p-3 pr-14 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-mono font-bold text-[var(--text)] focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400"
+                          className="w-full p-3 pr-14 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-mono font-semibold text-[var(--text)] focus:ring-2 focus:ring-[var(--focus)] focus:border-[var(--border)]"
                         />
-                        <span className="absolute right-3 top-3 text-xs text-[var(--text-muted)] font-bold">XAF</span>
+                        <span className="absolute right-3 top-3 text-xs text-[var(--text-muted)] font-semibold">XAF</span>
                       </div>
                       <p className="text-xs text-[var(--text-muted)] mt-1">{sub}</p>
                     </div>
@@ -478,13 +480,13 @@ const handleSave = async () => {
                 {/* Détail 3 branches */}
                 <div className="mt-5 grid grid-cols-3 gap-3">
                   {[
-                    { label: 'Retraite',         rate: '8%',     ceiling: 'Plafond 1', color: 'bg-emerald-50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400' },
-                    { label: 'Prestations fam.', rate: '10.03%', ceiling: 'Plafond 2', color: 'bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400' },
-                    { label: 'Accidents',        rate: '2.25%',  ceiling: 'Plafond 2', color: 'bg-emerald-50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400' },
+                    { label: 'Retraite',         rate: '8%',     ceiling: 'Plafond 1', color: 'bg-[var(--brand-soft)]  border-[var(--border)]  text-[var(--success-text)] ' },
+                    { label: 'Prestations fam.', rate: '10.03%', ceiling: 'Plafond 2', color: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  border-[var(--border)]  text-[var(--warning-text)] ' },
+                    { label: 'Accidents',        rate: '2.25%',  ceiling: 'Plafond 2', color: 'bg-[var(--brand-soft)]  border-[var(--border)]  text-[var(--success-text)] ' },
                   ].map((b) => (
                     <div key={b.label} className={`p-3 border rounded-xl ${b.color}`}>
-                      <p className="text-xs font-bold mb-0.5">{b.label}</p>
-                      <p className="text-lg font-black">{b.rate}</p>
+                      <p className="text-xs font-semibold mb-0.5">{b.label}</p>
+                      <p className="text-lg font-semibold">{b.rate}</p>
                       <p className="text-[10px] opacity-70">{b.ceiling}</p>
                     </div>
                   ))}
@@ -493,16 +495,16 @@ const handleSave = async () => {
 
               {/* Arrondi */}
               <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5">
-                <label className="block text-sm font-bold text-[var(--text)] mb-3">
+                <label className="block text-sm font-semibold text-[var(--text)] mb-3">
                   Règle d'arrondi CNSS
                 </label>
                 <div className="flex gap-2">
                   {['UP', 'DOWN', 'NEAREST'].map(v => (
                     <button key={v} onClick={() => set('cnssRounding', v)}
-                      className={`flex-1 py-2.5 rounded-xl text-sm font-bold border-2 transition-all ${
+                      className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border-2 transition-colors ${
                         settings.cnssRounding === v
-                          ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
-                          : 'border-[var(--border)] text-[var(--text-muted)] hover:border-emerald-300'
+                          ? 'border-[var(--border)] bg-[var(--brand-soft)]  text-[var(--success-text)] '
+                          : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--border)]'
                       }`}>
                       {v === 'UP' ? '↑ Supérieur' : v === 'DOWN' ? '↓ Inférieur' : '≈ Nearest'}
                     </button>
@@ -519,19 +521,19 @@ const handleSave = async () => {
               <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl overflow-hidden">
                 <div className="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
-                      <Zap size={18} className="text-amber-500" />
+                    <div className="p-2 bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  rounded-xl">
+                      <Zap size={18} className="text-[var(--warning-text)]" />
                     </div>
                     <div>
-                      <p className="font-bold text-[var(--text)]">Heures supplémentaires</p>
+                      <p className="font-semibold text-[var(--text)]">Heures supplémentaires</p>
                       <p className="text-xs text-[var(--text-muted)]">Décret 78-360 — Congo</p>
                     </div>
                   </div>
                   <button
                     onClick={() => set('overtimeEnabled', !settings.overtimeEnabled)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all border ${
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-colors border ${
                       settings.overtimeEnabled
-                        ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800'
+                        ? 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  text-[var(--warning-text)]  border-[var(--border)] '
                         : 'bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)]'
                     }`}
                   >
@@ -542,16 +544,16 @@ const handleSave = async () => {
 
                 <div className={`p-6 space-y-5 transition-opacity ${!settings.overtimeEnabled ? 'opacity-40 pointer-events-none' : ''}`}>
                   {!settings.overtimeEnabled && (
-                    <div className="!opacity-100 pointer-events-auto p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl flex items-start gap-2">
-                      <AlertTriangle size={14} className="text-amber-500 flex-shrink-0 mt-0.5" />
-                      <p className="text-xs text-amber-700 dark:text-amber-400">
+                    <div className="!opacity-100 pointer-events-auto p-3 bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  border border-[var(--border)]  rounded-xl flex items-start gap-2">
+                      <AlertTriangle size={14} className="text-[var(--warning-text)] flex-shrink-0 mt-0.5" />
+                      <p className="text-xs text-[var(--warning-text)] ">
                         Les heures supplémentaires sont désactivées. Aucun calcul HS ne sera effectué.
                       </p>
                     </div>
                   )}
 
                   <div>
-                    <p className="text-xs font-bold text-[var(--text-muted)] uppercase mb-3">Taux de majoration</p>
+                    <p className="text-xs font-semibold text-[var(--text-muted)] uppercase mb-3">Taux de majoration</p>
                     <div className="grid grid-cols-2 gap-3">
                       {[
                         { key: 'overtimeRate10'  as const, label: '5 premières HS/semaine',     color: 'emerald', desc: '(+10% légal Congo)' },
@@ -559,16 +561,16 @@ const handleSave = async () => {
                         { key: 'overtimeRate50'  as const, label: 'Nuit / Repos / Férié',      color: 'amber',   desc: '(+50% légal Congo)' },
                         { key: 'overtimeRate100' as const, label: 'Nuit Dimanche / Férié',     color: 'amber',     desc: '(+100% légal Congo)' },
                       ].map((item) => (
-                        <div key={item.key} className={`p-4 bg-${item.color}-50 dark:bg-${item.color}-900/10 border border-${item.color}-200 dark:border-${item.color}-800 rounded-xl`}>
-                          <label className="block text-xs font-bold text-[var(--text-muted)] mb-2 leading-tight">
+                        <div key={item.key} className={'p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl'}>
+                          <label className="block text-xs font-semibold text-[var(--text-muted)] mb-2 leading-tight">
                             {item.label}
                           </label>
                           <div className="flex items-center gap-2">
-                            <span className="text-[var(--text-muted)] text-sm font-bold">+</span>
+                            <span className="text-[var(--text-muted)] text-sm font-semibold">+</span>
                             <input type="number" min={0} max={200} step={5}
                               value={settings[item.key] as number}
                               onChange={e => set(item.key, +e.target.value)}
-                              className="flex-1 px-2 py-1.5 bg-[var(--surface)] border border-transparent focus:border-emerald-400 rounded-lg text-sm font-black text-center text-[var(--text)]"
+                              className="flex-1 px-2 py-1.5 bg-[var(--surface)] border border-transparent focus:border-[var(--border)] rounded-lg text-sm font-semibold text-center text-[var(--text)]"
                             />
                             <span className="text-[var(--text-muted)] text-sm">%</span>
                           </div>
@@ -578,9 +580,9 @@ const handleSave = async () => {
                     </div>
                   </div>
 
-                  <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 rounded-xl flex items-start gap-2">
-                    <Info size={14} className="text-emerald-500 flex-shrink-0 mt-0.5" />
-                    <p className="text-xs text-emerald-700 dark:text-emerald-400">
+                  <div className="p-4 bg-[var(--brand-soft)]  border border-[var(--border)]  rounded-xl flex items-start gap-2">
+                    <Info size={14} className="text-[var(--success-text)] flex-shrink-0 mt-0.5" />
+                    <p className="text-xs text-[var(--success-text)] ">
                       Les taux sont ceux du <strong>Décret n°78-360</strong>. Modifiez-les uniquement si votre convention collective prévoit des taux différents.
                       La validation patron des heures sup passe par la page <strong>Présences → Corrections</strong>.
                     </p>
@@ -596,19 +598,19 @@ const handleSave = async () => {
               <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl overflow-hidden">
                 <div className="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl">
-                      <Moon size={18} className="text-emerald-500" />
+                    <div className="p-2 bg-[var(--brand-soft)]  rounded-xl">
+                      <Moon size={18} className="text-[var(--success-text)]" />
                     </div>
                     <div>
-                      <p className="font-bold text-[var(--text)]">Prime de travail de nuit</p>
+                      <p className="font-semibold text-[var(--text)]">Prime de travail de nuit</p>
                       <p className="text-xs text-[var(--text-muted)]">Pour shifts de nuit contractuels</p>
                     </div>
                   </div>
                   <button
                     onClick={() => set('nightShiftEnabled', !settings.nightShiftEnabled)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all border ${
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-colors border ${
                       settings.nightShiftEnabled
-                        ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
+                        ? 'bg-[var(--brand-soft)]  text-[var(--success-text)]  border-[var(--border)] '
                         : 'bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)]'
                     }`}
                   >
@@ -618,9 +620,9 @@ const handleSave = async () => {
                 </div>
 
                 <div className={`p-6 space-y-5 transition-opacity ${!settings.nightShiftEnabled ? 'opacity-40 pointer-events-none' : ''}`}>
-                  <div className="!opacity-100 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 rounded-xl flex items-start gap-2">
-                    <Info size={14} className="text-emerald-500 flex-shrink-0 mt-0.5" />
-                    <p className="text-xs text-emerald-700 dark:text-emerald-400">
+                  <div className="!opacity-100 p-3 bg-[var(--brand-soft)]  border border-[var(--border)]  rounded-xl flex items-start gap-2">
+                    <Info size={14} className="text-[var(--success-text)] flex-shrink-0 mt-0.5" />
+                    <p className="text-xs text-[var(--success-text)] ">
                       La prime de nuit s'applique aux heures travaillées pendant la plage définie ci-dessous.
                       Elle est <strong>distincte des heures sup</strong> — un infirmier en shift de nuit contractuel bénéficie de la prime, pas des heures sup.
                     </p>
@@ -628,33 +630,33 @@ const handleSave = async () => {
 
                   {/* Plage horaire */}
                   <div>
-                    <p className="text-xs font-bold text-[var(--text-muted)] uppercase mb-3">Plage horaire nocturne</p>
+                    <p className="text-xs font-semibold text-[var(--text-muted)] uppercase mb-3">Plage horaire nocturne</p>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs font-bold text-[var(--text-muted)] mb-1.5 flex items-center gap-1.5">
-                          <Moon size={12} className="text-emerald-400" /> Début de nuit
+                        <label className="block text-xs font-semibold text-[var(--text-muted)] mb-1.5 flex items-center gap-1.5">
+                          <Moon size={12} className="text-[var(--success-text)]" /> Début de nuit
                         </label>
-                        <select value={settings.nightShiftStartHour}
+                        <ModuleSelect value={settings.nightShiftStartHour}
                           onChange={e => set('nightShiftStartHour', +e.target.value)}
-                          className="w-full px-3 py-2.5 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm font-bold text-[var(--text)] focus:border-emerald-500"
+                          className="w-full px-3 py-2.5 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm font-semibold text-[var(--text)] focus:border-[var(--border)]"
                         >
                           {Array.from({ length: 24 }, (_, i) => (
                             <option key={i} value={i}>{String(i).padStart(2, '0')}h00</option>
                           ))}
-                        </select>
+                        </ModuleSelect>
                       </div>
                       <div>
-                        <label className="block text-xs font-bold text-[var(--text-muted)] mb-1.5 flex items-center gap-1.5">
-                          <Sun size={12} className="text-amber-400" /> Fin de nuit
+                        <label className="block text-xs font-semibold text-[var(--text-muted)] mb-1.5 flex items-center gap-1.5">
+                          <Sun size={12} className="text-[var(--warning-text)]" /> Fin de nuit
                         </label>
-                        <select value={settings.nightShiftEndHour}
+                        <ModuleSelect value={settings.nightShiftEndHour}
                           onChange={e => set('nightShiftEndHour', +e.target.value)}
-                          className="w-full px-3 py-2.5 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm font-bold text-[var(--text)] focus:border-emerald-500"
+                          className="w-full px-3 py-2.5 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm font-semibold text-[var(--text)] focus:border-[var(--border)]"
                         >
                           {Array.from({ length: 24 }, (_, i) => (
                             <option key={i} value={i}>{String(i).padStart(2, '0')}h00</option>
                           ))}
-                        </select>
+                        </ModuleSelect>
                       </div>
                     </div>
                     <div className="mt-2 px-3 py-2 bg-[var(--surface-2)] rounded-xl text-xs font-mono text-[var(--text-muted)] text-center">
@@ -667,23 +669,23 @@ const handleSave = async () => {
 
                   {/* Taux prime */}
                   <div>
-                    <p className="text-xs font-bold text-[var(--text-muted)] uppercase mb-3">Taux de la prime (%)</p>
+                    <p className="text-xs font-semibold text-[var(--text-muted)] uppercase mb-3">Taux de la prime (%)</p>
                     <div className="flex items-center gap-4">
                       <input type="range" min={0} max={100} step={5}
                         value={settings.nightShiftPremiumRate}
                         onChange={e => set('nightShiftPremiumRate', +e.target.value)}
                         className="flex-1 accent-emerald-500"
                       />
-                      <div className="w-20 text-center px-3 py-2 bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-200 dark:border-emerald-800 rounded-xl">
-                        <span className="font-black text-emerald-600 dark:text-emerald-400 text-lg">+{settings.nightShiftPremiumRate}%</span>
+                      <div className="w-20 text-center px-3 py-2 bg-[var(--brand-soft)]  border-2 border-[var(--border)]  rounded-xl">
+                        <span className="font-semibold text-[var(--success-text)]  text-lg">+{settings.nightShiftPremiumRate}%</span>
                       </div>
                     </div>
                     <div className="flex gap-2 mt-3">
                       {[10, 15, 20, 25, 30].map(v => (
                         <button key={v} onClick={() => set('nightShiftPremiumRate', v)}
-                          className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${
+                          className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-colors ${
                             settings.nightShiftPremiumRate === v
-                              ? 'bg-emerald-500 text-white'
+                              ? 'bg-[var(--brand)] text-[var(--on-brand)]'
                               : 'bg-[var(--surface-2)] text-[var(--text-muted)] hover:bg-[var(--border)]'
                           }`}>
                           +{v}%
@@ -697,17 +699,17 @@ const handleSave = async () => {
               {/* Lien vers shifts */}
               <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl">
-                    <Calendar size={16} className="text-emerald-500" />
+                  <div className="p-2 bg-[var(--brand-soft)]  rounded-xl">
+                    <Calendar size={16} className="text-[var(--success-text)]" />
                   </div>
                   <div>
-                    <p className="font-bold text-sm text-[var(--text)]">Plannings & Shifts</p>
+                    <p className="font-semibold text-sm text-[var(--text)]">Plannings & Shifts</p>
                     <p className="text-xs text-[var(--text-muted)]">Assigner les shifts de nuit par employé</p>
                   </div>
                 </div>
                 <button
                   onClick={() => router.push(bp('/presences/shifts'))}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 rounded-xl text-xs font-bold hover:-translate-y-0.5 transition-all"
+                  className="flex items-center gap-1.5 px-4 py-2 bg-[var(--brand-soft)]  text-[var(--success-text)]  border border-[var(--border)]  rounded-xl text-xs font-semibold  transition-colors"
                 >
                   Gérer <ChevronRight size={13} />
                 </button>
@@ -721,10 +723,10 @@ const handleSave = async () => {
               {/* Mode fiscal */}
               <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-bold text-[var(--text)] flex items-center gap-2">
-                    <Calculator size={18} className="text-emerald-500" /> Mode fiscal
+                  <h3 className="font-semibold text-[var(--text)] flex items-center gap-2">
+                    <Calculator size={18} className="text-[var(--success-text)]" /> Mode fiscal
                   </h3>
-                  <span className="text-[10px] bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800 rounded-full px-2 py-0.5 font-bold">
+                  <span className="text-[10px] bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  text-[var(--warning-text)]  border border-[var(--border)]  rounded-full px-2 py-0.5 font-semibold">
                     Barème légal — lecture seule
                   </span>
                 </div>
@@ -738,10 +740,10 @@ const handleSave = async () => {
                     <div key={v}
                       className={`flex flex-col items-start px-4 py-3 rounded-xl border-2 text-left ${
                         settings.fiscalMode === v
-                          ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
+                          ? 'border-[var(--border)] bg-[var(--brand-soft)] '
                           : 'border-[var(--border)]'
                       }`}>
-                      <p className={`font-bold text-sm ${settings.fiscalMode === v ? 'text-emerald-700 dark:text-emerald-300' : 'text-[var(--text)]'}`}>
+                      <p className={`font-semibold text-sm ${settings.fiscalMode === v ? 'text-[var(--success-text)] ' : 'text-[var(--text)]'}`}>
                         {label}
                       </p>
                       <p className="text-xs text-[var(--text-muted)] mt-0.5">{desc}</p>
@@ -754,17 +756,17 @@ const handleSave = async () => {
               {/* Barème ITS */}
               <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl overflow-hidden">
                 <div className="px-6 py-4 border-b border-[var(--border)]">
-                  <h3 className="font-bold text-[var(--text)] flex items-center gap-2">
-                    <Percent size={16} className="text-emerald-500" /> Barème ITS 2026 — Congo
+                  <h3 className="font-semibold text-[var(--text)] flex items-center gap-2">
+                    <Percent size={16} className="text-[var(--success-text)]" /> Barème ITS 2026 — Congo
                   </h3>
                   <p className="text-xs text-[var(--text-muted)] mt-0.5">Tranches annuelles de l'Impôt sur le Traitement et les Salaires</p>
                 </div>
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
+                  <div className="settings-table-scroll" role="region" tabIndex={0} aria-label="Tableau des paramètres — défilement horizontal"><table data-settings-table="true" className="w-full text-sm">
                     <thead className="bg-[var(--surface-2)]">
                       <tr>
-                        <th className="px-5 py-3 text-left text-xs font-bold text-[var(--text-muted)] uppercase">Tranche (XAF/an)</th>
-                        <th className="px-5 py-3 text-right text-xs font-bold text-[var(--text-muted)] uppercase">Taux</th>
+                        <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase">Tranche (XAF/an)</th>
+                        <th className="px-5 py-3 text-right text-xs font-semibold text-[var(--text-muted)] uppercase">Taux</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[var(--border)]">
@@ -774,11 +776,11 @@ const handleSave = async () => {
                             {b.min.toLocaleString('fr-FR')} → {b.max ? b.max.toLocaleString('fr-FR') : '∞'}
                           </td>
                           <td className="px-5 py-3 text-right">
-                            <span className={`px-2.5 py-1 rounded-lg text-xs font-black ${
+                            <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold ${
                               b.rate === 0 ? 'bg-[var(--surface-2)] text-[var(--text-muted)]'
-                              : b.rate <= 0.1 ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
-                              : b.rate <= 0.25 ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
-                              : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                              : b.rate <= 0.1 ? 'bg-[var(--brand-soft)]  text-[var(--success-text)] '
+                              : b.rate <= 0.25 ? 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  text-[var(--warning-text)] '
+                              : 'bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  text-[var(--danger-text)] '
                             }`}>
                               {b.label}
                             </span>
@@ -786,7 +788,7 @@ const handleSave = async () => {
                         </tr>
                       ))}
                     </tbody>
-                  </table>
+                  </table></div>
                 </div>
               </div>
             </div>
@@ -797,24 +799,24 @@ const handleSave = async () => {
             <div className="space-y-5">
               {/* Temps de travail */}
               <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6">
-                <h3 className="font-bold text-[var(--text)] mb-5 flex items-center gap-2">
-                  <Clock size={18} className="text-emerald-500" /> Temps de travail
+                <h3 className="font-semibold text-[var(--text)] mb-5 flex items-center gap-2">
+                  <Clock size={18} className="text-[var(--success-text)]" /> Temps de travail
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1.5">Jours ouvrables / mois</label>
+                    <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase mb-1.5">Jours ouvrables / mois</label>
                     <input type="number" min={1} max={31}
                       value={settings.workDaysPerMonth}
                       onChange={e => set('workDaysPerMonth', +e.target.value)}
-                      className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-bold text-[var(--text)] focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400"
+                      className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-semibold text-[var(--text)] focus:ring-2 focus:ring-[var(--focus)] focus:border-[var(--border)]"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1.5">Heures / jour</label>
+                    <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase mb-1.5">Heures / jour</label>
                     <input type="number" min={1} max={24} step={0.5}
                       value={settings.workHoursPerDay}
                       onChange={e => set('workHoursPerDay', +e.target.value)}
-                      className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-bold text-[var(--text)] focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400"
+                      className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-semibold text-[var(--text)] focus:ring-2 focus:ring-[var(--focus)] focus:border-[var(--border)]"
                     />
                   </div>
                 </div>
@@ -822,45 +824,45 @@ const handleSave = async () => {
 
               {/* Pointage */}
               <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6">
-                <h3 className="font-bold text-[var(--text)] mb-5 flex items-center gap-2">
-                  <Clock size={18} className="text-emerald-500" /> Paramètres de pointage
+                <h3 className="font-semibold text-[var(--text)] mb-5 flex items-center gap-2">
+                  <Clock size={18} className="text-[var(--success-text)]" /> Paramètres de pointage
                 </h3>
                 <div className="grid grid-cols-2 gap-4 mb-5">
                   <div>
-                    <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1.5">Heure de début officielle</label>
+                    <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase mb-1.5">Heure de début officielle</label>
                     <div className="flex items-center gap-2">
                       <input type="number" inputMode="numeric" min={0} max={23} aria-label="Heure de début"
                         value={settings.officialStartHour}
                         onChange={e => set('officialStartHour', Math.min(23, Math.max(0, parseInt(e.target.value) || 0)))}
-                        className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-bold text-center text-[var(--text)] focus:ring-2 focus:ring-emerald-500/20" />
-                      <span className="font-bold text-[var(--text-muted)]">h</span>
+                        className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-semibold text-center text-[var(--text)] focus:ring-2 focus:ring-[var(--focus)]" />
+                      <span className="font-semibold text-[var(--text-muted)]">h</span>
                       <input type="number" inputMode="numeric" min={0} max={59} aria-label="Minute de début"
                         value={settings.officialStartMinute}
                         onChange={e => set('officialStartMinute', Math.min(59, Math.max(0, parseInt(e.target.value) || 0)))}
-                        className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-bold text-center text-[var(--text)] focus:ring-2 focus:ring-emerald-500/20" />
+                        className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-semibold text-center text-[var(--text)] focus:ring-2 focus:ring-[var(--focus)]" />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1.5">Tolérance retard (min)</label>
+                    <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase mb-1.5">Tolérance retard (min)</label>
                     <input type="number" min={0} max={120}
                       value={settings.lateToleranceMinutes}
                       onChange={e => set('lateToleranceMinutes', +e.target.value)}
-                      className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-bold text-[var(--text)] focus:ring-2 focus:ring-emerald-500/20"
+                      className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-semibold text-[var(--text)] focus:ring-2 focus:ring-[var(--focus)]"
                     />
                   </div>
                 </div>
 
                 {/* 🆕 Fin officielle */}
                 <div className="mb-5">
-                  <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1.5">Heure de fin officielle</label>
-                  <select value={settings.officialEndHour}
+                  <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase mb-1.5">Heure de fin officielle</label>
+                  <ModuleSelect value={settings.officialEndHour}
                     onChange={e => set('officialEndHour', +e.target.value)}
-                    className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-bold text-[var(--text)] focus:ring-2 focus:ring-emerald-500"
+                    className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-semibold text-[var(--text)] focus:ring-2 focus:ring-[var(--focus)]"
                   >
                     {Array.from({ length: 23 }, (_, i) => i + 1).map(h => (
                       <option key={h} value={h}>{String(h).padStart(2, '0')}h00</option>
                     ))}
-                  </select>
+                  </ModuleSelect>
                   <p className="text-[11px] text-[var(--text-muted)] mt-1.5">
                     Sert à fermer automatiquement les sorties oubliées et à calculer les heures en plus.
                   </p>
@@ -869,11 +871,11 @@ const handleSave = async () => {
                 {/* 🆕 Pause de la journée */}
                 <div className="mb-5 p-4 border border-[var(--border)] rounded-2xl">
                   <div className="flex items-center justify-between gap-3">
-                    <h4 className="font-bold text-[var(--text)] flex items-center gap-2 text-sm">
-                      <Coffee size={16} className="text-amber-500" /> Pause de la journée
+                    <h4 className="font-semibold text-[var(--text)] flex items-center gap-2 text-sm">
+                      <Coffee size={16} className="text-[var(--warning-text)]" /> Pause de la journée
                     </h4>
                     <button type="button" onClick={() => set('breakEnabled', !settings.breakEnabled)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold ${settings.breakEnabled ? 'bg-emerald-500/15 text-emerald-600' : 'bg-[var(--surface-2)] text-[var(--text-muted)]'}`}>
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${settings.breakEnabled ? 'bg-[var(--brand-soft)] text-[var(--success-text)]' : 'bg-[var(--surface-2)] text-[var(--text-muted)]'}`}>
                       {settings.breakEnabled ? 'Activée' : 'Désactivée'}
                     </button>
                   </div>
@@ -881,25 +883,25 @@ const handleSave = async () => {
                     <>
                       <div className="grid grid-cols-2 gap-4 mt-4">
                         <div>
-                          <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1.5">Début de pause (dès)</label>
+                          <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase mb-1.5">Début de pause (dès)</label>
                           <div className="flex gap-2">
-                            <select value={settings.breakStartHour} onChange={e => set('breakStartHour', +e.target.value)} className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-bold text-[var(--text)] focus:ring-2 focus:ring-emerald-500">
+                            <ModuleSelect value={settings.breakStartHour} onChange={e => set('breakStartHour', +e.target.value)} className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-semibold text-[var(--text)] focus:ring-2 focus:ring-[var(--focus)]">
                               {Array.from({ length: 24 }, (_, i) => i).map(h => <option key={h} value={h}>{String(h).padStart(2, '0')}h</option>)}
-                            </select>
-                            <select value={settings.breakStartMinute} onChange={e => set('breakStartMinute', +e.target.value)} className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-bold text-[var(--text)] focus:ring-2 focus:ring-emerald-500">
+                            </ModuleSelect>
+                            <ModuleSelect value={settings.breakStartMinute} onChange={e => set('breakStartMinute', +e.target.value)} className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-semibold text-[var(--text)] focus:ring-2 focus:ring-[var(--focus)]">
                               {[0, 15, 30, 45].map(m => <option key={m} value={m}>{String(m).padStart(2, '0')}</option>)}
-                            </select>
+                            </ModuleSelect>
                           </div>
                         </div>
                         <div>
-                          <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1.5">Durée prévue (min)</label>
+                          <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase mb-1.5">Durée prévue (min)</label>
                           <input type="number" min={5} max={240} value={settings.breakDurationMinutes}
-                            onChange={e => set('breakDurationMinutes', +e.target.value)} className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-bold text-[var(--text)] focus:ring-2 focus:ring-emerald-500" />
+                            onChange={e => set('breakDurationMinutes', +e.target.value)} className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-semibold text-[var(--text)] focus:ring-2 focus:ring-[var(--focus)]" />
                         </div>
                         <div className="col-span-2">
-                          <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1.5">Alerte de retard après la reprise prévue (min)</label>
+                          <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase mb-1.5">Alerte de retard après la reprise prévue (min)</label>
                           <input type="number" min={0} max={180} value={settings.breakLateToleranceMinutes}
-                            onChange={e => set('breakLateToleranceMinutes', +e.target.value)} className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-bold text-[var(--text)] focus:ring-2 focus:ring-emerald-500" />
+                            onChange={e => set('breakLateToleranceMinutes', +e.target.value)} className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-semibold text-[var(--text)] focus:ring-2 focus:ring-[var(--focus)]" />
                         </div>
                       </div>
                       <p className="text-[11px] text-[var(--text-muted)] mt-3">
@@ -911,21 +913,21 @@ const handleSave = async () => {
                 </div>
 
                 {/* Preview seuil */}
-                <div className="p-3 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800 rounded-xl text-xs text-center">
-                  ✅ <strong>PRÉSENT</strong> si arrivée ≤ <strong>{lateThreshold}</strong>
+                <div className="p-3 bg-[var(--brand-soft)]  border border-[var(--border)]  rounded-xl text-xs text-center">
+                  <CheckCircle2 size={14} strokeWidth={1.5} className="inline" aria-hidden="true" /> <strong>PRÉSENT</strong> si arrivée ≤ <strong>{lateThreshold}</strong>
                   &nbsp;·&nbsp;
-                  ⏰ <strong>RETARD</strong> si arrivée {'>'} <strong>{lateThreshold}</strong>
+                  <Clock size={14} strokeWidth={1.5} className="inline" aria-hidden="true" /> <strong>RETARD</strong> si arrivée {'>'} <strong>{lateThreshold}</strong>
                 </div>
 
                 {/* Jours travaillés */}
                 <div className="mt-5">
-                  <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-2">Jours travaillés</label>
+                  <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase mb-2">Jours travaillés</label>
                   <div className="flex gap-2">
                     {DAYS.map(({ v, l }) => (
                       <button key={v} onClick={() => toggleWorkDay(v)}
-                        className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                        className={`flex-1 py-2.5 rounded-xl text-xs font-semibold transition-colors ${
                           settings.workDays.includes(v)
-                            ? 'bg-emerald-500 text-white shadow-sm'
+                            ? 'bg-[var(--brand)] text-[var(--on-brand)] shadow-sm'
                             : 'bg-[var(--surface-2)] text-[var(--text-muted)] hover:bg-[var(--border)]'
                         }`}>
                         {l}
@@ -939,11 +941,11 @@ const handleSave = async () => {
               <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl overflow-hidden">
                 <div className="px-6 py-4 flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
-                      <Banknote size={18} className="text-amber-500" />
+                    <div className="p-2 bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  rounded-xl">
+                      <Banknote size={18} className="text-[var(--warning-text)]" />
                     </div>
                     <div>
-                      <p className="font-bold text-[var(--text)]">Paie sur le net</p>
+                      <p className="font-semibold text-[var(--text)]">Paie sur le net</p>
                       <p className="text-xs text-[var(--text-muted)]">
                         Option de flexibilité — le calcul légal habituel reste la règle par défaut
                       </p>
@@ -951,9 +953,9 @@ const handleSave = async () => {
                   </div>
                   <button
                     onClick={() => setNetBasedProrata(v => !v)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all border flex-shrink-0 ${
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-colors border flex-shrink-0 ${
                       netBasedProrata
-                        ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800'
+                        ? 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  text-[var(--warning-text)]  border-[var(--border)] '
                         : 'bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)]'
                     }`}
                   >
@@ -973,9 +975,9 @@ const handleSave = async () => {
                     autres lignes ne changent pas. Les mois avec congé ne sont pas concernés.
                   </p>
                   {netBasedProrata && (
-                    <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl flex items-start gap-2">
-                      <AlertTriangle size={14} className="text-amber-500 flex-shrink-0 mt-0.5" />
-                      <p className="text-xs text-amber-700 dark:text-amber-400">
+                    <div className="p-3 bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  border border-[var(--border)]  rounded-xl flex items-start gap-2">
+                      <AlertTriangle size={14} className="text-[var(--warning-text)] flex-shrink-0 mt-0.5" />
+                      <p className="text-xs text-[var(--warning-text)] ">
                         Activée : le brut des bulletins à jours réduits peut dépasser le brut proratisé légal.
                         À valider avec votre comptable (déclarations CNSS / ITS).
                       </p>
@@ -992,8 +994,8 @@ const handleSave = async () => {
 
               {/* Méthode de calcul de l'indemnité */}
               <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6">
-                <h3 className="font-bold text-[var(--text)] mb-1 flex items-center gap-2">
-                  <Calculator size={18} className="text-emerald-500" /> Méthode de calcul de l'indemnité
+                <h3 className="font-semibold text-[var(--text)] mb-1 flex items-center gap-2">
+                  <Calculator size={18} className="text-[var(--success-text)]" /> Méthode de calcul de l'indemnité
                 </h3>
                 <p className="text-xs text-[var(--text-muted)] mb-4">Les deux méthodes sont légales au Congo. L'entreprise choisit celle qu'elle applique dans son règlement intérieur.</p>
                 <div className="grid grid-cols-2 gap-3">
@@ -1010,12 +1012,12 @@ const handleSave = async () => {
                     },
                   ].map(({ v, label, desc }) => (
                     <button key={v} onClick={() => setLeaveMethod(v as any)}
-                      className={`text-left p-4 rounded-xl border-2 transition-all ${
+                      className={`text-left p-4 rounded-xl border-2 transition-colors ${
                         leaveMethod === v
-                          ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
-                          : 'border-[var(--border)] hover:border-emerald-300'
+                          ? 'border-[var(--border)] bg-[var(--brand-soft)] '
+                          : 'border-[var(--border)] hover:border-[var(--border)]'
                       }`}>
-                      <p className={`font-bold text-sm mb-1 ${leaveMethod === v ? 'text-emerald-700 dark:text-emerald-300' : 'text-[var(--text)]'}`}>{label}</p>
+                      <p className={`font-semibold text-sm mb-1 ${leaveMethod === v ? 'text-[var(--success-text)] ' : 'text-[var(--text)]'}`}>{label}</p>
                       <p className="text-xs text-[var(--text-muted)] leading-relaxed">{desc}</p>
                     </button>
                   ))}
@@ -1026,8 +1028,8 @@ const handleSave = async () => {
                   légalement, mais dans les faits c'est ROLLING ou l'ancre
                   d'embauche qui sont utilisées — voir conversation produit) */}
               <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6">
-                <h3 className="font-bold text-[var(--text)] mb-1 flex items-center gap-2">
-                  <CalendarClock size={18} className="text-emerald-500" /> Mode de cycle de départ en congé
+                <h3 className="font-semibold text-[var(--text)] mb-1 flex items-center gap-2">
+                  <CalendarClock size={18} className="text-[var(--success-text)]" /> Mode de cycle de départ en congé
                 </h3>
                 <p className="text-xs text-[var(--text-muted)] mb-4">
                   Le règlement intérieur doit préciser ce mode. Change uniquement QUAND le prochain départ est dû — le solde (26j + ancienneté) reste identique dans les deux cas.
@@ -1046,18 +1048,18 @@ const handleSave = async () => {
                     },
                   ].map(({ v, label, desc }) => (
                     <button key={v} onClick={() => setLeaveCycleMode(v as any)}
-                      className={`text-left p-4 rounded-xl border-2 transition-all ${
+                      className={`text-left p-4 rounded-xl border-2 transition-colors ${
                         leaveCycleMode === v
-                          ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
-                          : 'border-[var(--border)] hover:border-emerald-300'
+                          ? 'border-[var(--border)] bg-[var(--brand-soft)] '
+                          : 'border-[var(--border)] hover:border-[var(--border)]'
                       }`}>
-                      <p className={`font-bold text-sm mb-1 ${leaveCycleMode === v ? 'text-emerald-700 dark:text-emerald-300' : 'text-[var(--text)]'}`}>{label}</p>
+                      <p className={`font-semibold text-sm mb-1 ${leaveCycleMode === v ? 'text-[var(--success-text)] ' : 'text-[var(--text)]'}`}>{label}</p>
                       <p className="text-xs text-[var(--text-muted)] leading-relaxed">{desc}</p>
                     </button>
                   ))}
                 </div>
                 {leaveCycleMode === 'ANNIVERSARY' && (
-                  <p className="text-xs text-amber-600 dark:text-amber-400 mt-3 flex items-start gap-1.5">
+                  <p className="text-xs text-[var(--warning-text)]  mt-3 flex items-start gap-1.5">
                     <Info size={13} className="mt-0.5 shrink-0" />
                     Ce changement s'applique aux prochains cycles calculés — les cycles déjà ouverts (en cours) ne sont pas recalculés rétroactivement.
                   </p>
@@ -1067,7 +1069,7 @@ const handleSave = async () => {
 
               {/* 🆕 Prestataires & stagiaires */}
               <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5">
-                <p className="font-bold text-sm text-[var(--text)] mb-1">Prestataires et stagiaires</p>
+                <p className="font-semibold text-sm text-[var(--text)] mb-1">Prestataires et stagiaires</p>
                 <p className="text-xs text-[var(--text-muted)] mb-4 leading-relaxed">
                   Les stagiaires n'ont jamais de congé. Pour les prestataires/consultants, choisissez si votre entreprise leur accorde des congés et leur paie l'indemnité.
                 </p>
@@ -1090,11 +1092,11 @@ const handleSave = async () => {
               </div>
 
               {/* Rappel règles légales */}
-              <div className="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-5">
-                <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400 mb-2 flex items-center gap-2">
+              <div className="bg-[var(--brand-soft)]  border border-[var(--border)]  rounded-2xl p-5">
+                <p className="text-xs font-semibold text-[var(--success-text)]  mb-2 flex items-center gap-2">
                   <Info size={13} /> Règles légales Congo — non modifiables
                 </p>
-                <ul className="text-xs text-emerald-700 dark:text-emerald-400 space-y-1">
+                <ul className="text-xs text-[var(--success-text)]  space-y-1">
                   <li>• 26 jours ouvrables / an — acquisition : 2,16 j/mois</li>
                   <li>• Plafond de report : 78 jours (3 ans)</li>
                   <li>• Base de calcul : brut total (primes incluses) ÷ 26</li>
@@ -1108,13 +1110,13 @@ const handleSave = async () => {
         </div>
 
         {/* ── Sidebar ──────────────────────────────────────────────────────── */}
-        <div className="space-y-5">
+        <div className="settings-policy-summary space-y-5">
 
           {/* Actions */}
           <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 sticky top-6">
             <button
               onClick={() => setShowConfirm(true)}
-              className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 transition-all"
+              className="w-full py-3 bg-[var(--brand)] hover:bg-[var(--brand)] text-[var(--on-brand)] font-semibold rounded-xl shadow-lg  flex items-center justify-center gap-2 transition-colors"
             >
               <Save size={18} /> Enregistrer
             </button>
@@ -1125,40 +1127,40 @@ const handleSave = async () => {
 
           {/* Simulateur ITS (uniquement sur l'onglet ITS) */}
           {activeTab === 'its' && (
-            <div className="bg-gray-900 rounded-2xl p-5 text-white shadow-xl">
-              <div className="flex items-center gap-2 mb-5 pb-4 border-b border-gray-700">
-                <Calculator size={18} className="text-emerald-400" />
-                <h3 className="font-bold">Simulateur ITS / IRPP</h3>
+            <div className="bg-[var(--surface-2)] rounded-2xl p-5 text-[var(--text)] shadow-xl">
+              <div className="flex items-center gap-2 mb-5 pb-4 border-b border-[var(--border)]">
+                <Calculator size={18} className="text-[var(--success-text)]" />
+                <h3 className="font-semibold">Simulateur ITS / IRPP</h3>
               </div>
               <div className="space-y-4">
                 <div>
-                  <label className="text-xs text-[var(--text-muted)] uppercase font-bold">Revenu imposable annuel</label>
+                  <label className="text-xs text-[var(--text-muted)] uppercase font-semibold">Revenu imposable annuel</label>
                   <div className="relative mt-1.5">
                     <input type="number"
                       value={simIncome}
                       onChange={e => setSimIncome(+e.target.value)}
-                      className="w-full p-2.5 bg-gray-700 border border-gray-600 rounded-xl text-white font-mono font-bold focus:border-emerald-500"
+                      className="w-full p-2.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-[var(--text)] font-mono font-semibold focus:border-[var(--border)]"
                     />
                     <span className="absolute right-3 top-2.5 text-xs text-[var(--text-muted)]">XAF</span>
                   </div>
                 </div>
                 <button onClick={calculateITS}
-                  className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-bold text-sm transition-colors">
+                  className="w-full py-2.5 bg-[var(--brand)] hover:bg-[var(--brand)] rounded-xl font-semibold text-sm transition-colors">
                   Calculer
                 </button>
                 {simResult && (
-                  <div className="space-y-2 pt-4 border-t border-gray-700">
+                  <div className="space-y-2 pt-4 border-t border-[var(--border)]">
                     {simResult.breakdown.map((b: any, i: number) => (
                       <div key={i} className="flex justify-between text-xs text-[var(--text-muted)]">
                         <span>{b.range}</span>
                         <span className="font-mono">{b.amount.toLocaleString('fr-FR')}</span>
                       </div>
                     ))}
-                    <div className="flex justify-between font-bold text-amber-400 pt-2 border-t border-gray-700">
+                    <div className="flex justify-between font-semibold text-[var(--warning-text)] pt-2 border-t border-[var(--border)]">
                       <span>Total ITS</span>
                       <span className="font-mono">{simResult.total.toLocaleString('fr-FR')}</span>
                     </div>
-                    <div className="flex justify-between font-bold text-emerald-400 text-lg">
+                    <div className="flex justify-between font-semibold text-[var(--success-text)] text-lg">
                       <span>Net</span>
                       <span className="font-mono">{simResult.net.toLocaleString('fr-FR')}</span>
                     </div>
@@ -1175,26 +1177,26 @@ const handleSave = async () => {
 
       {/* ── Modal confirmation ─────────────────────────────────────────────── */}
       {showConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgb(0_0_0_/.5)]  p-4"
           onClick={() => setShowConfirm(false)}>
           <div className="bg-[var(--surface)] rounded-2xl p-6 max-w-md w-full shadow-2xl border border-[var(--border)]"
             onClick={e => e.stopPropagation()}>
             <div className="flex items-center gap-4 mb-6">
-              <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-500 rounded-full flex items-center justify-center">
+              <div className="w-12 h-12 bg-[var(--brand-soft)]  text-[var(--success-text)] rounded-full flex items-center justify-center">
                 <Shield size={24} />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-[var(--text)]">Confirmer les modifications</h3>
+                <h3 className="text-lg font-semibold text-[var(--text)]">Confirmer les modifications</h3>
                 <p className="text-sm text-[var(--text-muted)]">Ces changements impactent tous les bulletins futurs.</p>
               </div>
             </div>
             <div className="flex gap-3">
               <button onClick={() => setShowConfirm(false)}
-                className="flex-1 py-3 border border-[var(--border)] rounded-xl font-bold text-[var(--text-muted)] hover:bg-[var(--surface-2)]">
+                className="flex-1 py-3 border border-[var(--border)] rounded-xl font-semibold text-[var(--text-muted)] hover:bg-[var(--surface-2)]">
                 Annuler
               </button>
               <button onClick={handleSave} disabled={isSaving}
-                className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl flex justify-center items-center gap-2 disabled:opacity-50 transition-colors">
+                className="flex-1 py-3 bg-[var(--brand)] hover:bg-[var(--brand)] text-[var(--on-brand)] font-semibold rounded-xl flex justify-center items-center gap-2 disabled:opacity-50 transition-colors">
                 {isSaving ? <><Loader2 className="animate-spin" size={18} /> Sauvegarde...</> : 'Confirmer'}
               </button>
             </div>
@@ -1202,5 +1204,14 @@ const handleSave = async () => {
         </div>
       )}
     </div>
+  );
+}
+
+
+export default function PayrollSettingsPageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <PayrollSettingsPage />
+    </ModulePageFrame>
   );
 }

@@ -1,4 +1,7 @@
 'use client';
+import { AttendanceSelect } from '@/components/attendance/AttendanceSelect';
+import { AttendanceModuleFrame as ModulePageFrame } from '@/components/attendance/AttendanceModuleFrame';
+import { ModulePageSkeleton } from '@/components/requests/ModulePageFrame';
 
 // ============================================================================
 // 📁 app/(dashboard)/presences/permissions/suivi/[employeeId]/page.tsx
@@ -20,9 +23,9 @@ import { KonzaLoader } from '@/components/ui/KonzaLoader';
 const TYPE_LABEL: Record<string, string> = { URGENCE: 'Urgence', MISSION: 'Mission', AUTRE: 'Autre' };
 
 const STATUS_CFG: Record<string, { label: string; cls: string; icon: any }> = {
-  PENDING: { label: 'En attente', cls: 'bg-amber-50 text-amber-700 border-amber-100', icon: Clock },
-  APPROVED: { label: 'Autorisé', cls: 'bg-emerald-50 text-emerald-700 border-emerald-100', icon: CheckCircle2 },
-  REJECTED: { label: 'Refusé', cls: 'bg-red-50 text-red-700 border-red-100', icon: XCircle },
+  PENDING: { label: 'En attente', cls: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)] border-[var(--border)]', icon: Clock },
+  APPROVED: { label: 'Autorisé', cls: 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)] border-[var(--border)]', icon: CheckCircle2 },
+  REJECTED: { label: 'Refusé', cls: 'bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] text-[var(--danger-text)] border-[var(--border)]', icon: XCircle },
   CANCELLED: { label: 'Annulé', cls: 'bg-[var(--surface-2)] text-[var(--text-muted)]', icon: Ban },
 };
 
@@ -30,6 +33,7 @@ const fmtDateTime = (v?: string | Date | null) =>
   v ? new Date(v).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
 
 export default function EmployeePermissionsDetailPage() {
+ const [uiLoadError,setUiLoadError]=useState('');
   const { employeeId } = useParams<{ employeeId: string }>();
   const { bp } = useBasePath();
 
@@ -44,7 +48,7 @@ export default function EmployeePermissionsDetailPage() {
       try {
         const all: any[] = (await api.get('/permission-tickets')) || [];
         setTickets(all.filter(t => t.employeeId === employeeId));
-      } catch (e) { console.error('Erreur fiche permissions employé', e); }
+      } catch (e) { console.error('Erreur fiche permissions employé', e); setUiLoadError('Le chargement a échoué. Réessayez dans un instant.'); }
       finally { setIsLoading(false); }
     })();
   }, [employeeId]);
@@ -70,19 +74,19 @@ export default function EmployeePermissionsDetailPage() {
     rejected: filtered.filter(t => t.status === 'REJECTED').length,
   }), [filtered]);
 
-  if (isLoading) return <KonzaLoader variant="page" />;
+  if (isLoading) return <ModulePageSkeleton label="Chargement des permissions" />;
 
   return (
-    <div className="max-w-[1500px] mx-auto pb-24 space-y-6">
+    <ModulePageFrame kind="detail" error={uiLoadError}><div className="max-w-[1500px] mx-auto pb-24 space-y-6">
       <PresenceModuleSwitcher />
       <PermissionsSubNav userRole={userRole} />
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 attendance-page-header">
         <Link href={bp('/presences/permissions/suivi')} className="p-2 bg-[var(--surface)] rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)] transition-colors">
           <ArrowLeft size={18} className="text-[var(--text-muted)]" />
         </Link>
-        <div>
-          <h1 className="text-xl font-bold text-[var(--text)]">
+        <div className="attendance-page-heading">
+          <h1 className="text-xl font-semibold text-[var(--text)]">
             {employee ? `${employee.firstName} ${employee.lastName}` : 'Fiche permissions'}
           </h1>
           <p className="text-sm text-[var(--text-muted)]">
@@ -95,25 +99,25 @@ export default function EmployeePermissionsDetailPage() {
 
       {tickets.length > 0 && (
         <>
-          <div className="flex flex-wrap gap-2">
-            <select value={year} onChange={e => setYear(e.target.value === '' ? '' : Number(e.target.value))} className="text-xs px-2 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+          <div className="flex flex-wrap gap-2 attendance-filters">
+            <AttendanceSelect value={year} onChange={e => setYear(e.target.value === '' ? '' : Number(e.target.value))} className="text-xs px-2 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
               <option value="">Toutes les années</option>
               {availableYears.map(y => <option key={y} value={y}>{y}</option>)}
-            </select>
+            </AttendanceSelect>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <Kpi icon={Ticket} label="Total tickets" value={kpis.total} cls="bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-300" />
-            <Kpi icon={CheckCircle2} label="Autorisés" value={kpis.approved} cls="bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-300" />
-            <Kpi icon={Clock} label="En attente" value={kpis.pending} cls="bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-300" />
-            <Kpi icon={XCircle} label="Refusés" value={kpis.rejected} cls="bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-300" />
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 attendance-metrics">
+            <Kpi icon={Ticket} label="Total tickets" value={kpis.total} cls="bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)]  " />
+            <Kpi icon={CheckCircle2} label="Autorisés" value={kpis.approved} cls="bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)]  " />
+            <Kpi icon={Clock} label="En attente" value={kpis.pending} cls="bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)]  " />
+            <Kpi icon={XCircle} label="Refusés" value={kpis.rejected} cls="bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] text-[var(--danger-text)]  " />
           </div>
 
           <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+            <div className="overflow-x-auto attendance-table-scroll" tabIndex={0} role="region" aria-label="Tableau défilant horizontalement">
+              <table className="w-full text-sm attendance-table">
                 <thead className="bg-[var(--surface-2)]">
-                  <tr>{['Type', 'Motif', 'Sortie', 'Retour prévu', 'Retour réel', 'Statut'].map(h => <th key={h} className="px-4 py-3 text-left text-xs font-bold text-[var(--text-muted)] uppercase whitespace-nowrap">{h}</th>)}</tr>
+                  <tr>{['Type', 'Motif', 'Sortie', 'Retour prévu', 'Retour réel', 'Statut'].map(h => <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)]  whitespace-nowrap">{h}</th>)}</tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--border)]">
                   {filtered.length === 0 ? (
@@ -126,11 +130,11 @@ export default function EmployeePermissionsDetailPage() {
                         <td className="px-4 py-3 font-semibold text-[var(--text)] whitespace-nowrap">{TYPE_LABEL[t.type] ?? t.type}</td>
                         <td className="px-4 py-3 text-[var(--text-muted)] max-w-[320px]">
                           {t.reason || '—'}
-                          {t.status === 'REJECTED' && t.rejectionReason && <p className="text-xs text-red-500 mt-0.5">Refus : {t.rejectionReason}</p>}
+                          {t.status === 'REJECTED' && t.rejectionReason && <p className="text-xs text-[var(--danger-text)] mt-0.5">Refus : {t.rejectionReason}</p>}
                         </td>
                         <td className="px-4 py-3 font-mono text-xs whitespace-nowrap">{fmtDateTime(t.actualDepartureTime || t.departureTime)}</td>
                         <td className="px-4 py-3 font-mono text-xs whitespace-nowrap">{fmtDateTime(t.expectedReturnTime)}</td>
-                        <td className="px-4 py-3 font-mono text-xs whitespace-nowrap">{t.actualReturnTime ? fmtDateTime(t.actualReturnTime) : t.status === 'APPROVED' && t.returnStatus === 'PENDING_VALIDATION' ? <span className="text-amber-600">À valider</span> : '—'}</td>
+                        <td className="px-4 py-3 font-mono text-xs whitespace-nowrap">{t.actualReturnTime ? fmtDateTime(t.actualReturnTime) : t.status === 'APPROVED' && t.returnStatus === 'PENDING_VALIDATION' ? <span className="text-[var(--warning-text)]">À valider</span> : '—'}</td>
                         <td className="px-4 py-3">
                           <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-semibold ${cfg.cls}`}>
                             <Icon size={12} /> {cfg.label}
@@ -145,7 +149,7 @@ export default function EmployeePermissionsDetailPage() {
           </div>
         </>
       )}
-    </div>
+    </div></ModulePageFrame>
   );
 }
 
@@ -154,7 +158,7 @@ function Kpi({ icon: Icon, label, value, cls }: { icon: any; label: string; valu
     <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-4">
       <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${cls}`}><Icon size={18} /></div>
       <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-1">{label}</p>
-      <p className="text-lg font-bold text-[var(--text)]">{value}</p>
+      <p className="text-lg font-semibold text-[var(--text)]">{value}</p>
     </div>
   );
 }

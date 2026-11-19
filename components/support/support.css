@@ -1,0 +1,506 @@
+.support-workspace {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  height: min(780px, calc(100dvh - 190px));
+  min-height: 460px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  color: var(--text);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+  font-family: var(--font-jakarta), sans-serif;
+}
+.support-inbox {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 20px 14px;
+  border-right: 1px solid var(--border);
+  gap: 14px;
+}
+.support-inbox > header,
+.support-ticket > div,
+.support-thread-header,
+.support-thread-header > div,
+.support-message header,
+.support-composer > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.support-inbox h2,
+.support-thread-header h2 {
+  margin: 4px 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+.support-eyebrow {
+  font-size: 11px;
+  color: var(--action);
+  letter-spacing: 0.04em;
+}
+.support-muted,
+.support-thread-header p {
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.7;
+  margin: 0;
+}
+.support-ticket-list {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+.support-ticket {
+  width: 100%;
+  padding: 14px 12px;
+  margin-bottom: 7px;
+  text-align: left;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+.support-ticket:hover {
+  background: var(--surface-2);
+}
+.support-ticket.is-active {
+  background: var(--brand-soft);
+  border-color: var(--brand-border);
+}
+.support-ticket strong {
+  font-size: 13px;
+  line-height: 1.5;
+}
+.support-ticket span,
+.support-ticket p {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 12px;
+  margin: 6px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.support-ticket small {
+  color: var(--text-secondary);
+  font-size: 10px;
+}
+.support-ticket .support-unread {
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  background: var(--action);
+  border-radius: 50%;
+}
+.support-pagination {
+  display: flex;
+  justify-content: space-between;
+  gap: 5px;
+  font-size: 11px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+.support-pagination button {
+  background: none;
+  border: 0;
+  color: var(--action);
+  cursor: pointer;
+}
+.support-conversation {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+.support-thread-header {
+  flex-shrink: 0;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+}
+.support-thread-header > div {
+  justify-content: flex-start;
+  min-width: 0;
+}
+.support-thread-header h2 {
+  overflow-wrap: anywhere;
+}
+.support-status {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 11px;
+  white-space: nowrap;
+  padding: 6px 9px;
+  background: var(--surface-2);
+  border-radius: 999px;
+}
+.support-management {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: end;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--border);
+}
+.support-management label {
+  font-size: 11px;
+  display: grid;
+  gap: 5px;
+}
+.support-management small {
+  width: 100%;
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+.support-management select,
+.support-field :is(input, textarea, select) {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  font: inherit;
+  padding: 10px 12px;
+  min-width: 0;
+  max-width: 100%;
+}
+.support-transcript {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 24px;
+}
+.support-message {
+  max-width: 85%;
+  padding: 13px 16px;
+  border: 1px solid var(--border);
+  border-radius: 16px 16px 16px 4px;
+  background: var(--surface-2);
+  margin: 0 auto 16px 0;
+  overflow-wrap: anywhere;
+}
+.support-message.is-mine {
+  margin-left: auto;
+  margin-right: 0;
+  background: var(--brand-soft);
+  border-color: var(--brand-border);
+  border-radius: 16px 16px 4px 16px;
+}
+.support-message.is-note {
+  border-style: dashed;
+  background: var(--surface-2);
+}
+.support-message strong {
+  font-size: 11px;
+  font-weight: 600;
+}
+.support-message time,
+.support-message small {
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+.support-message p {
+  margin: 9px 0 0;
+  white-space: pre-wrap;
+  font-size: 13px;
+  line-height: 1.8;
+}
+.support-composer {
+  margin: 0 24px 20px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface-2);
+}
+.support-composer textarea {
+  display: block;
+  width: 100%;
+  min-height: 55px;
+  max-height: 150px;
+  resize: vertical;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  padding: 8px;
+}
+.support-composer small {
+  color: var(--text-secondary);
+  font-size: 10px;
+}
+.support-primary,
+.support-secondary,
+.support-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 11px 16px;
+  border: 0;
+  border-radius: var(--radius-control);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.support-primary {
+  background: var(--action);
+  color: var(--on-brand);
+}
+.support-secondary,
+.support-icon {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.support-icon {
+  padding: 8px;
+}
+.support-back {
+  display: none;
+}
+.support-workspace button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.support-workspace :is(input, textarea, select, button):focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+.support-note-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+.support-note-toggle input {
+  accent-color: var(--action);
+}
+.support-welcome {
+  margin: auto;
+  max-width: 450px;
+  text-align: center;
+  padding: 40px 24px;
+}
+.support-welcome > svg {
+  color: var(--action);
+  margin: 0 auto 14px;
+}
+.support-welcome h3 {
+  font-size: 22px;
+  line-height: 1.5;
+  margin: 0 0 12px;
+  font-weight: 600;
+}
+.support-welcome p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.8;
+  margin: 0 0 24px;
+}
+.support-new {
+  padding: 20px 32px;
+  overflow: auto;
+  display: grid;
+  gap: 16px;
+}
+.support-new .support-welcome {
+  padding: 8px 0;
+  max-width: none;
+}
+.support-new .support-welcome h3 {
+  font-size: 20px;
+}
+.support-field {
+  display: grid;
+  gap: 8px;
+  font-size: 12px;
+}
+.support-new textarea {
+  resize: vertical;
+  max-height: 260px;
+  min-height: 120px;
+}
+.support-new > .support-primary {
+  justify-self: end;
+}
+.support-error,
+.support-info {
+  padding: 12px 16px;
+  margin: 8px 16px;
+  font-size: 12px;
+  line-height: 1.6;
+  border-radius: var(--radius-control);
+  background: var(--surface-2);
+}
+.support-error {
+  color: var(--danger-text);
+  border: 1px solid var(--danger);
+}
+.support-info {
+  color: var(--text-secondary);
+}
+.support-workspace.is-guest {
+  grid-template-columns: minmax(0, 1fr);
+}
+.support-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+.support-admin {
+  color: var(--text);
+  display: grid;
+  gap: 20px;
+}
+.support-admin-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: center;
+}
+.support-admin-header h1 {
+  font-size: 26px;
+  font-weight: 600;
+  margin: 0;
+}
+.support-admin-header p {
+  color: var(--text-secondary);
+  font-size: 13px;
+  margin-top: 8px;
+}
+.support-agents {
+  padding: 22px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+}
+.support-agent-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 20px 0;
+}
+.support-agent-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 0;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+}
+.support-agent-row small {
+  display: block;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+.support-guest-page {
+  max-width: 1000px;
+  margin: auto;
+  padding: 32px 20px;
+  color: var(--text);
+}
+.support-guest-page h1 {
+  font-size: 25px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+.support-channel-nav {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.support-channel-nav a {
+  padding: 10px 16px;
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.support-channel-nav a[aria-current="page"] {
+  background: var(--brand-soft);
+  color: var(--action);
+}
+@media (max-width: 900px) {
+  .support-workspace {
+    grid-template-columns: 260px minmax(0, 1fr);
+  }
+  .support-thread-header {
+    padding: 16px;
+  }
+  .support-status {
+    display: none;
+  }
+  .support-management {
+    padding: 12px 16px;
+  }
+  .support-transcript {
+    padding: 16px;
+  }
+  .support-composer {
+    margin: 0 14px 14px;
+  }
+  .support-new {
+    padding: 20px;
+  }
+}
+@media (max-width: 640px) {
+  .support-workspace {
+    display: flex;
+    height: calc(100dvh - 210px);
+    min-height: 430px;
+  }
+  .support-inbox {
+    width: 100%;
+    border: 0;
+  }
+  .support-conversation {
+    display: none;
+    width: 100%;
+  }
+  .support-workspace.has-thread .support-inbox {
+    display: none;
+  }
+  .support-workspace.has-thread .support-conversation {
+    display: flex;
+  }
+  .support-back {
+    display: inline-flex;
+  }
+  .support-message {
+    max-width: 96%;
+  }
+  .support-thread-header > div > svg {
+    display: none;
+  }
+  .support-management select {
+    max-width: 140px;
+  }
+  .support-composer > div > small {
+    max-width: 55%;
+  }
+  .support-agent-form {
+    grid-template-columns: 1fr;
+  }
+  .support-guest-page {
+    padding: 20px 8px;
+  }
+  .support-guest-page .support-workspace {
+    height: calc(100dvh - 180px);
+  }
+  .support-admin-header {
+    align-items: flex-start;
+  }
+  .support-admin-header h1 {
+    font-size: 22px;
+  }
+}

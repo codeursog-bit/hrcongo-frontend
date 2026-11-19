@@ -1,4 +1,5 @@
 'use client';
+import { DocumentPreviewPanel } from '@/components/ui/DocumentReader';
 
 // ============================================================================
 // 📁 app/(dashboard)/presences/WeeklyView.tsx
@@ -12,6 +13,7 @@
 //    détail, icônes à la place des emojis, rapport imprimable/PDF.
 // ============================================================================
 
+import { AttendanceLoadError } from '@/components/attendance/AttendanceLoadError';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   BarChart3, ChevronLeft, ChevronRight,
@@ -57,6 +59,7 @@ function addDays(d: Date, n: number) {
 }
 
 export default function WeeklyView({ userRole, userDepartment, date, canRecordAttendanceForAll = false }: WeeklyViewProps) {
+  const [uiLoadError,setUiLoadError]=useState('');
   const [weekAnchor, setWeekAnchor] = useState<Date>(date);
   const [company, setCompany] = useState<any>(null);
   const [departmentsMeta, setDepartmentsMeta] = useState<any[]>([]);
@@ -117,9 +120,11 @@ export default function WeeklyView({ userRole, userDepartment, date, canRecordAt
       });
 
       setEmployeeMap(map);
+      setUiLoadError('');
     } catch (e) {
       console.error(e);
       setEmployeeMap(new Map());
+      setUiLoadError('Impossible de charger les pr\u00e9sences. R\u00e9essayez.');
     } finally {
       setIsLoading(false);
     }
@@ -266,17 +271,18 @@ export default function WeeklyView({ userRole, userDepartment, date, canRecordAt
 
   return (
     <div className="space-y-6">
+      <AttendanceLoadError message={uiLoadError} retry={fetchWeekData} />
       <div className="bg-[var(--surface)] rounded-2xl p-6 border border-[var(--border)]">
         <div className="flex items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-emerald-500 rounded-xl">
-              <BarChart3 size={24} className="text-white" />
+            <div className="p-3 bg-[var(--brand)] rounded-xl">
+              <BarChart3 size={24} className="bg-[var(--brand)] text-[var(--on-brand)]" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-[var(--text)]">Vue par Département</h3>
+              <h3 className="text-xl font-semibold text-[var(--text)]">Vue par Département</h3>
               <p className="text-sm text-[var(--text-muted)] capitalize">{weekLabel}</p>
               {userRole === 'MANAGER' && userDepartment && !canRecordAttendanceForAll && (
-                <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1 flex items-center gap-1">
+                <p className="text-xs text-[var(--success-text)]  mt-1 flex items-center gap-1">
                   <BarChart3 size={12} /> Vue limitée au département : {userDepartment}
                 </p>
               )}
@@ -287,7 +293,7 @@ export default function WeeklyView({ userRole, userDepartment, date, canRecordAt
             <button onClick={() => setWeekAnchor(addDays(monday, -7))} className="p-2.5 hover:bg-[var(--surface-2)] rounded-xl transition-colors" title="Semaine précédente">
               <ChevronLeft size={20} />
             </button>
-            <button onClick={() => setWeekAnchor(new Date())} className="px-3 py-2 text-xs font-bold text-emerald-500 hover:text-emerald-600 rounded-lg border border-emerald-100 dark:border-emerald-900">
+            <button onClick={() => setWeekAnchor(new Date())} className="px-3 py-2 text-xs font-semibold text-[var(--success-text)] hover:text-[var(--success-text)] rounded-lg border border-[var(--border)] ">
               Cette semaine
             </button>
             <button onClick={() => setWeekAnchor(addDays(monday, 7))} disabled={monday >= startOfWeek(new Date())} className="p-2.5 hover:bg-[var(--surface-2)] rounded-xl transition-colors disabled:opacity-30" title="Semaine suivante">
@@ -314,8 +320,8 @@ export default function WeeklyView({ userRole, userDepartment, date, canRecordAt
           <div className="space-y-6">
             {/* Tous les départements ensemble — en pourcentage */}
             <div>
-              <h4 className="font-bold text-[var(--text)] mb-3 flex items-center gap-2">
-                <BarChart3 size={16} className="text-emerald-500" /> Taux par Département (%)
+              <h4 className="font-semibold text-[var(--text)] mb-3 flex items-center gap-2">
+                <BarChart3 size={16} className="text-[var(--success-text)]" /> Taux par Département (%)
               </h4>
               <ResponsiveContainer width="100%" height={320}>
                 <BarChart data={departmentChartData} onClick={(e: any) => e?.activeLabel && openDepartmentDetail(e.activeLabel)}>
@@ -324,11 +330,11 @@ export default function WeeklyView({ userRole, userDepartment, date, canRecordAt
                   <YAxis unit="%" domain={[0, 100]} tick={{ fontSize: 11 }} />
                   <Tooltip formatter={(v: number) => `${v}%`} />
                   <Legend />
-                  <Bar dataKey="Présence" fill="#10b981" radius={[4, 4, 0, 0]} cursor="pointer" />
-                  <Bar dataKey="Retards" fill="#F59E0B" radius={[4, 4, 0, 0]} cursor="pointer" />
-                  <Bar dataKey="Absences" fill="#ef4444" radius={[4, 4, 0, 0]} cursor="pointer" />
-                  <Bar dataKey="Remote" fill="#34D399" radius={[4, 4, 0, 0]} cursor="pointer" />
-                  <Bar dataKey="Congés" fill="#FBBF24" radius={[4, 4, 0, 0]} cursor="pointer" />
+                  <Bar dataKey="Présence" fill="var(--green)" radius={[4, 4, 0, 0]} cursor="pointer" />
+                  <Bar dataKey="Retards" fill="var(--mustard)" radius={[4, 4, 0, 0]} cursor="pointer" />
+                  <Bar dataKey="Absences" fill="var(--danger)" radius={[4, 4, 0, 0]} cursor="pointer" />
+                  <Bar dataKey="Remote" fill="var(--brand)" radius={[4, 4, 0, 0]} cursor="pointer" />
+                  <Bar dataKey="Congés" fill="var(--mustard)" radius={[4, 4, 0, 0]} cursor="pointer" />
                 </BarChart>
               </ResponsiveContainer>
               <p className="text-xs text-[var(--text-muted)] mt-2">Cliquez sur une barre pour voir le détail du département.</p>
@@ -336,8 +342,8 @@ export default function WeeklyView({ userRole, userDepartment, date, canRecordAt
 
             {/* Courbe d'évolution sur les 7 jours de la semaine */}
             <div>
-              <h4 className="font-bold text-[var(--text)] mb-3 flex items-center gap-2">
-                <TrendingUp size={16} className="text-emerald-500" /> Évolution sur la Semaine
+              <h4 className="font-semibold text-[var(--text)] mb-3 flex items-center gap-2">
+                <TrendingUp size={16} className="text-[var(--success-text)]" /> Évolution sur la Semaine
               </h4>
               <ResponsiveContainer width="100%" height={280}>
                 <LineChart data={dailyStats}>
@@ -346,9 +352,9 @@ export default function WeeklyView({ userRole, userDepartment, date, canRecordAt
                   <YAxis unit="%" domain={[0, 100]} tick={{ fontSize: 11 }} />
                   <Tooltip formatter={(v: number) => `${v}%`} />
                   <Legend />
-                  <Line type="monotone" dataKey="Présence" stroke="#10b981" strokeWidth={2.5} dot={{ r: 4 }} />
-                  <Line type="monotone" dataKey="Absence" stroke="#ef4444" strokeWidth={2.5} dot={{ r: 4 }} />
-                  <Line type="monotone" dataKey="Congé" stroke="#F59E0B" strokeWidth={2.5} dot={{ r: 4 }} />
+                  <Line type="monotone" dataKey="Présence" stroke="var(--green)" strokeWidth={2.5} dot={{ r: 4 }} />
+                  <Line type="monotone" dataKey="Absence" stroke="var(--danger)" strokeWidth={2.5} dot={{ r: 4 }} />
+                  <Line type="monotone" dataKey="Congé" stroke="var(--mustard)" strokeWidth={2.5} dot={{ r: 4 }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -372,25 +378,25 @@ export default function WeeklyView({ userRole, userDepartment, date, canRecordAt
       {/* Résumé global */}
       {departmentStats.length > 1 && (
         <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6">
-          <h4 className="font-bold text-[var(--text)] mb-4 flex items-center gap-2">
-            <BarChart3 size={20} className="text-emerald-500" />
+          <h4 className="font-semibold text-[var(--text)] mb-4 flex items-center gap-2">
+            <BarChart3 size={20} className="text-[var(--success-text)]" />
             Résumé global de la semaine
           </h4>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 attendance-metrics">
             <div className="text-center">
-              <div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">{departmentStats.length}</div>
+              <div className="text-3xl font-semibold text-[var(--success-text)] ">{departmentStats.length}</div>
               <p className="text-xs text-[var(--text-muted)] mt-1">Départements</p>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">{departmentStats.reduce((sum, d) => sum + d.present, 0)}</div>
+              <div className="text-3xl font-semibold text-[var(--success-text)] ">{departmentStats.reduce((sum, d) => sum + d.present, 0)}</div>
               <p className="text-xs text-[var(--text-muted)] mt-1">Total présents</p>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-amber-600 dark:text-amber-400">{departmentStats.reduce((sum, d) => sum + d.late, 0)}</div>
+              <div className="text-3xl font-semibold text-[var(--warning-text)] ">{departmentStats.reduce((sum, d) => sum + d.late, 0)}</div>
               <p className="text-xs text-[var(--text-muted)] mt-1">Total retards</p>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-red-600 dark:text-red-400">{departmentStats.reduce((sum, d) => sum + d.absent, 0)}</div>
+              <div className="text-3xl font-semibold text-[var(--danger-text)] ">{departmentStats.reduce((sum, d) => sum + d.absent, 0)}</div>
               <p className="text-xs text-[var(--text-muted)] mt-1">Total absents</p>
             </div>
           </div>
@@ -400,7 +406,7 @@ export default function WeeklyView({ userRole, userDepartment, date, canRecordAt
       <DepartmentDetailSidebar open={!!selectedDept} onClose={() => setSelectedDept(null)} detail={selectedDept} />
 
       {/* Rapport imprimable — hors écran */}
-      <div style={{ position: 'fixed', top: -99999, left: -99999 }}>
+      <DocumentPreviewPanel title="Rapport hebdomadaire" landscape><div className="loan-document-protected" style={{ position: 'fixed', top: -99999, left: -99999 }}>
         <WeeklyAttendanceReportPrintable
           id={REPORT_ID}
           company={company || {}}
@@ -408,7 +414,7 @@ export default function WeeklyView({ userRole, userDepartment, date, canRecordAt
           deptStats={departmentStats}
           employeeRows={employeeWeekRows}
         />
-      </div>
+      </div></DocumentPreviewPanel>
     </div>
   );
 }

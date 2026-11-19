@@ -1,4 +1,8 @@
 'use client';
+import '@/components/leave-history/leave-workspace.css';
+import { LeaveModuleFrame as ModulePageFrame } from '@/components/leave-history/LeaveModuleFrame';
+import { ModulePageSkeleton } from '@/components/requests/ModulePageFrame';
+import { Button } from '@/components/design-system/primitives';
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
@@ -50,36 +54,37 @@ const fmt = (n: number) =>
 const ALERT_CONFIG = {
   CRITICAL: {
     label:     'Critique',
-    bg:        'bg-red-50 dark:bg-red-900/20',
-    border:    'border-red-200 dark:border-red-800',
-    text:      'text-red-700 dark:text-red-300',
-    badge:     'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300',
+    bg:        'bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] ',
+    border:    'border-[var(--border)] ',
+    text:      'text-[var(--danger-text)] ',
+    badge:     'bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  text-[var(--danger-text)] ',
     icon:      AlertTriangle,
-    iconColor: 'text-red-500',
+    iconColor: 'text-[var(--danger-text)]',
   },
   WARNING: {
     label:     'Attention',
-    bg:        'bg-amber-50 dark:bg-amber-900/20',
-    border:    'border-amber-200 dark:border-amber-800',
-    text:      'text-amber-700 dark:text-amber-300',
-    badge:     'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300',
+    bg:        'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] ',
+    border:    'border-[var(--border)] ',
+    text:      'text-[var(--warning-text)] ',
+    badge:     'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  text-[var(--warning-text)] ',
     icon:      AlertCircle,
-    iconColor: 'text-amber-500',
+    iconColor: 'text-[var(--warning-text)]',
   },
   OK: {
     label:     'Normal',
-    bg:        'bg-emerald-50 dark:bg-emerald-900/20',
-    border:    'border-emerald-200 dark:border-emerald-800',
-    text:      'text-emerald-700 dark:text-emerald-300',
-    badge:     'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300',
+    bg:        'bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))] ',
+    border:    'border-[var(--border)] ',
+    text:      'text-[var(--action)] ',
+    badge:     'bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))]  text-[var(--action)] ',
     icon:      CheckCircle2,
-    iconColor: 'text-emerald-500',
+    iconColor: 'text-[var(--action)]',
   },
 };
 
 // ─── Composant principal ─────────────────────────────────────────────────────
 
 export default function LeaveProvisionPage() {
+  const [uiLoadError,setUiLoadError]=useState('');
   const router = useRouter();
   const { bp } = useBasePath();
   const [provision, setProvision] = useState<ProvisionResult | null>(null);
@@ -101,7 +106,7 @@ export default function LeaveProvisionPage() {
       const data = await api.get<ProvisionResult>('/leaves/provision');
       setProvision(data);
     } catch (e) {
-      console.error('Erreur provision:', e);
+      console.error('Erreur provision:', e); setUiLoadError('Le chargement a échoué. Réessayez dans un instant.');
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -144,29 +149,29 @@ export default function LeaveProvisionPage() {
   // ─── Loading ───────────────────────────────────────────────────────────────
   if (isLoading) {
     return (
-      <KonzaLoader variant="page" />
+      <ModulePageSkeleton />
     );
   }
 
   // ─── Render ───────────────────────────────────────────────────────────────
   return (
-    <div className="max-w-[1400px] mx-auto pb-24 space-y-8">
+    <ModulePageFrame kind="dashboard" error={uiLoadError}><div className="max-w-[1400px] mx-auto pb-24 space-y-8">
       <CongeSubNav userRole={userRole} />
 
       {/* ── HEADER ── */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <button
+        <div className="flex items-center gap-4 leave-header">
+          <Button variant="ghost"
             onClick={() => router.back()}
             className="p-2.5 bg-[var(--surface)] rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)] transition-colors"
           >
             <ArrowLeft size={18} className="text-[var(--text-muted)]" />
-          </button>
+          </Button>
           <div>
-            <p className="text-xs font-bold tracking-[0.2em] text-[var(--text-muted)] uppercase mb-1">
+            <p className="text-xs font-semibold tracking-[0.2em] text-[var(--text-muted)] uppercase mb-1">
               Congés · Finances RH
             </p>
-            <h1 className="text-3xl font-bold text-[var(--text)]">
+            <h1 className="text-3xl font-semibold text-[var(--text)]">
               Provision pour Congés
             </h1>
             <p className="text-sm text-[var(--text-muted)] mt-1">
@@ -175,14 +180,14 @@ export default function LeaveProvisionPage() {
           </div>
         </div>
         <div className="flex gap-3">
-          <button
+          <Button variant="ghost"
             onClick={refresh}
             disabled={isRefreshing}
             className="px-4 py-2.5 rounded-xl border border-[var(--border)] text-sm font-semibold text-[var(--text-muted)] hover:bg-[var(--surface-2)] transition-colors flex items-center gap-2 disabled:opacity-50"
           >
             <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
             Actualiser
-          </button>
+          </Button>
           <Link
             href={bp('/conges')}
             className="px-4 py-2.5 rounded-xl bg-[var(--text)] text-[var(--bg)] text-sm font-semibold flex items-center gap-2 hover:opacity-90 transition-opacity"
@@ -193,9 +198,9 @@ export default function LeaveProvisionPage() {
       </div>
 
       {/* ── ENCART EXPLICATION ── */}
-      <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 rounded-2xl p-5 flex gap-4 items-start">
-        <Info size={20} className="text-emerald-500 shrink-0 mt-0.5" />
-        <div className="text-sm text-emerald-700 dark:text-emerald-300 space-y-1">
+      <div className="bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))]  border border-[var(--border)]  rounded-2xl p-5 flex gap-4 items-start">
+        <Info size={20} className="text-[var(--action)] shrink-0 mt-0.5" />
+        <div className="text-sm text-[var(--action)]  space-y-1">
           <p className="font-semibold">Qu'est-ce que la provision pour congés ?</p>
           <p>
             Chaque jour de congé non pris représente une dette financière. Si un employé démissionne,
@@ -207,20 +212,20 @@ export default function LeaveProvisionPage() {
 
       {/* ── STATS RAPIDES ── */}
       {stats && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 leave-metrics">
           {/* Provision totale */}
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            className="lg:col-span-1 bg-[#050607] rounded-2xl p-6 text-white shadow-xl"
+            className="lg:col-span-1 bg-[var(--brand-soft)] rounded-2xl p-6 text-[var(--text)] shadow-xl"
           >
             <div className="flex items-center gap-2 mb-3">
-              <Wallet size={16} className="text-emerald-400" />
-              <span className="text-xs font-bold uppercase tracking-widest text-[var(--text-muted)]">
+              <Wallet size={16} className="text-[var(--action)]" />
+              <span className="text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)]">
                 Provision totale
               </span>
             </div>
-            <p className="text-3xl font-bold">
+            <p className="text-3xl font-semibold">
               {fmt(provision?.totalProvision ?? 0)}
             </p>
             <p className="text-sm text-[var(--text-muted)] mt-1">F CFA</p>
@@ -231,16 +236,16 @@ export default function LeaveProvisionPage() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.05 }}
-            className="bg-[var(--surface)] rounded-2xl p-6 border border-red-100 dark:border-red-900/50 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+            className="bg-[var(--surface)] rounded-2xl p-6 border border-[var(--border)]  shadow-sm cursor-pointer hover:shadow-md transition-shadow"
             onClick={() => setFilter('CRITICAL')}
           >
             <div className="flex items-center justify-between mb-3">
-              <AlertTriangle size={18} className="text-red-500" />
-              <span className="text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 font-semibold px-2 py-0.5 rounded-full">
+              <AlertTriangle size={18} className="text-[var(--danger-text)]" />
+              <span className="text-xs bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  text-[var(--danger-text)]  font-semibold px-2 py-0.5 rounded-full">
                 Plafond proche
               </span>
             </div>
-            <p className="text-3xl font-bold text-[var(--text)]">{stats.critical}</p>
+            <p className="text-3xl font-semibold text-[var(--text)]">{stats.critical}</p>
             <p className="text-sm text-[var(--text-muted)] mt-1">employé{stats.critical > 1 ? 's' : ''} critique{stats.critical > 1 ? 's' : ''}</p>
           </motion.div>
 
@@ -249,16 +254,16 @@ export default function LeaveProvisionPage() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-[var(--surface)] rounded-2xl p-6 border border-amber-100 dark:border-amber-900/50 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+            className="bg-[var(--surface)] rounded-2xl p-6 border border-[var(--border)]  shadow-sm cursor-pointer hover:shadow-md transition-shadow"
             onClick={() => setFilter('WARNING')}
           >
             <div className="flex items-center justify-between mb-3">
-              <AlertCircle size={18} className="text-amber-500" />
-              <span className="text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 font-semibold px-2 py-0.5 rounded-full">
+              <AlertCircle size={18} className="text-[var(--warning-text)]" />
+              <span className="text-xs bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  text-[var(--warning-text)]  font-semibold px-2 py-0.5 rounded-full">
                 À surveiller
               </span>
             </div>
-            <p className="text-3xl font-bold text-[var(--text)]">{stats.warning}</p>
+            <p className="text-3xl font-semibold text-[var(--text)]">{stats.warning}</p>
             <p className="text-sm text-[var(--text-muted)] mt-1">employé{stats.warning > 1 ? 's' : ''} en alerte</p>
           </motion.div>
 
@@ -270,9 +275,9 @@ export default function LeaveProvisionPage() {
             className="bg-[var(--surface)] rounded-2xl p-6 border border-[var(--border)] shadow-sm"
           >
             <div className="flex items-center gap-2 mb-3">
-              <TrendingUp size={18} className="text-emerald-500" />
+              <TrendingUp size={18} className="text-[var(--action)]" />
             </div>
-            <p className="text-3xl font-bold text-[var(--text)]">
+            <p className="text-3xl font-semibold text-[var(--text)]">
               {Math.round(stats.avgDays)}j
             </p>
             <p className="text-sm text-[var(--text-muted)] mt-1">solde moyen par employé</p>
@@ -284,7 +289,7 @@ export default function LeaveProvisionPage() {
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div className="flex gap-1 bg-[var(--surface-2)] p-1 rounded-xl">
           {(['ALL', 'CRITICAL', 'WARNING', 'OK'] as const).map(f => (
-            <button
+            <Button variant="ghost"
               key={f}
               onClick={() => setFilter(f)}
               className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
@@ -297,14 +302,14 @@ export default function LeaveProvisionPage() {
                f === 'CRITICAL' ? `Critique (${stats?.critical})` :
                f === 'WARNING'  ? `Alerte (${stats?.warning})` :
                `Normal (${stats?.ok})`}
-            </button>
+            </Button>
           ))}
         </div>
 
         <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
           <span>Trier par :</span>
           {(['provision', 'days', 'name'] as const).map(s => (
-            <button
+            <Button variant="ghost"
               key={s}
               onClick={() => setSortBy(s)}
               className={`px-3 py-1.5 rounded-lg transition-colors ${
@@ -314,7 +319,7 @@ export default function LeaveProvisionPage() {
               }`}
             >
               {s === 'provision' ? 'Montant' : s === 'days' ? 'Jours' : 'Nom'}
-            </button>
+            </Button>
           ))}
         </div>
       </div>
@@ -322,7 +327,7 @@ export default function LeaveProvisionPage() {
       {/* ── LISTE EMPLOYÉS ── */}
       {filtered.length === 0 ? (
         <div className="text-center py-16 bg-[var(--surface)] rounded-2xl border border-[var(--border)]">
-          <CheckCircle2 size={40} className="text-emerald-400 mx-auto mb-3" />
+          <CheckCircle2 size={40} className="text-[var(--action)] mx-auto mb-3" />
           <p className="text-[var(--text-muted)]">Aucun employé dans cette catégorie.</p>
         </div>
       ) : (
@@ -354,14 +359,14 @@ export default function LeaveProvisionPage() {
                 >
                   <div className="flex items-center gap-5">
                     {/* Avatar */}
-                    <div className="w-12 h-12 rounded-xl bg-[var(--surface-2)] flex items-center justify-center font-bold text-[var(--text-muted)] text-sm shrink-0">
+                    <div className="w-12 h-12 rounded-xl bg-[var(--surface-2)] flex items-center justify-center font-semibold text-[var(--text-muted)] text-sm shrink-0">
                       {initials}
                     </div>
 
                     {/* Info principale */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 mb-2">
-                        <p className="font-bold text-[var(--text)]">{emp.employeeName}</p>
+                        <p className="font-semibold text-[var(--text)]">{emp.employeeName}</p>
                         <span className={`text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1 ${cfg.badge}`}>
                           <Icon size={12} />
                           {cfg.label}
@@ -376,9 +381,9 @@ export default function LeaveProvisionPage() {
                             animate={{ width: `${pct}%` }}
                             transition={{ duration: 0.6, delay: i * 0.02 }}
                             className={`h-full rounded-full ${
-                              emp.alertLevel === 'CRITICAL' ? 'bg-red-500' :
-                              emp.alertLevel === 'WARNING'  ? 'bg-amber-500' :
-                              'bg-emerald-500'
+                              emp.alertLevel === 'CRITICAL' ? 'bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]' :
+                              emp.alertLevel === 'WARNING'  ? 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]' :
+                              'bg-[var(--brand)]'
                             }`}
                           />
                         </div>
@@ -401,9 +406,9 @@ export default function LeaveProvisionPage() {
 
                     <div className="text-right shrink-0">
                       <p className="text-xs text-[var(--text-muted)] mb-0.5">Provision</p>
-                      <p className={`text-xl font-bold ${
-                        emp.alertLevel === 'CRITICAL' ? 'text-red-600 dark:text-red-400' :
-                        emp.alertLevel === 'WARNING'  ? 'text-amber-600 dark:text-amber-400' :
+                      <p className={`text-xl font-semibold ${
+                        emp.alertLevel === 'CRITICAL' ? 'text-[var(--danger-text)] ' :
+                        emp.alertLevel === 'WARNING'  ? 'text-[var(--warning-text)] ' :
                         'text-[var(--text)]'
                       }`}>
                         {fmt(emp.provision)} F
@@ -431,7 +436,7 @@ export default function LeaveProvisionPage() {
             <p className="text-[var(--text-muted)] text-sm">
               {filter === 'ALL' ? 'Total provision entreprise' : `Total — ${filter === 'CRITICAL' ? 'employés critiques' : filter === 'WARNING' ? 'employés en alerte' : 'employés normaux'}`}
             </p>
-            <p className="text-white text-2xl font-bold mt-1">
+            <p className="text-[var(--on-brand)] text-2xl font-semibold mt-1">
               {fmt(filtered.reduce((s, d) => s + d.provision, 0))} F CFA
             </p>
           </div>
@@ -441,6 +446,6 @@ export default function LeaveProvisionPage() {
           </div>
         </div>
       )}
-    </div>
+    </div></ModulePageFrame>
   );
 }

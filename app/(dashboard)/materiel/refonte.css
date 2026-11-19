@@ -1,0 +1,21 @@
+.materiel-refonte {min-width:0;}
+@media screen {
+ .materiel-refonte .fixed.pointer-events-none {display:none;}
+ .materiel-refonte .loan-module-content {min-width:0;}
+ .materiel-refonte :where(.grid>div.rounded-2xl) {background:var(--surface);border:0;box-shadow:var(--shadow-card);border-radius:var(--radius-card);}
+ .materiel-refonte :where(h1 span) {color:var(--text);}
+ .materiel-refonte :where(h1,h3,p) {overflow-wrap:anywhere;}
+ .materiel-refonte :where(.font-mono) {font-family:inherit;font-variant-numeric:tabular-nums;}
+ .materiel-refonte :where([class*="w-12"][class*="h-12"]):has(>svg:only-child) {background:transparent;border:0;box-shadow:none;}
+ .materiel-refonte :where([class*="fixed"]>[class*="max-w"]) {width:min(100%,560px);padding:24px;}
+ .materiel-refonte :where(input[class*="pl-10"]) {padding-left:42px!important;}
+ .materiel-refonte :where([class*="fixed"]) {z-index:120;}
+ .materiel-refonte .grid>div.group>.flex:first-child {flex-wrap:wrap;gap:12px;}
+ .materiel-refonte .grid>div.group>.flex:first-child>div:first-child {min-width:0;flex:1 1 180px;}
+ .materiel-refonte .grid>div.group>.flex:first-child>div:last-child {flex-shrink:0;}
+}
+@media screen and (max-width:600px) {
+ .materiel-refonte :where([class*="fixed"] .grid-cols-2) {grid-template-columns:minmax(0,1fr);}
+ .materiel-refonte :where([class*="fixed"] .col-span-2) {grid-column:auto;}
+ .materiel-refonte :where([class*="fixed"]>[class*="max-w"]) {padding:20px;}
+}

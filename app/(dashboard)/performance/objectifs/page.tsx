@@ -1,4 +1,7 @@
 'use client';
+import { PerformanceOverlay } from '@/components/performance/PerformanceOverlay';
+import { ModuleSelect } from '@/components/ui/ModuleSelect';
+
 
 // ============================================================================
 // 📄 app/(dashboard)/performance/objectifs/page.tsx
@@ -21,6 +24,7 @@ import { api } from '@/services/api';
 import PerformanceNav from '@/components/performance/PerformanceNav';
 import { MANAGE_ROLES, getStoredUser, fmtDate } from '@/components/performance/sheet-types';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import { PerformanceFrame as ModulePageFrame } from '@/components/performance/PerformanceFrame';
 
 interface KeyResult { id: string; title: string; targetValue: number | string; currentValue: number | string; unit?: string | null }
 interface Goal {
@@ -36,16 +40,16 @@ interface Goal {
 type Filter = 'ALL' | 'OPEN' | 'DONE';
 
 const inputCls =
-  'w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/40 focus:border-purple-400';
-const cardCls = 'bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm';
+  'w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--focus)] focus:border-[var(--border)]';
+const cardCls = 'bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm';
 
 // ─── Rattachement à une évaluation ───────────────────────────────────────────
 function LinkBadge({ g }: { g: Goal }) {
   if (g.evaluatedInReview)
-    return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300"><Link2 size={11} /> Évalué dans « {g.evaluatedInReview.period} »</span>;
+    return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-[var(--brand-soft)] text-[var(--action)]"><Link2 strokeWidth={1.5} size={11} /> Évalué dans « {g.evaluatedInReview.period} »</span>;
   if (g.plannedInReview)
-    return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"><Clock size={11} /> Fixé pour la prochaine évaluation</span>;
-  return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-gray-100 dark:bg-gray-700 text-gray-500"><Clock size={11} /> Sera repris au prochain cycle</span>;
+    return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-[var(--brand-soft)] text-[var(--action)]"><Clock strokeWidth={1.5} size={11} /> Fixé pour la prochaine évaluation</span>;
+  return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-[var(--surface-2)] text-[var(--text-secondary)]"><Clock strokeWidth={1.5} size={11} /> Sera repris au prochain cycle</span>;
 }
 
 // ─── Un résultat clé : valeur modifiable ─────────────────────────────────────
@@ -72,22 +76,22 @@ function KeyResultRow({ kr, onSaved }: { kr: KeyResult; onSaved: () => void }) {
   return (
     <div>
       <div className="flex items-start justify-between gap-3 text-sm">
-        <span className="font-medium text-gray-800 dark:text-gray-200 break-words min-w-0">{kr.title}</span>
-        <span className="text-gray-400 shrink-0 text-xs pt-0.5">cible : {target} {kr.unit}</span>
+        <span className="font-medium text-[var(--text)] break-words min-w-0">{kr.title}</span>
+        <span className="text-[var(--text-secondary)] shrink-0 text-xs pt-0.5">cible : {target} {kr.unit}</span>
       </div>
       <div className="mt-2 flex items-center gap-3">
-        <div className="flex-1 h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-          <div className={`h-full rounded-full transition-all ${pct >= 100 ? 'bg-emerald-500' : 'bg-purple-600'}`} style={{ width: `${pct}%` }} />
+        <div className="flex-1 h-2.5 bg-[var(--surface-2)] rounded-full overflow-hidden">
+          <div className={`h-full rounded-full transition-all ${pct >= 100 ? 'bg-[var(--green)]' : 'bg-[var(--brand)]'}`} style={{ width: `${pct}%` }} />
         </div>
-        <span className="text-xs font-bold text-gray-500 w-10 text-right">{pct} %</span>
+        <span className="text-xs font-semibold text-[var(--text-secondary)] w-10 text-right">{pct} %</span>
       </div>
       <div className="mt-2 flex items-center gap-2">
-        <label className="text-xs text-gray-500">Valeur actuelle</label>
+        <label className="text-xs text-[var(--text-secondary)]">Valeur actuelle</label>
         <input type="number" inputMode="decimal" min={0} className={`${inputCls} !w-28 !py-2`} value={value}
           onChange={e => setValue(e.target.value)} onBlur={commit} onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }} />
-        {saving && <Loader2 size={14} className="animate-spin text-purple-600" />}
+        {saving && <Loader2 strokeWidth={1.5} size={14} className="animate-spin text-[var(--action)]" />}
       </div>
-      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+      {error && <p className="text-xs text-[var(--danger-text)] mt-1">{error}</p>}
     </div>
   );
 }
@@ -107,8 +111,8 @@ function ProgressSlider({ goal, onSaved }: { goal: Goal; onSaved: () => void }) 
   return (
     <div>
       <div className="flex items-center justify-between text-sm mb-2">
-        <span className="font-medium text-gray-700 dark:text-gray-300">Progression</span>
-        <span className="font-bold text-purple-600 flex items-center gap-1.5">{saving && <Loader2 size={12} className="animate-spin" />}{value} %</span>
+        <span className="font-medium text-[var(--text)]">Progression</span>
+        <span className="font-semibold text-[var(--action)] flex items-center gap-1.5">{saving && <Loader2 strokeWidth={1.5} size={12} className="animate-spin" />}{value} %</span>
       </div>
       <input type="range" min={0} max={100} step={5} value={value} onChange={e => setValue(Number(e.target.value))}
         onPointerUp={commit} onKeyUp={commit} onBlur={commit} aria-label="Progression" className="w-full h-3 accent-purple-600 cursor-pointer" />
@@ -156,66 +160,66 @@ function CreateModal({ employees, onClose, onDone }: {
   };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm sm:p-4" onClick={onClose}>
+    <PerformanceOverlay initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[rgb(0_0_0_/.45)] sm:p-4" onClose={onClose}>
       <motion.div initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 40, opacity: 0 }} onClick={e => e.stopPropagation()}
-        className="bg-white dark:bg-gray-800 rounded-t-3xl sm:rounded-3xl w-full sm:max-w-xl shadow-2xl border border-gray-100 dark:border-gray-700 max-h-[94vh] flex flex-col">
-        <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700">
+        className="bg-[var(--surface)] rounded-t-3xl sm:rounded-3xl w-full sm:max-w-xl shadow-2xl border border-[var(--border)] max-h-[94vh] flex flex-col performance-card">
+        <div className="flex items-center justify-between p-5 border-b border-[var(--border)]">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-purple-100 dark:bg-purple-900/30 text-purple-600 rounded-xl"><Target size={20} /></div>
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Nouvel objectif</h2>
+            <div className="p-2 bg-[var(--brand-soft)] text-[var(--action)] rounded-xl"><Target strokeWidth={1.5} size={20} /></div>
+            <h2 className="text-lg font-semibold text-[var(--text)]">Nouvel objectif</h2>
           </div>
-          <button onClick={onClose} aria-label="Fermer" className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"><X size={18} /></button>
+          <button onClick={onClose} aria-label="Fermer" className="p-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--surface-2)]"><X strokeWidth={1.5} size={18} /></button>
         </div>
 
         <div className="p-5 space-y-4 overflow-y-auto">
           <div>
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Assigné à *</label>
-            <select className={`${inputCls} mt-1`} value={employeeId} onChange={e => setEmployeeId(e.target.value)}>
+            <label className="text-sm font-medium text-[var(--text)]">Assigné à *</label>
+            <ModuleSelect className={`${inputCls} mt-1`} value={employeeId} onChange={e => setEmployeeId(e.target.value)}>
               <option value="">Choisir un collaborateur…</option>
               {employees.map(e => <option key={e.id} value={e.id}>{e.firstName} {e.lastName}{e.position ? ` — ${e.position}` : ''}</option>)}
-            </select>
+            </ModuleSelect>
           </div>
           <div>
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Objectif *</label>
+            <label className="text-sm font-medium text-[var(--text)]">Objectif *</label>
             <input className={`${inputCls} mt-1`} value={title} onChange={e => setTitle(e.target.value)} placeholder="ex : Réduire les retards de livraison" />
           </div>
           <div>
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Description (facultatif)</label>
+            <label className="text-sm font-medium text-[var(--text)]">Description (facultatif)</label>
             <textarea rows={2} className={`${inputCls} mt-1`} value={description} onChange={e => setDescription(e.target.value)} />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Début *</label>
+              <label className="text-sm font-medium text-[var(--text)]">Début *</label>
               <input type="date" className={`${inputCls} mt-1`} value={startDate} onChange={e => setStartDate(e.target.value)} />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Échéance *</label>
+              <label className="text-sm font-medium text-[var(--text)]">Échéance *</label>
               <input type="date" className={`${inputCls} mt-1`} value={endDate} min={startDate} onChange={e => setEndDate(e.target.value)} />
             </div>
           </div>
 
-          <div className="rounded-2xl bg-gray-50 dark:bg-gray-900/40 p-4 space-y-3">
-            <p className="text-sm font-bold text-gray-900 dark:text-white">Pour l'évaluation <span className="text-xs font-normal text-gray-400">(facultatif)</span></p>
+          <div className="rounded-2xl bg-[var(--surface-2)] p-4 space-y-3">
+            <p className="text-sm font-semibold text-[var(--text)]">Pour l'évaluation <span className="text-xs font-normal text-[var(--text-secondary)]">(facultatif)</span></p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label className="text-xs font-medium text-gray-500">Poids (%)</label>
+                <label className="text-xs font-medium text-[var(--text-secondary)]">Poids (%)</label>
                 <input type="number" min={0} max={100} inputMode="decimal" className={`${inputCls} mt-1`} value={weight} onChange={e => setWeight(e.target.value)} placeholder="auto" />
               </div>
               <div className="sm:col-span-2">
-                <label className="text-xs font-medium text-gray-500">KPI / livrables attendus</label>
+                <label className="text-xs font-medium text-[var(--text-secondary)]">KPI / livrables attendus</label>
                 <input className={`${inputCls} mt-1`} value={kpi} onChange={e => setKpi(e.target.value)} />
               </div>
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-500">Support / dépendances</label>
+              <label className="text-xs font-medium text-[var(--text-secondary)]">Support / dépendances</label>
               <input className={`${inputCls} mt-1`} value={support} onChange={e => setSupport(e.target.value)} />
             </div>
-            <p className="text-xs text-gray-400">Sans poids, les objectifs d'un même employé se partagent 100 % à parts égales quand le cycle est lancé.</p>
+            <p className="text-xs text-[var(--text-secondary)]">Sans poids, les objectifs d'un même employé se partagent 100 % à parts égales quand le cycle est lancé.</p>
           </div>
 
           <div className="space-y-3">
-            <p className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2"><TrendingUp size={15} /> Comment mesurer la réussite ?</p>
+            <p className="text-sm font-semibold text-[var(--text)] flex items-center gap-2"><TrendingUp strokeWidth={1.5} size={15} /> Comment mesurer la réussite ?</p>
             {krs.map((k, i) => (
               <div key={i} className="flex items-start gap-2">
                 <div className="flex-1 min-w-0 space-y-1.5">
@@ -227,35 +231,35 @@ function CreateModal({ employees, onClose, onDone }: {
                 </div>
                 {krs.length > 1 && (
                   <button type="button" aria-label="Retirer" onClick={() => setKrs(prev => prev.filter((_, j) => j !== i))}
-                    className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 shrink-0"><Trash2 size={16} /></button>
+                    className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-[var(--danger-text)] hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] shrink-0"><Trash2 strokeWidth={1.5} size={16} /></button>
                 )}
               </div>
             ))}
             {krs.length < 5 && (
               <button type="button" onClick={() => setKrs(prev => [...prev, { title: '', target: '100', unit: '' }])}
-                className="w-full py-2.5 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-600 text-gray-500 hover:border-purple-400 hover:text-purple-600 font-bold text-sm flex items-center justify-center gap-2">
-                <Plus size={16} /> Ajouter une mesure
+                className="w-full py-2.5 rounded-xl border-2 border-dashed border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border)] hover:text-[var(--action)] font-semibold text-sm flex items-center justify-center gap-2">
+                <Plus strokeWidth={1.5} size={16} /> Ajouter une mesure
               </button>
             )}
           </div>
 
-          {error && <p className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 rounded-xl p-3 break-words">{error}</p>}
+          {error && <p className="text-sm text-[var(--danger-text)] bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] rounded-xl p-3 break-words">{error}</p>}
         </div>
 
-        <div className="p-5 border-t border-gray-100 dark:border-gray-700 flex gap-3">
-          <button onClick={onClose} className="flex-1 py-3 rounded-xl border border-gray-200 dark:border-gray-600 font-bold text-gray-600 dark:text-gray-300">Annuler</button>
+        <div className="p-5 border-t border-[var(--border)] flex gap-3">
+          <button onClick={onClose} className="flex-1 py-3 rounded-xl border border-[var(--border)] font-semibold text-[var(--text-secondary)]">Annuler</button>
           <button onClick={submit} disabled={busy || !valid}
-            className="flex-1 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold shadow-lg shadow-purple-500/20 disabled:opacity-60 flex items-center justify-center gap-2">
-            {busy && <Loader2 size={16} className="animate-spin" />} Créer
+            className="flex-1 py-3 rounded-xl bg-[var(--brand)] hover:bg-[var(--brand)] text-[var(--on-brand)] font-semibold shadow-lg disabled:opacity-60 flex items-center justify-center gap-2">
+            {busy && <Loader2 strokeWidth={1.5} size={16} className="animate-spin" />} Créer
           </button>
         </div>
       </motion.div>
-    </motion.div>
+    </PerformanceOverlay>
   );
 }
 
 // ─── Page ────────────────────────────────────────────────────────────────────
-export default function ObjectivesPage() {
+function ObjectivesPage() {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [employees, setEmployees] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -310,32 +314,32 @@ export default function ObjectivesPage() {
     <div className="max-w-[1200px] mx-auto pb-20 space-y-6 sm:space-y-8">
       <PerformanceNav />
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 performance-header">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">{canCreate ? 'Objectifs' : 'Mes objectifs'}</h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base">
+          <h1 className="text-2xl sm:text-3xl font-semibold text-[var(--text)] tracking-tight">{canCreate ? 'Objectifs' : 'Mes objectifs'}</h1>
+          <p className="text-[var(--text-secondary)] text-sm sm:text-base">
             {canCreate ? 'Ce que chaque personne doit atteindre' : 'Mettez à jour votre avancement'}{goals.length > 0 && ` · ${goals.length} objectif${goals.length > 1 ? 's' : ''}, ${done} atteint${done > 1 ? 's' : ''}`}
           </p>
         </div>
         {canCreate && (
           <button onClick={() => setCreating(true)}
-            className="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold shadow-lg shadow-purple-500/20 flex items-center justify-center gap-2">
-            <Plus size={20} /> Nouvel objectif
+            className="px-5 py-2.5 rounded-xl bg-[var(--brand)] hover:bg-[var(--brand)] text-[var(--on-brand)] font-semibold shadow-lg flex items-center justify-center gap-2">
+            <Plus strokeWidth={1.5} size={20} /> Nouvel objectif
           </button>
         )}
       </div>
 
-      {error && <div className="rounded-xl bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 text-sm p-4 flex items-center gap-2"><AlertTriangle size={16} /> {error}</div>}
+      {error && <div className="rounded-xl bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] text-[var(--danger-text)] text-sm p-4 flex items-center gap-2"><AlertTriangle strokeWidth={1.5} size={16} /> {error}</div>}
 
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1 max-w-sm">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search strokeWidth={1.5} size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" />
           <input className={`${inputCls} pl-9`} placeholder="Rechercher un objectif ou un employé…" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
         <div className="flex gap-2">
           {([['ALL', 'Tous'], ['OPEN', 'En cours'], ['DONE', 'Atteints']] as const).map(([k, label]) => (
-            <button key={k} onClick={() => setFilter(k)}
-              className={`px-3.5 py-2 rounded-lg text-sm font-bold ${filter === k ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800'}`}>{label}</button>
+            <button aria-pressed={filter === k} key={k} onClick={() => setFilter(k)}
+              className={`px-3.5 py-2 rounded-lg text-sm font-semibold ${filter === k ? 'bg-[var(--brand-soft)] text-[var(--action)]' : 'text-[var(--text-secondary)] hover:bg-[var(--surface-2)]'}`}>{label}</button>
           ))}
         </div>
       </div>
@@ -344,11 +348,11 @@ export default function ObjectivesPage() {
         <KonzaLoader variant="section" />
       ) : shown.length === 0 ? (
         <div className={`${cardCls} p-12 text-center`}>
-          <Target size={40} className="mx-auto text-gray-300 mb-3" />
-          <p className="font-bold text-gray-900 dark:text-white">{goals.length === 0 ? 'Aucun objectif défini' : 'Aucun résultat'}</p>
-          <p className="text-sm text-gray-500 mt-1">{goals.length === 0 ? (canCreate ? 'Commencez par en créer un : choisissez la personne, écrivez l\'objectif et la date limite.' : "Votre responsable n'a pas encore fixé d'objectif.") : 'Modifiez la recherche ou le filtre.'}</p>
+          <Target strokeWidth={1.5} size={40} className="mx-auto text-[var(--text-secondary)] mb-3" />
+          <p className="font-semibold text-[var(--text)]">{goals.length === 0 ? 'Aucun objectif défini' : 'Aucun résultat'}</p>
+          <p className="text-sm text-[var(--text-secondary)] mt-1">{goals.length === 0 ? (canCreate ? 'Commencez par en créer un : choisissez la personne, écrivez l\'objectif et la date limite.' : "Votre responsable n'a pas encore fixé d'objectif.") : 'Modifiez la recherche ou le filtre.'}</p>
           {goals.length === 0 && canCreate && (
-            <button onClick={() => setCreating(true)} className="mt-4 px-5 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold shadow-lg shadow-purple-500/20 inline-flex items-center gap-2 min-h-[48px]"><Plus size={18} /> Créer le premier objectif</button>
+            <button onClick={() => setCreating(true)} className="mt-4 px-5 py-3 rounded-xl bg-[var(--brand)] hover:bg-[var(--brand)] text-[var(--on-brand)] font-semibold shadow-lg inline-flex items-center gap-2 min-h-[48px]"><Plus strokeWidth={1.5} size={18} /> Créer le premier objectif</button>
           )}
         </div>
       ) : (
@@ -362,55 +366,55 @@ export default function ObjectivesPage() {
               <motion.div key={g.id} layout className={`${cardCls} overflow-hidden`}>
                 <button type="button" onClick={() => setExpanded(open ? null : g.id)} aria-expanded={open}
                   className="w-full text-left p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
-                  <div className={`w-14 h-14 rounded-2xl flex flex-col items-center justify-center font-bold shrink-0 ${finished ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : g.progress >= 50 ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400'}`}>
+                  <div className={`w-14 h-14 rounded-2xl flex flex-col items-center justify-center font-semibold shrink-0 ${finished ? 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)]' : g.progress >= 50 ? 'bg-[var(--brand-soft)] text-[var(--action)]' : 'bg-[var(--brand-soft)] text-[var(--action)]'}`}>
                     <span className="text-lg leading-none">{g.progress}</span><span className="text-[10px] opacity-60">%</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-gray-900 dark:text-white break-words">{g.title}</h3>
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 mt-1">
-                      {g.employee && <span className="flex items-center gap-1"><User size={12} /> {g.employee.firstName} {g.employee.lastName}</span>}
-                      <span className={`flex items-center gap-1 ${late ? 'text-amber-600 font-medium' : ''}`}><Calendar size={12} /> {fmtDate(g.endDate)}{late ? ' · en retard' : ''}</span>
-                      {w > 0 && <span className="font-bold text-purple-600">{w} %</span>}
+                    <h3 className="font-semibold text-[var(--text)] break-words">{g.title}</h3>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--text-secondary)] mt-1">
+                      {g.employee && <span className="flex items-center gap-1"><User strokeWidth={1.5} size={12} /> {g.employee.firstName} {g.employee.lastName}</span>}
+                      <span className={`flex items-center gap-1 ${late ? 'text-[var(--warning-text)] font-medium' : ''}`}><Calendar strokeWidth={1.5} size={12} /> {fmtDate(g.endDate)}{late ? ' · en retard' : ''}</span>
+                      {w > 0 && <span className="font-semibold text-[var(--action)]">{w} %</span>}
                     </div>
                     <div className="mt-2"><LinkBadge g={g} /></div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    {finished && <CheckCircle2 size={20} className="text-emerald-500" />}
-                    <ChevronDown size={18} className={`text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`} />
+                    {finished && <CheckCircle2 strokeWidth={1.5} size={20} className="text-[var(--success-text)]" />}
+                    <ChevronDown strokeWidth={1.5} size={18} className={`text-[var(--text-secondary)] transition-transform ${open ? 'rotate-180' : ''}`} />
                   </div>
                 </button>
 
                 <div className="px-4 sm:px-5 pb-3">
-                  <div className="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                    <div className={`h-full rounded-full transition-all ${finished ? 'bg-emerald-500' : 'bg-gradient-to-r from-purple-500 to-indigo-500'}`} style={{ width: `${g.progress}%` }} />
+                  <div className="h-1.5 bg-[var(--surface-2)] rounded-full overflow-hidden">
+                    <div className={`h-full rounded-full transition-all ${finished ? 'bg-[var(--green)]' : ''}`} style={{ width: `${g.progress}%` }} />
                   </div>
                 </div>
 
                 <AnimatePresence initial={false}>
                   {open && (
                     <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-                      className="overflow-hidden border-t border-gray-100 dark:border-gray-700 bg-gray-50/60 dark:bg-black/20">
+                      className="overflow-hidden border-t border-[var(--border)] bg-[var(--surface-2)]">
                       <div className="p-4 sm:p-5 space-y-5">
-                        {g.description && <p className="text-sm text-gray-600 dark:text-gray-300 break-words">{g.description}</p>}
+                        {g.description && <p className="text-sm text-[var(--text-secondary)] break-words">{g.description}</p>}
                         {(g.kpi || g.support) && (
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                            {g.kpi && <p className="text-gray-600 dark:text-gray-300 break-words"><b className="text-gray-900 dark:text-white">KPI / livrables :</b> {g.kpi}</p>}
-                            {g.support && <p className="text-gray-600 dark:text-gray-300 break-words"><b className="text-gray-900 dark:text-white">Support :</b> {g.support}</p>}
+                            {g.kpi && <p className="text-[var(--text-secondary)] break-words"><b className="text-[var(--text)]">KPI / livrables :</b> {g.kpi}</p>}
+                            {g.support && <p className="text-[var(--text-secondary)] break-words"><b className="text-[var(--text)]">Support :</b> {g.support}</p>}
                           </div>
                         )}
                         {canCreate && (
                           <div className="flex justify-end">
                             <button type="button" onClick={() => removeGoal(g)}
-                              className="px-3 py-2 rounded-lg text-sm font-bold text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2 min-h-[40px]">
-                              <Trash2 size={15} /> Supprimer cet objectif
+                              className="px-3 py-2 rounded-lg text-sm font-semibold text-[var(--danger-text)] hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] flex items-center gap-2 min-h-[40px]">
+                              <Trash2 strokeWidth={1.5} size={15} /> Supprimer cet objectif
                             </button>
                           </div>
                         )}
                         {g.keyResults.length > 0 ? (
                           <div className="space-y-5">
-                            <h4 className="text-xs font-bold uppercase text-gray-400 tracking-wider flex items-center gap-2"><TrendingUp size={13} /> Avancement</h4>
+                            <h4 className="text-xs font-semibold text-[var(--text-secondary)] flex items-center gap-2"><TrendingUp strokeWidth={1.5} size={13} /> Avancement</h4>
                             {g.keyResults.map(kr => <KeyResultRow key={kr.id} kr={kr} onSaved={load} />)}
-                            <p className="text-xs text-gray-400 flex items-center gap-1.5"><Check size={12} /> Le pourcentage de l'objectif se calcule tout seul à partir de ces mesures.</p>
+                            <p className="text-xs text-[var(--text-secondary)] flex items-center gap-1.5"><Check strokeWidth={1.5} size={12} /> Le pourcentage de l'objectif se calcule tout seul à partir de ces mesures.</p>
                           </div>
                         ) : (
                           <ProgressSlider goal={g} onSaved={load} />
@@ -429,5 +433,14 @@ export default function ObjectivesPage() {
         {creating && <CreateModal employees={employees} onClose={() => setCreating(false)} onDone={load} />}
       </AnimatePresence>
     </div>
+  );
+}
+
+
+export default function ObjectivesPageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <ObjectivesPage />
+    </ModulePageFrame>
   );
 }

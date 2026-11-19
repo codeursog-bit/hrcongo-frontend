@@ -1,4 +1,6 @@
 'use client';
+import { Button } from '@/components/design-system/primitives';
+import { LoanModuleFrame, LoanModuleSkeleton } from '@/components/loans/LoanModuleFrame';
 
 // ============================================================================
 // 📁 app/(dashboard)/loans/page.tsx
@@ -65,6 +67,7 @@ const ADVANCE_STATUS_CFG: Record<string, { label: string; cls: string; dot: stri
 };
 
 export default function LoansManagementPage() {
+  const [refonteError,setRefonteError]=useState('');
   const { bp } = useBasePath();
   const router = useRouter();
   const [userRole, setUserRole] = useState('');
@@ -143,7 +146,7 @@ export default function LoansManagementPage() {
       // ou inchangés après une action pour garder la modal ouverte sur le
       // même prêt/avance avec les données fraîchement rechargées.)
     } catch (e) {
-      console.error('Erreur chargement prêts/avances', e);
+      console.error('Erreur chargement prêts/avances', e); setRefonteError('Le chargement a échoué. Réessayez dans un instant.');
     } finally {
       setIsLoading(false);
     }
@@ -550,10 +553,10 @@ export default function LoansManagementPage() {
     finally { setIsExportingXlsx(false); }
   };
 
-  if (isLoading) return <KonzaLoader variant="page" />;
+  if (isLoading) return <LoanModuleSkeleton />;
 
   return (
-    <div className="max-w-[1600px] mx-auto pb-24 space-y-6">
+    <LoanModuleFrame kind="list" error={refonteError}><div className="max-w-[1600px] mx-auto pb-24 space-y-6">
       <FinanceSubNav userRole={userRole} />
 
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -567,20 +570,20 @@ export default function LoansManagementPage() {
       </div>
 
       <div className="flex gap-1 bg-[var(--surface-2)] p-1 rounded-xl w-fit overflow-x-auto">
-        <button onClick={() => setTab('overview')} className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all whitespace-nowrap ${tab === 'overview' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
+        <Button variant="ghost" onClick={() => setTab('overview')} className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all whitespace-nowrap ${tab === 'overview' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
           <LayoutDashboard size={14} /> Vue d'ensemble
-        </button>
-        <button onClick={() => setTab('loans')} className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all ${tab === 'loans' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
+        </Button>
+        <Button variant="ghost" onClick={() => setTab('loans')} className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all ${tab === 'loans' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
           <Banknote size={14} /> Prêts
           {loans.filter(l => ['PENDING', 'PENDING_DG'].includes(l.status)).length > 0 && <span className="bg-amber-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">{loans.filter(l => ['PENDING', 'PENDING_DG'].includes(l.status)).length}</span>}
-        </button>
-        <button onClick={() => setTab('advances')} className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all ${tab === 'advances' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
+        </Button>
+        <Button variant="ghost" onClick={() => setTab('advances')} className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all ${tab === 'advances' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
           <Wallet size={14} /> Avances
           {advances.filter(a => a.status === 'PENDING').length > 0 && <span className="bg-amber-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">{advances.filter(a => a.status === 'PENDING').length}</span>}
-        </button>
-        <button onClick={() => setTab('deductions')} className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all ${tab === 'deductions' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
+        </Button>
+        <Button variant="ghost" onClick={() => setTab('deductions')} className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all ${tab === 'deductions' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
           <Receipt size={14} /> Retenues diverses
-        </button>
+        </Button>
       </div>
 
       {/* ══════════════════ VUE D'ENSEMBLE ══════════════════ */}
@@ -654,9 +657,9 @@ export default function LoansManagementPage() {
                     <tr key={l.id} onClick={() => { setSelectedLoanId(l.id); setRejectMode(false); setRejectionReason(''); }} className="cursor-pointer hover:bg-[var(--surface-2)]/40 transition-colors">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <button onClick={(e) => { e.stopPropagation(); openEmployeeHistory(l.employee, l.employeeId); }} className="w-9 h-9 rounded-xl bg-[var(--surface-2)] flex items-center justify-center text-xs font-bold text-[var(--text-muted)] overflow-hidden shrink-0 hover:ring-2 hover:ring-emerald-400">
+                          <Button variant="ghost" onClick={(e) => { e.stopPropagation(); openEmployeeHistory(l.employee, l.employeeId); }} className="w-9 h-9 rounded-xl bg-[var(--surface-2)] flex items-center justify-center text-xs font-bold text-[var(--text-muted)] overflow-hidden shrink-0 hover:ring-2 hover:ring-emerald-400">
                             {l.employee?.photoUrl ? <img src={l.employee.photoUrl} className="w-full h-full object-cover" alt="" /> : initials}
-                          </button>
+                          </Button>
                           <div className="min-w-0">
                             <p className="font-semibold text-[var(--text)] truncate">{l.employee?.firstName} {l.employee?.lastName}</p>
                             <p className="text-xs text-[var(--text-muted)] truncate">{l.employee?.department?.name || '—'}</p>
@@ -672,9 +675,9 @@ export default function LoansManagementPage() {
                       </td>
                       <td className="px-4 py-3 text-right">
                         {l.status === 'ACTIVE' && Number(l.remainingBalance) > 0 && DRH_ROLES.includes(userRole) && (
-                          <button onClick={(e) => { e.stopPropagation(); handleCashRepayment(l.id, Number(l.remainingBalance)); }} className="inline-flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 hover:bg-emerald-500 hover:text-white dark:bg-emerald-500/10 dark:text-emerald-300 dark:hover:bg-emerald-500 dark:hover:text-white transition-colors whitespace-nowrap">
+                          <Button variant="primary" onClick={(e) => { e.stopPropagation(); handleCashRepayment(l.id, Number(l.remainingBalance)); }} className="inline-flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 hover:bg-emerald-500 hover:text-white dark:bg-emerald-500/10 dark:text-emerald-300 dark:hover:bg-emerald-500 dark:hover:text-white transition-colors whitespace-nowrap">
                             <Wallet size={11} /> Rembourser
-                          </button>
+                          </Button>
                         )}
                       </td>
                     </tr>
@@ -707,7 +710,7 @@ export default function LoansManagementPage() {
                       <span className={`w-1.5 h-1.5 rounded-full ${(LOAN_STATUS_CFG[selectedLoan.status] ?? LOAN_STATUS_CFG.PENDING).dot}`} />
                       {(LOAN_STATUS_CFG[selectedLoan.status] ?? LOAN_STATUS_CFG.PENDING).label}
                     </span>
-                    <button onClick={() => setSelectedLoanId(null)} className="w-9 h-9 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"><X size={18} /></button>
+                    <Button variant="ghost" onClick={() => setSelectedLoanId(null)} className="w-9 h-9 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"><X size={18} /></Button>
                   </div>
                 </div>
 
@@ -779,25 +782,25 @@ export default function LoansManagementPage() {
                           <div>
                             <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Remboursement</p>
                             <div className="grid grid-cols-2 gap-2">
-                              <button
+                              <Button variant="ghost"
                                 type="button"
                                 onClick={() => setRecoverViaPayroll(true)}
                                 className={`px-3 py-2 rounded-xl border-2 text-xs font-bold transition-all ${recoverViaPayroll ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300' : 'border-[var(--border)] text-[var(--text-muted)]'}`}
                               >
                                 Sur la paie
-                              </button>
-                              <button
+                              </Button>
+                              <Button variant="ghost"
                                 type="button"
                                 onClick={() => setRecoverViaPayroll(false)}
                                 className={`px-3 py-2 rounded-xl border-2 text-xs font-bold transition-all ${!recoverViaPayroll ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300' : 'border-[var(--border)] text-[var(--text-muted)]'}`}
                               >
                                 En espèces
-                              </button>
+                              </Button>
                             </div>
                           </div>
                           <div className="flex gap-2">
-                            {!awaitingOpinions && <button onClick={() => handleLoanDecision('OUI')} disabled={isProcessing} className="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2"><Check size={16} /> Valider (OUI)</button>}
-                            <button onClick={() => setRejectMode(true)} className="flex-1 py-2.5 border border-[var(--border)] hover:bg-red-50 hover:text-red-600 text-[var(--text-muted)] text-sm font-bold rounded-xl flex items-center justify-center gap-2"><X size={16} /> Refuser</button>
+                            {!awaitingOpinions && <Button variant="primary" onClick={() => handleLoanDecision('OUI')} disabled={isProcessing} className="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2"><Check size={16} /> Valider (OUI)</Button>}
+                            <Button variant="ghost" onClick={() => setRejectMode(true)} className="flex-1 py-2.5 border border-[var(--border)] hover:bg-red-50 hover:text-red-600 text-[var(--text-muted)] text-sm font-bold rounded-xl flex items-center justify-center gap-2"><X size={16} /> Refuser</Button>
                           </div>
                         </>
                       ) : (
@@ -807,9 +810,9 @@ export default function LoansManagementPage() {
                   )}
 
                   {selectedLoan.status === 'ACTIVE' && Number(selectedLoan.remainingBalance) > 0 && DRH_ROLES.includes(userRole) && (
-                    <button onClick={() => handleCashRepayment(selectedLoan.id, Number(selectedLoan.remainingBalance))} className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2 shadow-sm shadow-emerald-500/30">
+                    <Button variant="primary" onClick={() => handleCashRepayment(selectedLoan.id, Number(selectedLoan.remainingBalance))} className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2 shadow-sm shadow-emerald-500/30">
                       <Wallet size={16} /> Confirmer un remboursement
-                    </button>
+                    </Button>
                   )}
 
                   {['ACTIVE', 'PAID'].includes(selectedLoan.status) && DRH_ROLES.includes(userRole) && (
@@ -820,41 +823,41 @@ export default function LoansManagementPage() {
                           {selectedLoan.printAuthorized ? "Impression autorisée pour l'employé" : 'Impression non autorisée'}
                         </span>
                       </div>
-                      <button
+                      <Button variant="ghost"
                         onClick={() => setPrintAuthModal('loan')}
                         disabled={isTogglingPrintAuth}
                         className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)] disabled:opacity-40"
                       >
                         {selectedLoan.printAuthorized ? 'Modifier' : 'Autoriser'}
-                      </button>
+                      </Button>
                     </div>
                   )}
 
                   <div className="flex gap-2 pt-2">
                     {DRH_ROLES.includes(userRole) && ['PENDING', 'PENDING_DG'].includes(selectedLoan.status) && (
-                      <button onClick={openEditLoan} className="flex-1 py-2 border border-[var(--border)] text-xs font-semibold rounded-xl text-[var(--text-muted)] hover:bg-[var(--surface-2)] flex items-center justify-center gap-1.5"><Pencil size={13} /> Modifier</button>
+                      <Button variant="ghost" onClick={openEditLoan} className="flex-1 py-2 border border-[var(--border)] text-xs font-semibold rounded-xl text-[var(--text-muted)] hover:bg-[var(--surface-2)] flex items-center justify-center gap-1.5"><Pencil size={13} /> Modifier</Button>
                     )}
                     {(FULL_ADMIN_ROLES.includes(userRole) ? true : selectedLoan.status === 'PENDING') && (
-                      <button onClick={() => handleDeleteLoan(selectedLoan.id)} className="flex-1 py-2 border border-[var(--border)] text-xs font-semibold rounded-xl text-red-500 hover:bg-red-50 flex items-center justify-center gap-1.5"><Trash2 size={13} /> Supprimer</button>
+                      <Button variant="ghost" onClick={() => handleDeleteLoan(selectedLoan.id)} className="flex-1 py-2 border border-[var(--border)] text-xs font-semibold rounded-xl text-red-500 hover:bg-red-50 flex items-center justify-center gap-1.5"><Trash2 size={13} /> Supprimer</Button>
                     )}
                     {['ACTIVE', 'PENDING_DG'].includes(selectedLoan.status) && DRH_ROLES.includes(userRole) && (
-                      <button onClick={() => handleCancelLoan(selectedLoan.id)} className="flex-1 py-2 border border-[var(--border)] text-xs font-semibold rounded-xl text-[var(--text-muted)] hover:bg-[var(--surface-2)]">Annuler</button>
+                      <Button variant="ghost" onClick={() => handleCancelLoan(selectedLoan.id)} className="flex-1 py-2 border border-[var(--border)] text-xs font-semibold rounded-xl text-[var(--text-muted)] hover:bg-[var(--surface-2)]">Annuler</Button>
                     )}
                   </div>
 
                   <div className="flex gap-2">
                     {/* Impression 100% côté navigateur (aucune dépendance serveur) — marche pour Orca (rendu HTML fidèle) comme pour les autres (LoanRequestPrintable), puisque PRINT_ID contient déjà le bon rendu. */}
-                    <button onClick={() => setTimeout(() => printLoanDocument(PRINT_ID), 50)} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)]"><Printer size={16} /> Imprimer</button>
+                    <Button variant="ghost" onClick={() => setTimeout(() => printLoanDocument(PRINT_ID), 50)} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)]"><Printer size={16} /> Imprimer</Button>
                     {docData?.company?.documentTemplate === 'ORCA' ? (
-                      <button onClick={handleDownloadOrcaXlsx} disabled={isExportingXlsx} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)] disabled:opacity-40">{isExportingXlsx ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} Fiche Excel</button>
+                      <Button variant="ghost" onClick={handleDownloadOrcaXlsx} disabled={isExportingXlsx} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)] disabled:opacity-40">{isExportingXlsx ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} Fiche Excel</Button>
                     ) : (
-                      <button onClick={handleDownloadPdf} disabled={isExportingPdf} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)] disabled:opacity-40">{isExportingPdf ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} PDF</button>
+                      <Button variant="ghost" onClick={handleDownloadPdf} disabled={isExportingPdf} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)] disabled:opacity-40">{isExportingPdf ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} PDF</Button>
                     )}
                   </div>
 
-                  <button onClick={() => setShowPreviewModal(true)} className="w-full py-2.5 border border-dashed border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)]">
+                  <Button variant="ghost" onClick={() => setShowPreviewModal(true)} className="w-full py-2.5 border border-dashed border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)]">
                     <Eye size={16} /> Aperçu de la fiche
-                  </button>
+                  </Button>
 
                   {/* Rendu réel hors-écran (pas display:none) : nécessaire pour la capture d'impression navigateur */}
                   <div className="fixed -left-[9999px] top-0 pointer-events-none" aria-hidden="true">
@@ -923,9 +926,9 @@ export default function LoansManagementPage() {
                     <tr key={a.id} onClick={() => { setSelectedAdvanceId(a.id); setRejectMode(false); setRejectionReason(''); }} className="cursor-pointer hover:bg-[var(--surface-2)]/40 transition-colors">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <button onClick={(e) => { e.stopPropagation(); openEmployeeHistory(a.employee, a.employeeId); }} className="w-9 h-9 rounded-xl bg-[var(--surface-2)] flex items-center justify-center text-xs font-bold text-[var(--text-muted)] overflow-hidden shrink-0 hover:ring-2 hover:ring-emerald-400">
+                          <Button variant="ghost" onClick={(e) => { e.stopPropagation(); openEmployeeHistory(a.employee, a.employeeId); }} className="w-9 h-9 rounded-xl bg-[var(--surface-2)] flex items-center justify-center text-xs font-bold text-[var(--text-muted)] overflow-hidden shrink-0 hover:ring-2 hover:ring-emerald-400">
                             {a.employee?.photoUrl ? <img src={a.employee.photoUrl} className="w-full h-full object-cover" alt="" /> : initials}
-                          </button>
+                          </Button>
                           <div className="min-w-0">
                             <p className="font-semibold text-[var(--text)] truncate">{a.employee?.firstName} {a.employee?.lastName}</p>
                             <p className="text-xs text-[var(--text-muted)] truncate">{a.employee?.department?.name || '—'}</p>
@@ -939,9 +942,9 @@ export default function LoansManagementPage() {
                       </td>
                       <td className="px-4 py-3 text-right">
                         {a.status === 'APPROVED' && Number(a.remainingBalance ?? a.amount) > 0 && DRH_ROLES.includes(userRole) && (
-                          <button onClick={(e) => { e.stopPropagation(); handleAdvanceCashRepayment(a.id, Number(a.remainingBalance ?? a.amount)); }} className="inline-flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 hover:bg-emerald-500 hover:text-white dark:bg-emerald-500/10 dark:text-emerald-300 dark:hover:bg-emerald-500 dark:hover:text-white transition-colors whitespace-nowrap">
+                          <Button variant="primary" onClick={(e) => { e.stopPropagation(); handleAdvanceCashRepayment(a.id, Number(a.remainingBalance ?? a.amount)); }} className="inline-flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 hover:bg-emerald-500 hover:text-white dark:bg-emerald-500/10 dark:text-emerald-300 dark:hover:bg-emerald-500 dark:hover:text-white transition-colors whitespace-nowrap">
                             <Wallet size={11} /> Rembourser
-                          </button>
+                          </Button>
                         )}
                       </td>
                     </tr>
@@ -974,7 +977,7 @@ export default function LoansManagementPage() {
                       <span className={`w-1.5 h-1.5 rounded-full ${(ADVANCE_STATUS_CFG[selectedAdvance.status] ?? ADVANCE_STATUS_CFG.PENDING).dot}`} />
                       {(ADVANCE_STATUS_CFG[selectedAdvance.status] ?? ADVANCE_STATUS_CFG.PENDING).label}
                     </span>
-                    <button onClick={() => setSelectedAdvanceId(null)} className="w-9 h-9 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"><X size={18} /></button>
+                    <Button variant="ghost" onClick={() => setSelectedAdvanceId(null)} className="w-9 h-9 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"><X size={18} /></Button>
                   </div>
                 </div>
 
@@ -1028,25 +1031,25 @@ export default function LoansManagementPage() {
                           <div>
                             <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Remboursement</p>
                             <div className="grid grid-cols-2 gap-2">
-                              <button
+                              <Button variant="ghost"
                                 type="button"
                                 onClick={() => setRecoverViaPayroll(true)}
                                 className={`px-3 py-2 rounded-xl border-2 text-xs font-bold transition-all ${recoverViaPayroll ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300' : 'border-[var(--border)] text-[var(--text-muted)]'}`}
                               >
                                 Sur la paie
-                              </button>
-                              <button
+                              </Button>
+                              <Button variant="ghost"
                                 type="button"
                                 onClick={() => setRecoverViaPayroll(false)}
                                 className={`px-3 py-2 rounded-xl border-2 text-xs font-bold transition-all ${!recoverViaPayroll ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300' : 'border-[var(--border)] text-[var(--text-muted)]'}`}
                               >
                                 En espèces
-                              </button>
+                              </Button>
                             </div>
                           </div>
                           <div className="flex gap-2">
-                            {!awaitingOpinions && <button onClick={() => handleAdvanceDecision('APPROVED')} disabled={isProcessing} className="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2"><Check size={16} /> Approuver</button>}
-                            <button onClick={() => setRejectMode(true)} className="flex-1 py-2.5 border border-[var(--border)] hover:bg-red-50 hover:text-red-600 text-[var(--text-muted)] text-sm font-bold rounded-xl flex items-center justify-center gap-2"><X size={16} /> Refuser</button>
+                            {!awaitingOpinions && <Button variant="primary" onClick={() => handleAdvanceDecision('APPROVED')} disabled={isProcessing} className="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2"><Check size={16} /> Approuver</Button>}
+                            <Button variant="ghost" onClick={() => setRejectMode(true)} className="flex-1 py-2.5 border border-[var(--border)] hover:bg-red-50 hover:text-red-600 text-[var(--text-muted)] text-sm font-bold rounded-xl flex items-center justify-center gap-2"><X size={16} /> Refuser</Button>
                           </div>
                         </>
                       ) : (
@@ -1057,12 +1060,12 @@ export default function LoansManagementPage() {
 
                   {selectedAdvance.status === 'APPROVED' && Number(selectedAdvance.remainingBalance ?? selectedAdvance.amount) > 0 && DRH_ROLES.includes(userRole) && (
                     <div className="space-y-2">
-                      <button onClick={() => handleAdvanceCashRepayment(selectedAdvance.id, Number(selectedAdvance.remainingBalance ?? selectedAdvance.amount))} className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2 shadow-sm shadow-emerald-500/30">
+                      <Button variant="primary" onClick={() => handleAdvanceCashRepayment(selectedAdvance.id, Number(selectedAdvance.remainingBalance ?? selectedAdvance.amount))} className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2 shadow-sm shadow-emerald-500/30">
                         <Wallet size={16} /> Confirmer un remboursement
-                      </button>
-                      <button onClick={() => handleMarkAdvancePaidCash(selectedAdvance.id)} className="w-full py-2 text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--text)]">
+                      </Button>
+                      <Button variant="ghost" onClick={() => handleMarkAdvancePaidCash(selectedAdvance.id)} className="w-full py-2 text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--text)]">
                         Solder tout en espèces d'un coup
-                      </button>
+                      </Button>
                     </div>
                   )}
 
@@ -1074,37 +1077,37 @@ export default function LoansManagementPage() {
                           {selectedAdvance.printAuthorized ? "Impression autorisée pour l'employé" : 'Impression non autorisée'}
                         </span>
                       </div>
-                      <button
+                      <Button variant="ghost"
                         onClick={() => setPrintAuthModal('advance')}
                         disabled={isTogglingPrintAuth}
                         className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)] disabled:opacity-40"
                       >
                         {selectedAdvance.printAuthorized ? 'Modifier' : 'Autoriser'}
-                      </button>
+                      </Button>
                     </div>
                   )}
 
                   <div className="flex gap-2">
                     {DRH_ROLES.includes(userRole) && selectedAdvance.status === 'PENDING' && (
-                      <button onClick={openEditAdvance} className="flex-1 py-2 border border-[var(--border)] text-xs font-semibold rounded-xl text-[var(--text-muted)] hover:bg-[var(--surface-2)] flex items-center justify-center gap-1.5"><Pencil size={13} /> Modifier</button>
+                      <Button variant="ghost" onClick={openEditAdvance} className="flex-1 py-2 border border-[var(--border)] text-xs font-semibold rounded-xl text-[var(--text-muted)] hover:bg-[var(--surface-2)] flex items-center justify-center gap-1.5"><Pencil size={13} /> Modifier</Button>
                     )}
                     {(FULL_ADMIN_ROLES.includes(userRole) ? true : selectedAdvance.status === 'PENDING') && (
-                      <button onClick={() => handleDeleteAdvance(selectedAdvance.id)} className="flex-1 py-2 border border-[var(--border)] text-xs font-semibold rounded-xl text-red-500 hover:bg-red-50 flex items-center justify-center gap-1.5"><Trash2 size={13} /> Supprimer</button>
+                      <Button variant="ghost" onClick={() => handleDeleteAdvance(selectedAdvance.id)} className="flex-1 py-2 border border-[var(--border)] text-xs font-semibold rounded-xl text-red-500 hover:bg-red-50 flex items-center justify-center gap-1.5"><Trash2 size={13} /> Supprimer</Button>
                     )}
                   </div>
 
                   <div className="flex gap-2">
-                    <button onClick={() => setTimeout(() => printLoanDocument(PRINT_ID), 50)} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)]"><Printer size={16} /> Imprimer</button>
+                    <Button variant="ghost" onClick={() => setTimeout(() => printLoanDocument(PRINT_ID), 50)} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)]"><Printer size={16} /> Imprimer</Button>
                     {docData?.company?.documentTemplate === 'ORCA' ? (
-                      <button onClick={handleDownloadOrcaXlsx} disabled={isExportingXlsx} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)] disabled:opacity-40">{isExportingXlsx ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} Fiche Excel</button>
+                      <Button variant="ghost" onClick={handleDownloadOrcaXlsx} disabled={isExportingXlsx} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)] disabled:opacity-40">{isExportingXlsx ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} Fiche Excel</Button>
                     ) : (
-                      <button onClick={handleDownloadPdf} disabled={isExportingPdf} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)] disabled:opacity-40">{isExportingPdf ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} PDF</button>
+                      <Button variant="ghost" onClick={handleDownloadPdf} disabled={isExportingPdf} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)] disabled:opacity-40">{isExportingPdf ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} PDF</Button>
                     )}
                   </div>
 
-                  <button onClick={() => setShowPreviewModal(true)} className="w-full py-2.5 border border-dashed border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)]">
+                  <Button variant="ghost" onClick={() => setShowPreviewModal(true)} className="w-full py-2.5 border border-dashed border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)]">
                     <Eye size={16} /> Aperçu de la fiche
-                  </button>
+                  </Button>
 
                   <div className="fixed -left-[9999px] top-0 pointer-events-none" aria-hidden="true">
                     {docData?.company?.documentTemplate === 'ORCA' ? (
@@ -1200,20 +1203,20 @@ export default function LoansManagementPage() {
                 <div>
                   <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Mode de prélèvement</label>
                   <div className="grid grid-cols-2 gap-2">
-                    <button
+                    <Button variant="ghost"
                       type="button"
                       onClick={() => setNewDeduction({ ...newDeduction, recoverViaPayroll: true })}
                       className={`px-3 py-3 rounded-xl border-2 text-xs font-bold transition-all flex flex-col items-center gap-1.5 ${newDeduction.recoverViaPayroll ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300' : 'border-[var(--border)] text-[var(--text-muted)]'}`}
                     >
                       <CreditCard size={18} /> Sur la paie
-                    </button>
-                    <button
+                    </Button>
+                    <Button variant="ghost"
                       type="button"
                       onClick={() => setNewDeduction({ ...newDeduction, recoverViaPayroll: false })}
                       className={`px-3 py-3 rounded-xl border-2 text-xs font-bold transition-all flex flex-col items-center gap-1.5 ${!newDeduction.recoverViaPayroll ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300' : 'border-[var(--border)] text-[var(--text-muted)]'}`}
                     >
                       <Banknote size={18} /> En espèces
-                    </button>
+                    </Button>
                   </div>
                 </div>
 
@@ -1242,9 +1245,9 @@ export default function LoansManagementPage() {
                   </div>
                 )}
 
-                <button onClick={handleAddDeduction} disabled={isAddingDeduction || !newDeduction.employeeId || !newDeduction.label || !newDeduction.amount} className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2">
+                <Button variant="primary" onClick={handleAddDeduction} disabled={isAddingDeduction || !newDeduction.employeeId || !newDeduction.label || !newDeduction.amount} className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2">
                   {isAddingDeduction ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />} Ajouter la retenue
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -1263,8 +1266,8 @@ export default function LoansManagementPage() {
               <div>
                 <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1 block">Vue</label>
                 <div className="flex rounded-xl border border-[var(--border)] overflow-hidden">
-                  <button onClick={() => setDedView('mensuelle')} className={`px-3 py-2 text-xs font-bold transition-colors ${dedView === 'mensuelle' ? 'bg-emerald-500 text-white' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'}`}>Mensuelle</button>
-                  <button onClick={() => setDedView('annuelle')} className={`px-3 py-2 text-xs font-bold transition-colors ${dedView === 'annuelle' ? 'bg-emerald-500 text-white' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'}`}>Annuelle</button>
+                  <Button variant="ghost" onClick={() => setDedView('mensuelle')} className={`px-3 py-2 text-xs font-bold transition-colors ${dedView === 'mensuelle' ? 'bg-emerald-500 text-white' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'}`}>Mensuelle</Button>
+                  <Button variant="ghost" onClick={() => setDedView('annuelle')} className={`px-3 py-2 text-xs font-bold transition-colors ${dedView === 'annuelle' ? 'bg-emerald-500 text-white' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'}`}>Annuelle</Button>
                 </div>
               </div>
               {dedView === 'mensuelle' && (
@@ -1343,11 +1346,11 @@ export default function LoansManagementPage() {
                                 placeholder="Montant"
                                 className="w-24 px-2 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-xs"
                               />
-                              <button onClick={() => handleCashRepaymentDeduction(d.id)} disabled={payingCashId === d.id || !dedCashAmounts[d.id]} className="text-emerald-600 hover:underline text-xs font-semibold disabled:opacity-40 disabled:no-underline whitespace-nowrap">
+                              <Button variant="ghost" onClick={() => handleCashRepaymentDeduction(d.id)} disabled={payingCashId === d.id || !dedCashAmounts[d.id]} className="text-emerald-600 hover:underline text-xs font-semibold disabled:opacity-40 disabled:no-underline whitespace-nowrap">
                                 {payingCashId === d.id ? 'En cours…' : 'Régler'}
-                              </button>
+                              </Button>
                               {Number(d.remainingBalance) === Number(d.amount) && (
-                                <button onClick={() => handleDeleteDeduction(d.id)} className="text-red-500 hover:underline text-xs font-semibold">Supprimer</button>
+                                <Button variant="ghost" onClick={() => handleDeleteDeduction(d.id)} className="text-red-500 hover:underline text-xs font-semibold">Supprimer</Button>
                               )}
                             </div>
                           )}
@@ -1528,15 +1531,15 @@ export default function LoansManagementPage() {
             </div>
 
             <div className="flex gap-2 mt-6">
-              <button onClick={() => setEditModal(null)} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] hover:bg-[var(--surface-2)]">Annuler</button>
-              <button onClick={handleSaveEdit} disabled={isSavingEdit} className="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2">
+              <Button variant="ghost" onClick={() => setEditModal(null)} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] hover:bg-[var(--surface-2)]">Annuler</Button>
+              <Button variant="primary" onClick={handleSaveEdit} disabled={isSavingEdit} className="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2">
                 {isSavingEdit ? <Loader2 size={16} className="animate-spin" /> : null} Enregistrer
-              </button>
+              </Button>
             </div>
           </div>
         </div>
       )}
-    </div>
+    </div></LoanModuleFrame>
   );
 }
 
@@ -1560,10 +1563,10 @@ function RejectForm({ reason, setReason, onConfirm, onCancel, isProcessing }: { 
     <div className="space-y-2">
       <textarea value={reason} onChange={e => setReason(e.target.value)} placeholder="Motif du refus…" rows={2} className="w-full px-3 py-2.5 rounded-xl border border-red-200 dark:border-red-800 text-sm resize-none" autoFocus />
       <div className="flex gap-2">
-        <button onClick={onConfirm} disabled={isProcessing || !reason.trim()} className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 disabled:opacity-40 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2">
+        <Button variant="ghost" onClick={onConfirm} disabled={isProcessing || !reason.trim()} className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 disabled:opacity-40 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2">
           {isProcessing ? <Loader2 size={16} className="animate-spin" /> : <X size={16} />} Confirmer le refus
-        </button>
-        <button onClick={onCancel} className="px-4 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)]">Annuler</button>
+        </Button>
+        <Button variant="ghost" onClick={onCancel} className="px-4 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)]">Annuler</Button>
       </div>
     </div>
   );

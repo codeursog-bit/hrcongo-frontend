@@ -17,6 +17,10 @@ import { StatCard } from './ui/StatCard';
 import { GlobalLoader } from './ui/GlobalLoader';
 import { api } from '@/services/api';
 import { UserRole } from '@/types';
+import { computeFallbackLeaveBalance, computeDebtKpis, computeMonthlyPresenceRate } from '@/lib/personal-dashboard-stats';
+import { MyDay, MyDaySkeleton } from '@/components/dashboard/MyDay';
+import { usePersonalDay } from '@/hooks/usePersonalDay';
+import { PilotageDashboard, PilotageSkeleton } from '@/components/dashboard/PilotageDashboard';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -55,36 +59,10 @@ const StatusDot = ({ status }: { status: string }) => {
 // 🆕 Solde de congés — secours si /leaves/balance échoue. Mêmes règles que
 // partout ailleurs dans l'app (Code du travail congolais : 26 j/an, soit
 // 26/12 j/mois) — PAS 30j/2.5j comme l'ancien calcul de secours.
-function computeFallbackLeaveBalance(employeeProfile: any, approvedAnnualLeaves: any[]) {
-  const takenDays = approvedAnnualLeaves.reduce((acc: number, curr: any) => acc + (curr.daysCount || 0), 0);
-  if (!employeeProfile?.hireDate) return 0;
-  const months = (Date.now() - new Date(employeeProfile.hireDate).getTime()) / (1000 * 60 * 60 * 24 * 30.44);
-  return Math.max(0, Math.round(Math.min(26, months * (26 / 12)) * 10) / 10 - takenDays);
-}
-
-// 🆕 KPI dettes (prêts + avances) de l'employé connecté — même logique que
-// /loans/mon-espace (myKpis), pour rester cohérent avec le reste de l'app.
-function computeDebtKpis(loans: any[] = [], advances: any[] = []) {
-  const dueLoans = loans.filter((l) => ['ACTIVE', 'PAID'].includes(l.status));
-  const paidLoans = dueLoans.reduce((s, l) => s + (Number(l.amount) - Number(l.remainingBalance)), 0);
-  const paidAdvances = advances.filter((a) => ['DEDUCTED', 'PAID'].includes(a.status)).reduce((s, a) => s + Number(a.amount), 0);
-  const totalRemaining = loans.filter((l) => l.status === 'ACTIVE').reduce((s, l) => s + Number(l.remainingBalance), 0)
-    + advances.filter((a) => a.status === 'APPROVED').reduce((s, a) => s + Number(a.amount), 0);
-  return { totalPaid: paidLoans + paidAdvances, totalRemaining };
-}
-
-// 🆕 Taux de présence du mois en cours uniquement, à partir de
-// /attendance/employee/:id (mêmes statuts DayStatus que partout ailleurs).
-function computeMonthlyPresenceRate(dayStatuses: any[] = []) {
-  const workable = dayStatuses.filter((d) => !['OFF_DAY', 'HOLIDAY', 'FUTURE', 'LEAVE'].includes(d.status));
-  if (workable.length === 0) return 0;
-  const present = workable.filter((d) => ['PRESENT', 'LATE', 'REMOTE'].includes(d.status)).length;
-  return Math.round((present / workable.length) * 100);
-}
-
 export const DashboardContent = () => {
   const router = useRouter();
   const [loading, setLoading]           = useState(true);
+  const [dashboardError, setDashboardError] = useState('');
   const [userRole, setUserRole]         = useState<UserRole | null>(null);
   const [userName, setUserName]         = useState<string>('');
   const [showSalary, setShowSalary]     = useState(false);
@@ -94,6 +72,10 @@ export const DashboardContent = () => {
   // Stagiaires / prestataires sans l'option entreprise : pas de congés → cartes congés masquées.
   const [leaveEligible, setLeaveEligible] = useState(true);
   const [managerStats, setManagerStats] = useState<any>({});
+  const [activeView, setActiveView] = useState<'pilotage' | 'day'>('pilotage');
+  const [personalContext, setPersonalContext] = useState<any>({});
+  const isAdmin = !!userRole && ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER'].includes(userRole);
+  const adminDay = usePersonalDay(isAdmin && activeView === 'day');
 
   useEffect(() => {
     if (!localStorage.getItem('user')) return;
@@ -206,6 +188,7 @@ export const DashboardContent = () => {
             lastSalaryMonth  = new Date(0, sorted[0].month - 1).toLocaleString('fr-FR', { month: 'long' });
           }
           const todayStatus = attendance.find((a: any) => a.employeeId === employeeProfile.id);
+          setPersonalContext({ employee: employeeProfile, leaves, attendance: todayStatus, dayStatuses });
           // 🆕 Même source que « Mon espace » → un seul chiffre partout dans l'app
             const leaveEx = await api.get<any>('/leaves/me/balance-explained').catch(() => null);
             if (leaveEx?.totals) remainingLeaves = leaveEx.totals.remaining;
@@ -228,6 +211,7 @@ export const DashboardContent = () => {
         }
       } catch (error) {
         console.error('❌ Erreur chargement dashboard:', error);
+        setDashboardError('Le chargement du pilotage RH a échoué.');
       } finally {
         setLoading(false);
       }
@@ -287,7 +271,7 @@ export const DashboardContent = () => {
   })();
   const greetingName = userName ? `, ${userName}` : '';
 
-  if (loading) return <GlobalLoader />;
+  if (loading) return userRole && ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER'].includes(userRole) ? <PilotageSkeleton /> : userRole === 'EMPLOYEE' ? <MyDaySkeleton /> : <GlobalLoader />;
 
   const tooltipStyle = {
     backgroundColor: 'var(--surface)',
@@ -531,162 +515,8 @@ export const DashboardContent = () => {
   // ══════════════════════════════════════════════════════════════
   // 👤 VUE EMPLOYEE — enrichie (donut solde congés en plus)
   // ══════════════════════════════════════════════════════════════
-  if (userRole === 'EMPLOYEE') {
-    const remaining = parseFloat(myStats.remainingLeaves) || 0;
-    const annualQuota = 26;
-    const used = Math.max(0, annualQuota - remaining);
+  if (userRole === 'EMPLOYEE') return <MyDay viewerRole={userRole || ''} userName={userName} stats={myStats} context={personalContext} leaveEligible={leaveEligible} error={dashboardError} />;
 
-    return (
-      <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-6">
-        <motion.div variants={itemVariants} className="flex items-center gap-3">
-          <div className="p-2 rounded-xl" style={{ background: 'var(--brand-soft)' }}><Sparkles size={20} className="text-emerald-500" /></div>
-          <div>
-            <h2 className="text-2xl font-bold" style={{ color: 'var(--text)' }}>Bonjour{greetingName} 👋</h2>
-            <p style={{ color: 'var(--text-muted)' }}>Voici votre résumé personnel pour le mois de {monthLabel}.</p>
-          </div>
-        </motion.div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-          <motion.div variants={itemVariants}><StatCard label="Congés Posés" value={myStats.pendingLeaves?.toString() || '0'} trend="En attente" isPositive={true} icon={Calendar} color="amber" /></motion.div>
-          <motion.div variants={itemVariants}><StatCard label="Solde Congés" value={`${myStats.remainingLeaves || '0'} j`} trend="Disponibles" isPositive={true} icon={Clock} color="emerald" /></motion.div>
-          <motion.div variants={itemVariants}><StatCard label="Dernier Salaire" value={myStats.lastSalary || '0 F'} trend={myStats.lastSalaryMonth || '-'} isPositive={true} icon={Wallet} color="emerald" isPrivate={true} showValue={showSalary} onToggleVisibility={() => setShowSalary(!showSalary)} /></motion.div>
-          <motion.div variants={itemVariants}>
-            <div
-              className="rounded-2xl p-6 h-full flex flex-col justify-center items-center text-center cursor-pointer transition-colors hover:-translate-y-1"
-              style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
-              onClick={() => router.push('/presences/pointage')}
-            >
-              {myStats.checkIn && myStats.checkOut ? (
-                <><div className="w-12 h-12 rounded-full flex items-center justify-center mb-3 bg-emerald-500/15 text-emerald-500"><Fingerprint size={24} /></div><h4 className="font-bold" style={{ color: 'var(--text)' }}>Journée terminée</h4><p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Depuis {new Date(myStats.checkOut).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p></>
-              ) : myStats.checkIn ? (
-                <><div className="w-12 h-12 rounded-full flex items-center justify-center mb-3 bg-emerald-500/15 text-emerald-500"><Fingerprint size={24} /></div><h4 className="font-bold" style={{ color: 'var(--text)' }}>Pointé</h4><p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Depuis {new Date(myStats.checkIn).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p></>
-              ) : (
-                <><div className="w-12 h-12 rounded-full flex items-center justify-center mb-3" style={{ background: 'var(--surface-2)', color: 'var(--text-muted)' }}><Fingerprint size={24} /></div><h4 className="font-bold" style={{ color: 'var(--text)' }}>Non pointé</h4><p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Pointer maintenant</p></>
-              )}
-            </div>
-          </motion.div>
-        </div>
-
-        {/* 🆕 Indicateurs complémentaires */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          <motion.div variants={itemVariants}><StatCard label="Présence (mois)" value={`${myStats.presenceRateMonth || 0}%`} trend={monthLabel} isPositive={(myStats.presenceRateMonth || 0) >= 90} icon={Activity} color={(myStats.presenceRateMonth || 0) >= 90 ? 'emerald' : (myStats.presenceRateMonth || 0) >= 70 ? 'amber' : 'red'} /></motion.div>
-
-          <motion.div variants={itemVariants} className="lg:col-span-2">
-            <Panel>
-              <h3 className="text-sm font-bold uppercase tracking-wider mb-4" style={{ color: 'var(--text-muted)' }}>Mes prêts & avances</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Déjà remboursé</p>
-                  <p className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400">{formatCurrency(myStats.totalPaid || 0)} F</p>
-                </div>
-                <div>
-                  <p className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Reste à rembourser</p>
-                  <p className="text-xl font-extrabold text-amber-500">{formatCurrency(myStats.totalDebt || 0)} F</p>
-                </div>
-              </div>
-            </Panel>
-          </motion.div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          {leaveEligible && (
-          <motion.div variants={itemVariants} className="lg:col-span-1">
-            <Panel>
-              {myStats.leaveEx ? (() => {
-                const ex = myStats.leaveEx;
-                const R = 62, C = 2 * Math.PI * R;
-                const pct = Math.min(1, ex.base.acquired / ex.base.max);
-                const nb = (n: number) => (Math.round(n * 10) / 10).toString().replace('.', ',');
-                const fmt = (d: string) => new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
-                const nd = ex.nextDeparture;
-                return (
-                  <>
-                    <h3 className="text-lg font-bold mb-1" style={{ color: 'var(--text)' }}>Mon solde de congés</h3>
-                    <p className="text-sm mb-3" style={{ color: 'var(--text-muted)' }}>Jours de base acquis, sur {ex.base.max} par an</p>
-                    <div className="relative w-40 h-40 mx-auto">
-                      <svg viewBox="0 0 150 150" className="w-full h-full -rotate-90">
-                        <circle cx="75" cy="75" r={R} fill="none" stroke="var(--surface-2)" strokeWidth="13" />
-                        <circle cx="75" cy="75" r={R} fill="none" stroke="#10B981" strokeWidth="13" strokeLinecap="round"
-                          strokeDasharray={C} strokeDashoffset={C * (1 - pct)} />
-                      </svg>
-                      <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className="text-3xl font-extrabold" style={{ color: 'var(--text)' }}>{nb(ex.base.acquired)}</span>
-                        <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>sur {ex.base.max} jours</span>
-                      </div>
-                    </div>
-                    <div className="mt-4 space-y-1.5 text-sm">
-                      <div className="flex justify-between"><span style={{ color: 'var(--text-muted)' }}>Il me reste</span><strong className="text-emerald-600 dark:text-emerald-400">{nb(ex.totals.remaining)} j</strong></div>
-                      <div className="flex justify-between"><span style={{ color: 'var(--text-muted)' }}>Déjà pris</span><strong style={{ color: 'var(--text)' }}>{nb(ex.totals.taken)} j</strong></div>
-                      {ex.seniority.days > 0 && (
-                        <div className="flex justify-between"><span style={{ color: 'var(--text-muted)' }}>Ancienneté</span><strong style={{ color: 'var(--text)' }}>+ {nb(ex.seniority.days)} j</strong></div>
-                      )}
-                    </div>
-                    {nd && (nd.kind === 'PLANNED' || nd.kind === 'PROBABLE' || nd.kind === 'IN_PROGRESS' || nd.kind === 'NOT_YET') && (
-                      <div className="mt-3 rounded-xl px-3 py-2 text-xs" style={{ background: 'var(--surface-2)', color: 'var(--text)' }}>
-                        {nd.kind === 'IN_PROGRESS' && <>Vous êtes en congé jusqu'au <strong>{fmt(nd.endDate)}</strong>.</>}
-                        {nd.kind === 'PLANNED' && <>Prochain congé {nd.status === 'APPROVED' ? 'validé' : 'demandé'} : <strong>{fmt(nd.startDate)}</strong>.</>}
-                        {nd.kind === 'PROBABLE' && <>Départ probable : <strong>{nd.reason === 'AVAILABLE_NOW' ? 'dès maintenant' : fmt(nd.startDate)}</strong>.</>}
-                        {nd.kind === 'NOT_YET' && <>Premier congé possible dès le <strong>{fmt(nd.startDate)}</strong>.</>}
-                      </div>
-                    )}
-                    <button
-                      onClick={() => router.push('/conges/mon-espace')}
-                      className="mt-3 w-full text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center justify-center gap-1"
-                    >
-                      Comprendre mon solde <ArrowRight size={12} />
-                    </button>
-                  </>
-                );
-              })() : (
-                <>
-                  <h3 className="text-lg font-bold mb-1" style={{ color: 'var(--text)' }}>Solde de congés</h3>
-                  <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>Sur {annualQuota} jours annuels</p>
-                  <div className="h-[180px] relative">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie data={[{ value: remaining }, { value: used }]} cx="50%" cy="50%" innerRadius={55} outerRadius={75} paddingAngle={4} dataKey="value" stroke="none">
-                          <Cell fill="#10B981" />
-                          <Cell fill="var(--surface-2)" fillOpacity={1} />
-                        </Pie>
-                      </PieChart>
-                    </ResponsiveContainer>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                      <span className="text-3xl font-bold" style={{ color: 'var(--text)' }}>{remaining}</span>
-                      <span className="text-[11px] uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>jours restants</span>
-                    </div>
-                  </div>
-                </>
-              )}
-            </Panel>
-          </motion.div>
-          )}
-
-          <motion.div variants={itemVariants} className={leaveEligible ? 'lg:col-span-2' : 'lg:col-span-3'}>
-            <Panel>
-              <h3 className="text-lg font-bold mb-4" style={{ color: 'var(--text)' }}>Mes Actions Rapides</h3>
-              <div className="grid grid-cols-2 gap-4">
-                {[
-                  { label: 'Demander congé', icon: Calendar,    color: 'text-emerald-500', path: '/conges/nouveau' },
-                  { label: 'Mes bulletins',  icon: Wallet,      color: 'text-emerald-500', path: '/ma-paie' },
-                  { label: 'Formation',      icon: PlayCircle,  color: 'text-amber-500',   path: '/formation' },
-                  { label: 'Pointer',        icon: Fingerprint, color: 'text-amber-500',   path: '/presences/pointage' },
-                ].filter(item => leaveEligible || item.path !== '/conges/nouveau').map(item => (
-                  <button key={item.label} onClick={() => router.push(item.path)} className="p-4 rounded-xl text-left transition-colors group" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
-                    <item.icon className={`${item.color} mb-3 group-hover:scale-110 transition-transform`} size={24} />
-                    <p className="font-bold text-sm" style={{ color: 'var(--text)' }}>{item.label}</p>
-                  </button>
-                ))}
-              </div>
-            </Panel>
-          </motion.div>
-        </div>
-      </motion.div>
-    );
-  }
-
-  // ══════════════════════════════════════════════════════════════
-  // 🔑 VUE ADMIN / HR
-  // ══════════════════════════════════════════════════════════════
   const pendingTotal = stats.pendingRequestsTotal ?? ((stats.pendingLeaves||0)+(stats.pendingAbsences||0)+(stats.pendingPermissions||0));
 
   // 🆕 Indicateurs RH complémentaires — fournis directement par /dashboard/summary
@@ -694,192 +524,11 @@ export const DashboardContent = () => {
   const totalPretAvanceMois = stats.totalPretAvanceMois || 0;
   const deptCount = (charts.deptDistribution || []).length;
 
-  return (
-    <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-6">
-      <motion.div variants={itemVariants} className="flex items-center gap-3">
-        <div className="p-2 rounded-xl" style={{ background: 'var(--brand-soft)' }}><LayoutGrid size={20} className="text-emerald-500" /></div>
-        <div>
-          <h2 className="text-2xl font-bold" style={{ color: 'var(--text)' }}>Bonjour{greetingName} 👋</h2>
-          <p style={{ color: 'var(--text-muted)' }}>Voici la vue d'ensemble des opérations RH et paie pour le mois de {monthLabel}.</p>
-        </div>
-      </motion.div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-        <motion.div variants={itemVariants}><StatCard label="Total Employés" value={stats.totalEmployees?.toString() || '0'} trend="Actif" isPositive={true} icon={Users} color="emerald" /></motion.div>
-        <motion.div variants={itemVariants}><StatCard label="Masse Salariale" value={formatCurrency(stats.masseSalariale)} trend="Mensuel" isPositive={true} icon={Wallet} color="emerald" /></motion.div>
-        <motion.div variants={itemVariants}><StatCard label="Demandes en attente" value={pendingTotal.toString()} trend="À traiter" isPositive={pendingTotal === 0} icon={Calendar} color="amber" /></motion.div>
-        <motion.div variants={itemVariants}><StatCard label="Taux Présence" value={`${stats.attendanceRate || 0}%`} trend={`${stats.absentToday || 0} absents`} isPositive={stats.attendanceRate > 90} icon={Clock} color="emerald" /></motion.div>
-      </div>
-
-      {/* 🆕 Indicateurs RH complémentaires */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <motion.div variants={itemVariants}><StatCard label="Départs en Congé" value={leavesThisMonth.toString()} trend={monthLabel} isPositive={true} icon={Umbrella} color="emerald" /></motion.div>
-        <motion.div variants={itemVariants}><StatCard label="Prêts & Avances" value={`${formatCurrency(totalPretAvanceMois)} F`} trend="Accordés ce mois" isPositive={true} icon={Wallet} color="emerald" /></motion.div>
-        <motion.div variants={itemVariants}><StatCard label="Départements" value={deptCount.toString()} trend="Actifs" isPositive={true} icon={Building2} color="amber" /></motion.div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        <div className="lg:col-span-2 space-y-5">
-          <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {[
-              { label: 'Ajouter Employé', icon: UserPlus, color: 'emerald', action: '/employes/nouveau' },
-              { label: 'Créer Paie',      icon: Wallet,   color: 'emerald', action: '/paie/nouveau' },
-              { label: 'Gérer Congés',    icon: Calendar, color: 'amber',   action: '/conges' },
-              { label: 'Rapports',        icon: BarChartIcon, color: 'amber',   action: '/rapports' },
-            ].map((item, i) => (
-              <div
-                key={i}
-                onClick={() => router.push(item.action)}
-                className="group cursor-pointer rounded-2xl p-5 transition-all hover:-translate-y-1"
-                style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
-              >
-                <div className="flex items-center gap-4">
-                  <div className={`p-3 rounded-xl text-white ${item.color === 'emerald' ? 'bg-emerald-500' : 'bg-amber-500'}`}>
-                    <item.icon size={24} />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-lg group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors" style={{ color: 'var(--text)' }}>{item.label}</h4>
-                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Action rapide</p>
-                  </div>
-                  <ArrowRight className="ml-auto transition-colors" style={{ color: 'var(--text-muted)' }} size={20} />
-                </div>
-              </div>
-            ))}
-          </motion.div>
-
-          <motion.div variants={itemVariants}>
-            <Panel>
-              <h3 className="text-lg font-bold mb-4" style={{ color: 'var(--text)' }}>Derniers Bulletins (3)</h3>
-              <div className="space-y-3">
-                {stats.recentPayrolls?.length > 0 ? stats.recentPayrolls.map((payroll: any) => (
-                  <div key={payroll.id} className="flex items-center gap-3 p-3 rounded-xl transition-colors hover:bg-black/[0.02] dark:hover:bg-white/5" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
-                    <div className="w-10 h-10 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/25 font-bold text-xs">{payroll.employee.firstName[0]}{payroll.employee.lastName[0]}</div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold truncate" style={{ color: 'var(--text)' }}>{payroll.employee.firstName} {payroll.employee.lastName}</p>
-                      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Net: {payroll.netSalary.toLocaleString()} F</p>
-                    </div>
-                    <span className="text-xs font-mono text-emerald-600 dark:text-emerald-400">{new Date(payroll.createdAt).toLocaleDateString()}</span>
-                  </div>
-                )) : <p className="text-sm italic" style={{ color: 'var(--text-muted)' }}>Aucun bulletin récent</p>}
-              </div>
-              <button onClick={() => router.push('/paie')} className="w-full mt-4 py-2 text-sm font-bold transition-colors rounded-xl border border-dashed hover:bg-black/[0.02] dark:hover:bg-white/5" style={{ color: 'var(--text-muted)', borderColor: 'var(--border)' }}>Voir tout l'historique</button>
-            </Panel>
-          </motion.div>
-        </div>
-
-        <motion.div variants={itemVariants}>
-          <Panel className="h-full">
-            <h3 className="text-xl font-bold mb-1" style={{ color: 'var(--text)' }}>Répartition</h3>
-            <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>Effectifs par département</p>
-            {(() => {
-              const sorted = [...(charts.deptDistribution || [])].sort((a, b) => b.id - a.id);
-              const top5   = sorted.slice(0, 5);
-              const others = sorted.slice(5);
-              const finalData = [...top5];
-              if (others.length > 0) finalData.push({ name: 'Autres', value: others.reduce((acc: number, curr: any) => acc + curr.value, 0), color: '#64748b' });
-              return (
-                <div className="h-[250px] relative">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie data={finalData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value" stroke="none">
-                        {finalData.map((entry: any, index: number) => <Cell key={`cell-${index}`} fill={entry.color} />)}
-                      </Pie>
-                      <Tooltip contentStyle={tooltipStyle} itemStyle={{ color: 'var(--text)' }} />
-                      <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '20px', color: 'var(--text-muted)' }} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pb-8">
-                    <span className="text-4xl font-bold" style={{ color: 'var(--text)' }}>{stats.totalEmployees}</span>
-                    <span className="text-xs uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Total</span>
-                  </div>
-                </div>
-              );
-            })()}
-          </Panel>
-        </motion.div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        <motion.div variants={itemVariants} className="lg:col-span-2">
-          <Panel>
-            <div className="mb-6">
-              <h3 className="text-xl font-bold" style={{ color: 'var(--text)' }}>Évolution Salaires</h3>
-              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>5 derniers mois (FCFA)</p>
-            </div>
-            <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={charts.salaryTrend} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} tickFormatter={(v) => v >= 1000000 ? `${(v/1000000).toFixed(1)}M` : v >= 1000 ? `${(v/1000).toFixed(0)}k` : v} />
-                  <Tooltip contentStyle={tooltipStyle} itemStyle={{ color: 'var(--text)' }} formatter={(value: any) => value.toLocaleString() + ' F'} />
-                  {/* Aires en couleur pleine — plus de dégradé */}
-                  <Area type="monotone" dataKey="masseSalariale" stroke="#10B981" strokeWidth={2} fillOpacity={0.12} fill="#10B981" name="Masse Salariale" />
-                  <Area type="monotone" dataKey="value" stroke="#F59E0B" strokeWidth={2} fillOpacity={0.12} fill="#F59E0B" name="Salaire Net" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </Panel>
-        </motion.div>
-
-        <motion.div variants={itemVariants}>
-          <Panel className="h-full flex flex-col">
-            <div className="flex items-center gap-2 mb-6">
-              <div className="p-2 bg-red-500/10 rounded-lg text-red-500 animate-pulse"><Radio size={18} /></div>
-              <h3 className="text-lg font-bold" style={{ color: 'var(--text)' }}>En direct (36h)</h3>
-            </div>
-            <div className="flex-1 space-y-5 overflow-y-auto max-h-[400px] pr-2">
-              {stats.recentActivities?.length > 0 ? stats.recentActivities.map((act: any, i: number) => {
-                let icon  = <CheckCircle size={16} />;
-                let color = 'bg-gray-100 text-gray-500';
-                if (act.type === 'LEAVE')      { icon = <Calendar size={16} />; color = 'bg-amber-100 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400'; }
-                if (act.type === 'ABSENCE')    { icon = <FileText size={16} />; color = 'bg-amber-100 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400'; }
-                if (act.type === 'PERMISSION') { icon = <Ticket size={16} />;   color = 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400'; }
-                if (act.type === 'HIRE')       { icon = <User size={16} />;     color = 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400'; }
-                if (act.type === 'ATTENDANCE') { icon = <Clock size={16} />;    color = 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400'; }
-                return (
-                  <div key={act.id} className="flex gap-4 relative">
-                    {i !== stats.recentActivities.length - 1 && <div className="absolute left-[15px] top-8 bottom-[-20px] w-0.5" style={{ background: 'var(--border)' }} />}
-                    <div className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${color}`}>{icon}</div>
-                    <div>
-                      <p className="text-sm font-bold" style={{ color: 'var(--text)' }}>{act.text}</p>
-                      <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{act.subText}</p>
-                      <p className="text-[10px] mt-1 font-mono" style={{ color: 'var(--text-muted)' }}>{new Date(act.time).toLocaleString()}</p>
-                    </div>
-                  </div>
-                );
-              }) : (
-                <div className="text-center py-10" style={{ color: 'var(--text-muted)' }}>
-                  <Bell size={32} className="mx-auto mb-2 opacity-20" />
-                  <p className="text-sm">Aucune activité récente (dernières 36h).</p>
-                </div>
-              )}
-            </div>
-          </Panel>
-        </motion.div>
-      </div>
-
-      {/* 🆕 Histogramme — même données que la courbe ci-dessus, vue complémentaire */}
-      <motion.div variants={itemVariants}>
-        <Panel>
-          <div className="mb-6">
-            <h3 className="text-xl font-bold" style={{ color: 'var(--text)' }}>Masse Salariale — vue en histogramme</h3>
-            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Comparaison mois par mois (FCFA)</p>
-          </div>
-          <div className="h-[260px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={charts.salaryTrend} margin={{ top: 10, right: 10, left: 0, bottom: 0 }} barGap={6}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} tickFormatter={(v) => v >= 1000000 ? `${(v/1000000).toFixed(1)}M` : v >= 1000 ? `${(v/1000).toFixed(0)}k` : v} />
-                <Tooltip contentStyle={tooltipStyle} itemStyle={{ color: 'var(--text)' }} formatter={(value: any) => value.toLocaleString() + ' F'} cursor={{ fill: 'var(--surface-2)' }} />
-                <Bar dataKey="masseSalariale" fill="#10B981" name="Masse Salariale" radius={[6, 6, 0, 0]} />
-                <Bar dataKey="value" fill="#F59E0B" name="Salaire Net" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </Panel>
-      </motion.div>
-    </motion.div>
-  );
+  return <>
+    <div className="myday-view-switch" role="group" aria-label="Vue du tableau de bord">
+      <button type="button" aria-pressed={activeView === 'pilotage'} onClick={() => setActiveView('pilotage')}>Pilotage RH</button>
+      <button type="button" aria-pressed={activeView === 'day'} onClick={() => setActiveView('day')}>Ma journée</button>
+    </div>
+    {activeView === 'day' ? (adminDay.loading ? <MyDaySkeleton /> : <MyDay viewerRole={userRole || ''} userName={userName} stats={adminDay.stats} context={adminDay.context} leaveEligible={leaveEligible} error={adminDay.error} />) : <PilotageDashboard userName={userName} monthLabel={monthLabel} stats={stats} charts={charts} pendingTotal={pendingTotal} leavesThisMonth={leavesThisMonth} totalPretAvanceMois={totalPretAvanceMois} deptCount={deptCount} error={dashboardError} />}
+  </>;
 };

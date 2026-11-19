@@ -2,11 +2,13 @@
 
 // ============================================================================
 // 📁 components/workforce/WorkforceDashboard.tsx
-// Tableau de bord effectifs — mêmes représentations et mêmes couleurs que les
+// Tableau de bord effectifs — mêmes données et représentations que les
 // onglets « dashboard » des modèles :
 //   • ORCA     (page Liste des employés)  : genre, contrat, nationalité, fonctions
 //   • POWERMAN (portefeuille)             : départements, genre, catégories, contrats,
 //                                           villes, fonctions, pyramide des âges, indicateurs
+// Les palettes des modèles servent de repli dans les zones legacy ; l’espace
+// Employés utilise les tokens de l’application. Les fichiers Excel sont inchangés.
 // Toutes les valeurs viennent du back (/workforce-dashboard) — la même source
 // que l'Excel : l'écran et le fichier affichent les mêmes chiffres.
 //
@@ -14,13 +16,14 @@
 // tous les textes utilisent les variables du thème (--text, --text-muted).
 // ============================================================================
 
+import { useModuleVisuals } from '@/components/requests/ModulePageFrame';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Download, Loader2, AlertCircle, Users, TrendingUp, Building2, Briefcase, Globe, PieChart as PieIcon, BarChart3,
 } from 'lucide-react';
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell, LabelList, PieChart, Pie, Legend,
-  LineChart, Line,
+  LineChart, Line, AreaChart, Area,
 } from 'recharts';
 import { api } from '@/services/api';
 import { FancySelect } from '@/components/ui/FancySelect';
@@ -32,9 +35,9 @@ import {
 
 // ─── Couleurs des modèles ────────────────────────────────────────────────────
 const C = {
-  navy: '#1F497D', magenta: '#FF33CC', teal: '#4BACC6', salmon: '#C0504D',
-  orange: '#ED7D31', orangeDark: '#C55A11', purple: '#9900CC', blue: '#0070C0', kpi: '#28236B',
-  multi: ['#4F81BD', '#C0504D', '#9BBB59', '#8064A2', '#4BACC6', '#F79646', '#2C4D75', '#772C2A', '#5F7530', '#4D3B62', '#276A7C', '#B65708'],
+  navy: 'var(--wf-navy, #1F497D)', magenta: 'var(--wf-magenta, #FF33CC)', teal: 'var(--wf-teal, #4BACC6)', salmon: 'var(--wf-salmon, #C0504D)',
+  orange: 'var(--wf-orange, #ED7D31)', orangeDark: 'var(--wf-orangeDark, #C55A11)', purple: 'var(--wf-purple, #9900CC)', blue: 'var(--wf-blue, #0070C0)', kpi: 'var(--wf-kpi, #28236B)',
+  multi: ['var(--wf-multi-0, #4F81BD)', 'var(--wf-multi-1, #C0504D)', 'var(--wf-multi-2, #9BBB59)', 'var(--wf-multi-3, #8064A2)', 'var(--wf-multi-4, #4BACC6)', 'var(--wf-multi-5, #F79646)', 'var(--wf-multi-6, #2C4D75)', 'var(--wf-multi-7, #772C2A)', 'var(--wf-multi-8, #5F7530)', 'var(--wf-multi-9, #4D3B62)', 'var(--wf-multi-10, #276A7C)', 'var(--wf-multi-11, #B65708)'],
 };
 
 // ─── Briques de graphiques (valeurs toujours visibles, thème-aware) ───────────
@@ -60,6 +63,8 @@ function Card({ title, icon, children, hint }: { title: string; icon?: React.Rea
 function HBar({ data, color, colors, labelWidth = 150, rowH = 30 }: {
   data: { label: string; count: number }[]; color?: string; colors?: string[]; labelWidth?: number; rowH?: number;
 }) {
+ const {refonte:uiRefonte,motion:uiMotion}=useModuleVisuals();
+
   const h = Math.max(140, data.length * rowH + 20);
   return (
     <div style={{ height: Math.min(h, 640), overflowY: h > 640 ? 'auto' : 'visible' }}>
@@ -69,7 +74,7 @@ function HBar({ data, color, colors, labelWidth = 150, rowH = 30 }: {
           <XAxis type="number" hide allowDecimals={false} />
           <YAxis dataKey="label" type="category" width={labelWidth} axisLine={false} tickLine={false} tick={TICK} interval={0} />
           <Tooltip {...TT} />
-          <Bar dataKey="count" name="Effectif" radius={[0, 6, 6, 0]}>
+          <Bar dataKey="count" name="Effectif" radius={uiRefonte ? [0,10,10,0] : [0,6,6,0]} maxBarSize={uiRefonte?16:undefined} isAnimationActive={uiRefonte?uiMotion:undefined} animationDuration={uiRefonte?700:undefined}>
             {data.map((_, i) => <Cell key={i} fill={colors ? colors[i % colors.length] : color ?? C.teal} />)}
             <LabelList dataKey="count" position="right" {...LBL} />
           </Bar>
@@ -82,6 +87,8 @@ function HBar({ data, color, colors, labelWidth = 150, rowH = 30 }: {
 function VBar({ data, color, colors, height = 240, tickAngle = 0 }: {
   data: { label: string; count: number }[]; color?: string; colors?: string[]; height?: number; tickAngle?: number;
 }) {
+ const {refonte:uiRefonte,motion:uiMotion}=useModuleVisuals();
+
   return (
     <div style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
@@ -90,7 +97,7 @@ function VBar({ data, color, colors, height = 240, tickAngle = 0 }: {
           <XAxis dataKey="label" axisLine={false} tickLine={false} tick={TICK} interval={0} angle={tickAngle} textAnchor={tickAngle ? 'end' : 'middle'} height={tickAngle ? 70 : 30} />
           <YAxis axisLine={false} tickLine={false} tick={TICK} allowDecimals={false} />
           <Tooltip {...TT} />
-          <Bar dataKey="count" name="Effectif" radius={[6, 6, 0, 0]}>
+          <Bar dataKey="count" name="Effectif" radius={uiRefonte ? [10,10,0,0] : [6,6,0,0]} maxBarSize={uiRefonte?16:undefined} isAnimationActive={uiRefonte?uiMotion:undefined} animationDuration={uiRefonte?700:undefined}>
             {data.map((_, i) => <Cell key={i} fill={colors ? colors[i % colors.length] : color ?? C.teal} />)}
             <LabelList dataKey="count" position="top" {...LBL} />
           </Bar>
@@ -101,12 +108,14 @@ function VBar({ data, color, colors, height = 240, tickAngle = 0 }: {
 }
 
 function Donut({ data, colors, height = 230 }: { data: { label: string; count: number }[]; colors: string[]; height?: number }) {
+ const {refonte:uiRefonte,motion:uiMotion}=useModuleVisuals();
+
   return (
     <div style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
-            data={data} dataKey="count" nameKey="label" cx="50%" cy="50%" innerRadius={48} outerRadius={82} paddingAngle={2}
+            data={data} dataKey="count" nameKey="label" cx="50%" cy="50%" innerRadius={48} outerRadius={82} paddingAngle={uiRefonte?5:2} cornerRadius={uiRefonte?8:undefined} isAnimationActive={uiRefonte?uiMotion:undefined} animationDuration={uiRefonte?700:undefined}
             label={({ value }: any) => value} labelLine={false} stroke="var(--surface)"
           >
             {data.map((_, i) => <Cell key={i} fill={colors[i % colors.length]} />)}
@@ -120,10 +129,12 @@ function Donut({ data, colors, height = 230 }: { data: { label: string; count: n
 }
 
 function Kpi({ title, value, sub, tone = 'dark' }: { title: string; value: string; sub?: string; tone?: 'dark' | 'light' }) {
+ const {refonte:uiRefonte,motion:uiMotion}=useModuleVisuals();
+
   return tone === 'dark' ? (
-    <div className="rounded-2xl p-5 text-center text-white shadow-sm" style={{ background: C.kpi }}>
-      <p className="text-xs font-bold tracking-wider" style={{ fontFamily: 'Cambria, serif' }}>{title}</p>
-      <p className="text-4xl font-extrabold mt-2" style={{ fontFamily: 'Cambria, serif' }}>{value}</p>
+    <div className="wf-kpi rounded-2xl p-5 text-center text-white shadow-sm" style={{ background: C.kpi }}>
+      <p className="text-xs font-bold tracking-wider" style={{ fontFamily: 'var(--wf-font, Cambria, serif)' }}>{title}</p>
+      <p className="text-4xl font-extrabold mt-2" style={{ fontFamily: 'var(--wf-font, Cambria, serif)' }}>{value}</p>
       {sub && <p className="text-xs mt-1 opacity-80">{sub}</p>}
     </div>
   ) : (
@@ -150,6 +161,8 @@ interface Props {
 }
 
 export function WorkforceDashboard({ model, scope, companyId, title, initialPeriod }: Props) {
+ const {refonte:uiRefonte,motion:uiMotion}=useModuleVisuals();
+
   const [period, setPeriod] = useState<WfPeriodState>(initialPeriod ?? defaultPeriod());
   const [companies, setCompanies] = useState<string>('ALL');
   const [view, setView] = useState<WfView | null>(null);
@@ -206,7 +219,7 @@ export function WorkforceDashboard({ model, scope, companyId, title, initialPeri
   const pyramid = useMemo(() => (cur?.ageBuckets ?? []).map((b) => ({ label: b.label, Hommes: b.M, Femmes: b.F })), [cur]);
 
   return (
-    <section className="pt-8 mt-4 border-t border-[var(--border)] space-y-5">
+    <section className="workforce-dashboard pt-8 mt-4 border-t border-[var(--border)] space-y-5">
       {/* En-tête + barre d'outils */}
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
         <div>
@@ -328,8 +341,8 @@ export function WorkforceDashboard({ model, scope, companyId, title, initialPeri
                         <YAxis axisLine={false} tickLine={false} tick={TICK} allowDecimals={false} />
                         <Tooltip {...TT} />
                         <Legend formatter={(v: any) => <span style={{ color: 'var(--text)', fontSize: 12 }}>{v}</span>} />
-                        <Bar dataKey="Hommes" fill="#1F497D" radius={[4, 4, 0, 0]}><LabelList dataKey="Hommes" position="top" {...LBL} /></Bar>
-                        <Bar dataKey="Femmes" fill={C.purple} radius={[4, 4, 0, 0]}><LabelList dataKey="Femmes" position="top" {...LBL} /></Bar>
+                        <Bar dataKey="Hommes" fill="#1F497D" radius={uiRefonte ? [10,10,0,0] : [4,4,0,0]} maxBarSize={uiRefonte?16:undefined} isAnimationActive={uiRefonte?uiMotion:undefined} animationDuration={uiRefonte?700:undefined}><LabelList dataKey="Hommes" position="top" {...LBL} /></Bar>
+                        <Bar dataKey="Femmes" fill={C.purple} radius={uiRefonte ? [10,10,0,0] : [4,4,0,0]} maxBarSize={uiRefonte?16:undefined} isAnimationActive={uiRefonte?uiMotion:undefined} animationDuration={uiRefonte?700:undefined}><LabelList dataKey="Femmes" position="top" {...LBL} /></Bar>
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -344,7 +357,15 @@ export function WorkforceDashboard({ model, scope, companyId, title, initialPeri
               <Card title="Évolution de l’effectif total" icon={<TrendingUp size={15} className="text-emerald-500" />}>
                 <div style={{ height: 250 }}>
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={view.evolution} margin={{ top: 22, right: 16, left: -10, bottom: 8 }}>
+                    {uiRefonte ? (<AreaChart data={view.evolution} margin={{ top: 22, right: 16, left: -10, bottom: 8 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+                      <XAxis dataKey="short" axisLine={false} tickLine={false} tick={TICK} />
+                      <YAxis axisLine={false} tickLine={false} tick={TICK} allowDecimals={false} domain={['dataMin - 5', 'dataMax + 5']} />
+                      <Tooltip {...TT} />
+                      <Area fill="var(--loan-gradient-1)" isAnimationActive={uiMotion} animationDuration={700} type="monotone" dataKey="total" name="Effectif" stroke={model === 'ORCA' ? C.blue : C.orange} strokeWidth={2.5} dot={false}>
+                        <LabelList dataKey="total" position="top" {...LBL} />
+                      </Area>
+                    </AreaChart>) : (<LineChart data={view.evolution} margin={{ top: 22, right: 16, left: -10, bottom: 8 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
                       <XAxis dataKey="short" axisLine={false} tickLine={false} tick={TICK} />
                       <YAxis axisLine={false} tickLine={false} tick={TICK} allowDecimals={false} domain={['dataMin - 5', 'dataMax + 5']} />
@@ -352,7 +373,7 @@ export function WorkforceDashboard({ model, scope, companyId, title, initialPeri
                       <Line type="monotone" dataKey="total" name="Effectif" stroke={model === 'ORCA' ? C.blue : C.orange} strokeWidth={3} dot={{ r: 4 }}>
                         <LabelList dataKey="total" position="top" {...LBL} />
                       </Line>
-                    </LineChart>
+                    </LineChart>)}
                   </ResponsiveContainer>
                 </div>
               </Card>
@@ -365,8 +386,8 @@ export function WorkforceDashboard({ model, scope, companyId, title, initialPeri
                       <YAxis axisLine={false} tickLine={false} tick={TICK} allowDecimals={false} />
                       <Tooltip {...TT} />
                       <Legend formatter={(v: any) => <span style={{ color: 'var(--text)', fontSize: 12 }}>{v}</span>} />
-                      <Bar dataKey="hires" name="Entrées" fill="#10B981" radius={[4, 4, 0, 0]}><LabelList dataKey="hires" position="top" {...LBL} /></Bar>
-                      <Bar dataKey="departures" name="Sorties" fill="#F59E0B" radius={[4, 4, 0, 0]}><LabelList dataKey="departures" position="top" {...LBL} /></Bar>
+                      <Bar dataKey="hires" name="Entrées" fill="#10B981" radius={uiRefonte ? [10,10,0,0] : [4,4,0,0]} maxBarSize={uiRefonte?16:undefined} isAnimationActive={uiRefonte?uiMotion:undefined} animationDuration={uiRefonte?700:undefined}><LabelList dataKey="hires" position="top" {...LBL} /></Bar>
+                      <Bar dataKey="departures" name="Sorties" fill="#F59E0B" radius={uiRefonte ? [10,10,0,0] : [4,4,0,0]} maxBarSize={uiRefonte?16:undefined} isAnimationActive={uiRefonte?uiMotion:undefined} animationDuration={uiRefonte?700:undefined}><LabelList dataKey="departures" position="top" {...LBL} /></Bar>
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -376,7 +397,7 @@ export function WorkforceDashboard({ model, scope, companyId, title, initialPeri
         </div>
       )}
 
-      <WorkforceExportDialog
+      <div className="loan-document-protected" style={{display:'contents'}}>      <WorkforceExportDialog
         open={dialog}
         onClose={() => setDialog(false)}
         model={model}
@@ -386,7 +407,7 @@ export function WorkforceDashboard({ model, scope, companyId, title, initialPeri
         companies={allCompanies}
         initialCompanies={companies}
         companyLabel={view?.companyName ?? 'Entreprise'}
-      />
+      /></div>
     </section>
   );
 }

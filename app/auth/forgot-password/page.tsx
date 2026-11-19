@@ -77,7 +77,7 @@ export default function ForgotPasswordPage() {
                 <div className="mt-6 text-center">
                   <Link
                     href="/auth/login"
-                    className="inline-flex items-center gap-1.5 text-[13px] text-[#8B8F98] transition-colors hover:text-[#FAFAFA]"
+                    className="inline-flex items-center gap-1.5 text-[13px] text-[var(--text-secondary)] transition-colors hover:text-[var(--text)]"
                   >
                     <ArrowLeft size={13} /> Retour à la connexion
                   </Link>
@@ -100,14 +100,14 @@ export default function ForgotPasswordPage() {
                 >
                   <CheckCircle2 size={26} className="text-[#10B981]" />
                 </motion.div>
-                <h2 className="mb-3 text-[19px] font-semibold text-[#FAFAFA]">Vérifiez votre boîte mail</h2>
-                <p className="mb-1.5 text-[13.5px] leading-relaxed text-[#8B8F98]">
+                <h2 className="mb-3 text-[19px] font-semibold text-[var(--text)]">Vérifiez votre boîte mail</h2>
+                <p className="mb-1.5 text-[13.5px] leading-relaxed text-[var(--text-secondary)]">
                   Si un compte est associé à{' '}
-                  <span className="font-medium text-[#FAFAFA]">{email}</span>, vous recevrez un lien de
+                  <span className="font-medium text-[var(--text)]">{email}</span>, vous recevrez un lien de
                   réinitialisation.
                 </p>
-                <p className="mb-7 text-[12.5px] text-[#5A5E66]">
-                  Le lien est valable <span className="text-[#8B8F98]">30 minutes</span>. Pensez à vérifier vos
+                <p className="mb-7 text-[12.5px] text-[var(--text-secondary)]">
+                  Le lien est valable <span className="text-[var(--text-secondary)]">30 minutes</span>. Pensez à vérifier vos
                   spams.
                 </p>
 
@@ -117,7 +117,7 @@ export default function ForgotPasswordPage() {
                   </SecondaryButton>
                   <Link
                     href="/auth/login"
-                    className="block w-full rounded-xl bg-white/[0.03] px-4 py-3 text-center text-[13.5px] font-medium text-[#FAFAFA] transition-colors hover:bg-white/[0.06]"
+                    className="block w-full rounded-xl bg-white/[0.03] px-4 py-3 text-center text-[13.5px] font-medium text-[var(--text)] transition-colors hover:bg-white/[0.06]"
                   >
                     Retour à la connexion
                   </Link>

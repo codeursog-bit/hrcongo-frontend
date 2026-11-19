@@ -1,0 +1,13 @@
+{
+  "date": "2026-11-17",
+  "initialErrors": [
+    "missing ma-paie reexport",
+    "Map/string iteration target and dependent inference"
+  ],
+  "corrections": [
+    "restore missing page byte-for-byte from fa79326",
+    "target ES2017"
+  ],
+  "verification": "npm run check-types -- --incremental false",
+  "exit": 0
+}

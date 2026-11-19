@@ -26,6 +26,7 @@ import {
   BudgetsMonth,
   BudgetRow,
 } from '@/services/finance-api';
+import { ModulePageFrame } from '@/components/requests/ModulePageFrame';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const nf = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 });
@@ -1057,7 +1058,7 @@ const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
   { key: 'settings', label: 'Paramètres', icon: <Settings2 size={16} /> },
 ];
 
-export default function FinancesPage() {
+function FinancesPage() {
   const [status, setStatus] = useState<'loading' | 'ready' | 'disabled' | 'forbidden' | 'error'>('loading');
   const [tab, setTab] = useState<TabKey>('dashboard');
   const [preset, setPreset] = useState<PresetKey>('month');
@@ -1195,5 +1196,14 @@ export default function FinancesPage() {
       {tab === 'budgets' && <BudgetsTab version={version} onChanged={changed} notify={notify} />}
       {tab === 'settings' && <SettingsTab onChanged={changed} notify={notify} />}
     </div>
+  );
+}
+
+
+export default function FinancesPageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <FinancesPage />
+    </ModulePageFrame>
   );
 }

@@ -1,0 +1,5 @@
+const assert=require('node:assert/strict'),vm=require('node:vm');
+const base=process.env.ATTENDANCE_TEST_BASE||'http://localhost:3101';
+const paths=['','dashboard','pointage','pointage-manuel','resume','shifts','synchronisation','tablettes','ecrans'];
+const routes=[...paths.map(p=>'/presences'+(p?'/'+p:'')),...['','dashboard','pointage','pointage-manuel','resume'].map(p=>'/pme/demo-company/presences'+(p?'/'+p:'')),'/kiosk','/ecran'];
+(async()=>{const scripts=new Set();for(const route of routes){const res=await fetch(base+route);assert.equal(res.status,200,route);const html=await res.text();assert.ok(!html.includes('id="__next_error__"'),route);for(const m of html.matchAll(/<script[^>]+src="([^"]+)"/g))scripts.add(m[1].replaceAll('&amp;','&'));console.log('HTTP 200',route);}assert.ok(scripts.size);for(const src of scripts){const res=await fetch(new URL(src,base));assert.equal(res.status,200,src);new vm.Script(await res.text(),{filename:src});}console.log(`${routes.length} routes; ${scripts.size} JavaScript files checked.`);})().catch(e=>{console.error(e);process.exitCode=1;});

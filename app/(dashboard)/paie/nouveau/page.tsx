@@ -11,7 +11,8 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
 import EmployeeSelector from './components/EmployeeSelector';
-import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import { ModulePageFrame, ModulePageSkeleton } from '@/components/requests/ModulePageFrame';
+import { Badge, Button, Card, Select } from '@/components/design-system/primitives';
 
 // ============================================================================
 // ✅ Interface 100% alignée avec ce que le backend retourne
@@ -230,27 +231,27 @@ export default function CreatePayrollPage() {
     }
   };
 
-  if (isLoadingEmployees) return (
-    <KonzaLoader variant="page" />
-  );
+  if (isLoadingEmployees) return <ModulePageSkeleton label="Chargement des employés…" />;
 
   const cnssPatTotal = simulation ? (simulation.cnssEmployerPension + simulation.cnssEmployerFamily + simulation.cnssEmployerAccident) : 0;
 
   return (
-    <div className="max-w-[1600px] mx-auto pb-20 px-4">
+    <ModulePageFrame kind="list">
+      <div data-guide="paie-individual-workspace" className="max-w-[1600px] mx-auto pb-20 px-4">
 
       {/* ── Header ── */}
-      <div className="flex items-center gap-4 mb-8">
-        <button onClick={() => router.back()}
-          className="p-2 bg-[var(--surface)] rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)] transition-colors">
-          <ArrowLeft size={20} className="text-gray-500" />
-        </button>
+      <div className="mb-6 flex items-start gap-4">
+        <Button variant="secondary" onClick={() => router.back()} aria-label="Retour" className="shrink-0">
+          <ArrowLeft size={18} strokeWidth={1.5} />
+        </Button>
         <div>
-          <h1 className="text-2xl font-bold text-[var(--text)]">Créer une fiche de paie</h1>
-          <p className="text-[var(--text-muted)] text-sm">
-            Période : <span className="text-emerald-500 font-bold capitalize">{month} {year}</span>
-          </p>
+          <div className="mb-1 flex flex-wrap items-center gap-2">
+            <h1 className="text-2xl font-semibold tracking-tight text-[var(--text)]">Créer une fiche de paie</h1>
+            <Badge tone="info">Un bulletin</Badge>
+          </div>
+          <p className="text-sm text-[var(--text-secondary)]">Sélectionnez un employé, vérifiez l’aperçu puis confirmez la création.</p>
         </div>
+        <div className="ml-auto"><Badge tone="neutral">{month} {year}</Badge></div>
       </div>
 
       <div className="grid lg:grid-cols-5 gap-8 items-start">
@@ -259,25 +260,16 @@ export default function CreatePayrollPage() {
         <div className="lg:col-span-3 space-y-5">
 
           {/* Période */}
-          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Période de paie</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-xs font-bold text-gray-500 uppercase block mb-1.5">Mois</label>
-                <select value={month} onChange={e => { setMonth(e.target.value); setOvertimeEdited(false); }}
-                  className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-bold text-[var(--text)] focus:ring-2 focus:ring-emerald-500/20 outline-none cursor-pointer">
-                  {MONTHS.map(m => <option key={m}>{m}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="text-xs font-bold text-gray-500 uppercase block mb-1.5">Année</label>
-                <select value={year} onChange={e => { setYear(Number(e.target.value)); setOvertimeEdited(false); }}
-                  className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-bold text-[var(--text)] focus:ring-2 focus:ring-emerald-500/20 outline-none cursor-pointer">
-                  {Array.from(new Set([...Array.from({ length: 7 }, (_, i) => Math.max(2020, new Date().getFullYear() - 5) + i), year])).sort((a, b) => a - b).map(y => <option key={y}>{y}</option>)}
-                </select>
-              </div>
+          <Card title="Période de paie" action={<Badge tone="neutral">{month} {year}</Badge>}>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Select label="Mois" value={month} onChange={e => { setMonth(e.target.value); setOvertimeEdited(false); }}>
+                {MONTHS.map(m => <option key={m}>{m}</option>)}
+              </Select>
+              <Select label="Année" value={year} onChange={e => { setYear(Number(e.target.value)); setOvertimeEdited(false); }}>
+                {Array.from(new Set([...Array.from({ length: 7 }, (_, i) => Math.max(2020, new Date().getFullYear() - 5) + i), year])).sort((a, b) => a - b).map(y => <option key={y}>{y}</option>)}
+              </Select>
             </div>
-          </div>
+          </Card>
 
           {/* Sélecteur employé */}
           <EmployeeSelector
@@ -289,31 +281,31 @@ export default function CreatePayrollPage() {
 
           {/* Erreur simulation */}
           {simulationError && (
-            <div className="p-4 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-xl flex items-start gap-3">
-              <AlertCircle size={18} className="text-red-500 mt-0.5 shrink-0" />
+            <div className="p-4 bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  border border-[var(--border)]  rounded-xl flex items-start gap-3">
+              <AlertCircle size={18} className="text-[var(--danger-text)] mt-0.5 shrink-0" />
               <div>
-                <p className="font-bold text-red-800 dark:text-red-200 text-sm">Simulation impossible</p>
-                <p className="text-red-600 dark:text-red-400 text-xs mt-1">{simulationError}</p>
+                <p className="font-semibold text-[var(--danger-text)]  text-sm">Simulation impossible</p>
+                <p className="text-[var(--danger-text)]  text-xs mt-1">{simulationError}</p>
               </div>
             </div>
           )}
 
           {/* Chargement */}
           {isSimulating && !simulation && (
-            <div className="p-4 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800 rounded-xl flex items-center gap-3">
-              <Loader2 size={16} className="text-emerald-500 animate-spin shrink-0" />
-              <p className="text-sm text-emerald-700 dark:text-emerald-300">Calcul depuis le serveur…</p>
+            <div className="p-4 bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  border border-[var(--border)]  rounded-xl flex items-center gap-3">
+              <Loader2 size={16} className="text-[var(--success-text)] animate-spin shrink-0" />
+              <p className="text-sm text-[var(--success-text)] ">Calcul depuis le serveur…</p>
             </div>
           )}
 
           {/* ✅ Exemptions fiscales — dès que le back répond */}
           {simulation && (!simulation.employee.isSubjectToCnss || !simulation.employee.isSubjectToIrpp) && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-              className="p-4 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-700 rounded-xl flex items-start gap-3">
-              <AlertCircle size={18} className="text-amber-500 mt-0.5 shrink-0" />
+              className="p-4 bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  border border-[var(--border)]  rounded-xl flex items-start gap-3">
+              <AlertCircle size={18} className="text-[var(--warning-text)] mt-0.5 shrink-0" />
               <div>
-                <p className="font-bold text-amber-800 dark:text-amber-200 text-sm">Exemptions fiscales détectées</p>
-                <div className="text-amber-600 dark:text-amber-400 text-xs mt-1 space-y-0.5">
+                <p className="font-semibold text-[var(--warning-text)]  text-sm">Exemptions fiscales détectées</p>
+                <div className="text-[var(--warning-text)]  text-xs mt-1 space-y-0.5">
                   {!simulation.employee.isSubjectToCnss && <p>• CNSS salariale : <strong>0 F</strong> — exempté</p>}
                   {!simulation.employee.isSubjectToIrpp && <p>• ITS / IRPP : <strong>0 F</strong> — exempté</p>}
                   {simulation.employee.taxExemptionReason && <p className="italic mt-1">Raison : {simulation.employee.taxExemptionReason}</p>}
@@ -325,14 +317,14 @@ export default function CreatePayrollPage() {
           {/* ✅ Heures supplémentaires — depuis pointage, corrigeables */}
           {simulation && (
             <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-              className="bg-amber-50 dark:bg-amber-900/10 rounded-2xl border border-amber-200 dark:border-amber-800 p-5">
+              className="bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  rounded-2xl border border-[var(--border)]  p-5">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-bold text-amber-900 dark:text-amber-200 flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-[var(--warning-text)]  flex items-center gap-2">
                   <Clock size={16} /> Heures Supplémentaires — Décret 78-360
                 </h3>
                 {overtimeEdited
-                  ? <span className="text-[10px] bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-2 py-1 rounded-full font-bold">✏️ Modifié</span>
-                  : <span className="text-[10px] bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 px-2 py-1 rounded-full">Depuis pointage</span>}
+                  ? <span className="text-[10px] bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  text-[var(--warning-text)]  px-2 py-1 rounded-full font-semibold">✏️ Modifié</span>
+                  : <span className="text-[10px] bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  text-[var(--warning-text)]  px-2 py-1 rounded-full">Depuis pointage</span>}
               </div>
               <p className="text-xs text-[var(--text-muted)] mb-4">
                 Valeurs issues du pointage. Modifiables — l'aperçu se recalcule automatiquement via le serveur.
@@ -345,17 +337,17 @@ export default function CreatePayrollPage() {
                   { label: `HS +${simulation.settings.overtimeRate100}%`,sub: 'Nuit dim. / férié',     val: overtime100, set: setOvertime100, color: 'amber' },
                 ].map(ot => (
                   <div key={ot.label}>
-                    <label className={`flex items-center gap-1 text-xs font-bold mb-1.5 ${
-                      ot.color === 'amber'  ? 'text-amber-700 dark:text-amber-300'  :
-                      'text-amber-700 dark:text-amber-300'}`}>
+                    <label className={`flex items-center gap-1 text-xs font-semibold mb-1.5 ${
+                      ot.color === 'amber'  ? 'text-[var(--warning-text)] '  :
+                      'text-[var(--warning-text)] '}`}>
                       {(ot.label.includes('50') || ot.label.includes('100')) && <Moon size={10} />}
                       {ot.label} — {ot.sub}
                     </label>
                     <input type="number" step="0.5" min="0" value={ot.val}
                       onChange={e => { ot.set(Number(e.target.value) || 0); setOvertimeEdited(true); }}
                       className={`w-full p-3 border rounded-xl bg-[var(--surface)] text-[var(--text)] font-mono text-lg focus:outline-none focus:ring-2 ${
-                        ot.color === 'amber'  ? 'border-amber-200 dark:border-amber-800 focus:ring-amber-400/30'  :
-                        'border-amber-200 dark:border-amber-800 focus:ring-amber-400/30'}`} />
+                        ot.color === 'amber'  ? 'border-[var(--border)]  focus:ring-[var(--focus)]'  :
+                        'border-[var(--border)]  focus:ring-[var(--focus)]'}`} />
                   </div>
                 ))}
               </div>
@@ -365,34 +357,34 @@ export default function CreatePayrollPage() {
           {/* ✅ Primes — imposables et non imposables, depuis le backend */}
           {simulation && simulation.bonuses.length > 0 && (
             <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-              className="bg-emerald-50 dark:bg-emerald-900/10 rounded-2xl border border-emerald-200 dark:border-emerald-800 p-5">
-              <h3 className="text-sm font-bold text-emerald-900 dark:text-emerald-200 mb-4 flex items-center gap-2">
+              className="bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  rounded-2xl border border-[var(--border)]  p-5">
+              <h3 className="text-sm font-semibold text-[var(--success-text)]  mb-4 flex items-center gap-2">
                 <Gift size={16} /> Primes applicables — {month} {year}
               </h3>
               <div className="space-y-2">
                 {simulation.bonuses.map(b => (
-                  <div key={b.id} className="flex items-center justify-between p-3 bg-[var(--surface)] rounded-xl border border-emerald-100 dark:border-emerald-900/30">
+                  <div key={b.id} className="flex items-center justify-between p-3 bg-[var(--surface)] rounded-xl border border-[var(--border)] ">
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-[var(--text)]">{b.bonusType}</p>
+                      <p className="text-sm font-semibold text-[var(--text)]">{b.bonusType}</p>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-[var(--text-secondary)]">
                           {b.source === 'AUTOMATIC' ? '🤖 Auto convention' : '✋ Manuelle'}
                           {b.details && ` · ${b.details}`}
                         </p>
                         {/* ✅ Badges fiscal */}
-                        {b.isTaxable === true  && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[var(--surface-2)] text-[var(--text-muted)] border border-[var(--border)] font-bold">ITS</span>}
-                        {b.isCnss === true      && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-600 border border-emerald-200 font-bold">CNSS</span>}
-                        {b.isTaxable === false  && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-600 border border-amber-200 font-bold">Non imposable</span>}
+                        {b.isTaxable === true  && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[var(--surface-2)] text-[var(--text-muted)] border border-[var(--border)] font-semibold">ITS</span>}
+                        {b.isCnss === true      && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)] border border-[var(--border)] font-semibold">CNSS</span>}
+                        {b.isTaxable === false  && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)] border border-[var(--border)] font-semibold">Non imposable</span>}
                       </div>
                     </div>
-                    <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 flex-shrink-0 ml-3">
+                    <span className="font-mono font-semibold text-[var(--success-text)]  flex-shrink-0 ml-3">
                       +{fmt(b.amount)} F
                     </span>
                   </div>
                 ))}
-                <div className="flex justify-between pt-2 border-t border-emerald-200 dark:border-emerald-800">
-                  <span className="text-sm font-bold text-emerald-800 dark:text-emerald-200">Total primes</span>
-                  <span className="font-mono font-bold text-emerald-700 dark:text-emerald-300">+{fmt(simulation.totalBonuses)} F</span>
+                <div className="flex justify-between pt-2 border-t border-[var(--border)] ">
+                  <span className="text-sm font-semibold text-[var(--success-text)] ">Total primes</span>
+                  <span className="font-mono font-semibold text-[var(--success-text)] ">+{fmt(simulation.totalBonuses)} F</span>
                 </div>
               </div>
             </motion.section>
@@ -401,43 +393,43 @@ export default function CreatePayrollPage() {
           {/* ✅ Prêts & avances — récupérés par le backend depuis la BDD */}
           {simulation && (simulation.totalLoanDeduction > 0 || simulation.totalAdvanceDeduction > 0) && (
             <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-              className="bg-red-50 dark:bg-red-900/10 rounded-2xl border border-red-200 dark:border-red-800 p-5">
-              <h3 className="text-sm font-bold text-red-900 dark:text-red-200 mb-4 flex items-center gap-2">
+              className="bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  rounded-2xl border border-[var(--border)]  p-5">
+              <h3 className="text-sm font-semibold text-[var(--danger-text)]  mb-4 flex items-center gap-2">
                 <DollarSign size={16} /> Déductions programmées
               </h3>
               <div className="space-y-2">
                 {simulation.loans.map(loan => (
-                  <div key={loan.id} className="flex items-center justify-between p-3 bg-[var(--surface)] rounded-xl border border-red-100 dark:border-red-900/30">
+                  <div key={loan.id} className="flex items-center justify-between p-3 bg-[var(--surface)] rounded-xl border border-[var(--border)] ">
                     <div className="flex items-center gap-3">
-                      <CreditCard size={14} className="text-red-500 shrink-0" />
+                      <CreditCard size={14} className="text-[var(--danger-text)] shrink-0" />
                       <div>
-                        <p className="text-sm font-bold text-[var(--text)]">
+                        <p className="text-sm font-semibold text-[var(--text)]">
                           {loan.label || `Prêt #${loan.id.substring(0, 8)}`}
                         </p>
-                        <p className="text-xs text-gray-500">Solde restant : {fmt(loan.remainingBalance)} F</p>
+                        <p className="text-xs text-[var(--text-secondary)]">Solde restant : {fmt(loan.remainingBalance)} F</p>
                       </div>
                     </div>
-                    <span className="font-mono font-bold text-red-600 dark:text-red-400">−{fmt(loan.monthlyRepayment)} F</span>
+                    <span className="font-mono font-semibold text-[var(--danger-text)] ">−{fmt(loan.monthlyRepayment)} F</span>
                   </div>
                 ))}
                 {simulation.advances.map(adv => (
-                  <div key={adv.id} className="flex items-center justify-between p-3 bg-[var(--surface)] rounded-xl border border-red-100 dark:border-red-900/30">
+                  <div key={adv.id} className="flex items-center justify-between p-3 bg-[var(--surface)] rounded-xl border border-[var(--border)] ">
                     <div className="flex items-center gap-3">
-                      <Wallet size={14} className="text-red-500 shrink-0" />
+                      <Wallet size={14} className="text-[var(--danger-text)] shrink-0" />
                       <div>
-                        <p className="text-sm font-bold text-[var(--text)]">
+                        <p className="text-sm font-semibold text-[var(--text)]">
                           {adv.label || `Avance #${adv.id.substring(0, 8)}`}
                         </p>
-                        <p className="text-xs text-gray-500">{new Date(adv.createdAt).toLocaleDateString('fr-FR')}</p>
+                        <p className="text-xs text-[var(--text-secondary)]">{new Date(adv.createdAt).toLocaleDateString('fr-FR')}</p>
                       </div>
                     </div>
-                    <span className="font-mono font-bold text-red-600 dark:text-red-400">−{fmt(adv.amount)} F</span>
+                    <span className="font-mono font-semibold text-[var(--danger-text)] ">−{fmt(adv.amount)} F</span>
                   </div>
                 ))}
                 {(simulation.totalLoanDeduction > 0 && simulation.totalAdvanceDeduction > 0) && (
-                  <div className="flex justify-between pt-2 border-t border-red-200 dark:border-red-800">
-                    <span className="text-sm font-bold text-red-800 dark:text-red-200">Total déductions</span>
-                    <span className="font-mono font-bold text-red-700 dark:text-red-300">
+                  <div className="flex justify-between pt-2 border-t border-[var(--border)] ">
+                    <span className="text-sm font-semibold text-[var(--danger-text)] ">Total déductions</span>
+                    <span className="font-mono font-semibold text-[var(--danger-text)] ">
                       −{fmt(simulation.totalLoanDeduction + simulation.totalAdvanceDeduction)} F
                     </span>
                   </div>
@@ -448,7 +440,7 @@ export default function CreatePayrollPage() {
 
           {/* Message si pas encore d'employé sélectionné */}
           {!selectedEmployee && !isSimulating && (
-            <div className="p-8 bg-[var(--surface-2)] border-2 border-dashed border-[var(--border)] rounded-2xl text-center text-gray-400">
+            <div className="p-8 bg-[var(--surface-2)] border-2 border-dashed border-[var(--border)] rounded-2xl text-center text-[var(--text-secondary)]">
               <Calculator size={36} className="mx-auto mb-3 opacity-30" />
               <p className="text-sm font-medium">Sélectionnez un employé pour commencer</p>
               <p className="text-xs mt-1">Le bulletin est calculé automatiquement par le serveur</p>
@@ -463,23 +455,23 @@ export default function CreatePayrollPage() {
             {simulation ? (
               <motion.div key="preview"
                 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-                className="bg-[var(--surface)] rounded-2xl shadow-xl border border-[var(--border)] overflow-hidden">
+                className="k-card !p-0 overflow-hidden">
 
                 {/* Header aperçu */}
-                <div className="bg-gray-900 text-white p-5">
+                <div className="border-b border-[var(--border)] bg-[var(--surface-2)] p-5">
                   <div className="flex items-center justify-between mb-2">
                     <div>
-                      <h3 className="font-bold text-base">Aperçu du Bulletin</h3>
-                      <p className="text-gray-400 text-xs capitalize">{month} {year}</p>
+                      <h3 className="font-semibold text-base text-[var(--text)]">Aperçu du bulletin</h3>
+                      <p className="text-xs text-[var(--text-secondary)] capitalize">{month} {year}</p>
                     </div>
                     {isSimulating && (
                       <div className="flex items-center gap-1.5">
-                        <Loader2 size={12} className="animate-spin text-emerald-400" />
-                        <span className="text-xs text-emerald-400">Recalcul…</span>
+                        <Loader2 size={12} className="animate-spin text-[var(--brand-strong)]" />
+                        <span className="text-xs text-[var(--text-secondary)]">Recalcul…</span>
                       </div>
                     )}
                   </div>
-                  <p className="text-sm font-bold text-white/80">
+                  <p className="text-sm font-semibold text-[var(--text)]">
                     {simulation.employee.firstName} {simulation.employee.lastName}
                   </p>
                   <div className="flex items-center gap-2 mt-1.5">
@@ -489,33 +481,35 @@ export default function CreatePayrollPage() {
                         const v = e.target.value;
                         setWorkedDaysInput(v === '' ? '' : Math.min(simulation.workDays, Math.max(0, Number(v))));
                       }}
-                      className={`w-16 px-2 py-1 bg-white/10 border rounded-lg text-xs font-bold text-center text-white focus:outline-none focus:ring-2 focus:ring-emerald-400/40 ${
-                        workedDaysEdited ? 'border-amber-400' : 'border-white/20'
+                      aria-label="Jours travaillés"
+                      className={`k-input !min-h-9 w-20 px-2 py-1 text-center text-xs font-semibold tabular-nums ${
+                        workedDaysEdited ? 'border-[var(--warning-text)]' : ''
                       }`} />
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-[var(--text-secondary)]">
                       / {simulation.workDays} jours travaillés
-                      {!workedDaysEdited && <span className="text-emerald-400 ml-1">(présences)</span>}
+                      {!workedDaysEdited && <span className="ml-1 text-[var(--success-text)]">(présences)</span>}
                     </p>
                   </div>
                   {!workedDaysEdited && simulation.daysToPay === 0 && (
-                    <p className="text-[11px] text-amber-400 mt-1 flex items-center gap-1">
+                    <p className="mt-1 flex items-center gap-1 text-[11px] text-[var(--warning-text)]">
                       <AlertCircle size={10} /> Aucune présence trouvée en BDD pour ce mois — vérifiez le pointage ou ajustez ce champ.
                     </p>
                   )}
                 </div>
 
                 <div className="p-4">
-                  <PayslipBreakdown result={simulation} />
+                  <div className="loan-document-protected">
+                    <PayslipBreakdown result={simulation} />
+                  </div>
                 </div>
 
                 {/* Bouton confirmer → créer en BDD */}
                 <div className="p-4 bg-[var(--surface-2)] border-t border-[var(--border)]">
-                  <button onClick={submitPayroll} disabled={isSubmitting || isSimulating}
-                    className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold shadow-lg flex items-center justify-center gap-2 transition-all hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100">
-                    {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle2 size={18} />}
+                  <Button onClick={submitPayroll} disabled={isSimulating} loading={isSubmitting} className="w-full">
+                    {!isSubmitting && <CheckCircle2 size={17} strokeWidth={1.5} />}
                     {isSubmitting ? 'Enregistrement…' : 'Confirmer & Créer le Bulletin'}
-                  </button>
-                  <p className="text-center text-xs text-gray-400 mt-2">
+                  </Button>
+                  <p className="mt-2 text-center text-xs text-[var(--text-secondary)]">
                     Le bulletin sera créé en base de données avec ces valeurs
                   </p>
                 </div>
@@ -523,12 +517,12 @@ export default function CreatePayrollPage() {
 
             ) : (
               <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                className="bg-[var(--surface-2)] border-2 border-dashed border-[var(--border)] rounded-2xl min-h-[300px] flex flex-col items-center justify-center text-gray-400 p-8 text-center">
+                className="bg-[var(--surface-2)] border-2 border-dashed border-[var(--border)] rounded-2xl min-h-[300px] flex flex-col items-center justify-center text-[var(--text-secondary)] p-8 text-center">
                 <Calculator size={48} className="mb-4 opacity-20" />
                 <p className="text-sm font-medium">
                   {isSimulating ? 'Calcul en cours…' : 'Sélectionnez un employé pour voir l\'aperçu'}
                 </p>
-                <p className="text-xs text-gray-400 mt-1">L'aperçu est calculé automatiquement par le serveur</p>
+                <p className="text-xs text-[var(--text-secondary)] mt-1">L'aperçu est calculé automatiquement par le serveur</p>
               </motion.div>
             )}
           </AnimatePresence>
@@ -538,27 +532,27 @@ export default function CreatePayrollPage() {
       {/* ── Modal succès ── */}
       <AnimatePresence>
         {showSuccess && (
-          <motion.div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          <motion.div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgb(0_0_0_/.48)]  p-4"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <div className="bg-[var(--surface)] rounded-3xl p-8 max-w-md w-full text-center">
-              <CheckCircle2 size={64} className="mx-auto text-emerald-500 mb-6" />
-              <h2 className="text-2xl font-bold text-[var(--text)] mb-2">Bulletin Créé !</h2>
+              <CheckCircle2 size={64} className="mx-auto text-[var(--success-text)] mb-6" />
+              <h2 className="text-2xl font-semibold text-[var(--text)] mb-2">Bulletin Créé !</h2>
               <p className="text-[var(--text-muted)] mb-8">
                 La fiche de paie a été enregistrée avec succès en base de données.
               </p>
               <div className="flex gap-3">
                 <button onClick={() => { setShowSuccess(false); setSimulation(null); setSelectedEmployee(null); }}
-                  className="flex-1 py-3 border border-[var(--border)] rounded-xl font-bold text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors">
+                  className="flex-1 py-3 border border-[var(--border)] rounded-xl font-semibold text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors">
                   Nouveau
                 </button>
                 {createdPayrollId && (
                   <button onClick={() => router.push(`/paie/${createdPayrollId}`)}
-                    className="flex-1 py-3 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 shadow-lg transition-colors">
+                    className="flex-1 py-3 bg-[var(--brand-soft)] text-[var(--action)] font-semibold rounded-xl hover:bg-[var(--brand-soft)] shadow-lg transition-colors">
                     Voir bulletin
                   </button>
                 )}
                 <button onClick={() => router.push('/paie')}
-                  className="flex-1 py-3 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 shadow-lg transition-colors">
+                  className="flex-1 py-3 bg-[var(--brand-soft)] text-[var(--action)] font-semibold rounded-xl hover:bg-[var(--brand-soft)] shadow-lg transition-colors">
                   Liste paie
                 </button>
               </div>
@@ -566,6 +560,7 @@ export default function CreatePayrollPage() {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+      </div>
+    </ModulePageFrame>
   );
 }

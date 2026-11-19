@@ -1,4 +1,5 @@
 'use client';
+import { ModuleSelect } from '@/components/ui/ModuleSelect';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -12,6 +13,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
 import { useAlert } from '@/components/providers/AlertProvider';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import { SettingsFrame as ModulePageFrame } from '@/components/settings/SettingsFrame';
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
@@ -198,19 +200,19 @@ const FiscalBadge = ({ fiscalType, isTaxable, isCnss }: {
     isTaxable && !isCnss  ? 'TAXABLE_NO_CNSS' : 'TAXABLE_CNSS'
   );
   if (ft === 'NON_TAXABLE') return (
-    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700">
+    <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  text-[var(--warning-text)]  border border-[var(--border)] ">
       Net direct
     </span>
   );
   if (ft === 'TAXABLE_NO_CNSS') return (
-    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700">
+    <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-[var(--brand-soft)]  text-[var(--success-text)]  border border-[var(--border)] ">
       ITS seul.
     </span>
   );
   return (
     <span className="inline-flex gap-1">
-      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[var(--surface-2)] text-[var(--text-muted)] border border-[var(--border)]">ITS</span>
-      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[var(--surface-2)] text-[var(--text-muted)] border border-[var(--border)]">CNSS</span>
+      <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-[var(--surface-2)] text-[var(--text-muted)] border border-[var(--border)]">ITS</span>
+      <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-[var(--surface-2)] text-[var(--text-muted)] border border-[var(--border)]">CNSS</span>
     </span>
   );
 };
@@ -220,13 +222,13 @@ const QuantityBadge = ({ mode }: { mode?: string | null }) => {
   const cfg = QUANTITY_MODES.find(m => m.value === mode);
   if (!cfg) return null;
   const colors: Record<string, string> = {
-    emerald: 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-700',
-    amber:   'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700',
+    emerald: 'bg-[var(--brand-soft)] text-[var(--success-text)] border-[var(--border)]   ',
+    amber:   'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)] border-[var(--border)]   ',
     slate:   'bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)]',
   };
   const Icon = cfg.icon;
   return (
-    <span className={`inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full border ${colors[cfg.color]}`}>
+    <span className={`inline-flex items-center gap-1 text-[9px] font-semibold px-1.5 py-0.5 rounded-full border ${colors[cfg.color]}`}>
       <Icon size={9} /> {cfg.label}
     </span>
   );
@@ -261,7 +263,7 @@ const emptyForm = () => ({
 
 // ─── COMPOSANT PRINCIPAL ─────────────────────────────────────────────────────
 
-export default function CataloguePrimesPage() {
+function CataloguePrimesPage() {
   const router       = useRouter();
   const searchParams = useSearchParams();
   const alert        = useAlert();
@@ -479,19 +481,19 @@ export default function CataloguePrimesPage() {
       {/* Header */}
       <div className="flex items-center justify-between pt-4">
         <button onClick={() => router.push(backUrl)}
-          className="inline-flex items-center gap-2 text-sm text-[var(--text-muted)] hover:text-emerald-500 transition-colors">
+          className="inline-flex items-center gap-2 text-sm text-[var(--text-muted)] hover:text-[var(--success-text)] transition-colors">
           <ArrowLeft size={16} /> {backUrl === '/parametres' ? 'Paramètres' : 'Retour'}
         </button>
         <button onClick={openCreate}
-          className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 flex items-center gap-2 transition-all">
+          className="px-5 py-2.5 bg-[var(--brand)] hover:bg-[var(--brand)] text-[var(--on-brand)] font-semibold rounded-xl shadow-lg  flex items-center gap-2 transition-colors">
           <Plus size={18} /> Nouvelle prime
         </button>
       </div>
 
       {/* Titre */}
       <div>
-        <h1 className="text-3xl font-bold text-[var(--text)] flex items-center gap-3">
-          <Gift size={28} className="text-emerald-500" /> Catalogue des primes
+        <h1 className="text-3xl font-semibold text-[var(--text)] flex items-center gap-3">
+          <Gift size={28} className="text-[var(--success-text)]" /> Catalogue des primes
         </h1>
         <p className="text-[var(--text-muted)] mt-1">
           Définissez les types de primes — libellé, mode de calcul, nature fiscale.
@@ -499,9 +501,9 @@ export default function CataloguePrimesPage() {
       </div>
 
       {/* Notice */}
-      <div className="flex items-start gap-3 p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-2xl">
-        <Info size={16} className="text-emerald-500 mt-0.5 shrink-0" />
-        <p className="text-sm text-emerald-700 dark:text-emerald-300 leading-relaxed">
+      <div className="flex items-start gap-3 p-4 bg-[var(--brand-soft)]  border border-[var(--border)]  rounded-2xl">
+        <Info size={16} className="text-[var(--success-text)] mt-0.5 shrink-0" />
+        <p className="text-sm text-[var(--success-text)]  leading-relaxed">
           Configurez ici <strong>une fois pour toutes</strong> le mode de calcul de chaque prime.
           Les primes <strong>AUTO</strong> (jours, semaines) se calculent automatiquement depuis le pointage.
           Les primes <strong>Quantité libre</strong> demandent une saisie rapide au moment du bulletin.
@@ -509,20 +511,20 @@ export default function CataloguePrimesPage() {
       </div>
 
       {/* 🆕 Prime d'ancienneté — config générale entreprise */}
-      <section className="glass-panel rounded-2xl p-6 border border-amber-200 dark:border-amber-800 bg-amber-50/30 dark:bg-amber-900/10">
+      <section className="glass-panel rounded-2xl p-6 border border-[var(--border)]  bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] ">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center">
-              <TrendingUp size={16} className="text-white" />
+            <div className="w-8 h-8 bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] rounded-lg flex items-center justify-center">
+              <TrendingUp size={16} className="text-[var(--text)]" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-[var(--text)]">Prime d'ancienneté — formule générale</h2>
+              <h2 className="text-sm font-semibold text-[var(--text)]">Prime d'ancienneté — formule générale</h2>
               <p className="text-xs text-[var(--text-muted)]">S'applique à tous les employés, sauf override personnel sur leur fiche.</p>
             </div>
           </div>
           <button onClick={() => setSeniorityEnabled(v => !v)}
-            className={`relative w-11 h-6 rounded-full transition-colors ${seniorityEnabled ? 'bg-amber-500' : 'bg-[var(--surface-2)]'}`}>
-            <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${seniorityEnabled ? 'translate-x-5' : ''}`} />
+            className={`relative w-11 h-6 rounded-full transition-colors ${seniorityEnabled ? 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]' : 'bg-[var(--surface-2)]'}`}>
+            <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-[var(--surface)] rounded-full shadow transition-transform ${seniorityEnabled ? 'translate-x-5' : ''}`} />
           </button>
         </div>
 
@@ -539,28 +541,28 @@ export default function CataloguePrimesPage() {
                 <p className="text-[10px] text-[var(--text-muted)] mb-1">Dès l'année</p>
                 <input type="number" min={0} value={seniorityStartYear}
                   onChange={e => setSeniorityStartYear(e.target.value === '' ? '' : Number(e.target.value))}
-                  className="w-full px-2 py-2 bg-[var(--surface-2)] border border-amber-200 dark:border-amber-800 rounded-xl text-xs font-mono text-right focus:outline-none focus:ring-2 focus:ring-amber-400/30 text-[var(--text)]" />
+                  className="w-full px-2 py-2 bg-[var(--surface-2)] border border-[var(--border)]  rounded-xl text-xs font-mono text-right focus:outline-none focus:ring-2 focus:ring-[var(--focus)] text-[var(--text)]" />
               </div>
               <div>
                 <p className="text-[10px] text-[var(--text-muted)] mb-1">Taux de départ %</p>
                 <input type="number" step="0.1" value={seniorityStartRate}
                   onChange={e => setSeniorityStartRate(e.target.value === '' ? '' : Number(e.target.value))}
-                  className="w-full px-2 py-2 bg-[var(--surface-2)] border border-amber-200 dark:border-amber-800 rounded-xl text-xs font-mono text-right focus:outline-none focus:ring-2 focus:ring-amber-400/30 text-[var(--text)]" />
+                  className="w-full px-2 py-2 bg-[var(--surface-2)] border border-[var(--border)]  rounded-xl text-xs font-mono text-right focus:outline-none focus:ring-2 focus:ring-[var(--focus)] text-[var(--text)]" />
               </div>
               <div>
                 <p className="text-[10px] text-[var(--text-muted)] mb-1">+ % / an suppl.</p>
                 <input type="number" step="0.1" value={seniorityRatePerYr}
                   onChange={e => setSeniorityRatePerYr(e.target.value === '' ? '' : Number(e.target.value))}
-                  className="w-full px-2 py-2 bg-[var(--surface-2)] border border-amber-200 dark:border-amber-800 rounded-xl text-xs font-mono text-right focus:outline-none focus:ring-2 focus:ring-amber-400/30 text-[var(--text)]" />
+                  className="w-full px-2 py-2 bg-[var(--surface-2)] border border-[var(--border)]  rounded-xl text-xs font-mono text-right focus:outline-none focus:ring-2 focus:ring-[var(--focus)] text-[var(--text)]" />
               </div>
               <div>
                 <p className="text-[10px] text-[var(--text-muted)] mb-1">Plafond % (optionnel)</p>
                 <input type="number" step="0.1" value={seniorityCapPercent} placeholder="aucun"
                   onChange={e => setSeniorityCapPercent(e.target.value === '' ? '' : Number(e.target.value))}
-                  className="w-full px-2 py-2 bg-[var(--surface-2)] border border-amber-200 dark:border-amber-800 rounded-xl text-xs font-mono text-right focus:outline-none focus:ring-2 focus:ring-amber-400/30 text-[var(--text)]" />
+                  className="w-full px-2 py-2 bg-[var(--surface-2)] border border-[var(--border)]  rounded-xl text-xs font-mono text-right focus:outline-none focus:ring-2 focus:ring-[var(--focus)] text-[var(--text)]" />
               </div>
             </div>
-            <p className="text-[11px] text-amber-600 dark:text-amber-300 bg-amber-100/50 dark:bg-amber-900/20 rounded-lg px-3 py-2 mb-3">
+            <p className="text-[11px] text-[var(--warning-text)]  bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  rounded-lg px-3 py-2 mb-3">
               Exemple : {seniorityStartYear || 2} ans = {seniorityStartRate || 0}%, puis +{seniorityRatePerYr || 0}%/an
               {' '}→ 29 ans = {(() => {
                 const sy = Number(seniorityStartYear) || 0, sr = Number(seniorityStartRate) || 0, ry = Number(seniorityRatePerYr) || 0;
@@ -576,7 +578,7 @@ export default function CataloguePrimesPage() {
         {/* Prorata aux jours travaillés — valable pour la formule, la convention et les primes manuelles */}
         <div className="flex items-center justify-between gap-3 mb-3 px-3 py-2 rounded-xl bg-[var(--surface-2)]">
           <div>
-            <p className="text-xs font-bold text-[var(--text)]">Proratiser selon les jours travaillés</p>
+            <p className="text-xs font-semibold text-[var(--text)]">Proratiser selon les jours travaillés</p>
             <p className="text-[11px] text-[var(--text-muted)]">
               {seniorityProrata
                 ? 'Activé — ex. 22 j sur 26 = 22/26 de la prime.'
@@ -584,13 +586,13 @@ export default function CataloguePrimesPage() {
             </p>
           </div>
           <button onClick={() => setSeniorityProrata(v => !v)}
-            className={`relative w-11 h-6 shrink-0 rounded-full transition-colors ${seniorityProrata ? 'bg-amber-500' : 'bg-[var(--surface)]'}`}>
-            <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${seniorityProrata ? 'translate-x-5' : ''}`} />
+            className={`relative w-11 h-6 shrink-0 rounded-full transition-colors ${seniorityProrata ? 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]' : 'bg-[var(--surface)]'}`}>
+            <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-[var(--surface)] rounded-full shadow transition-transform ${seniorityProrata ? 'translate-x-5' : ''}`} />
           </button>
         </div>
 
         <button onClick={saveSeniorityConfig} disabled={savingSeniority}
-          className="w-full py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+          className="w-full py-2 bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] hover:bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--text)] text-xs font-semibold rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
           {savingSeniority ? <><Loader2 size={12} className="animate-spin"/>Sauvegarde…</> :
            senioritySaved  ? <><Check size={12}/>Sauvegardé ✓</> :
                              'Enregistrer'}
@@ -601,13 +603,13 @@ export default function CataloguePrimesPage() {
       <div className="grid grid-cols-3 gap-3">
         {FISCAL_TYPES.map(ft => (
           <div key={ft.value} className={`p-3 rounded-xl border text-center ${
-            ft.value === 'NON_TAXABLE'    ? 'bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800' :
-            ft.value === 'TAXABLE_NO_CNSS' ? 'bg-emerald-50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-800' :
+            ft.value === 'NON_TAXABLE'    ? 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  border-[var(--border)] ' :
+            ft.value === 'TAXABLE_NO_CNSS' ? 'bg-[var(--brand-soft)]  border-[var(--border)] ' :
             'bg-[var(--surface-2)] border-[var(--border)]'
           }`}>
-            <p className={`text-xs font-bold mb-0.5 ${
-              ft.value === 'NON_TAXABLE'    ? 'text-amber-700 dark:text-amber-300' :
-              ft.value === 'TAXABLE_NO_CNSS' ? 'text-emerald-700 dark:text-emerald-300' :
+            <p className={`text-xs font-semibold mb-0.5 ${
+              ft.value === 'NON_TAXABLE'    ? 'text-[var(--warning-text)] ' :
+              ft.value === 'TAXABLE_NO_CNSS' ? 'text-[var(--success-text)] ' :
               'text-[var(--text-muted)]'
             }`}>{ft.label}</p>
             <p className="text-[10px] text-[var(--text-muted)]">{ft.desc.split(' — ')[0]}</p>
@@ -618,9 +620,9 @@ export default function CataloguePrimesPage() {
       {/* Bouton presets */}
       <div className="relative">
         <button onClick={() => setShowPresets(v => !v)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl text-sm font-bold text-amber-700 dark:text-amber-300 hover:bg-amber-100 transition-all">
+          className="flex items-center gap-2 px-4 py-2.5 bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  border border-[var(--border)]  rounded-xl text-sm font-semibold text-[var(--warning-text)]  hover:bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] transition-colors">
           <Award size={16} /> Importer des primes conventionnelles
-          <span className="ml-1 text-xs bg-amber-200 dark:bg-amber-800 px-1.5 py-0.5 rounded-full">
+          <span className="ml-1 text-xs bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  px-1.5 py-0.5 rounded-full">
             {CONVENTIONAL_PRESETS.length}
           </span>
         </button>
@@ -631,7 +633,7 @@ export default function CataloguePrimesPage() {
               exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.15 }}
               className="absolute z-30 mt-2 bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-2xl overflow-hidden w-full max-w-lg">
               <div className="p-3 border-b border-[var(--border)] flex justify-between items-center">
-                <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">
+                <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
                   Cliquez pour pré-remplir le formulaire
                 </p>
                 <button onClick={() => setShowPresets(false)} className="text-[var(--text-muted)] hover:text-[var(--text)]">
@@ -641,7 +643,7 @@ export default function CataloguePrimesPage() {
               <div className="max-h-72 overflow-y-auto divide-y divide-[var(--border)]">
                 {CONVENTIONAL_PRESETS.map((p, i) => (
                   <button key={i} onClick={() => { applyPreset(p); setShowModal(true); }}
-                    className="w-full flex items-center justify-between px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors text-left">
+                    className="w-full flex items-center justify-between px-4 py-3 hover:bg-[var(--brand-soft)]  transition-colors text-left">
                     <div>
                       <p className="font-semibold text-sm text-[var(--text)]">{p.name}</p>
                       <p className="text-xs text-[var(--text-muted)] mt-0.5">{p.description}</p>
@@ -669,7 +671,7 @@ export default function CataloguePrimesPage() {
           <p className="text-[var(--text-muted)] font-medium text-lg mb-2">Catalogue vide</p>
           <p className="text-[var(--text-muted)] text-sm mb-5">Créez vos premiers types de primes.</p>
           <button onClick={openCreate}
-            className="px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-sm flex items-center gap-2 mx-auto">
+            className="px-5 py-2.5 bg-[var(--brand)] text-[var(--on-brand)] font-semibold rounded-xl text-sm flex items-center gap-2 mx-auto">
             <Plus size={16} /> Créer ma première prime
           </button>
         </div>
@@ -683,23 +685,23 @@ export default function CataloguePrimesPage() {
               <motion.div key={t.id}
                 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: -20 }}
                 className="glass-panel rounded-xl p-5 flex items-start gap-5">
-                <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center shrink-0">
-                  <Gift size={22} className="text-emerald-500" />
+                <div className="w-12 h-12 bg-[var(--brand-soft)]  rounded-xl flex items-center justify-center shrink-0">
+                  <Gift size={22} className="text-[var(--success-text)]" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap mb-1.5">
-                    <p className="font-bold text-[var(--text)]">{t.name}</p>
+                    <p className="font-semibold text-[var(--text)]">{t.name}</p>
                     <FiscalBadge fiscalType={t.fiscalType} isTaxable={t.isTaxable} isCnss={t.isCnss} />
                     <QuantityBadge mode={t.quantityMode} />
                     {t.isProratized && (
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700">
+                      <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  text-[var(--warning-text)]  border border-[var(--border)] ">
                         Prorata
                       </span>
                     )}
-                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border ${
+                    <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full border ${
                       t.isRecurring
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800'
-                        : 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800'
+                        ? 'bg-[var(--brand-soft)] text-[var(--success-text)] border-[var(--border)]   '
+                        : 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)] border-[var(--border)]   '
                     }`}>
                       {t.isRecurring ? 'Récurrente' : 'Ponctuelle'}
                     </span>
@@ -713,11 +715,11 @@ export default function CataloguePrimesPage() {
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <button onClick={() => openEdit(t)}
-                    className="p-2 text-[var(--text-muted)] hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-all">
+                    className="p-2 text-[var(--text-muted)] hover:text-[var(--success-text)] hover:bg-[var(--brand-soft)]  rounded-lg transition-colors">
                     <Pencil size={16} />
                   </button>
                   <button onClick={() => handleDelete(t.id, t.name)} disabled={deletingId === t.id}
-                    className="p-2 text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all">
+                    className="p-2 text-[var(--text-muted)] hover:text-[var(--danger-text)] hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  rounded-lg transition-colors">
                     {deletingId === t.id ? <Loader2 className="animate-spin" size={16} /> : <Trash2 size={16} />}
                   </button>
                 </div>
@@ -731,7 +733,7 @@ export default function CataloguePrimesPage() {
       <AnimatePresence>
         {showModal && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xl p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[rgb(0_0_0_/.5)]  p-4"
             onClick={() => setShowModal(false)}>
             <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
               onClick={e => e.stopPropagation()}
@@ -743,11 +745,11 @@ export default function CataloguePrimesPage() {
               </button>
 
               <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-500 rounded-full flex items-center justify-center">
+                <div className="w-12 h-12 bg-[var(--brand-soft)]  text-[var(--success-text)] rounded-full flex items-center justify-center">
                   <Gift size={24} />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-[var(--text)]">
+                  <h2 className="text-xl font-semibold text-[var(--text)]">
                     {editTarget ? 'Modifier la prime' : 'Nouvelle prime'}
                   </h2>
                   <p className="text-xs text-[var(--text-muted)] mt-0.5">Configuration une fois, utilisée partout</p>
@@ -758,46 +760,46 @@ export default function CataloguePrimesPage() {
 
                 {/* Nom */}
                 <div>
-                  <label className="block text-sm font-bold text-[var(--text)] mb-2">
+                  <label className="block text-sm font-semibold text-[var(--text)] mb-2">
                     Nom de la prime *
                   </label>
                   <input type="text" value={form.name}
                     onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
                     placeholder="Ex: Indemnité de transport, Prime de garde..."
-                    className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl outline-none text-[var(--text)] font-medium focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 transition-all" />
+                    className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl outline-none text-[var(--text)] font-medium focus:border-[var(--border)] focus:ring-2 focus:ring-[var(--focus)] transition-colors" />
                 </div>
 
                 {/* 🆕 Nature fiscale — 3 choix clairs */}
                 <div>
-                  <label className="block text-sm font-bold text-[var(--text)] mb-2">
+                  <label className="block text-sm font-semibold text-[var(--text)] mb-2">
                     Nature fiscale *
                   </label>
                   <div className="space-y-2">
                     {FISCAL_TYPES.map(ft => (
                       <button key={ft.value} type="button" onClick={() => setFiscalType(ft.value)}
-                        className={`w-full flex items-start gap-3 p-3 rounded-xl border-2 text-left transition-all ${
+                        className={`w-full flex items-start gap-3 p-3 rounded-xl border-2 text-left transition-colors ${
                           form.fiscalType === ft.value
                             ? ft.value === 'NON_TAXABLE'
-                              ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20'
+                              ? 'border-[var(--border)] bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] '
                               : ft.value === 'TAXABLE_NO_CNSS'
-                                ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
+                                ? 'border-[var(--border)] bg-[var(--brand-soft)] '
                                 : 'border-[var(--border)] bg-[var(--surface-2)]'
                             : 'border-[var(--border)] opacity-60'
                         }`}>
                         <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mt-0.5 shrink-0 ${
                           form.fiscalType === ft.value
-                            ? ft.value === 'NON_TAXABLE' ? 'border-amber-500 bg-amber-500'
-                              : ft.value === 'TAXABLE_NO_CNSS' ? 'border-emerald-500 bg-emerald-500'
+                            ? ft.value === 'NON_TAXABLE' ? 'border-[var(--border)] bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]'
+                              : ft.value === 'TAXABLE_NO_CNSS' ? 'border-[var(--border)] bg-[var(--brand)]'
                               : 'border-[var(--text-muted)] bg-[var(--text-muted)]'
                             : 'border-[var(--border)]'
                         }`}>
-                          {form.fiscalType === ft.value && <div className="w-2 h-2 rounded-full bg-white" />}
+                          {form.fiscalType === ft.value && <div className="w-2 h-2 rounded-full bg-[var(--surface)]" />}
                         </div>
                         <div>
-                          <p className={`font-bold text-sm ${
+                          <p className={`font-semibold text-sm ${
                             form.fiscalType === ft.value
-                              ? ft.value === 'NON_TAXABLE' ? 'text-amber-700 dark:text-amber-300'
-                                : ft.value === 'TAXABLE_NO_CNSS' ? 'text-emerald-700 dark:text-emerald-300'
+                              ? ft.value === 'NON_TAXABLE' ? 'text-[var(--warning-text)] '
+                                : ft.value === 'TAXABLE_NO_CNSS' ? 'text-[var(--success-text)] '
                                 : 'text-[var(--text-muted)]'
                               : 'text-[var(--text-muted)]'
                           }`}>{ft.label}</p>
@@ -810,7 +812,7 @@ export default function CataloguePrimesPage() {
 
                 {/* 🆕 Mode de calcul */}
                 <div>
-                  <label className="block text-sm font-bold text-[var(--text)] mb-2">
+                  <label className="block text-sm font-semibold text-[var(--text)] mb-2">
                     Mode de calcul
                   </label>
                   <div className="space-y-2">
@@ -824,23 +826,23 @@ export default function CataloguePrimesPage() {
                             useFixedAmount: m.value !== null ? false : p.useFixedAmount,
                             usePercentage:  m.value !== null ? false : p.usePercentage,
                           }))}
-                          className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all ${
+                          className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-colors ${
                             isSelected
-                              ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
+                              ? 'border-[var(--border)] bg-[var(--brand-soft)] '
                               : 'border-[var(--border)] opacity-60'
                           }`}>
                           <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
-                            isSelected ? 'bg-emerald-500' : 'bg-[var(--surface-2)]'
+                            isSelected ? 'bg-[var(--brand)]' : 'bg-[var(--surface-2)]'
                           }`}>
-                            <Icon size={16} className={isSelected ? 'text-white' : 'text-[var(--text-muted)]'} />
+                            <Icon size={16} className={isSelected ? 'text-[var(--on-brand)]' : 'text-[var(--text-muted)]'} />
                           </div>
                           <div className="flex-1">
-                            <p className={`font-bold text-sm ${isSelected ? 'text-emerald-700 dark:text-emerald-300' : 'text-[var(--text-muted)]'}`}>
+                            <p className={`font-semibold text-sm ${isSelected ? 'text-[var(--success-text)] ' : 'text-[var(--text-muted)]'}`}>
                               {m.label}
                             </p>
                             <p className="text-xs text-[var(--text-muted)]">{m.desc}</p>
                           </div>
-                          {isSelected && <Check size={16} className="text-emerald-500 shrink-0" />}
+                          {isSelected && <Check size={16} className="text-[var(--success-text)] shrink-0" />}
                         </button>
                       );
                     })}
@@ -851,7 +853,7 @@ export default function CataloguePrimesPage() {
                 {hasQuantityMode ? (
                   // Mode quantité → montant unitaire
                   <div>
-                    <label className="block text-sm font-bold text-[var(--text)] mb-2">
+                    <label className="block text-sm font-semibold text-[var(--text)] mb-2">
                       Montant unitaire (FCFA) *
                       <span className="font-normal text-[var(--text-muted)] ml-2 text-xs">
                         Ex: 1 200 pour "1 200 FCFA par jour"
@@ -860,20 +862,20 @@ export default function CataloguePrimesPage() {
                     <input type="number" min="0" value={form.unitAmount}
                       onChange={e => setForm(p => ({ ...p, unitAmount: e.target.value }))}
                       placeholder="Ex: 1200"
-                      className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl outline-none font-bold font-mono text-lg text-[var(--text)]" />
+                      className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl outline-none font-semibold font-mono text-lg text-[var(--text)]" />
 
                     {/* Quantité par défaut pour FREE */}
                     {form.quantityMode === 'FREE' && (
                       <div className="mt-3">
-                        <label className="block text-sm font-bold text-[var(--text)] mb-2">
+                        <label className="block text-sm font-semibold text-[var(--text)] mb-2">
                           Quantité par défaut (optionnel)
                           <span className="font-normal text-[var(--text-muted)] ml-2 text-xs">Ex: 7 repas</span>
                         </label>
                         <input type="number" min="0" value={form.defaultQuantity}
                           onChange={e => setForm(p => ({ ...p, defaultQuantity: e.target.value }))}
                           placeholder="0"
-                          className="w-full p-3 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-700 rounded-xl outline-none font-bold font-mono text-lg text-[var(--text)]" />
-                        <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 flex items-center gap-1">
+                          className="w-full p-3 bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  border border-[var(--border)]  rounded-xl outline-none font-semibold font-mono text-lg text-[var(--text)]" />
+                        <p className="text-xs text-[var(--warning-text)]  mt-1 flex items-center gap-1">
                           <AlertCircle size={11} />
                           Valeur pré-remplie au bulletin — modifiable à chaque mois
                         </p>
@@ -882,9 +884,9 @@ export default function CataloguePrimesPage() {
 
                     {/* Aperçu calcul */}
                     {form.unitAmount && form.defaultQuantity && (
-                      <div className="mt-3 p-3 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800 rounded-xl">
-                        <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300 mb-1">Aperçu calcul</p>
-                        <p className="text-xs text-emerald-600 dark:text-emerald-400 font-mono">
+                      <div className="mt-3 p-3 bg-[var(--brand-soft)]  border border-[var(--border)]  rounded-xl">
+                        <p className="text-xs font-semibold text-[var(--success-text)]  mb-1">Aperçu calcul</p>
+                        <p className="text-xs text-[var(--success-text)]  font-mono">
                           {Number(form.unitAmount).toLocaleString('fr-FR')} × {form.defaultQuantity} = {(Number(form.unitAmount) * Number(form.defaultQuantity)).toLocaleString('fr-FR')} FCFA (défaut)
                         </p>
                       </div>
@@ -893,7 +895,7 @@ export default function CataloguePrimesPage() {
                 ) : (
                   // Mode classique → fixe ou %
                   <div>
-                    <label className="block text-sm font-bold text-[var(--text)] mb-2">
+                    <label className="block text-sm font-semibold text-[var(--text)] mb-2">
                       Montant par défaut
                     </label>
                     <div className="grid grid-cols-3 gap-2 mb-3">
@@ -908,12 +910,12 @@ export default function CataloguePrimesPage() {
                             useFixedAmount: btn.key === 'fixe',
                             usePercentage:  btn.key === 'pct',
                           }))}
-                          className={`p-2.5 rounded-xl border-2 text-xs font-bold text-center transition-all ${
+                          className={`p-2.5 rounded-xl border-2 text-xs font-semibold text-center transition-colors ${
                             btn.active
                               ? btn.key === 'pct'
-                                ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300'
+                                ? 'border-[var(--border)] bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  text-[var(--warning-text)] '
                                 : btn.key === 'fixe'
-                                  ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
+                                  ? 'border-[var(--border)] bg-[var(--brand-soft)]  text-[var(--success-text)] '
                                   : 'border-[var(--text)] bg-[var(--text)] text-[var(--bg)]'
                               : 'border-[var(--border)] text-[var(--text-muted)]'
                           }`}>
@@ -929,20 +931,20 @@ export default function CataloguePrimesPage() {
                       <input type="number" min="0" value={form.defaultAmount}
                         onChange={e => setForm(p => ({ ...p, defaultAmount: e.target.value }))}
                         placeholder="Ex: 25 000"
-                        className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl outline-none font-bold font-mono text-lg text-[var(--text)]" />
+                        className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl outline-none font-semibold font-mono text-lg text-[var(--text)]" />
                     )}
                     {form.usePercentage && (
                       <div className="grid grid-cols-2 gap-3">
                         <input type="number" min="0" max="100" step="0.5" value={form.defaultPercentage}
                           onChange={e => setForm(p => ({ ...p, defaultPercentage: e.target.value }))}
                           placeholder="Ex: 10"
-                          className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl outline-none font-bold font-mono text-lg text-[var(--text)]" />
-                        <select value={form.baseCalculation}
+                          className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl outline-none font-semibold font-mono text-lg text-[var(--text)]" />
+                        <ModuleSelect value={form.baseCalculation}
                           onChange={e => setForm(p => ({ ...p, baseCalculation: e.target.value as any }))}
                           className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl outline-none text-[var(--text)] font-medium">
                           <option value="BASE_SALARY">du salaire de base</option>
                           <option value="GROSS_SALARY">du salaire brut</option>
-                        </select>
+                        </ModuleSelect>
                       </div>
                     )}
                   </div>
@@ -958,7 +960,7 @@ export default function CataloguePrimesPage() {
                     bulletin, quel que soit le nombre de jours travaillés. */}
                 <div className="flex items-center justify-between gap-3 px-3 py-2 rounded-xl bg-[var(--surface-2)]">
                   <div>
-                    <p className="text-sm font-bold text-[var(--text)]">Proratiser selon les jours travaillés</p>
+                    <p className="text-sm font-semibold text-[var(--text)]">Proratiser selon les jours travaillés</p>
                     <p className="text-[11px] text-[var(--text-muted)]">
                       {form.isProratized
                         ? 'Activé — ex. 20 j sur 26 = 20/26 du montant de la prime.'
@@ -966,28 +968,28 @@ export default function CataloguePrimesPage() {
                     </p>
                   </div>
                   <button type="button" onClick={() => setForm(p => ({ ...p, isProratized: !p.isProratized }))}
-                    className={`relative w-11 h-6 shrink-0 rounded-full transition-colors ${form.isProratized ? 'bg-emerald-500' : 'bg-[var(--surface)]'}`}>
-                    <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${form.isProratized ? 'translate-x-5' : ''}`} />
+                    className={`relative w-11 h-6 shrink-0 rounded-full transition-colors ${form.isProratized ? 'bg-[var(--brand)]' : 'bg-[var(--surface)]'}`}>
+                    <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-[var(--surface)] rounded-full shadow transition-transform ${form.isProratized ? 'translate-x-5' : ''}`} />
                   </button>
                 </div>
 
                 {/* Fréquence */}
                 <div>
-                  <label className="block text-sm font-bold text-[var(--text)] mb-2">Fréquence par défaut</label>
+                  <label className="block text-sm font-semibold text-[var(--text)] mb-2">Fréquence par défaut</label>
                   <div className="grid grid-cols-2 gap-3">
                     {[
                       { val: true,  label: 'Récurrente', sub: 'Chaque mois', color: 'emerald' },
                       { val: false, label: 'Ponctuelle',  sub: '1 mois cible', color: 'amber' },
                     ].map(btn => (
                       <button key={String(btn.val)} type="button" onClick={() => setForm(p => ({ ...p, isRecurring: btn.val }))}
-                        className={`p-3 rounded-xl border-2 text-left transition-all ${
+                        className={`p-3 rounded-xl border-2 text-left transition-colors ${
                           form.isRecurring === btn.val
                             ? btn.color === 'emerald'
-                              ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
-                              : 'border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300'
+                              ? 'border-[var(--border)] bg-[var(--brand-soft)]  text-[var(--success-text)] '
+                              : 'border-[var(--border)] bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  text-[var(--warning-text)] '
                             : 'border-[var(--border)] text-[var(--text-muted)]'
                         }`}>
-                        <div className="font-bold text-sm">{btn.label}</div>
+                        <div className="font-semibold text-sm">{btn.label}</div>
                         <div className="text-xs opacity-75 mt-0.5">{btn.sub}</div>
                       </button>
                     ))}
@@ -996,7 +998,7 @@ export default function CataloguePrimesPage() {
 
                 {/* Description */}
                 <div>
-                  <label className="block text-sm font-bold text-[var(--text)] mb-2">Description (optionnel)</label>
+                  <label className="block text-sm font-semibold text-[var(--text)] mb-2">Description (optionnel)</label>
                   <input type="text" value={form.description}
                     onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
                     placeholder="Ex: Versée aux agents de terrain uniquement"
@@ -1007,9 +1009,9 @@ export default function CataloguePrimesPage() {
                 {selectedFiscal && (
                   <div className={`p-3 rounded-xl border text-xs font-medium ${
                     form.fiscalType === 'NON_TAXABLE'
-                      ? 'bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300'
+                      ? 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  border-[var(--border)]  text-[var(--warning-text)] '
                       : form.fiscalType === 'TAXABLE_NO_CNSS'
-                        ? 'bg-emerald-50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300'
+                        ? 'bg-[var(--brand-soft)]  border-[var(--border)]  text-[var(--success-text)] '
                         : 'bg-[var(--surface-2)] border-[var(--border)] text-[var(--text-muted)]'
                   }`}>
                     {form.fiscalType === 'NON_TAXABLE'    && '💛 Versée au net — aucune retenue ITS ni CNSS'}
@@ -1021,11 +1023,11 @@ export default function CataloguePrimesPage() {
                 {/* Actions */}
                 <div className="flex gap-3 pt-2">
                   <button onClick={() => setShowModal(false)}
-                    className="flex-1 py-4 bg-[var(--surface-2)] text-[var(--text)] font-bold rounded-xl hover:bg-[var(--border)] transition-all">
+                    className="flex-1 py-4 bg-[var(--surface-2)] text-[var(--text)] font-semibold rounded-xl hover:bg-[var(--border)] transition-colors">
                     Annuler
                   </button>
                   <button onClick={handleSave} disabled={isSaving}
-                    className="flex-1 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg transition-all flex justify-center items-center gap-2 disabled:opacity-50">
+                    className="flex-1 py-4 bg-[var(--brand)] hover:bg-[var(--brand)] text-[var(--on-brand)] font-semibold rounded-xl shadow-lg transition-colors flex justify-center items-center gap-2 disabled:opacity-50">
                     {isSaving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
                     {editTarget ? 'Mettre à jour' : 'Ajouter au catalogue'}
                   </button>
@@ -1037,5 +1039,14 @@ export default function CataloguePrimesPage() {
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+
+export default function CataloguePrimesPageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <CataloguePrimesPage />
+    </ModulePageFrame>
   );
 }

@@ -2,7 +2,7 @@
 // 📁 components/auth/AuthShell.tsx
 // Coquille commune à toutes les pages d'authentification.
 // Reprend fidèlement les codes visuels de la landing (app/page.tsx) :
-// fond #050607, halos discrets, grille 48px à 5%, logo, typographie.
+// fond var(--bg), halos discrets, grille 48px à 5%, logo, typographie.
 // ============================================================================
 'use client';
 
@@ -14,7 +14,7 @@ import { GRID_BG_STYLE } from './tokens';
 
 export function AuthShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative flex min-h-screen min-h-[100dvh] w-full flex-col items-center overflow-x-hidden bg-[#050607] font-sans text-[#FAFAFA]">
+    <div className="auth-theme relative flex min-h-screen min-h-[100dvh] w-full flex-col items-center overflow-x-hidden bg-[var(--bg)] font-sans text-[var(--text)]">
       {/* Halos — identiques à la landing (Hero + FinalCta) */}
       <div className="pointer-events-none fixed -right-40 -top-40 -z-10 h-[600px] w-[600px] rounded-full bg-white/[0.04] blur-[130px]" />
       <div className="pointer-events-none fixed -left-40 bottom-0 -z-10 h-[500px] w-[500px] rounded-full bg-[#10B981]/[0.06] blur-[130px]" />
@@ -36,7 +36,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
         </Link>
         <Link
           href="/"
-          className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1.5 text-[13px] text-[#8B8F98] transition-colors hover:border-white/20 hover:text-[#FAFAFA]"
+          className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1.5 text-[13px] text-[var(--text-secondary)] transition-colors hover:border-white/20 hover:text-[var(--text)]"
         >
           <ArrowLeft size={13} />
           Accueil
@@ -54,7 +54,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
 export function AuthCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
     <div
-      className={`w-full rounded-2xl border border-white/[0.08] bg-[#0B0C0F] p-7 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.6)] sm:p-9 ${className}`}
+      className={`w-full rounded-2xl border border-white/[0.08] bg-[var(--surface)] p-7 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.6)] sm:p-9 ${className}`}
     >
       {children}
     </div>
@@ -73,14 +73,14 @@ export function AuthHeading({
   return (
     <div className="mb-7 text-center">
       {eyebrow && (
-        <div className="mx-auto mb-4 w-fit rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1.5 text-[12px] text-[#8B8F98]">
+        <div className="mx-auto mb-4 w-fit rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1.5 text-[12px] text-[var(--text-secondary)]">
           {eyebrow}
         </div>
       )}
-      <h1 className="text-[26px] font-semibold leading-[1.15] tracking-[-0.02em] text-[#FAFAFA] sm:text-[30px]">
+      <h1 className="text-[26px] font-semibold leading-[1.15] tracking-[-0.02em] text-[var(--text)] sm:text-[30px]">
         {title}
       </h1>
-      {description && <p className="mt-2 text-[14px] leading-relaxed text-[#8B8F98]">{description}</p>}
+      {description && <p className="mt-2 text-[14px] leading-relaxed text-[var(--text-secondary)]">{description}</p>}
     </div>
   );
 }

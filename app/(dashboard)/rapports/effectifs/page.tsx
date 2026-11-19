@@ -1,27 +1,31 @@
 'use client';
+import { ReportContents } from '@/components/reports/ReportContents';
+import { chartTheme } from '@/lib/chart-theme';
+
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  ArrowLeft, Users, UserPlus, TrendingDown, TrendingUp, Clock, 
+import {
+  ArrowLeft, Users, UserPlus, TrendingDown, TrendingUp, Clock,
   Calendar, Building2, Award, Target, AlertCircle, ClipboardList, LayoutDashboard,UsersRound,
   UmbrellaOff,BookOpen, DollarSign, Hourglass, AlertTriangle, CheckCircle2, Activity, LogOut, UserCircle, BarChart3,
   Globe, Briefcase, SlidersHorizontal, ChevronDown, ChevronUp,
 } from 'lucide-react';
-import { 
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
+import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar, ReferenceLine, PieChart, Pie, Cell, Legend, LineChart, Line
 } from 'recharts';
 import { api } from '@/services/api';
  import { useBasePath } from '@/hooks/useBasePath';
 import RapportsSubNav from '@/components/RapportsSubNav';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import { ReportsFrame as ModulePageFrame } from '@/components/reports/ReportsFrame';
 import SlideOver from '@/components/SlideOver'; // 🆕 panneau détail nationalité
 import EffectifMonthlyList from '@/components/reports/EffectifMonthlyList'; // 🆕 liste mensuelle séparée
 import { FancySelect } from '@/components/ui/FancySelect'; // 🆕 filtres du rapport
 import { NATIONALITIES } from '@/lib/nationalities'; // 🆕 filtre nationalité
 
-const COLORS = ['#10B981', '#F59E0B', '#34D399', '#FBBF24', '#059669'];
+const COLORS = chartTheme.series;
 
 interface Metric {
   value: number;
@@ -121,7 +125,7 @@ interface WorkforceData {
   absenteeism?: Absenteeism;           // 🆕 étape 3
 }
 
-export default function EmployeeAnalyticsPage() {
+function EmployeeAnalyticsPage() {
   const router = useRouter();
   const { bp } = useBasePath();
   const [data, setData] = useState<WorkforceData | null>(null);
@@ -174,7 +178,7 @@ export default function EmployeeAnalyticsPage() {
           api.get('/reports/departments'),
           api.get('/reports/top-employees')
         ]);
-        
+
         setData(workforceRes as WorkforceData);
         setDepartments(deptRes as Department[]);
         setTopEmployees(topRes);
@@ -197,18 +201,18 @@ export default function EmployeeAnalyticsPage() {
 
   return (
     <div className="max-w-[1600px] mx-auto pb-20 space-y-8">
-      
+
       {/* HEADER */}
-      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 reports-header">
         <div className="flex items-center gap-4">
-          <button 
-            onClick={() => router.push(bp('/rapports'))} 
+          <button
+            onClick={() => router.push(bp('/rapports'))}
             className="p-2 bg-[var(--surface)] rounded-xl border border-[var(--border)]"
           >
-            <ArrowLeft size={20} className="text-[var(--text-muted)]"/>
+            <ArrowLeft strokeWidth={1.5} size={20} className="text-[var(--text-muted)]"/>
           </button>
           <div>
-            <h1 className="text-3xl font-bold text-[var(--text)]">
+            <h1 className="text-3xl font-semibold text-[var(--text)]">
               Analyse des Effectifs
             </h1>
             <p className="text-[var(--text-muted)]">
@@ -220,15 +224,16 @@ export default function EmployeeAnalyticsPage() {
 
       {/* ✅ NAVIGATION RAPPORTS */}
       <RapportsSubNav active="/rapports/effectifs" />
+      <ReportContents sections={[{"id":"report-section-1","label":"Répartition par Département"},{"id":"report-section-2","label":"Évolution de l'Effectif —"},{"id":"report-section-3","label":"Évolution sur 5 ans"},{"id":"report-section-4","label":"Pyramide des Âges"},{"id":"report-section-5","label":"Pyramide de l'Ancienneté"},{"id":"report-section-6","label":"Veille Départs à la Retraite"},{"id":"report-section-7","label":"Répartitions Avancées"},{"id":"report-section-8","label":"KPI Bilan Social"},{"id":"report-section-9","label":"Répartition par Genre"}]} />
 
       {/* 🆕 FILTRES DU RAPPORT — repliable pour ne pas surcharger la page */}
-      <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm overflow-hidden">
+      <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm overflow-hidden reports-card">
         <button
           onClick={() => setFiltersOpen((o) => !o)}
           className="w-full flex items-center justify-between px-5 py-4"
         >
-          <div className="flex items-center gap-2 text-sm font-bold text-[var(--text)]">
-            <SlidersHorizontal size={16} className="text-[var(--brand)]" />
+          <div className="flex items-center gap-2 text-sm font-semibold text-[var(--text)]">
+            <SlidersHorizontal strokeWidth={1.5} size={16} className="text-[var(--brand)]" />
             Filtres du rapport
             <span className="text-xs font-normal text-[var(--text-muted)]">
               — Année {reportFilters.year}
@@ -237,7 +242,7 @@ export default function EmployeeAnalyticsPage() {
               {reportFilters.nationality !== 'Tous' ? ` · ${reportFilters.nationality}` : ''}
             </span>
           </div>
-          {filtersOpen ? <ChevronUp size={18} className="text-[var(--text-muted)]" /> : <ChevronDown size={18} className="text-[var(--text-muted)]" />}
+          {filtersOpen ? <ChevronUp strokeWidth={1.5} size={18} className="text-[var(--text-muted)]" /> : <ChevronDown strokeWidth={1.5} size={18} className="text-[var(--text-muted)]" />}
         </button>
         {filtersOpen && (
           <div className="px-5 pb-5 flex flex-wrap items-end gap-3 border-t border-[var(--border)] pt-4">
@@ -293,7 +298,7 @@ export default function EmployeeAnalyticsPage() {
             {(reportFilters.department !== 'Tous' || reportFilters.contractType !== 'Tous' || reportFilters.nationality !== 'Tous') && (
               <button
                 onClick={() => setReportFilters((prev) => ({ ...prev, department: 'Tous', contractType: 'Tous', nationality: 'Tous' }))}
-                className="text-xs font-bold text-red-500 hover:text-red-600 px-3 py-2.5"
+                className="text-xs font-semibold text-[var(--danger-text)] hover:text-[var(--danger-text)] px-3 py-2.5"
               >
                 Réinitialiser
               </button>
@@ -303,26 +308,26 @@ export default function EmployeeAnalyticsPage() {
       </div>
 
       {/* METRIC CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 reports-metrics">
         {data?.metrics?.map((m: Metric, i: number) => {
           const icons = [Users, UserPlus, TrendingDown];
           // ✅ 2 teintes (émeraude/ambre) + rouge réservé au 3ᵉ (départs —
           // vrai indicateur négatif), plus de dégradé
-          const colors = ['bg-[var(--accent-2)]', 'bg-[var(--brand)]', 'bg-red-500'];
+          const colors = ['bg-[var(--accent-2)]', 'bg-[var(--brand)]', 'bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]'];
           const Icon = icons[i];
 
           return (
-            <div key={i} className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-              <div className={`absolute top-0 right-0 w-32 h-32 ${colors[i]} opacity-5 rounded-bl-full -mr-10 -mt-10 group-hover:scale-150 transition-transform`} />
-              
+            <div key={i} className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group reports-card">
+              <div className={`absolute top-0 right-0 w-32 h-32 ${colors[i]} opacity-5 rounded-bl-full -mr-10 -mt-10 transition-transform`} />
+
               <div className="relative z-10">
-                <div className={`w-12 h-12 rounded-xl ${colors[i]} flex items-center justify-center text-white shadow-lg mb-4`}>
+                <div className={`w-12 h-12 rounded-xl ${colors[i]} flex items-center justify-center text-[var(--text)] shadow-lg mb-4`}>
                   <Icon size={24} />
                 </div>
-                <h3 className="text-3xl font-bold text-[var(--text)] tracking-tight">
+                <h3 className="text-3xl font-semibold text-[var(--text)] tracking-tight">
                   {m.value}
                 </h3>
-                <p className="text-xs text-[var(--text-muted)] font-bold uppercase tracking-wide mt-2">
+                <p className="text-xs text-[var(--text-muted)] font-semibold   mt-2">
                   {m.label}
                 </p>
                 <p className="text-xs text-[var(--text-muted)] mt-1">{m.sub}</p>
@@ -333,11 +338,11 @@ export default function EmployeeAnalyticsPage() {
       </div>
 
       {/* RÉPARTITION PAR DÉPARTEMENT */}
-      <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
+      <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm reports-card">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="text-lg font-bold text-[var(--text)] flex items-center gap-2">
-              <Building2 size={20} className="text-[var(--brand)]" />
+            <h3 id="report-section-1" tabIndex={-1} className="text-lg font-semibold text-[var(--text)] flex items-center gap-2">
+              <Building2 strokeWidth={1.5} size={20} className="text-[var(--brand)]" />
               Répartition par Département
             </h3>
             <p className="text-sm text-[var(--text-muted)]">
@@ -351,14 +356,14 @@ export default function EmployeeAnalyticsPage() {
             <div key={dept.id} className="p-5 bg-[var(--surface-2)]/50 rounded-xl hover:shadow-md transition-shadow">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div 
-                    className="w-12 h-12 rounded-xl flex items-center justify-center text-white text-lg font-bold"
+                  <div
+                    className="w-12 h-12 rounded-xl flex items-center justify-center text-[var(--text)] text-lg font-semibold reports-metric-icon"
                     style={{ backgroundColor: dept.color || COLORS[idx % COLORS.length] }}
                   >
                     {dept.name[0]}
                   </div>
                   <div>
-                    <h4 className="font-bold text-[var(--text)]">{dept.name}</h4>
+                    <h4 className="font-semibold text-[var(--text)]">{dept.name}</h4>
                     <p className="text-xs text-[var(--text-muted)]">{dept.headcount} employé(s)</p>
                   </div>
                 </div>
@@ -367,16 +372,16 @@ export default function EmployeeAnalyticsPage() {
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-[var(--text-muted)]">Salaire moyen</span>
-                  <span className="text-sm font-bold text-[var(--text)]">
+                  <span className="text-sm font-semibold text-[var(--text)]">
                     {(dept.avgSalary / 1000).toFixed(0)}k FCFA
                   </span>
                 </div>
-                
+
                 <div className="h-2 bg-[var(--surface-2)] rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-[var(--brand)] transition-all duration-500"
-                    style={{ 
-                      width: `${Math.min(100, (dept.headcount / totalEmployees) * 100)}%` 
+                  <div
+                    className="h-full bg-[var(--surface)] transition-colors duration-500"
+                    style={{
+                      width: `${Math.min(100, (dept.headcount / totalEmployees) * 100)}%`
                     }}
                   />
                 </div>
@@ -392,10 +397,10 @@ export default function EmployeeAnalyticsPage() {
 
       {/* GRAPHIQUES */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        
+
         {/* Évolution */}
-        <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
-          <h3 className="text-lg font-bold text-[var(--text)] mb-1">
+        <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm reports-card">
+          <h3 id="report-section-2" tabIndex={-1} className="text-lg font-semibold text-[var(--text)] mb-1">
             Évolution de l'Effectif — {reportFilters.year}
           </h3>
           <p className="text-sm text-[var(--text-muted)] mb-5">
@@ -415,31 +420,26 @@ export default function EmployeeAnalyticsPage() {
                   <AreaChart data={merged}>
                     <defs>
                       <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                        <stop offset="5%" stopColor="var(--green)" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="var(--green)" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+
                     <XAxis dataKey="month" axisLine={false} tickLine={false} />
                     <YAxis axisLine={false} tickLine={false} allowDecimals={false} />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: '#1f2937', 
-                        color: '#fff', 
-                        borderRadius: '12px', 
-                        border: 'none' 
-                      }} 
+                    <Tooltip
+                      contentStyle={chartTheme.tooltip}
                     />
                     <Legend />
-                    <Area 
-                      type="monotone" 
-                      dataKey="total" 
+                    <Area isAnimationActive={false} activeDot={{r:5,stroke:chartTheme.surface,strokeWidth:3}}
+                      type="monotone"
+                      dataKey="total"
                       name={String(reportFilters.year)}
-                      stroke="#10B981" 
+                      stroke="var(--green)"
                       strokeWidth={3}
-                      fill="url(#colorTotal)" 
+                      fill="url(#colorTotal)"
                     />
-                    <Area
+                    <Area isAnimationActive={false} activeDot={{r:5,stroke:chartTheme.surface,strokeWidth:3}}
                       type="monotone"
                       dataKey="totalPrevYear"
                       name={String(reportFilters.year - 1)}
@@ -456,8 +456,8 @@ export default function EmployeeAnalyticsPage() {
         </div>
 
         {/* 🆕 Historique pluriannuel — combien on avait chaque année */}
-        <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
-          <h3 className="text-lg font-bold text-[var(--text)] mb-1">
+        <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm reports-card">
+          <h3 id="report-section-3" tabIndex={-1} className="text-lg font-semibold text-[var(--text)] mb-1">
             Évolution sur 5 ans
           </h3>
           <p className="text-sm text-[var(--text-muted)] mb-5">
@@ -466,20 +466,15 @@ export default function EmployeeAnalyticsPage() {
           <div className="h-[350px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data?.yearlyHeadcount || []} margin={{ left: 0, right: 10 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+
                 <XAxis dataKey="year" axisLine={false} tickLine={false} />
                 <YAxis axisLine={false} tickLine={false} allowDecimals={false} />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#1f2937', 
-                    color: '#fff', 
-                    borderRadius: '12px', 
-                    border: 'none' 
-                  }} 
+                <Tooltip
+                  contentStyle={chartTheme.tooltip}
                 />
-                <Bar dataKey="total" name="Effectif" radius={[8, 8, 0, 0]}>
+                <Bar isAnimationActive={false} maxBarSize={32} background={{fill:chartTheme.track,radius:8}} dataKey="total" name="Effectif" radius={[8, 8, 0, 0]}>
                   {(data?.yearlyHeadcount || []).map((yh, idx) => (
-                    <Cell key={idx} fill={yh.year === reportFilters.year ? '#10B981' : '#A7F3D0'} />
+                    <Cell key={idx} fill={yh.year === reportFilters.year ? 'var(--green)' : '#A7F3D0'} />
                   ))}
                 </Bar>
               </BarChart>
@@ -488,8 +483,8 @@ export default function EmployeeAnalyticsPage() {
         </div>
 
         {/* Pyramide des Âges */}
-        <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
-          <h3 className="text-lg font-bold text-[var(--text)] mb-1">
+        <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm reports-card">
+          <h3 id="report-section-4" tabIndex={-1} className="text-lg font-semibold text-[var(--text)] mb-1">
             Pyramide des Âges
           </h3>
           <p className="text-sm text-[var(--text-muted)] mb-5">
@@ -503,41 +498,36 @@ export default function EmployeeAnalyticsPage() {
                 const maxSide = Math.max(1, ...pyramidSrc.map((b: PyramidData) => Math.max(b.male, b.female)));
                 const axisMax = Math.ceil(maxSide * 1.15);
                 return (
-                  <BarChart 
-                    layout="vertical" 
-                    data={pyramidData} 
+                  <BarChart
+                    layout="vertical"
+                    data={pyramidData}
                     margin={{ left: 20, right: 20 }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+
                     <XAxis type="number" domain={[-axisMax, axisMax]} tickFormatter={(v: number) => String(Math.abs(v))} allowDecimals={false} />
-                    <YAxis 
-                      dataKey="label" 
-                      type="category" 
-                      width={60} 
+                    <YAxis
+                      dataKey="label"
+                      type="category"
+                      width={60}
                       axisLine={false}
                       tickLine={false}
                     />
-                    <Tooltip 
+                    <Tooltip
                       formatter={(value: any, name: any) => [Math.abs(value), name]}
-                      contentStyle={{ 
-                        backgroundColor: '#1f2937', 
-                        color: '#fff', 
-                        borderRadius: '12px', 
-                        border: 'none' 
-                      }} 
+                      contentStyle={chartTheme.tooltip}
                     />
                     <Legend />
                     <ReferenceLine x={0} stroke="var(--text-muted)" strokeWidth={2} />
-                    <Bar 
-                      dataKey="femaleNeg" 
-                      name="Femmes" 
-                      fill="#F59E0B" 
+                    <Bar isAnimationActive={false} maxBarSize={32} background={{fill:chartTheme.track,radius:8}}
+                      dataKey="femaleNeg"
+                      name="Femmes"
+                      fill="var(--mustard)"
                       radius={[8, 0, 0, 8]}
                     />
-                    <Bar 
-                      dataKey="male" 
-                      name="Hommes" 
-                      fill="#10B981" 
+                    <Bar isAnimationActive={false} maxBarSize={32} background={{fill:chartTheme.track,radius:8}}
+                      dataKey="male"
+                      name="Hommes"
+                      fill="var(--green)"
                       radius={[0, 8, 8, 0]}
                     />
                   </BarChart>
@@ -548,8 +538,8 @@ export default function EmployeeAnalyticsPage() {
         </div>
 
         {/* 🆕 Pyramide de l'Ancienneté */}
-        <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
-          <h3 className="text-lg font-bold text-[var(--text)] mb-1">
+        <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm reports-card">
+          <h3 id="report-section-5" tabIndex={-1} className="text-lg font-semibold text-[var(--text)] mb-1">
             Pyramide de l'Ancienneté
           </h3>
           <p className="text-sm text-[var(--text-muted)] mb-5">
@@ -563,33 +553,28 @@ export default function EmployeeAnalyticsPage() {
                 const maxSide = Math.max(1, ...senioritySrc.map((b: PyramidData) => Math.max(b.male, b.female)));
                 const axisMax = Math.ceil(maxSide * 1.15);
                 return (
-                  <BarChart 
-                    layout="vertical" 
-                    data={seniorityData} 
+                  <BarChart
+                    layout="vertical"
+                    data={seniorityData}
                     margin={{ left: 20, right: 20 }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+
                     <XAxis type="number" domain={[-axisMax, axisMax]} tickFormatter={(v: number) => String(Math.abs(v))} allowDecimals={false} />
-                    <YAxis 
-                      dataKey="label" 
-                      type="category" 
-                      width={80} 
+                    <YAxis
+                      dataKey="label"
+                      type="category"
+                      width={80}
                       axisLine={false}
                       tickLine={false}
                     />
-                    <Tooltip 
+                    <Tooltip
                       formatter={(value: any, name: any) => [Math.abs(value), name]}
-                      contentStyle={{ 
-                        backgroundColor: '#1f2937', 
-                        color: '#fff', 
-                        borderRadius: '12px', 
-                        border: 'none' 
-                      }} 
+                      contentStyle={chartTheme.tooltip}
                     />
                     <Legend />
                     <ReferenceLine x={0} stroke="var(--text-muted)" strokeWidth={2} />
-                    <Bar dataKey="femaleNeg" name="Femmes" fill="#F59E0B" radius={[8, 0, 0, 8]} />
-                    <Bar dataKey="male"      name="Hommes" fill="#10B981" radius={[0, 8, 8, 0]} />
+                    <Bar isAnimationActive={false} maxBarSize={32} background={{fill:chartTheme.track,radius:8}} dataKey="femaleNeg" name="Femmes" fill="var(--mustard)" radius={[8, 0, 0, 8]} />
+                    <Bar isAnimationActive={false} maxBarSize={32} background={{fill:chartTheme.track,radius:8}} dataKey="male"      name="Hommes" fill="var(--green)" radius={[0, 8, 8, 0]} />
                   </BarChart>
                 );
               })()}
@@ -598,10 +583,10 @@ export default function EmployeeAnalyticsPage() {
         </div>
 
         {/* 🆕 Veille Départs à la Retraite */}
-        <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
+        <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm reports-card">
           <div className="flex items-center justify-between mb-1">
-            <h3 className="text-lg font-bold text-[var(--text)] flex items-center gap-2">
-              <Hourglass size={20} className="text-amber-500" />
+            <h3 id="report-section-6" tabIndex={-1} className="text-lg font-semibold text-[var(--text)] flex items-center gap-2">
+              <Hourglass strokeWidth={1.5} size={20} className="text-[var(--warning-text)]" />
               Veille Départs à la Retraite
             </h3>
           </div>
@@ -611,25 +596,25 @@ export default function EmployeeAnalyticsPage() {
 
           {(!data?.retirementWatch || (data.retirementWatch.critical.length === 0 && data.retirementWatch.upcoming.length === 0)) ? (
             <div className="flex flex-col items-center justify-center py-10 text-center">
-              <CheckCircle2 size={32} className="text-emerald-400" />
+              <CheckCircle2 strokeWidth={1.5} size={32} className="text-[var(--action)]" />
               <p className="text-sm text-[var(--text-muted)] mt-3">Aucun départ à la retraite à anticiper dans les 5 prochaines années.</p>
             </div>
           ) : (
             <div className="space-y-5 max-h-[320px] overflow-y-auto pr-1">
               {data.retirementWatch.critical.length > 0 && (
                 <div>
-                  <p className="text-xs font-black uppercase tracking-wider text-red-500 mb-2 flex items-center gap-1.5">
-                    <AlertTriangle size={13} /> Critique — {data.retirementWatch.critical.length} à préparer en priorité
+                  <p className="text-xs font-semibold   text-[var(--danger-text)] mb-2 flex items-center gap-1.5">
+                    <AlertTriangle strokeWidth={1.5} size={13} /> Critique — {data.retirementWatch.critical.length} à préparer en priorité
                   </p>
                   <div className="space-y-2">
                     {data.retirementWatch.critical.map((e: RetirementCandidate) => (
-                      <div key={e.id} className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 rounded-xl">
+                      <div key={e.id} className="flex items-center justify-between p-3 bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] border border-[var(--border)] rounded-xl">
                         <div>
-                          <p className="text-sm font-bold text-[var(--text)]">{e.name}</p>
+                          <p className="text-sm font-semibold text-[var(--text)]">{e.name}</p>
                           <p className="text-xs text-[var(--text-muted)]">{e.position}{e.department ? ` · ${e.department}` : ''}</p>
                         </div>
                         <div className="text-right shrink-0 ml-3">
-                          <p className="text-sm font-black text-red-600 dark:text-red-400">{e.yearsRemaining === 0 ? 'Éligible' : `${e.yearsRemaining} an${e.yearsRemaining > 1 ? 's' : ''}`}</p>
+                          <p className="text-sm font-semibold text-[var(--danger-text)]">{e.yearsRemaining === 0 ? 'Éligible' : `${e.yearsRemaining} an${e.yearsRemaining > 1 ? 's' : ''}`}</p>
                           <p className="text-[11px] text-[var(--text-muted)]">{e.age} ans</p>
                         </div>
                       </div>
@@ -640,18 +625,18 @@ export default function EmployeeAnalyticsPage() {
 
               {data.retirementWatch.upcoming.length > 0 && (
                 <div>
-                  <p className="text-xs font-black uppercase tracking-wider text-amber-500 mb-2 flex items-center gap-1.5">
-                    <Hourglass size={13} /> À anticiper — {data.retirementWatch.upcoming.length}
+                  <p className="text-xs font-semibold   text-[var(--warning-text)] mb-2 flex items-center gap-1.5">
+                    <Hourglass strokeWidth={1.5} size={13} /> À anticiper — {data.retirementWatch.upcoming.length}
                   </p>
                   <div className="space-y-2">
                     {data.retirementWatch.upcoming.map((e: RetirementCandidate) => (
-                      <div key={e.id} className="flex items-center justify-between p-3 bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-500/20 rounded-xl">
+                      <div key={e.id} className="flex items-center justify-between p-3 bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] border border-[var(--border)] rounded-xl">
                         <div>
-                          <p className="text-sm font-bold text-[var(--text)]">{e.name}</p>
+                          <p className="text-sm font-semibold text-[var(--text)]">{e.name}</p>
                           <p className="text-xs text-[var(--text-muted)]">{e.position}{e.department ? ` · ${e.department}` : ''}</p>
                         </div>
                         <div className="text-right shrink-0 ml-3">
-                          <p className="text-sm font-black text-amber-600 dark:text-amber-400">{e.yearsRemaining} ans</p>
+                          <p className="text-sm font-semibold text-[var(--warning-text)]">{e.yearsRemaining} ans</p>
                           <p className="text-[11px] text-[var(--text-muted)]">{e.age} ans</p>
                         </div>
                       </div>
@@ -666,22 +651,22 @@ export default function EmployeeAnalyticsPage() {
 
       {/* 🆕 RÉPARTITIONS AVANCÉES */}
       <div>
-        <h3 className="text-lg font-bold text-[var(--text)] mb-1">Répartitions Avancées</h3>
+        <h3 id="report-section-7" tabIndex={-1} className="text-lg font-semibold text-[var(--text)] mb-1">Répartitions Avancées</h3>
         <p className="text-sm text-[var(--text-muted)] mb-4">Contrat, nationalité et catégorie conventionnelle</p>
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
 
           {/* Type de contrat */}
-          <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
-            <h4 className="text-base font-bold text-[var(--text)] mb-5">Répartition par Type de Contrat</h4>
+          <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm reports-card">
+            <h4 className="text-base font-semibold text-[var(--text)] mb-5">Répartition par Type de Contrat</h4>
             <div className="h-[280px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart layout="vertical" data={data?.byContractType || []} margin={{ left: 10, right: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+
                   <XAxis type="number" hide />
                   <YAxis dataKey="label" type="category" width={90} axisLine={false} tickLine={false} />
-                  <Tooltip contentStyle={{ backgroundColor: '#1f2937', color: '#fff', borderRadius: '12px', border: 'none' }} />
-                  <Bar dataKey="count" name="Employés" radius={[0, 8, 8, 0]}>
+                  <Tooltip contentStyle={chartTheme.tooltip} />
+                  <Bar isAnimationActive={false} maxBarSize={32} background={{fill:chartTheme.track,radius:8}} dataKey="count" name="Employés" radius={[0, 8, 8, 0]}>
                     {(data?.byContractType || []).map((_: ContractTypeData, idx: number) => (
                       <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
                     ))}
@@ -692,10 +677,10 @@ export default function EmployeeAnalyticsPage() {
           </div>
 
           {/* 🆕 Nationalité — détail réel par pays, cliquable pour voir la liste */}
-          <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
+          <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm reports-card">
             <div className="flex items-center justify-between mb-1">
-              <h4 className="text-base font-bold text-[var(--text)] flex items-center gap-2">
-                <Globe size={17} className="text-[var(--brand)]" /> Répartition par Nationalité
+              <h4 className="text-base font-semibold text-[var(--text)] flex items-center gap-2">
+                <Globe strokeWidth={1.5} size={17} className="text-[var(--brand)]" /> Répartition par Nationalité
               </h4>
             </div>
             {data?.nationalitySummary && (
@@ -719,17 +704,17 @@ export default function EmployeeAnalyticsPage() {
                     if (label) openNationalityDetail(label);
                   }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+
                   <XAxis type="number" hide allowDecimals={false} />
                   <YAxis dataKey="label" type="category" width={110} axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
                   <Tooltip
-                    contentStyle={{ backgroundColor: '#1f2937', color: '#fff', borderRadius: '12px', border: 'none' }}
+                    contentStyle={chartTheme.tooltip}
                     formatter={(value: any, _name: any, item: any) => [
                       `${value} (${item?.payload?.male ?? 0} H · ${item?.payload?.female ?? 0} F)`,
                       'Employés',
                     ]}
                   />
-                  <Bar dataKey="count" name="Employés" radius={[0, 8, 8, 0]} cursor="pointer">
+                  <Bar isAnimationActive={false} maxBarSize={32} background={{fill:chartTheme.track,radius:8}} dataKey="count" name="Employés" radius={[0, 8, 8, 0]} cursor="pointer">
                     {(data?.byNationality || []).map((_: NationalityData, idx: number) => (
                       <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
                     ))}
@@ -740,9 +725,9 @@ export default function EmployeeAnalyticsPage() {
           </div>
 
           {/* Regroupement CSP */}
-          <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
+          <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm reports-card">
             <div className="flex items-center justify-between mb-1">
-              <h4 className="text-base font-bold text-[var(--text)]">Regroupement Socio-Professionnel (CSP)</h4>
+              <h4 className="text-base font-semibold text-[var(--text)]">Regroupement Socio-Professionnel (CSP)</h4>
             </div>
             {data?.hasConvention === false ? (
               <p className="text-sm text-[var(--text-muted)] py-10 text-center">
@@ -754,7 +739,7 @@ export default function EmployeeAnalyticsPage() {
                 <div className="h-[280px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Pie
+                      <Pie isAnimationActive={false} stroke="none" cornerRadius={6}
                         data={data?.csp || []}
                         dataKey="count"
                         nameKey="label"
@@ -768,7 +753,7 @@ export default function EmployeeAnalyticsPage() {
                           <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
                         ))}
                       </Pie>
-                      <Tooltip contentStyle={{ backgroundColor: '#1f2937', color: '#fff', borderRadius: '12px', border: 'none' }} />
+                      <Tooltip contentStyle={chartTheme.tooltip} />
                       <Legend />
                     </PieChart>
                   </ResponsiveContainer>
@@ -778,8 +763,8 @@ export default function EmployeeAnalyticsPage() {
           </div>
 
           {/* Catégorie / Échelon conventionnel */}
-          <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
-            <h4 className="text-base font-bold text-[var(--text)] mb-5">Effectif par Catégorie / Échelon</h4>
+          <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm reports-card">
+            <h4 className="text-base font-semibold text-[var(--text)] mb-5">Effectif par Catégorie / Échelon</h4>
             <div className="h-[280px] overflow-y-auto pr-1">
               {(data?.byCategory || []).length === 0 ? (
                 <p className="text-sm text-[var(--text-muted)] text-center py-10">Aucune catégorie renseignée pour le moment.</p>
@@ -812,35 +797,35 @@ export default function EmployeeAnalyticsPage() {
 
       {/* 🆕 KPI BILAN SOCIAL */}
       <div>
-        <h3 className="text-lg font-bold text-[var(--text)] mb-1">KPI Bilan Social</h3>
+        <h3 id="report-section-8" tabIndex={-1} className="text-lg font-semibold text-[var(--text)] mb-1">KPI Bilan Social</h3>
         <p className="text-sm text-[var(--text-muted)] mb-4">Turnover détaillé et absentéisme — indicateurs RH classiques</p>
 
         {/* Cartes Absentéisme */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-          <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-sm">
+          <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-sm reports-card">
             <div className="flex items-center gap-2 mb-2">
-              <Activity size={16} className="text-red-500" />
-              <span className="text-xs font-bold uppercase tracking-wide text-[var(--text-muted)]">Taux d'absentéisme</span>
+              <Activity strokeWidth={1.5} size={16} className="text-[var(--danger-text)]" />
+              <span className="text-xs font-semibold   text-[var(--text-muted)]">Taux d'absentéisme</span>
             </div>
-            <p className="text-3xl font-bold text-[var(--text)]">{data?.absenteeism?.rate ?? 0}%</p>
+            <p className="text-3xl font-semibold text-[var(--text)]">{data?.absenteeism?.rate ?? 0}%</p>
             <p className="text-xs text-[var(--text-muted)] mt-1">
               {data?.absenteeism?.totalAbsenceDays ?? 0} j. d'absence / {data?.absenteeism?.theoreticalWorkingDays ?? 0} j. ouvrés théoriques (12 mois)
             </p>
           </div>
-          <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-sm">
+          <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-sm reports-card">
             <div className="flex items-center gap-2 mb-2">
-              <Clock size={16} className="text-amber-500" />
-              <span className="text-xs font-bold uppercase tracking-wide text-[var(--text-muted)]">Durée moyenne d'absence</span>
+              <Clock strokeWidth={1.5} size={16} className="text-[var(--warning-text)]" />
+              <span className="text-xs font-semibold   text-[var(--text-muted)]">Durée moyenne d'absence</span>
             </div>
-            <p className="text-3xl font-bold text-[var(--text)]">{data?.absenteeism?.avgDurationDays ?? 0} j.</p>
+            <p className="text-3xl font-semibold text-[var(--text)]">{data?.absenteeism?.avgDurationDays ?? 0} j.</p>
             <p className="text-xs text-[var(--text-muted)] mt-1">{data?.absenteeism?.totalAbsenceCount ?? 0} absence(s) enregistrée(s) sur 12 mois</p>
           </div>
-          <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-sm">
+          <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-sm reports-card">
             <div className="flex items-center gap-2 mb-2">
-              <LogOut size={16} className="text-[var(--accent-2)]" />
-              <span className="text-xs font-bold uppercase tracking-wide text-[var(--text-muted)]">Motifs de départ enregistrés</span>
+              <LogOut strokeWidth={1.5} size={16} className="text-[var(--accent-2)]" />
+              <span className="text-xs font-semibold   text-[var(--text-muted)]">Motifs de départ enregistrés</span>
             </div>
-            <p className="text-3xl font-bold text-[var(--text)]">{data?.turnoverDetail?.recordedRuptures ?? 0}</p>
+            <p className="text-3xl font-semibold text-[var(--text)]">{data?.turnoverDetail?.recordedRuptures ?? 0}</p>
             <p className="text-xs text-[var(--text-muted)] mt-1">via le module rupture de contrat (12 mois)</p>
           </div>
         </div>
@@ -848,25 +833,25 @@ export default function EmployeeAnalyticsPage() {
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
 
           {/* Turnover mensuel */}
-          <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
-            <h4 className="text-base font-bold text-[var(--text)] mb-1">Turnover Mensuel (12 mois)</h4>
+          <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm reports-card">
+            <h4 className="text-base font-semibold text-[var(--text)] mb-1">Turnover Mensuel (12 mois)</h4>
             <p className="text-xs text-[var(--text-muted)] mb-5">Départs du mois / effectif moyen du mois × 100</p>
             <div className="h-[280px]">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={data?.turnoverDetail?.monthly || []} margin={{ left: 0, right: 10 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+
                   <XAxis dataKey="month" axisLine={false} tickLine={false} />
                   <YAxis axisLine={false} tickLine={false} unit="%" />
-                  <Tooltip contentStyle={{ backgroundColor: '#1f2937', color: '#fff', borderRadius: '12px', border: 'none' }} />
-                  <Line type="monotone" dataKey="rate" name="Turnover" stroke="#EF4444" strokeWidth={3} dot={{ r: 3 }} />
+                  <Tooltip contentStyle={chartTheme.tooltip} />
+                  <Line isAnimationActive={false} activeDot={{r:5,stroke:chartTheme.surface,strokeWidth:3}} type="monotone" dataKey="rate" name="Turnover" stroke="var(--danger)" strokeWidth={3} dot={{ r: 3 }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
           </div>
 
           {/* Turnover par motif */}
-          <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
-            <h4 className="text-base font-bold text-[var(--text)] mb-1">Départs par Motif (12 mois)</h4>
+          <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm reports-card">
+            <h4 className="text-base font-semibold text-[var(--text)] mb-1">Départs par Motif (12 mois)</h4>
             <p className="text-xs text-[var(--text-muted)] mb-5">Source : dossiers de rupture de contrat validés</p>
             {(data?.turnoverDetail?.byMotif || []).length === 0 ? (
               <p className="text-sm text-[var(--text-muted)] text-center py-16">Aucune rupture de contrat enregistrée sur les 12 derniers mois.</p>
@@ -874,11 +859,11 @@ export default function EmployeeAnalyticsPage() {
               <div className="h-[280px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart layout="vertical" data={data?.turnoverDetail?.byMotif || []} margin={{ left: 10, right: 20 }}>
-                    <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+
                     <XAxis type="number" hide />
                     <YAxis dataKey="label" type="category" width={140} axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
-                    <Tooltip contentStyle={{ backgroundColor: '#1f2937', color: '#fff', borderRadius: '12px', border: 'none' }} />
-                    <Bar dataKey="count" name="Départs" radius={[0, 8, 8, 0]}>
+                    <Tooltip contentStyle={chartTheme.tooltip} />
+                    <Bar isAnimationActive={false} maxBarSize={32} background={{fill:chartTheme.track,radius:8}} dataKey="count" name="Départs" radius={[0, 8, 8, 0]}>
                       {(data?.turnoverDetail?.byMotif || []).map((_: TurnoverMotif, idx: number) => (
                         <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
                       ))}
@@ -891,14 +876,14 @@ export default function EmployeeAnalyticsPage() {
 
           {/* Turnover par département */}
           {(data?.turnoverDetail?.byDepartment || []).length > 0 && (
-            <div className="xl:col-span-2 bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
-              <h4 className="text-base font-bold text-[var(--text)] mb-5">Départs par Département (12 mois)</h4>
+            <div className="xl:col-span-2 bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm reports-card">
+              <h4 className="text-base font-semibold text-[var(--text)] mb-5">Départs par Département (12 mois)</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {data!.turnoverDetail!.byDepartment.map((d: TurnoverByDept, idx: number) => (
                   <div key={d.department} className="flex items-center justify-between p-3 bg-[var(--surface-2)]/50 rounded-xl">
                     <span className="text-sm font-semibold text-[var(--text)]">{d.department}</span>
                     <span
-                      className="text-sm font-black px-2.5 py-0.5 rounded-full text-white"
+                      className="text-sm font-semibold px-2.5 py-0.5 rounded-full text-[var(--text)]"
                       style={{ backgroundColor: COLORS[idx % COLORS.length] }}
                     >
                       {d.count}
@@ -912,15 +897,15 @@ export default function EmployeeAnalyticsPage() {
       </div>
 
       {/* DISTRIBUTION PAR GENRE */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
-          <h3 className="text-lg font-bold text-[var(--text)] mb-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 reports-charts">
+        <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm reports-card">
+          <h3 id="report-section-9" tabIndex={-1} className="text-lg font-semibold text-[var(--text)] mb-4">
             Répartition par Genre
           </h3>
           <div className="h-[250px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie
+                <Pie isAnimationActive={false} stroke="none" cornerRadius={6}
                   data={[
                     { name: 'Hommes', value: data?.pyramid?.reduce((sum: number, age: PyramidData) => sum + age.male, 0) || 0 },
                     { name: 'Femmes', value: data?.pyramid?.reduce((sum: number, age: PyramidData) => sum + age.female, 0) || 0 }
@@ -932,24 +917,24 @@ export default function EmployeeAnalyticsPage() {
                   dataKey="value"
                   label
                 >
-                  <Cell fill="#10B981" />
-                  <Cell fill="#F59E0B" />
+                  <Cell fill="var(--green)" />
+                  <Cell fill="var(--mustard)" />
                 </Pie>
-                <Tooltip />
+                <Tooltip contentStyle={chartTheme.tooltip} />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        <div className="lg:col-span-2 bg-[var(--brand)] rounded-2xl p-6 text-white shadow-xl">
-          <h3 className="text-lg font-bold mb-1">Conseils RH — Assistant Effectifs</h3>
-          <p className="text-sm text-white/80 mb-4">Généré automatiquement à partir des données de {data?.selectedYear || new Date().getFullYear()}</p>
+        <div className="lg:col-span-2 bg-[var(--surface)] rounded-2xl p-6 text-[var(--text)] shadow-xl">
+          <h3 className="text-lg font-semibold mb-1">Conseils RH — Assistant Effectifs</h3>
+          <p className="text-sm text-[var(--text)] mb-4">Généré automatiquement à partir des données de {data?.selectedYear || new Date().getFullYear()}</p>
 
           <div className="space-y-4">
             {(!data?.insights || data.insights.length === 0) && (
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-                <p className="text-sm text-white/70 leading-relaxed">
+              <div className="bg-[color-mix(in_srgb,var(--surface)_10%,transparent)] rounded-xl p-4">
+                <p className="text-sm text-[var(--text)] leading-relaxed">
                   Pas encore assez de données pour générer des conseils. Revenez lorsque l'effectif aura un peu plus d'historique.
                 </p>
               </div>
@@ -957,12 +942,12 @@ export default function EmployeeAnalyticsPage() {
             {data?.insights?.map((insight: { type: 'success' | 'warning' | 'info'; title: string; message: string }, idx: number) => {
               const InsightIcon = insight.type === 'warning' ? AlertTriangle : insight.type === 'success' ? CheckCircle2 : Target;
               return (
-                <div key={idx} className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+                <div key={idx} className="bg-[color-mix(in_srgb,var(--surface)_10%,transparent)] rounded-xl p-4">
                   <div className="flex items-start gap-3">
                     <InsightIcon size={20} className="flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="font-bold mb-1">{insight.title}</p>
-                      <p className="text-sm text-white/70 leading-relaxed">{insight.message}</p>
+                      <p className="font-semibold mb-1">{insight.title}</p>
+                      <p className="text-sm text-[var(--text)] leading-relaxed">{insight.message}</p>
                     </div>
                   </div>
                 </div>
@@ -996,8 +981,8 @@ export default function EmployeeAnalyticsPage() {
             {nationalityEmployees.map((e) => (
               <div key={e.id} className="p-3 bg-[var(--surface-2)]/50 rounded-xl border border-[var(--border)]">
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-bold text-[var(--text)]">{e.name}</p>
-                  <span className="text-[10px] uppercase font-bold tracking-wide px-2 py-0.5 rounded-full bg-[var(--surface-2)] text-[var(--text)] shrink-0">
+                  <p className="text-sm font-semibold text-[var(--text)]">{e.name}</p>
+                  <span className="text-[10px]  font-semibold  px-2 py-0.5 rounded-full bg-[var(--surface-2)] text-[var(--text)] shrink-0">
                     {e.gender === 'MALE' ? 'H' : e.gender === 'FEMALE' ? 'F' : '—'}
                   </span>
                 </div>
@@ -1015,5 +1000,14 @@ export default function EmployeeAnalyticsPage() {
         )}
       </SlideOver>
     </div>
+  );
+}
+
+
+export default function EmployeeAnalyticsPageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <EmployeeAnalyticsPage />
+    </ModulePageFrame>
   );
 }

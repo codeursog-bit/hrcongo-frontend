@@ -1,4 +1,9 @@
 'use client';
+import '@/components/leave-history/leave-workspace.css';
+import { ModuleSelect } from '@/components/ui/ModuleSelect';
+import { LeaveModuleFrame as ModulePageFrame } from '@/components/leave-history/LeaveModuleFrame';
+import { ModulePageSkeleton } from '@/components/requests/ModulePageFrame';
+import { Button } from '@/components/design-system/primitives';
 
 // ============================================================================
 // 📁 app/(dashboard)/conges/gestion/page.tsx
@@ -80,9 +85,9 @@ const STATUS_LABELS: Record<string, string> = {
   PENDING: 'En attente', APPROVED: 'Approuvé', REJECTED: 'Refusé', CANCELLED: 'Annulé',
 };
 const STATUS_COLORS: Record<string, string> = {
-  PENDING: 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400',
-  APPROVED: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400',
-  REJECTED: 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400',
+  PENDING: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)]  ',
+  APPROVED: 'bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))] text-[var(--action)]  ',
+  REJECTED: 'bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] text-[var(--danger-text)]  ',
   CANCELLED: 'bg-[var(--surface-2)] text-[var(--text-muted)]',
 };
 
@@ -93,6 +98,7 @@ function fmtDate(d: string) {
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function GestionCongesPage() {
+  const [uiLoadError,setUiLoadError]=useState('');
   const { bp } = useBasePath();
   const [userRole, setUserRole] = useState('');
   const [overview, setOverview] = useState<Overview | null>(null);
@@ -146,7 +152,7 @@ export default function GestionCongesPage() {
       const data = await api.get<Overview>(`/leaves/management-overview?${params.toString()}`);
       setOverview(data);
     } catch (e) {
-      console.error('Erreur chargement gestion congés', e);
+      console.error('Erreur chargement gestion congés', e); setUiLoadError('Le chargement a échoué. Réessayez dans un instant.');
     } finally {
       setIsLoading(false);
     }
@@ -227,11 +233,11 @@ export default function GestionCongesPage() {
   const kpis = overview?.kpis;
 
   return (
-    <div className="max-w-6xl mx-auto p-4 md:p-6">
+    <ModulePageFrame kind="list" error={uiLoadError}><div className="max-w-6xl mx-auto p-4 md:p-6">
       <CongeSubNav userRole={userRole} />
 
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[var(--text)]">Gestion des congés</h1>
+      <div className="mb-6 leave-header">
+        <h1 className="text-2xl font-semibold text-[var(--text)]">Gestion des congés</h1>
         <p className="text-sm text-[var(--text-muted)]">Vue d'ensemble congés et absences — filtrable par mois, type et statut</p>
       </div>
 
@@ -240,8 +246,8 @@ export default function GestionCongesPage() {
           au solde (voir la fiche congé), mais le RH doit s'en souvenir pour
           décider s'il replanifie un départ pour les jours non pris. ── */}
       {!!overview?.earlyReturns?.length && (
-        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl p-4 mb-6">
-          <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300 font-bold text-sm mb-3">
+        <div className="bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  border border-[var(--border)]  rounded-2xl p-4 mb-6">
+          <div className="flex items-center gap-2 text-[var(--warning-text)]  font-semibold text-sm mb-3">
             <Clock size={16} /> Retours anticipés — jours non pris à ne pas oublier ({overview.earlyReturns.length})
           </div>
           <div className="space-y-2">
@@ -254,91 +260,91 @@ export default function GestionCongesPage() {
                   </span>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
-                  <span className="text-amber-600 dark:text-amber-400 font-bold text-xs">{Math.round(er.forfeitedDays)}j non pris</span>
-                  <button
+                  <span className="text-[var(--warning-text)]  font-semibold text-xs">{Math.round(er.forfeitedDays)}j non pris</span>
+                  <Button variant="ghost"
                     onClick={() => openEmployeeHistory(er.employeeId)}
-                    className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline"
+                    className="text-xs font-semibold text-[var(--action)]  hover:underline"
                   >
                     Voir l'historique
-                  </button>
+                  </Button>
                 </div>
               </div>
             ))}
           </div>
-          <p className="text-[11px] text-amber-600/70 dark:text-amber-400/70 mt-3">
+          <p className="text-[11px] text-[var(--warning-text)]  mt-3">
             Purement informatif : ces jours ne sont pas reversés automatiquement au solde. C'est au RH de décider, au cas par cas, s'il replanifie un départ pour les jours non pris (via "Programme des départs" ou "Nouvelle demande").
           </p>
         </div>
       )}
 
       {/* KPI */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 leave-metrics">
         <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-4">
-          <div className="flex items-center gap-2 text-emerald-500 mb-1"><Umbrella size={16} /><span className="text-xs font-bold uppercase tracking-wider">En congé</span></div>
-          <p className="text-2xl font-bold text-[var(--text)]">{kpis?.onLeaveToday ?? '—'}</p>
+          <div className="flex items-center gap-2 text-[var(--action)] mb-1"><Umbrella size={16} /><span className="text-xs font-semibold uppercase tracking-wider">En congé</span></div>
+          <p className="text-2xl font-semibold text-[var(--text)]">{kpis?.onLeaveToday ?? '—'}</p>
           <p className="text-xs text-[var(--text-muted)]">aujourd'hui</p>
         </div>
         <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-4">
-          <div className="flex items-center gap-2 text-amber-500 mb-1"><UserCheck size={16} /><span className="text-xs font-bold uppercase tracking-wider">En absence</span></div>
-          <p className="text-2xl font-bold text-[var(--text)]">{kpis?.onAbsenceToday ?? '—'}</p>
+          <div className="flex items-center gap-2 text-[var(--warning-text)] mb-1"><UserCheck size={16} /><span className="text-xs font-semibold uppercase tracking-wider">En absence</span></div>
+          <p className="text-2xl font-semibold text-[var(--text)]">{kpis?.onAbsenceToday ?? '—'}</p>
           <p className="text-xs text-[var(--text-muted)]">
             dont {kpis?.absencePaidToday ?? 0} payée(s) · {kpis?.absenceUnpaidToday ?? 0} non payée(s)
           </p>
         </div>
         <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-4">
-          <div className="flex items-center gap-2 text-amber-500 mb-1"><Clock size={16} /><span className="text-xs font-bold uppercase tracking-wider">En attente</span></div>
-          <p className="text-2xl font-bold text-[var(--text)]">{kpis?.pendingRequests ?? '—'}</p>
+          <div className="flex items-center gap-2 text-[var(--warning-text)] mb-1"><Clock size={16} /><span className="text-xs font-semibold uppercase tracking-wider">En attente</span></div>
+          <p className="text-2xl font-semibold text-[var(--text)]">{kpis?.pendingRequests ?? '—'}</p>
           <p className="text-xs text-[var(--text-muted)]">demande(s) à traiter</p>
         </div>
         <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-4">
-          <div className="flex items-center gap-2 text-emerald-500 mb-1"><CalendarCheck size={16} /><span className="text-xs font-bold uppercase tracking-wider">Jours validés</span></div>
-          <p className="text-2xl font-bold text-[var(--text)]">{kpis?.daysApprovedThisPeriod ?? '—'}</p>
+          <div className="flex items-center gap-2 text-[var(--action)] mb-1"><CalendarCheck size={16} /><span className="text-xs font-semibold uppercase tracking-wider">Jours validés</span></div>
+          <p className="text-2xl font-semibold text-[var(--text)]">{kpis?.daysApprovedThisPeriod ?? '—'}</p>
           <p className="text-xs text-[var(--text-muted)]">ce mois</p>
         </div>
       </div>
 
       {/* Filtres */}
-      <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-4 mb-4 flex flex-wrap items-center gap-2">
+      <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-4 mb-4 flex flex-wrap items-center gap-2 leave-period-bar">
         <Filter size={16} className="text-[var(--text-muted)]" />
-        <select value={month} onChange={e => setMonth(Number(e.target.value))} className="text-sm border border-[var(--border)] bg-[var(--surface)] rounded-lg px-2 py-1.5">
+        <ModuleSelect value={month} onChange={e => setMonth(Number(e.target.value))} className="text-sm border border-[var(--border)] bg-[var(--surface)] rounded-lg px-2 py-1.5">
           {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
             <option key={m} value={m}>{new Date(2000, m - 1, 1).toLocaleDateString('fr-FR', { month: 'long' })}</option>
           ))}
-        </select>
-        <select value={year} onChange={e => setYear(Number(e.target.value))} className="text-sm border border-[var(--border)] bg-[var(--surface)] rounded-lg px-2 py-1.5">
+        </ModuleSelect>
+        <ModuleSelect value={year} onChange={e => setYear(Number(e.target.value))} className="text-sm border border-[var(--border)] bg-[var(--surface)] rounded-lg px-2 py-1.5">
           {[now.getFullYear() - 1, now.getFullYear(), now.getFullYear() + 1].map(y => <option key={y} value={y}>{y}</option>)}
-        </select>
-        <select value={typeFilter} onChange={e => { setTypeFilter(e.target.value); setSubTypeFilter(''); }} className="text-sm border border-[var(--border)] bg-[var(--surface)] rounded-lg px-2 py-1.5">
+        </ModuleSelect>
+        <ModuleSelect value={typeFilter} onChange={e => { setTypeFilter(e.target.value); setSubTypeFilter(''); }} className="text-sm border border-[var(--border)] bg-[var(--surface)] rounded-lg px-2 py-1.5">
           <option value="">Tous les types</option>
           <option value="ANNUAL">Annuel</option>
           <option value="ANNUAL_ANTICIPATED">Annuel anticipé</option>
           <option value="CONVENTIONNELLE">Conventionnelle</option>
           <option value="EXCEPTIONNELLE">Exceptionnelle</option>
-        </select>
+        </ModuleSelect>
         {subTypeOptions.length > 0 && (
-          <select value={subTypeFilter} onChange={e => setSubTypeFilter(e.target.value)} className="text-sm border border-[var(--border)] bg-[var(--surface)] rounded-lg px-2 py-1.5">
+          <ModuleSelect value={subTypeFilter} onChange={e => setSubTypeFilter(e.target.value)} className="text-sm border border-[var(--border)] bg-[var(--surface)] rounded-lg px-2 py-1.5">
             <option value="">Tous les sous-motifs</option>
             {subTypeOptions.map(s => <option key={s} value={s}>{SUBTYPE_LABELS[s]}</option>)}
-          </select>
+          </ModuleSelect>
         )}
-        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="text-sm border border-[var(--border)] bg-[var(--surface)] rounded-lg px-2 py-1.5">
+        <ModuleSelect value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="text-sm border border-[var(--border)] bg-[var(--surface)] rounded-lg px-2 py-1.5">
           <option value="">Tous les statuts</option>
           <option value="PENDING">En attente</option>
           <option value="APPROVED">Approuvé</option>
           <option value="REJECTED">Refusé</option>
-        </select>
+        </ModuleSelect>
       </div>
 
       {/* Liste */}
       <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
         {isLoading ? (
-          <KonzaLoader variant="section" />
+          <ModulePageSkeleton />
         ) : !overview?.events.length ? (
           <div className="text-center py-16 text-[var(--text-muted)] text-sm">Aucune demande sur cette période avec ces filtres.</div>
         ) : (
-          <table className="w-full text-sm">
+          <div className="leave-table-scroll" tabIndex={0} role="region" aria-label="Tableau des congés défilant horizontalement"><table data-leave-table="true" className="w-full text-sm">
             <thead>
-              <tr className="text-left text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider border-b border-[var(--border)]">
+              <tr className="text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider border-b border-[var(--border)]">
                 <th className="px-4 py-3">Employé</th>
                 <th className="px-4 py-3">Type</th>
                 <th className="px-4 py-3">Période</th>
@@ -366,7 +372,7 @@ export default function GestionCongesPage() {
                         <span>{TYPE_LABELS[ev.type] || ev.type}{ev.subType ? ` · ${SUBTYPE_LABELS[ev.subType] || ev.subType}` : ''}</span>
                       </div>
                       {ev.kind === 'ABSENCE' && (
-                        <span className={`inline-flex items-center gap-1 mt-1 text-[10px] font-semibold ${ev.isPaid ? 'text-emerald-500' : 'text-[var(--text-muted)]'}`}>
+                        <span className={`inline-flex items-center gap-1 mt-1 text-[10px] font-semibold ${ev.isPaid ? 'text-[var(--action)]' : 'text-[var(--text-muted)]'}`}>
                           {ev.isPaid ? <Unlock size={10} /> : <Lock size={10} />} {ev.isPaid ? 'Compté présent' : 'Compté absent'}
                         </span>
                       )}
@@ -375,14 +381,14 @@ export default function GestionCongesPage() {
                       {fmtDate(ev.startDate)} → {fmtDate(ev.endDate)}
                       {ev.kind === 'LEAVE' && ev.returnConfirmed && Number(ev.forfeitedDays) > 0 && (
                         <div className="mt-1">
-                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-1.5 py-0.5 rounded">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[var(--warning-text)]  bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  px-1.5 py-0.5 rounded">
                             ↩ Retour anticipé le {fmtDate(ev.actualReturnDate!)} · {Math.round(Number(ev.forfeitedDays))}j non pris
                           </span>
                         </div>
                       )}
                       {ev.kind === 'LEAVE' && ev.isCarryover && (
                         <div className="mt-1">
-                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-1.5 py-0.5 rounded">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[var(--action)]  bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))]  px-1.5 py-0.5 rounded">
                             Rattrapage — non payé
                           </span>
                         </div>
@@ -399,7 +405,7 @@ export default function GestionCongesPage() {
                 );
               })}
             </tbody>
-          </table>
+          </table></div>
         )}
       </div>
 
@@ -408,7 +414,7 @@ export default function GestionCongesPage() {
         {selectedEmployeeId && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/40 flex justify-end"
+            className="fixed inset-0 z-50 bg-[rgb(0_0_0_/.48)] flex justify-end"
             onClick={() => setSelectedEmployeeId(null)}
           >
             <motion.div
@@ -418,18 +424,18 @@ export default function GestionCongesPage() {
               onClick={e => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-bold text-[var(--text)]">Historique congés</h2>
-                <button onClick={() => setSelectedEmployeeId(null)} className="p-2 rounded-lg hover:bg-[var(--surface-2)]">
+                <h2 className="text-lg font-semibold text-[var(--text)]">Historique congés</h2>
+                <Button variant="ghost" onClick={() => setSelectedEmployeeId(null)} className="p-2 rounded-lg hover:bg-[var(--surface-2)]">
                   <X size={18} />
-                </button>
+                </Button>
               </div>
 
               {isLoadingHistory ? (
-                <KonzaLoader variant="section" />
+                <ModulePageSkeleton />
               ) : history ? (
                 <>
                   <div className="mb-6">
-                    <p className="font-bold text-[var(--text)]">{history.employee.firstName} {history.employee.lastName}</p>
+                    <p className="font-semibold text-[var(--text)]">{history.employee.firstName} {history.employee.lastName}</p>
                     <p className="text-sm text-[var(--text-muted)]">{history.employee.department?.name || history.employee.position}</p>
                   </div>
                   <div className="space-y-3">
@@ -450,29 +456,29 @@ export default function GestionCongesPage() {
                           <p className="text-xs text-[var(--text-muted)]">{fmtDate(h.startDate)} → {fmtDate(h.endDate)} · {Math.round(Number(h.daysCount))}j</p>
                           {h.reason && <p className="text-xs text-[var(--text-muted)] mt-1 italic">"{h.reason}"</p>}
                           {h.kind === 'LEAVE' && h.returnConfirmed && Number(h.forfeitedDays) > 0 && (
-                            <p className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 inline-block px-1.5 py-0.5 rounded mt-1">
+                            <p className="text-[11px] font-semibold text-[var(--warning-text)]  bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  inline-block px-1.5 py-0.5 rounded mt-1">
                               ↩ Retour anticipé le {fmtDate(h.actualReturnDate)} · {Math.round(Number(h.forfeitedDays))}j non pris
                             </p>
                           )}
                           {h.kind === 'LEAVE' && h.isCarryover && (
-                            <p className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 inline-block px-1.5 py-0.5 rounded mt-1 ml-1">
+                            <p className="text-[11px] font-semibold text-[var(--action)]  bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))]  inline-block px-1.5 py-0.5 rounded mt-1 ml-1">
                               Rattrapage — non payé
                             </p>
                           )}
                           {canManage && h.kind === 'LEAVE' && (
                             <div className="flex items-center gap-1 mt-2 pt-2 border-t border-[var(--border)]">
-                              <button
+                              <Button variant="ghost"
                                 onClick={() => openEditItem(h)}
-                                className="text-xs font-semibold px-2 py-1 rounded-lg text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 flex items-center gap-1"
+                                className="text-xs font-semibold px-2 py-1 rounded-lg text-[var(--action)]  hover:bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))]  flex items-center gap-1"
                               >
                                 <Pencil size={12} /> Modifier
-                              </button>
-                              <button
+                              </Button>
+                              <Button variant="ghost"
                                 onClick={() => { setDeleteError(''); setDeletingItem(h); }}
-                                className="text-xs font-semibold px-2 py-1 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-1"
+                                className="text-xs font-semibold px-2 py-1 rounded-lg text-[var(--danger-text)]  hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  flex items-center gap-1"
                               >
                                 <Trash2 size={12} /> Supprimer
-                              </button>
+                              </Button>
                             </div>
                           )}
                         </div>
@@ -487,13 +493,13 @@ export default function GestionCongesPage() {
       </AnimatePresence>
 
       {editingItem && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[60] p-4">
+        <div className="fixed inset-0 bg-[rgb(0_0_0_/.48)] flex items-center justify-center z-[60] p-4">
           <div className="bg-[var(--surface)] rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-[var(--text)]">Modifier ce congé</h2>
-              <button onClick={() => setEditingItem(null)} className="text-[var(--text-muted)] hover:text-[var(--text)]">
+              <h2 className="text-lg font-semibold text-[var(--text)]">Modifier ce congé</h2>
+              <Button variant="ghost" onClick={() => setEditingItem(null)} className="text-[var(--text-muted)] hover:text-[var(--text)]">
                 <X size={20} />
-              </button>
+              </Button>
             </div>
             <p className="text-xs text-[var(--text-muted)]">
               Modifie directement cette demande — dates/type ajustés sur la même ligne, sans jamais en créer une nouvelle ni impacter le calendrier en double.
@@ -501,14 +507,14 @@ export default function GestionCongesPage() {
             <div className="space-y-3">
               <div>
                 <label className="text-xs font-semibold text-[var(--text-muted)]">Type</label>
-                <select
+                <ModuleSelect
                   value={editForm.type}
                   onChange={e => setEditForm(f => ({ ...f, type: e.target.value as any }))}
                   className="mt-1 w-full text-sm border border-[var(--border)] bg-[var(--surface)] rounded-lg px-3 py-2"
                 >
                   <option value="ANNUAL">Annuel</option>
                   <option value="ANNUAL_ANTICIPATED">Annuel anticipé</option>
-                </select>
+                </ModuleSelect>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -531,51 +537,51 @@ export default function GestionCongesPage() {
                 </div>
               </div>
             </div>
-            {editError && <div className="text-xs text-red-500">{editError}</div>}
+            {editError && <div className="text-xs text-[var(--danger-text)]">{editError}</div>}
             <div className="flex justify-end gap-2 pt-2">
-              <button onClick={() => setEditingItem(null)} className="px-4 py-2 text-sm font-semibold rounded-lg text-[var(--text-muted)] hover:bg-[var(--surface-2)]">
+              <Button variant="ghost" onClick={() => setEditingItem(null)} className="px-4 py-2 text-sm font-semibold rounded-lg text-[var(--text-muted)] hover:bg-[var(--surface-2)]">
                 Annuler
-              </button>
-              <button
+              </Button>
+              <Button variant="primary"
                 onClick={saveEditItem}
                 disabled={isSavingEdit}
-                className="px-4 py-2 text-sm font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-2 disabled:opacity-40"
+                className="px-4 py-2 text-sm font-semibold rounded-lg bg-[var(--brand)] hover:bg-[var(--brand)] text-[var(--on-brand)] flex items-center gap-2 disabled:opacity-40"
               >
                 {isSavingEdit ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Enregistrer
-              </button>
+              </Button>
             </div>
           </div>
         </div>
       )}
 
       {deletingItem && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[60] p-4">
+        <div className="fixed inset-0 bg-[rgb(0_0_0_/.48)] flex items-center justify-center z-[60] p-4">
           <div className="bg-[var(--surface)] rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-900/30 text-red-600 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  text-[var(--danger-text)] flex items-center justify-center shrink-0">
                 <AlertTriangle size={20} />
               </div>
-              <h2 className="text-lg font-bold text-[var(--text)]">Supprimer ce congé ?</h2>
+              <h2 className="text-lg font-semibold text-[var(--text)]">Supprimer ce congé ?</h2>
             </div>
             <p className="text-sm text-[var(--text-muted)]">
               Le congé du {fmtDate(deletingItem.startDate)} au {fmtDate(deletingItem.endDate)} sera définitivement supprimé et le solde restauré s'il avait déjà été approuvé. Cette action est irréversible.
             </p>
-            {deleteError && <div className="text-xs text-red-500">{deleteError}</div>}
+            {deleteError && <div className="text-xs text-[var(--danger-text)]">{deleteError}</div>}
             <div className="flex justify-end gap-2 pt-2">
-              <button onClick={() => setDeletingItem(null)} className="px-4 py-2 text-sm font-semibold rounded-lg text-[var(--text-muted)] hover:bg-[var(--surface-2)]">
+              <Button variant="ghost" onClick={() => setDeletingItem(null)} className="px-4 py-2 text-sm font-semibold rounded-lg text-[var(--text-muted)] hover:bg-[var(--surface-2)]">
                 Annuler
-              </button>
-              <button
+              </Button>
+              <Button variant="ghost"
                 onClick={confirmDeleteItem}
                 disabled={isDeletingItem}
-                className="px-4 py-2 text-sm font-bold rounded-lg bg-red-600 hover:bg-red-700 text-white flex items-center gap-2 disabled:opacity-40"
+                className="px-4 py-2 text-sm font-semibold rounded-lg bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] text-[var(--danger-text)] flex items-center gap-2 disabled:opacity-40"
               >
                 {isDeletingItem ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />} Supprimer
-              </button>
+              </Button>
             </div>
           </div>
         </div>
       )}
-    </div>
+    </div></ModulePageFrame>
   );
 }

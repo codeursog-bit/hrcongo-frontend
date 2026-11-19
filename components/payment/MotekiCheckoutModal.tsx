@@ -31,7 +31,7 @@ const OPERATOR_LABELS: Record<string, string> = {
 };
 
 export interface MotekiCheckoutModalProps {
-  plan: 'BASIC' | 'PRO' | 'ENTERPRISE';
+  plan: 'STARTER' | 'BASIC' | 'PRO' | 'ENTERPRISE';
   billingPeriod: 'monthly' | 'yearly';
   planLabel: string;
   amount: number;

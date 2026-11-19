@@ -11,12 +11,16 @@
 import { usesStandardData } from '@/lib/document-template';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  Loader2, Check, X, Clock, CheckCircle2, XCircle, Ban, Filter, Users2,
-  Eye, Printer, Download, ShieldCheck, Landmark, LayoutGrid, List,
+  Loader2, Check, X, Eye, Printer, Download, LayoutGrid, List,
 } from 'lucide-react';
-import {
-  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-} from 'recharts';
+import { ListPage } from '@/components/templates';
+import { Button, Card, EmptyState, Select, Skeleton } from '@/components/design-system/primitives';
+import { useToast } from '@/components/design-system/feedback';
+import { RequestStatusBadge, RequestDecisionPanel } from '@/components/requests';
+import { requestStatus, requestTabs, type RequestGroup } from '@/lib/request-status';
+import { LoanSpaceKpi } from '@/components/loans/LoanSpaceView';
+import { LoanValidationChart } from '@/components/loans/LoanValidationCharts';
+import '@/components/loans/loan-validations.css';
 import { api } from '@/services/api';
 import { sanitizeOrcaHtml } from '@/lib/sanitize-html';
 import FinanceSubNav from '@/components/FinanceSubNav';
@@ -29,32 +33,22 @@ import ApprovalPanel from '@/components/approvals/ApprovalPanel';
 import { useApprovalDecision } from '@/hooks/useApprovalDecision';
 import { useDocSignatures } from '@/hooks/useDocSignatures';
 import type { ApprovalStateView } from '@/services/approvals';
-import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 const DRH_ROLES = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'];
 const TYPE_LABEL: Record<string, string> = { ARGENT: 'Prêt argent', MARCHANDISE: 'Marchandise', AUTRE: 'Autre prêt', AVANCE: 'Avance sur salaire' };
 const NATURE_LABEL: Record<string, string> = { SOCIAL: 'Prêt social', SCOLARITE: 'Prêt scolarité', LOGEMENT: 'Prêt logement', EXCEPTIONNEL: 'Prêt exceptionnel', AUTRE: 'Autre' };
 const fmt = (n: number) => Math.round(n).toLocaleString('fr-FR') + ' FCFA';
 
-const STATUS_CFG: Record<string, { label: string; cls: string; icon: any }> = {
-  PENDING:    { label: 'En attente', cls: 'bg-amber-50 text-amber-700 border-amber-100', icon: Clock },
-  PENDING_DG: { label: 'En attente', cls: 'bg-amber-50 text-amber-700 border-amber-100', icon: Clock },
-  ACTIVE:     { label: 'Validé',     cls: 'bg-emerald-50 text-emerald-700 border-emerald-100', icon: CheckCircle2 },
-  APPROVED:   { label: 'Validé',     cls: 'bg-emerald-50 text-emerald-700 border-emerald-100', icon: CheckCircle2 },
-  PAID:       { label: 'Soldé',      cls: 'bg-emerald-50 text-emerald-700 border-emerald-100', icon: CheckCircle2 },
-  DEDUCTED:   { label: 'Déduite',    cls: 'bg-emerald-50 text-emerald-700 border-emerald-100', icon: CheckCircle2 },
-  REJECTED:   { label: 'Refusé',     cls: 'bg-red-50 text-red-700 border-red-100', icon: XCircle },
-  CANCELLED:  { label: 'Annulé',     cls: 'bg-[var(--surface-2)] text-[var(--text-muted)]', icon: Ban },
-};
-
 export default function ValidationsPage() {
+  const toast = useToast();
+  const [loadError, setLoadError] = useState('');
   const [loans, setLoans] = useState<any[]>([]);
   const [advances, setAdvances] = useState<any[]>([]);
   const [company, setCompany] = useState<any>(null);
   const [userRole, setUserRole] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
-  const [statusFilter, setStatusFilter] = useState<'' | 'PENDING' | 'VALIDATED' | 'REJECTED'>('');
+  const [statusFilter, setStatusFilter] = useState<RequestGroup>('all');
   const [typeFilter, setTypeFilter] = useState('');
   const [deptFilter, setDeptFilter] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -80,11 +74,12 @@ export default function ValidationsPage() {
 
   const load = async () => {
     try {
+      setLoadError('');
       const [l, a, me]: any = await Promise.all([
         api.get('/loans'), api.get('/loans/advances'), api.get('/auth/me').catch(() => null),
       ]);
       setLoans(l || []); setAdvances(a || []); setCompany(me?.company ?? null);
-    } catch (e) { console.error('Erreur chargement validations', e); }
+    } catch (e) { console.error('Erreur chargement validations', e); setLoadError('Les demandes n’ont pas pu être chargées. Réessayez dans un instant.'); }
     finally { setIsLoading(false); }
   };
 
@@ -138,7 +133,7 @@ export default function ValidationsPage() {
   const departments = useMemo(() => Array.from(new Set(allRequests.map(r => r.employee?.department?.name).filter(Boolean))).sort(), [allRequests]);
 
   const filtered = useMemo(() => allRequests.filter(r =>
-    (!statusFilter || bucket(r.status) === statusFilter) &&
+    (statusFilter === 'all' || requestStatus(r.status).group === statusFilter) &&
     (!typeFilter || r.requestType === typeFilter) &&
     (!deptFilter || r.employee?.department?.name === deptFilter),
   ), [allRequests, statusFilter, typeFilter, deptFilter]);
@@ -172,11 +167,13 @@ export default function ValidationsPage() {
       if (out.outcome === 'CANCELLED') return;
       await load();
       if (out.outcome === 'WAITING') {
+        toast('info', 'Décision enregistrée, avis encore attendus');
         // On garde la fiche ouverte pour montrer « validée, en attente d'avis ».
         setRejectMode(false); setRejectionReason(''); setPanelKey(k => k + 1);
         return;
       }
       setSelected(null); setRejectMode(false); setRejectionReason('');
+      toast('success', isReject ? 'Demande refusée' : 'Demande approuvée');
     } catch (e: any) { alert(e?.message || 'Erreur'); } finally { setIsProcessing(false); }
   };
 
@@ -263,158 +260,46 @@ export default function ValidationsPage() {
     } catch (e: any) { alert(e?.message || 'Erreur'); } finally { setIsPreparingPrint(false); }
   };
 
-  if (isLoading) return <KonzaLoader variant="page" />;
-
-  return (
-    <div className="max-w-[1500px] mx-auto pb-24 space-y-6">
-      <FinanceSubNav userRole={userRole} />
-      <div>
-        <h1 className="text-xl font-bold text-[var(--text)]">Validations</h1>
-        <p className="text-sm text-[var(--text-muted)]">Toutes les demandes de prêts et avances, à valider ou refuser.</p>
-      </div>
-
-      {/* ══════════════════ KPI ══════════════════ */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-4">
-          <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-1">Total</p>
-          <p className="text-xl font-bold text-[var(--text)]">{kpis.total}</p>
-        </div>
-        <div className="bg-amber-50 dark:bg-amber-900/20 rounded-2xl border border-amber-100 dark:border-amber-900 p-4">
-          <p className="text-[11px] font-semibold text-amber-600 uppercase tracking-wide mb-1">En attente</p>
-          <p className="text-xl font-bold text-amber-700 dark:text-amber-300">{kpis.pending}</p>
-        </div>
-        <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl border border-emerald-100 dark:border-emerald-900 p-4">
-          <p className="text-[11px] font-semibold text-emerald-600 uppercase tracking-wide mb-1">Validées</p>
-          <p className="text-xl font-bold text-emerald-700 dark:text-emerald-300">{kpis.validated}</p>
-        </div>
-        <div className="bg-red-50 dark:bg-red-900/20 rounded-2xl border border-red-100 dark:border-red-900 p-4">
-          <p className="text-[11px] font-semibold text-red-600 uppercase tracking-wide mb-1">Refusées</p>
-          <p className="text-xl font-bold text-red-700 dark:text-red-300">{kpis.rejected}</p>
-        </div>
-      </div>
-
-      {/* ══════════════════ STATS ══════════════════ */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
-          <p className="text-sm font-bold text-[var(--text)] mb-4">Départements avec le plus de demandes</p>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={byDept} layout="vertical" margin={{ left: 24 }}>
-              <CartesianGrid strokeDasharray="3 3" opacity={0.2} horizontal={false} />
-              <XAxis type="number" fontSize={12} allowDecimals={false} />
-              <YAxis type="category" dataKey="departement" fontSize={12} width={110} />
-              <Tooltip />
-              <Bar dataKey="nombre" fill="#0ea5e9" radius={[0, 6, 6, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-        <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
-          <p className="text-sm font-bold text-[var(--text)] mb-4">Types de demande les plus fréquents</p>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={byType} layout="vertical" margin={{ left: 24 }}>
-              <CartesianGrid strokeDasharray="3 3" opacity={0.2} horizontal={false} />
-              <XAxis type="number" fontSize={12} allowDecimals={false} />
-              <YAxis type="category" dataKey="type" fontSize={12} width={110} />
-              <Tooltip />
-              <Bar dataKey="nombre" fill="#8b5cf6" radius={[0, 6, 6, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* ══════════════════ FILTRES ══════════════════ */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap gap-2">
-          <FilterSelect icon={Filter} value={statusFilter} onChange={(v: any) => setStatusFilter(v)} placeholder="Tous les statuts" options={[['PENDING', 'En attente'], ['VALIDATED', 'Validées'], ['REJECTED', 'Refusées']]} />
-          <FilterSelect icon={Filter} value={typeFilter} onChange={setTypeFilter} placeholder="Tous les types" options={Object.entries(TYPE_LABEL)} />
-          {departments.length > 0 && <FilterSelect icon={Users2} value={deptFilter} onChange={setDeptFilter} placeholder="Tous les départements" options={departments.map(d => [d, d] as [string, string])} />}
-        </div>
-        <div className="flex gap-1 bg-[var(--surface-2)] p-1 rounded-lg shrink-0">
-          <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded-md ${viewMode === 'grid' ? 'bg-[var(--surface)] shadow-sm text-[var(--text)]' : 'text-[var(--text-muted)]'}`} title="Vue grille"><LayoutGrid size={16} /></button>
-          <button onClick={() => setViewMode('list')} className={`p-1.5 rounded-md ${viewMode === 'list' ? 'bg-[var(--surface)] shadow-sm text-[var(--text)]' : 'text-[var(--text-muted)]'}`} title="Vue liste"><List size={16} /></button>
-        </div>
-      </div>
-
-      {/* ══════════════════ DEMANDES : GRILLE ══════════════════ */}
-      {viewMode === 'grid' && (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filtered.length === 0 ? (
-          <div className="col-span-full text-center py-16 bg-[var(--surface)] rounded-2xl border border-[var(--border)] text-sm text-[var(--text-muted)]">Aucune demande pour ce filtre.</div>
-        ) : filtered.map(r => {
-          const cfg = STATUS_CFG[r.status] ?? STATUS_CFG.PENDING;
-          const Icon = cfg.icon;
-          const isPending = bucket(r.status) === 'PENDING';
-          return (
-            <button key={`${r.kind}-${r.id}`} onClick={() => setSelected({ kind: r.kind, item: r })} className="text-left bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-4 hover:shadow-md hover:border-emerald-200 dark:hover:border-emerald-800 transition-all">
-              <div className="flex items-start justify-between mb-2">
-                <div>
-                  <p className="font-semibold text-[var(--text)] text-sm">{r.employee?.firstName} {r.employee?.lastName}</p>
-                  <p className="text-xs text-[var(--text-muted)]">{r.employee?.department?.name || '—'}</p>
-                </div>
-                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border flex items-center gap-1 shrink-0 ${cfg.cls}`}><Icon size={10} /> {cfg.label}</span>
-              </div>
-              <p className="text-xs text-[var(--text-muted)] mb-1">{TYPE_LABEL[r.requestType] ?? r.requestType}</p>
-              <p className="font-bold text-[var(--text)] mb-3">{fmt(Number(r.amount))}</p>
-              {isPending && DRH_ROLES.includes(userRole) ? (
-                <div className="flex gap-2">
-                  <button onClick={(e) => quickDecide(r, r.kind === 'loan' ? 'OUI' : 'APPROVED', e)} disabled={isProcessing} className="flex-1 py-1.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 text-white text-xs font-bold rounded-lg flex items-center justify-center gap-1"><Check size={13} /> Valider</button>
-                  <button onClick={(e) => quickDecide(r, r.kind === 'loan' ? 'NON' : 'REJECTED', e)} className="flex-1 py-1.5 border border-[var(--border)] hover:bg-red-50 hover:text-red-600 text-[var(--text-muted)] text-xs font-bold rounded-lg flex items-center justify-center gap-1"><X size={13} /> Refuser</button>
-                </div>
-              ) : (
-                <p className="text-[11px] text-[var(--text-muted)]">{new Date(r.createdAt).toLocaleDateString('fr-FR')}</p>
-              )}
-            </button>
-          );
-        })}
-      </div>
-      )}
-
-      {/* ══════════════════ DEMANDES : LISTE ══════════════════ */}
-      {viewMode === 'list' && (
-      <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden divide-y divide-[var(--border)]">
-        {filtered.length === 0 ? (
-          <div className="text-center py-16 text-sm text-[var(--text-muted)]">Aucune demande pour ce filtre.</div>
-        ) : filtered.map(r => {
-          const cfg = STATUS_CFG[r.status] ?? STATUS_CFG.PENDING;
-          const Icon = cfg.icon;
-          const isPending = bucket(r.status) === 'PENDING';
-          return (
-            <button key={`${r.kind}-${r.id}`} onClick={() => setSelected({ kind: r.kind, item: r })} className="w-full text-left flex flex-col sm:flex-row sm:items-center gap-3 p-4 hover:bg-[var(--surface-2)]/40 transition-colors">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <p className="font-semibold text-[var(--text)] text-sm">{r.employee?.firstName} {r.employee?.lastName}</p>
-                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border flex items-center gap-1 shrink-0 ${cfg.cls}`}><Icon size={10} /> {cfg.label}</span>
-                </div>
-                <p className="text-xs text-[var(--text-muted)]">{r.employee?.department?.name || '—'} · {TYPE_LABEL[r.requestType] ?? r.requestType} · {new Date(r.createdAt).toLocaleDateString('fr-FR')}</p>
-              </div>
-              <p className="font-bold text-[var(--text)] text-sm shrink-0">{fmt(Number(r.amount))}</p>
-              {isPending && DRH_ROLES.includes(userRole) && (
-                <div className="flex gap-2 shrink-0">
-                  <button onClick={(e) => quickDecide(r, r.kind === 'loan' ? 'OUI' : 'APPROVED', e)} disabled={isProcessing} className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 text-white text-xs font-bold rounded-lg flex items-center justify-center gap-1"><Check size={13} /> Valider</button>
-                  <button onClick={(e) => quickDecide(r, r.kind === 'loan' ? 'NON' : 'REJECTED', e)} className="px-3 py-1.5 border border-[var(--border)] hover:bg-red-50 hover:text-red-600 text-[var(--text-muted)] text-xs font-bold rounded-lg flex items-center justify-center gap-1"><X size={13} /> Refuser</button>
-                </div>
-              )}
-            </button>
-          );
-        })}
-      </div>
-      )}
-
-      {/* ══════════════════ MODAL DÉTAIL + DÉCISION ══════════════════ */}
+  useEffect(() => {
+    if (!selected || showPreviewModal || approvalDialog) return;
+    const dialog = document.querySelector<HTMLElement>('[data-loan-decision]');
+    const previous = document.activeElement as HTMLElement | null;
+    dialog?.focus();
+    const keydown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !isProcessing) { event.preventDefault(); setSelected(null); setRejectMode(false); setRejectionReason(''); }
+      if (event.key !== 'Tab' || !dialog) return;
+      const items = Array.from(dialog.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled), a[href], [tabindex="0"]')).filter(el => el.getClientRects().length && !el.closest('[aria-hidden="true"]'));
+      const first = items[0], last = items[items.length - 1];
+      if (!first) { event.preventDefault(); return; }
+      if (event.shiftKey && (document.activeElement === first || document.activeElement === dialog)) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    };
+    document.addEventListener('keydown', keydown);
+    return () => { document.removeEventListener('keydown', keydown); previous?.focus(); };
+  }, [selected?.item?.id, showPreviewModal, !!approvalDialog, isProcessing]);
+  if (isLoading) return <div className="loan-validations template-page" role="status" aria-label="Chargement des demandes à traiter"><Skeleton style={{height:36,width:240}} /><div className="validation-kpis">{[0,1,2,3].map(i => <Card key={i}><Skeleton /><Skeleton style={{height:32,marginTop:16}} /></Card>)}</div><div className="validation-charts">{[0,1].map(i => <Card key={i}><Skeleton style={{height:240}} /></Card>)}</div></div>;
+  return <div className="loan-validations"><ListPage title="Demandes à traiter" description="Prêts et avances : consulter les avis, approuver ou refuser." navigation={<FinanceSubNav userRole={userRole} />} error={loadError}
+    summary={<div className="validation-kpis"><LoanSpaceKpi label="Total" value={kpis.total} isCount /><LoanSpaceKpi label="En attente" value={kpis.pending} isCount tone="warning" /><LoanSpaceKpi label="Approuvées / soldées" value={kpis.validated} isCount tone="success" /><LoanSpaceKpi label="Refusées / annulées" value={kpis.rejected} isCount /></div>}>
+    <div className="validation-charts"><LoanValidationChart title="Départements avec le plus de demandes" data={byDept.map(d => ({label:d.departement,value:d.nombre}))} /><LoanValidationChart title="Types de demande les plus fréquents" color="green" data={byType.map(d => ({label:d.type,value:d.nombre}))} /></div>
+    <div className="request-tabs" role="group" aria-label="Filtrer par statut">{requestTabs.map(t => <button type="button" key={t.id} aria-pressed={statusFilter === t.id} onClick={() => setStatusFilter(t.id)}>{t.label}</button>)}</div>
+    <div className="validation-filter-bar"><Select label="Type de demande" value={typeFilter} onChange={e => setTypeFilter(e.target.value)}><option value="">Tous les types</option>{Object.entries(TYPE_LABEL).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</Select>{departments.length > 0 && <Select label="Département" value={deptFilter} onChange={e => setDeptFilter(e.target.value)}><option value="">Tous les départements</option>{departments.map(d => <option key={d} value={d}>{d}</option>)}</Select>}<div className="validation-views" role="group" aria-label="Affichage des demandes"><Button variant="secondary" aria-label="Vue grille" aria-pressed={viewMode === 'grid'} onClick={() => setViewMode('grid')}><LayoutGrid size={18} strokeWidth={1.5} /></Button><Button variant="secondary" aria-label="Vue liste" aria-pressed={viewMode === 'list'} onClick={() => setViewMode('list')}><List size={18} strokeWidth={1.5} /></Button></div></div>
+    {!filtered.length ? <Card><EmptyState title="Aucune demande à afficher pour ces filtres">Choisissez un autre statut ou un autre type pour retrouver les demandes.</EmptyState></Card> : <ul className={'validation-list ' + (viewMode === 'grid' ? 'validation-list-grid' : '')}>{filtered.map(r => <li key={r.kind + '-' + r.id} className="validation-request"><Card><button type="button" className="validation-request-open" onClick={() => setSelected({kind:r.kind,item:r})}><div className="validation-request-heading"><div><h2>{[r.employee?.firstName,r.employee?.lastName].filter(Boolean).join(' ') || 'Employé'}</h2><p>{r.employee?.department?.name || '—'}</p></div><RequestStatusBadge status={r.status} /></div><p>{TYPE_LABEL[r.requestType] ?? r.requestType}</p><strong>{fmt(Number(r.amount))}</strong><p><time>{new Date(r.createdAt).toLocaleDateString('fr-FR')}</time> · Ouvrir la demande</p></button>{bucket(r.status) === 'PENDING' && DRH_ROLES.includes(userRole) && <div className="validation-actions"><Button disabled={isProcessing} onClick={e => quickDecide(r,r.kind === 'loan' ? 'OUI' : 'APPROVED',e)}><Check size={16} strokeWidth={1.5} /> Approuver</Button><Button variant="secondary" onClick={e => quickDecide(r,r.kind === 'loan' ? 'NON' : 'REJECTED',e)}><X size={16} strokeWidth={1.5} /> Refuser</Button></div>}</Card></li>)}</ul>}
+  </ListPage>
       {selected && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => { setSelected(null); setRejectMode(false); setRejectionReason(''); }}>
-          <div onClick={e => e.stopPropagation()} className="bg-[var(--surface)] rounded-2xl shadow-2xl max-w-md w-full p-5">
-            <div className="flex items-center justify-between mb-4">
-              <p className="font-bold text-[var(--text)]">{selected.item.employee?.firstName} {selected.item.employee?.lastName}</p>
-              <button onClick={() => setSelected(null)} className="text-[var(--text-muted)] hover:text-[var(--text)]"><X size={20} /></button>
+        <div className="validation-dialog-overlay" onClick={() => { setSelected(null); setRejectMode(false); setRejectionReason(''); }}>
+          <div data-loan-decision role="dialog" aria-modal="true" aria-labelledby="validation-dialog-title" tabIndex={-1} onClick={e => e.stopPropagation()} className="validation-dialog">
+            <div className="validation-dialog-heading">
+              <p id="validation-dialog-title" className="font-bold text-[var(--text)]">{selected.item.employee?.firstName} {selected.item.employee?.lastName}</p>
+              <Button variant="secondary" aria-label="Fermer la demande" onClick={() => setSelected(null)} className="text-[var(--text-secondary)] hover:text-[var(--text)]"><X size={20} /></Button>
             </div>
 
-            <div className="space-y-2 text-sm mb-4">
+            <div className="validation-details">
               <Row label="Type" value={TYPE_LABEL[selected.kind === 'loan' ? (selected.item.type ?? 'ARGENT') : 'AVANCE']} />
               {selected.kind === 'loan' && selected.item.nature && <Row label="Nature" value={NATURE_LABEL[selected.item.nature] || selected.item.nature} />}
               <Row label="Montant" value={fmt(Number(selected.item.amount))} />
               {selected.kind === 'loan' && <Row label="Mensualité" value={fmt(Number(selected.item.monthlyRepayment))} />}
               <Row label="Département" value={selected.item.employee?.department?.name || '—'} />
-              <Row label="Statut" value={(STATUS_CFG[selected.item.status] ?? STATUS_CFG.PENDING).label} />
+              <Row label="Statut" value={<RequestStatusBadge status={selected.item.status} />} />
               <Row label="Mode de remboursement" value={selected.item.recoverViaPayroll ? 'Sur la paie' : 'Espèces'} />
               <Row label="Demandée le" value={new Date(selected.item.createdAt).toLocaleDateString('fr-FR')} />
               {selected.item.reason && <Row label="Motif" value={selected.item.reason} />}
@@ -422,61 +307,63 @@ export default function ValidationsPage() {
             </div>
 
             {/* ✅ LOT B — avis + historique (masqué si aucun circuit actif et rien à montrer) */}
-            <ApprovalPanel
+            <RequestDecisionPanel><div className="validation-approval"><ApprovalPanel
               kind={selected.kind}
               requestId={selected.item.id}
               refreshKey={panelKey}
               onState={setApprovalState}
               onChanged={() => { load(); }}
-            />
+            /></div>
+            {bucket(selected.item.status) !== 'PENDING' && <p className="k-help">Cette demande a déjà été traitée.</p>}
 
             {bucket(selected.item.status) === 'PENDING' && DRH_ROLES.includes(userRole) && (
               <div className="space-y-2 pt-3 border-t border-[var(--border)] mb-3">
                 {!rejectMode ? (
                   <>
                     <div>
-                      <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Remboursement</p>
+                      <p className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-1.5">Remboursement</p>
                       <div className="grid grid-cols-2 gap-2">
-                        <button
+                        <Button variant="secondary"
                           type="button"
-                          onClick={() => setRecoverViaPayroll(true)}
-                          className={`px-3 py-2 rounded-xl border-2 text-xs font-bold transition-all ${recoverViaPayroll ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300' : 'border-[var(--border)] text-[var(--text-muted)]'}`}
+                          aria-pressed={recoverViaPayroll} onClick={() => setRecoverViaPayroll(true)}
+                          className="validation-choice"
                         >
                           Sur la paie
-                        </button>
-                        <button
+                        </Button>
+                        <Button variant="secondary"
                           type="button"
-                          onClick={() => setRecoverViaPayroll(false)}
-                          className={`px-3 py-2 rounded-xl border-2 text-xs font-bold transition-all ${!recoverViaPayroll ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300' : 'border-[var(--border)] text-[var(--text-muted)]'}`}
+                          aria-pressed={!recoverViaPayroll} onClick={() => setRecoverViaPayroll(false)}
+                          className="validation-choice"
                         >
                           En espèces
-                        </button>
+                        </Button>
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      {!awaitingOpinions && <button onClick={() => handleDecision(selected.kind === 'loan' ? 'OUI' : 'APPROVED')} disabled={isProcessing} className="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2"><Check size={16} /> Valider</button>}
-                      <button onClick={() => setRejectMode(true)} className="flex-1 py-2.5 border border-[var(--border)] hover:bg-red-50 hover:text-red-600 text-[var(--text-muted)] text-sm font-bold rounded-xl flex items-center justify-center gap-2"><X size={16} /> Refuser</button>
+                      {!awaitingOpinions && <Button onClick={() => handleDecision(selected.kind === 'loan' ? 'OUI' : 'APPROVED')} disabled={isProcessing} className=""><Check strokeWidth={1.5} size={16} /> Approuver</Button>}
+                      <Button variant="secondary" onClick={() => setRejectMode(true)} className="flex-1 py-2.5 border border-[var(--border)] bg-[var(--surface-2)] text-[var(--danger-text)] text-[var(--text-secondary)] text-sm font-bold rounded-xl flex items-center justify-center gap-2"><X size={16} /> Refuser</Button>
                     </div>
                   </>
                 ) : (
                   <div className="space-y-2">
-                    <textarea value={rejectionReason} onChange={e => setRejectionReason(e.target.value)} placeholder="Motif du refus (obligatoire)" rows={2} className="w-full text-sm p-2 rounded-lg border border-[var(--border)] bg-[var(--surface)]" />
+                    <textarea aria-label="Motif du refus (obligatoire)" value={rejectionReason} onChange={e => setRejectionReason(e.target.value)} placeholder="Motif du refus (obligatoire)" rows={2} className="k-input" />
                     <div className="flex gap-2">
-                      <button onClick={() => handleDecision(selected.kind === 'loan' ? 'NON' : 'REJECTED')} disabled={isProcessing} className="flex-1 py-2 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white text-sm font-bold rounded-xl">Confirmer le refus</button>
-                      <button onClick={() => { setRejectMode(false); setRejectionReason(''); }} className="flex-1 py-2 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)]">Annuler</button>
+                      <Button variant="secondary" onClick={() => handleDecision(selected.kind === 'loan' ? 'NON' : 'REJECTED')} disabled={isProcessing} className="">Refuser</Button>
+                      <Button variant="secondary" onClick={() => { setRejectMode(false); setRejectionReason(''); }} className="flex-1 py-2 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-secondary)]">Annuler</Button>
                     </div>
                   </div>
                 )}
               </div>
             )}
 
-            <button onClick={() => setShowPreviewModal(true)} className="w-full py-2 border border-dashed border-[var(--border)] text-xs font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)] mb-2">
-              <Eye size={14} /> Aperçu de la fiche
-            </button>
+            </RequestDecisionPanel>
+            <Button variant="secondary" onClick={() => setShowPreviewModal(true)} className="w-full py-2 border border-dashed border-[var(--border)] text-xs font-semibold rounded-xl text-[var(--text-secondary)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)] mb-2">
+              <Eye strokeWidth={1.5} size={14} /> Aperçu de la fiche
+            </Button>
             <div className="flex gap-2">
-              <button onClick={() => setTimeout(() => printLoanDocument('val-print-target'), 50)} className="flex-1 py-2 border border-[var(--border)] text-xs font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-1.5 hover:bg-[var(--surface-2)]"><Printer size={13} /> Imprimer</button>
+              <Button variant="secondary" onClick={() => setTimeout(() => printLoanDocument('val-print-target'), 50)} className="flex-1 py-2 border border-[var(--border)] text-xs font-semibold rounded-xl text-[var(--text-secondary)] flex items-center justify-center gap-1.5 hover:bg-[var(--surface-2)]"><Printer strokeWidth={1.5} size={13} /> Imprimer</Button>
               {docData?.company?.documentTemplate === 'ORCA' && (
-                <button onClick={handleDownloadOrcaXlsx} disabled={isExportingXlsx} className="flex-1 py-2 border border-[var(--border)] text-xs font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-1.5 hover:bg-[var(--surface-2)] disabled:opacity-40">{isExportingXlsx ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />} Fiche Excel</button>
+                <Button variant="secondary" onClick={handleDownloadOrcaXlsx} disabled={isExportingXlsx} className="flex-1 py-2 border border-[var(--border)] text-xs font-semibold rounded-xl text-[var(--text-secondary)] flex items-center justify-center gap-1.5 hover:bg-[var(--surface-2)] disabled:opacity-40">{isExportingXlsx ? <Loader2 strokeWidth={1.5} size={13} className="animate-spin" /> : <Download strokeWidth={1.5} size={13} />} Fiche Excel</Button>
               )}
             </div>
 
@@ -498,8 +385,8 @@ export default function ValidationsPage() {
         </div>
       )}
 
-      {approvalDialog}
 
+  <div className="validation-orchestrator validation-approval">{approvalDialog}</div>
       <DocumentPreviewModal open={showPreviewModal} onClose={() => setShowPreviewModal(false)}>
         {selected && docData && (
           docData.company?.documentTemplate === 'ORCA' ? (
@@ -513,27 +400,6 @@ export default function ValidationsPage() {
           )
         )}
       </DocumentPreviewModal>
-    </div>
-  );
+  </div>;
 }
-
-function FilterSelect({ icon: IconEl, value, onChange, placeholder, options }: { icon: any; value: string; onChange: (v: string) => void; placeholder: string; options: [string, string][] }) {
-  return (
-    <div className="relative">
-      <IconEl size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" />
-      <select value={value} onChange={e => onChange(e.target.value)} className="pl-7 pr-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-xs">
-        <option value="">{placeholder}</option>
-        {options.map(([val, label]) => <option key={val} value={val}>{label}</option>)}
-      </select>
-    </div>
-  );
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between gap-3">
-      <span className="text-[var(--text-muted)]">{label}</span>
-      <span className="font-semibold text-[var(--text)] text-right">{value}</span>
-    </div>
-  );
-}
+function Row({label,value}: {label:string;value:React.ReactNode}) { return <div><span>{label}</span><span>{value}</span></div>; }

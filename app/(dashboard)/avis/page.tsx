@@ -7,7 +7,17 @@
 // ============================================================================
 
 import AvisInbox from '@/components/approvals/AvisInbox';
+import { ModulePageFrame } from '@/components/requests/ModulePageFrame';
 
-export default function AvisPage() {
+function AvisPage() {
   return <AvisInbox />;
+}
+
+
+export default function AvisPageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <AvisPage />
+    </ModulePageFrame>
+  );
 }

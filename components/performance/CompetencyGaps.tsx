@@ -20,7 +20,7 @@ interface Props {
   onChanged?: () => void;
 }
 
-const cardCls = 'bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm';
+const cardCls = 'bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm';
 
 function LevelBar({ current, required }: { current: number | null; required: number }) {
   return (
@@ -28,12 +28,12 @@ function LevelBar({ current, required }: { current: number | null; required: num
       <div className="grid grid-cols-5 gap-1">
         {[1, 2, 3, 4, 5].map(n => (
           <div key={n} className={`h-2.5 rounded-full ${current !== null && n <= current
-            ? (current >= required ? 'bg-emerald-500' : 'bg-amber-400')
-            : 'bg-gray-200 dark:bg-gray-700'}`} />
+            ? (current >= required ? 'bg-[var(--green)]' : 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]')
+            : 'bg-[var(--surface-2)]'}`} />
         ))}
       </div>
       {/* repère du niveau requis */}
-      <div className="absolute -top-1 h-4.5 w-0.5 bg-purple-600" style={{ left: `calc(${(required / 5) * 100}% - 3px)`, height: '18px' }} title={`Requis : ${required}`} />
+      <div className="absolute -top-1 h-4.5 w-0.5 bg-[var(--brand)]" style={{ left: `calc(${(required / 5) * 100}% - 3px)`, height: '18px' }} title={`Requis : ${required}`} />
     </div>
   );
 }
@@ -49,10 +49,10 @@ function Row({ row, mode, employeeId, onChanged, pendingLevel, onLevel }: {
 
   const levels = row.competency.levels ?? {};
   const state = row.current === null
-    ? { label: 'Non évalué', cls: 'bg-gray-100 dark:bg-gray-700 text-gray-500', icon: <Clock size={12} /> }
+    ? { label: 'Non évalué', cls: 'bg-[var(--surface-2)] text-[var(--text-secondary)]', icon: <Clock strokeWidth={1.5} size={12} /> }
     : row.gap > 0
-      ? { label: `Écart de ${row.gap}`, cls: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300', icon: <AlertTriangle size={12} /> }
-      : { label: 'Atteint', cls: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300', icon: <CheckCircle2 size={12} /> };
+      ? { label: `Écart de ${row.gap}`, cls: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)]', icon: <AlertTriangle strokeWidth={1.5} size={12} /> }
+      : { label: 'Atteint', cls: 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)]', icon: <CheckCircle2 strokeWidth={1.5} size={12} /> };
 
   const enroll = async (courseId: string) => {
     setBusy(courseId); setError(null);
@@ -70,31 +70,31 @@ function Row({ row, mode, employeeId, onChanged, pendingLevel, onLevel }: {
       <button type="button" onClick={() => setOpen(!open)} className="w-full text-left" aria-expanded={open}>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h3 className="font-bold text-gray-900 dark:text-white break-words">{row.competency.name}</h3>
-            <span className={`inline-block mt-1 px-2 py-0.5 rounded-md text-[11px] font-bold ${CATEGORY_CLS[row.competency.category]}`}>
+            <h3 className="font-semibold text-[var(--text)] break-words">{row.competency.name}</h3>
+            <span className={`inline-block mt-1 px-2 py-0.5 rounded-md text-[11px] font-semibold ${CATEGORY_CLS[row.competency.category]}`}>
               {CATEGORY_LABEL[row.competency.category]}
             </span>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <span className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 ${state.cls}`}>{state.icon} {state.label}</span>
-            <ChevronDown size={16} className={`text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`} />
+            <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 ${state.cls}`}>{state.icon} {state.label}</span>
+            <ChevronDown strokeWidth={1.5} size={16} className={`text-[var(--text-secondary)] transition-transform ${open ? 'rotate-180' : ''}`} />
           </div>
         </div>
         <div className="mt-4">
           <LevelBar current={row.current} required={row.required} />
-          <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-2">
-            <span>Actuel : <b className="text-gray-800 dark:text-gray-200">{row.current ?? '—'}</b>/5</span>
-            <span>Requis : <b className="text-purple-600 dark:text-purple-400">{row.required}</b>/5</span>
+          <div className="flex justify-between text-xs text-[var(--text-secondary)] mt-2">
+            <span>Actuel : <b className="text-[var(--text)]">{row.current ?? '—'}</b>/5</span>
+            <span>Requis : <b className="text-[var(--action)]">{row.required}</b>/5</span>
           </div>
         </div>
       </button>
 
       {open && (
-        <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 space-y-4">
-          {row.competency.description && <p className="text-sm text-gray-600 dark:text-gray-300">{row.competency.description}</p>}
+        <div className="mt-4 pt-4 border-t border-[var(--border)] space-y-4">
+          {row.competency.description && <p className="text-sm text-[var(--text-secondary)]">{row.competency.description}</p>}
 
           {row.assessedAt && (
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-[var(--text-secondary)]">
               Dernière évaluation : {fmtDate(row.assessedAt)} ({row.source === 'REVIEW' ? "lors d'une évaluation" : 'saisie manuelle'})
             </p>
           )}
@@ -102,9 +102,9 @@ function Row({ row, mode, employeeId, onChanged, pendingLevel, onLevel }: {
           {Object.keys(levels).length > 0 && (
             <ul className="space-y-1.5 text-sm">
               {[1, 2, 3, 4, 5].filter(n => levels[String(n)]).map(n => (
-                <li key={n} className={`flex gap-2 rounded-lg px-2.5 py-1.5 ${n === row.required ? 'bg-purple-50 dark:bg-purple-900/20' : ''}`}>
-                  <span className="font-bold text-purple-600 w-4 shrink-0">{n}</span>
-                  <span className="text-gray-600 dark:text-gray-300 break-words">{levels[String(n)]}</span>
+                <li key={n} className={`flex gap-2 rounded-lg px-2.5 py-1.5 ${n === row.required ? 'bg-[var(--brand-soft)]' : ''}`}>
+                  <span className="font-semibold text-[var(--action)] w-4 shrink-0">{n}</span>
+                  <span className="text-[var(--text-secondary)] break-words">{levels[String(n)]}</span>
                 </li>
               ))}
             </ul>
@@ -112,7 +112,7 @@ function Row({ row, mode, employeeId, onChanged, pendingLevel, onLevel }: {
 
           {mode === 'supervisor' && onLevel && (
             <div>
-              <p className="text-sm font-bold text-gray-900 dark:text-white mb-2">Nouveau niveau</p>
+              <p className="text-sm font-semibold text-[var(--text)] mb-2">Nouveau niveau</p>
               <ScorePicker value={pendingLevel ?? null} onChange={onLevel}
                 levels={{ '1': levels['1'] ?? 'Notions', '2': levels['2'] ?? 'Débutant', '3': levels['3'] ?? 'Autonome', '4': levels['4'] ?? 'Confirmé', '5': levels['5'] ?? 'Expert' }} />
             </div>
@@ -120,19 +120,19 @@ function Row({ row, mode, employeeId, onChanged, pendingLevel, onLevel }: {
 
           {row.gap > 0 && row.courses.length > 0 && (
             <div>
-              <p className="text-sm font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2"><GraduationCap size={16} className="text-purple-600" /> Formations pour progresser</p>
+              <p className="text-sm font-semibold text-[var(--text)] mb-2 flex items-center gap-2"><GraduationCap strokeWidth={1.5} size={16} className="text-[var(--action)]" /> Formations pour progresser</p>
               <div className="space-y-2">
                 {row.courses.map(c => (
-                  <div key={c.id} className="flex items-center justify-between gap-3 rounded-xl bg-gray-50 dark:bg-gray-900/40 p-3">
+                  <div key={c.id} className="flex items-center justify-between gap-3 rounded-xl bg-[var(--surface-2)] p-3">
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{c.title}</p>
-                      {c.durationHours ? <p className="text-xs text-gray-400">{c.durationHours} h</p> : null}
+                      <p className="text-sm font-medium text-[var(--text)] truncate">{c.title}</p>
+                      {c.durationHours ? <p className="text-xs text-[var(--text-secondary)]">{c.durationHours} h</p> : null}
                     </div>
                     <button type="button" disabled={busy === c.id || done.has(c.id)} onClick={() => enroll(c.id)}
-                      className={`px-3 py-2 rounded-lg text-xs font-bold shrink-0 flex items-center gap-1.5 min-h-[40px] ${done.has(c.id)
-                        ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
-                        : 'bg-purple-600 hover:bg-purple-700 text-white'} disabled:opacity-70`}>
-                      {busy === c.id ? <Loader2 size={12} className="animate-spin" /> : done.has(c.id) ? <Check size={12} /> : null}
+                      className={`px-3 py-2 rounded-lg text-xs font-semibold shrink-0 flex items-center gap-1.5 min-h-[40px] ${done.has(c.id)
+                        ? 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)]'
+                        : 'bg-[var(--brand)] hover:bg-[var(--brand)] text-[var(--on-brand)]'} disabled:opacity-70`}>
+                      {busy === c.id ? <Loader2 strokeWidth={1.5} size={12} className="animate-spin" /> : done.has(c.id) ? <Check strokeWidth={1.5} size={12} /> : null}
                       {done.has(c.id) ? 'Inscrit' : mode === 'self' ? "M'inscrire" : 'Affecter'}
                     </button>
                   </div>
@@ -141,9 +141,9 @@ function Row({ row, mode, employeeId, onChanged, pendingLevel, onLevel }: {
             </div>
           )}
           {row.gap > 0 && row.courses.length === 0 && (
-            <p className="text-xs text-gray-400">Aucune formation n'est encore liée à cette compétence.</p>
+            <p className="text-xs text-[var(--text-secondary)]">Aucune formation n'est encore liée à cette compétence.</p>
           )}
-          {error && <p className="text-xs text-red-500 break-words">{error}</p>}
+          {error && <p className="text-xs text-[var(--danger-text)] break-words">{error}</p>}
         </div>
       )}
     </div>
@@ -157,7 +157,7 @@ export function CompetencyGaps({ data, mode, onChanged }: Props) {
 
   if (!data.profile) {
     return (
-      <div className={`${cardCls} p-8 text-center text-sm text-gray-500`}>
+      <div className={`${cardCls} p-8 text-center text-sm text-[var(--text-secondary)]`}>
         Aucune fiche de poste n'est définie pour {data.employee?.position ? `« ${data.employee.position} »` : 'ce poste'}.
         {mode === 'supervisor' ? " La RH peut la créer dans « Fiches de poste »." : ''}
       </div>
@@ -183,21 +183,21 @@ export function CompetencyGaps({ data, mode, onChanged }: Props) {
   return (
     <div className="space-y-4">
       {s && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 performance-metrics">
           {[
-            ['Atteintes', `${s.met}/${s.total}`, 'text-emerald-600'],
-            ['Écarts', String(s.gaps), 'text-amber-600'],
-            ['Non évaluées', String(s.notAssessed), 'text-gray-500'],
-            ['Couverture', `${s.coverage} %`, 'text-purple-600'],
+            ['Atteintes', `${s.met}/${s.total}`, 'text-[var(--success-text)]'],
+            ['Écarts', String(s.gaps), 'text-[var(--warning-text)]'],
+            ['Non évaluées', String(s.notAssessed), 'text-[var(--text-secondary)]'],
+            ['Couverture', `${s.coverage} %`, 'text-[var(--action)]'],
           ].map(([label, value, cls]) => (
             <div key={label} className={`${cardCls} p-4`}>
-              <p className={`text-2xl font-bold ${cls}`}>{value}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
+              <p className={`text-2xl font-semibold ${cls}`}>{value}</p>
+              <p className="text-sm text-[var(--text-secondary)]">{label}</p>
             </div>
           ))}
         </div>
       )}
-      <p className="text-xs text-gray-400">Fiche de poste : {data.profile.title}. Le trait violet marque le niveau requis.</p>
+      <p className="text-xs text-[var(--text-secondary)]">Fiche de poste : {data.profile.title}. Le trait violet marque le niveau requis.</p>
 
       {[...data.rows].sort((a, b) => b.gap - a.gap).map(r => (
         <Row key={r.competency.id} row={r} mode={mode} employeeId={data.employee?.id} onChanged={onChanged}
@@ -207,14 +207,14 @@ export function CompetencyGaps({ data, mode, onChanged }: Props) {
 
       {mode === 'supervisor' && data.canAssess && pendingCount > 0 && (
         <div className="sticky bottom-3 z-20">
-          <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur rounded-2xl border border-gray-100 dark:border-gray-700 shadow-xl p-3 sm:p-4 flex items-center justify-between gap-3">
-            <span className="text-sm text-gray-600 dark:text-gray-300">{pendingCount} niveau(x) à enregistrer</span>
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-xl p-3 sm:p-4 flex items-center justify-between gap-3 performance-card">
+            <span className="text-sm text-[var(--text-secondary)]">{pendingCount} niveau(x) à enregistrer</span>
             <button onClick={save} disabled={saving}
-              className="px-5 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold shadow-lg shadow-purple-500/20 flex items-center gap-2 disabled:opacity-60">
-              {saving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />} Enregistrer
+              className="px-5 py-3 rounded-xl bg-[var(--brand)] hover:bg-[var(--brand)] text-[var(--on-brand)] font-semibold shadow-lg flex items-center gap-2 disabled:opacity-60">
+              {saving ? <Loader2 strokeWidth={1.5} size={16} className="animate-spin" /> : <Check strokeWidth={1.5} size={16} />} Enregistrer
             </button>
           </div>
-          {error && <p className="mt-2 text-sm text-red-600 bg-red-50 dark:bg-red-900/20 rounded-xl p-3">{error}</p>}
+          {error && <p className="mt-2 text-sm text-[var(--danger-text)] bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] rounded-xl p-3">{error}</p>}
         </div>
       )}
     </div>

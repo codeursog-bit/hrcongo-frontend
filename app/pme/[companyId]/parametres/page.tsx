@@ -17,13 +17,14 @@ import {
   Building2, Network, Gift, Receipt, Crown, Shield,
 } from 'lucide-react';
 import { api } from '@/services/api';
+import { ModulePageFrame } from '@/components/requests/ModulePageFrame';
 
 interface CompanyInfo {
   managedByCabinet: boolean;
   cabinetId?: string | null;
 }
 
-export default function PmeParametresPage() {
+function PmeParametresPage() {
   const params    = useParams();
   const companyId = params.companyId as string;
   const base      = `/pme/${companyId}`;
@@ -159,5 +160,14 @@ export default function PmeParametresPage() {
         ))}
       </div>
     </div>
+  );
+}
+
+
+export default function PmeParametresPageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <PmeParametresPage />
+    </ModulePageFrame>
   );
 }

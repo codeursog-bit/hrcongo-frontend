@@ -1,5 +1,6 @@
 'use client';
 
+
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   RefreshCw, Info, Building2,
@@ -8,6 +9,7 @@ import { api } from '@/services/api';
 import RapportsSubNav from '@/components/RapportsSubNav';
 import PeriodSelector, { PeriodValue } from '@/components/PeriodSelector';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import { ReportsFrame as ModulePageFrame } from '@/components/reports/ReportsFrame';
 
 // ─── TYPES (miroir de FiscalBreakdown côté backend) ─────────────────────────
 interface FiscalMonthlyAmount {
@@ -76,7 +78,7 @@ function annualFor(row: { annualIts: number; annualBnc10: number; annualBnc20: n
   return row.annualBnc20;
 }
 
-export default function ItsBncPage() {
+function ItsBncPage() {
   const currentYear = new Date().getFullYear();
   // ✅ "ANNEE" = vue mensuelle détaillée sur une année (comportement
   // d'origine). "PLAGE" = comparaison sur plusieurs années (ex. 2020→2023),
@@ -192,7 +194,7 @@ export default function ItsBncPage() {
     <div className="p-6 max-w-[1400px] mx-auto">
       <RapportsSubNav active="/rapports/its-bnc" />
 
-      <div className="flex items-center justify-between mt-6 mb-4 flex-wrap gap-3">
+      <div className="flex items-center justify-between mt-6 mb-4 flex-wrap gap-3 reports-header">
         <div>
           <h1 className="text-xl font-semibold text-[var(--text)]">Répartition ITS / BNC</h1>
           <p className="text-sm text-[var(--text-muted)] mt-1">
@@ -205,14 +207,14 @@ export default function ItsBncPage() {
             onClick={load}
             className="flex items-center gap-2 px-3 py-2 text-sm border border-[var(--border)] rounded-lg hover:bg-[var(--surface-2)]"
           >
-            <RefreshCw className="w-4 h-4" /> Actualiser
+            <RefreshCw strokeWidth={1.5} className="w-4 h-4" /> Actualiser
           </button>
         </div>
       </div>
 
       {/* Bandeau de contrôle — comparer avant tout export */}
       <div className="bg-[var(--accent-2-soft)] border border-[var(--accent-2)]/30 rounded-xl p-4 mb-4 flex items-start gap-3">
-        <Info className="w-5 h-5 text-[var(--accent-2)] mt-0.5 flex-shrink-0" />
+        <Info strokeWidth={1.5} className="w-5 h-5 text-[var(--accent-2)] mt-0.5 flex-shrink-0" />
         <p className="text-sm text-[var(--text)]">
           Comparez ce total annuel avec la somme des déclarations mensuelles déjà reversées à la DGI
           avant de déposer le DAS ou d\u2019exporter le Bulletin Annuel. Un écart n\u2019est pas forcément une
@@ -227,7 +229,7 @@ export default function ItsBncPage() {
             key={v}
             onClick={() => setView(v)}
             className={`px-4 py-2 text-sm rounded-lg border ${
-              view === v ? 'bg-[var(--brand)] text-white border-[var(--brand)]' : 'bg-[var(--surface)] text-[var(--text-muted)] hover:bg-[var(--surface-2)]'
+              view === v ? 'bg-[var(--brand)] text-[var(--text)] border-[var(--brand)]' : 'bg-[var(--surface)] text-[var(--text-muted)] hover:bg-[var(--surface-2)]'
             }`}
           >
             {CATEGORY_LABEL[v]}
@@ -238,7 +240,7 @@ export default function ItsBncPage() {
       {loading ? (
         <KonzaLoader variant="section" />
       ) : error ? (
-        <div className="text-red-600 text-sm py-8">{error}</div>
+        <div className="text-[var(--danger-text)] text-sm py-8">{error}</div>
       ) : isRange ? (
         rangeRows.length === 0 ? (
           <div className="text-[var(--text-muted)] text-sm py-12 text-center border border-[var(--border)] rounded-xl">
@@ -251,7 +253,7 @@ export default function ItsBncPage() {
               <span className="font-semibold text-[var(--text)]">{fmt(rangeGrandTotal)} FCFA</span>
             </div>
             <div className="overflow-x-auto border border-[var(--border)] rounded-xl">
-              <table className="min-w-full text-sm">
+              <div className="reports-table-region" role="region" aria-label="Données du rapport" tabIndex={0}><table data-report-table className="min-w-full text-sm reports-table">
                 <thead className="bg-[var(--surface-2)] border-b border-[var(--border)]">
                   <tr>
                     <th className="text-left px-3 py-2 font-medium text-[var(--text-muted)] sticky left-0 bg-[var(--surface-2)]">Salarié</th>
@@ -264,7 +266,7 @@ export default function ItsBncPage() {
                 <tbody>
                   {rangeRows.map((r) => (
                     <tr key={r.employeeId} className="border-b border-[var(--border)] last:border-0 hover:bg-[var(--surface-2)]">
-                      <td className="px-3 py-2 sticky left-0 bg-white">
+                      <td className="px-3 py-2 sticky left-0 bg-[var(--surface)]">
                         <div className="font-medium text-[var(--text)]">{r.employeeName}</div>
                         {r.matricule && <div className="text-xs text-[var(--text-muted)]">{r.matricule}</div>}
                         <div className="text-xs text-[var(--text-muted)]">{r.departmentName}</div>
@@ -282,15 +284,15 @@ export default function ItsBncPage() {
                   ))}
                 </tbody>
                 <tfoot>
-                  <tr className="bg-[var(--brand)] text-white">
+                  <tr className="bg-[var(--brand)] text-[var(--text)]">
                     <td className="px-3 py-2 font-semibold sticky left-0 bg-[var(--brand)]">TOTAL {CATEGORY_LABEL[view]}</td>
                     {rangeYears.map((y) => (
                       <td key={y} className="text-right px-3 py-2 font-medium">{fmt(rangeTotalsPerYear[y])}</td>
                     ))}
-                    <td className="text-right px-3 py-2 font-bold">{fmt(rangeGrandTotal)}</td>
+                    <td className="text-right px-3 py-2 font-semibold">{fmt(rangeGrandTotal)}</td>
                   </tr>
                 </tfoot>
-              </table>
+              </table></div>
             </div>
           </>
         )
@@ -305,7 +307,7 @@ export default function ItsBncPage() {
           </div>
 
           <div className="overflow-x-auto border border-[var(--border)] rounded-xl">
-            <table className="min-w-full text-sm">
+            <div className="reports-table-region" role="region" aria-label="Données du rapport" tabIndex={0}><table data-report-table className="min-w-full text-sm reports-table">
               <thead className="bg-[var(--surface-2)] border-b border-[var(--border)]">
                 <tr>
                   <th className="text-left px-3 py-2 font-medium text-[var(--text-muted)] sticky left-0 bg-[var(--surface-2)]">Salarié</th>
@@ -323,7 +325,7 @@ export default function ItsBncPage() {
                     <React.Fragment key={deptKey}>
                       <tr className="bg-[var(--surface-2)]">
                         <td colSpan={14} className="px-3 py-1.5 text-xs font-semibold text-[var(--text-muted)] flex items-center gap-1.5">
-                          <Building2 className="w-3.5 h-3.5" /> {deptName}
+                          <Building2 strokeWidth={1.5} className="w-3.5 h-3.5" /> {deptName}
                           <span className="ml-2 text-[var(--text-muted)] font-normal">
                             ({fmt(deptTotal)} FCFA sur l\u2019année)
                           </span>
@@ -331,7 +333,7 @@ export default function ItsBncPage() {
                       </tr>
                       {rows.map((r) => (
                         <tr key={r.employeeId} className="border-b border-[var(--border)] last:border-0 hover:bg-[var(--surface-2)]">
-                          <td className="px-3 py-2 sticky left-0 bg-white">
+                          <td className="px-3 py-2 sticky left-0 bg-[var(--surface)]">
                             <div className="font-medium text-[var(--text)]">{r.employeeName}</div>
                             {r.matricule && <div className="text-xs text-[var(--text-muted)]">{r.matricule}</div>}
                           </td>
@@ -353,20 +355,29 @@ export default function ItsBncPage() {
                 })}
               </tbody>
               <tfoot>
-                <tr className="bg-[var(--brand)] text-white">
+                <tr className="bg-[var(--brand)] text-[var(--text)]">
                   <td className="px-3 py-2 font-semibold sticky left-0 bg-[var(--brand)]">TOTAL {CATEGORY_LABEL[view]}</td>
                   {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
                     <td key={m} className="text-right px-2 py-2 font-medium">
                       {fmt(amountFor({ monthly: data!.totals.monthly } as any, view, m))}
                     </td>
                   ))}
-                  <td className="text-right px-3 py-2 font-bold">{fmt(totalAnnual)}</td>
+                  <td className="text-right px-3 py-2 font-semibold">{fmt(totalAnnual)}</td>
                 </tr>
               </tfoot>
-            </table>
+            </table></div>
           </div>
         </>
       )}
     </div>
+  );
+}
+
+
+export default function ItsBncPageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <ItsBncPage />
+    </ModulePageFrame>
   );
 }

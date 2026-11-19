@@ -28,6 +28,7 @@ import { useBasePath } from '@/hooks/useBasePath';
 import { authService } from '@/lib/services/authService';
 import { Lock } from 'lucide-react';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import { ModulePageFrame } from '@/components/requests/ModulePageFrame';
 
 // Page réservée à l'Admin et au RH (même périmètre que l'entrée de menu)
 const VIEW_ROLES = ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER'];
@@ -48,7 +49,7 @@ const TINT: Record<'amber' | 'emerald', string> = {
 
 const LOAN_PENDING_STATUSES = ['PENDING', 'PENDING_DG'];
 
-export default function DemandesHubPage() {
+function DemandesHubPage() {
   const { bp } = useBasePath();
   const [role, setRole] = useState<string | null | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
@@ -197,5 +198,14 @@ export default function DemandesHubPage() {
         )}
       </div>
     </div>
+  );
+}
+
+
+export default function DemandesHubPageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <DemandesHubPage />
+    </ModulePageFrame>
   );
 }

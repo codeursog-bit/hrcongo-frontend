@@ -1,0 +1,9 @@
+'use client';
+import React, { useEffect, useState } from 'react';
+import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Card, EmptyState } from '@/components/design-system/primitives';
+export function LoanValidationChart({ title, data, color = 'brand' }: { title: string; data: { label: string; value: number }[]; color?: 'brand' | 'green' }) {
+  const [animate,setAnimate] = useState(false);
+  useEffect(() => { const media = matchMedia('(prefers-reduced-motion: reduce)'); const update = () => setAnimate(!media.matches); update(); media.addEventListener('change', update); return () => media.removeEventListener('change', update); }, []);
+  return <Card title={title}>{data.length ? <figure aria-label={title}><figcaption className="sr-only">{data.map(d => `${d.label} : ${d.value}`).join(' ; ')}</figcaption><div style={{height:240,minWidth:0}}><ResponsiveContainer width="100%" height="100%"><BarChart data={data} layout="vertical" margin={{left:8,right:24}} accessibilityLayer><XAxis type="number" hide allowDecimals={false} /><YAxis type="category" dataKey="label" width={130} axisLine={false} tickLine={false} tick={{fill:'var(--text-secondary)',fontSize:11}} /><Tooltip cursor={false} content={({active,payload}) => active && payload?.length ? <div className="k-chart-tooltip">{payload[0].payload.label} : <strong>{payload[0].value}</strong></div> : null} /><Bar dataKey="value" name="Demandes" fill={`var(--${color})`} radius={[0,12,12,0]} maxBarSize={16} background={{fill:'var(--surface-2)'}} isAnimationActive={animate} animationDuration={700} /></BarChart></ResponsiveContainer></div></figure> : <EmptyState title="La répartition apparaîtra avec les premières demandes">Les demandes disponibles alimenteront ce graphique.</EmptyState>}</Card>;
+}

@@ -1,77 +1,43 @@
 'use client';
 
+// components/ui/basic.tsx — composants de base hérités, alignés sur le design system.
+// (Aucune page ne les utilise aujourd'hui ; ils suivent les mêmes classes que le reste de l'app.)
 import React from 'react';
+import '@/components/design-system/design-system.css';
+import '@/components/ui/select.css';
 
-/* =======================
-   INPUT
-======================= */
 export function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
-  return (
-    <input
-      {...props}
-      className={`w-full px-3 py-2 border rounded-lg outline-none 
-      focus:ring-2 focus:ring-cyan-500 ${props.className ?? ''}`}
-    />
-  );
+  return <input {...props} className={`k-input ${props.className ?? ''}`} />;
 }
 
-/* =======================
-   SELECT
-======================= */
 interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   options: { label: string; value: string }[];
 }
 
 export function Select({ options, ...props }: SelectProps) {
   return (
-    <select
-      {...props}
-      className={`w-full px-3 py-2 border rounded-lg outline-none 
-      focus:ring-2 focus:ring-cyan-500 ${props.className ?? ''}`}
-    >
-      <option value="">Sélectionner...</option>
+    <select {...props} className={`k-input ${props.className ?? ''}`}>
+      <option value="">Sélectionner…</option>
       {options.map(opt => (
-        <option key={opt.value} value={opt.value}>
-          {opt.label}
-        </option>
+        <option key={opt.value} value={opt.value}>{opt.label}</option>
       ))}
     </select>
   );
 }
 
-/* =======================
-   BUTTON
-======================= */
-export function Button(
-  props: React.ButtonHTMLAttributes<HTMLButtonElement>
-) {
-  return (
-    <button
-      {...props}
-      className={`px-4 py-2 rounded-lg font-semibold 
-      bg-cyan-600 text-white hover:bg-cyan-700 
-      disabled:opacity-50 ${props.className ?? ''}`}
-    />
-  );
+export function Button(props: React.ButtonHTMLAttributes<HTMLButtonElement>) {
+  return <button {...props} className={`k-button k-button-primary ${props.className ?? ''}`} />;
 }
 
-/* =======================
-   NOTIFICATION
-======================= */
 interface NotificationProps {
   type?: 'success' | 'error' | 'info';
   message: string;
 }
 
 export function Notification({ type = 'info', message }: NotificationProps) {
-  const colors = {
-    success: 'bg-green-100 text-green-700',
-    error: 'bg-red-100 text-red-700',
-    info: 'bg-blue-100 text-blue-700',
-  };
-
+  const tone = { success: 'k-tone-success', error: 'k-tone-danger', info: 'k-tone-info' }[type];
   return (
-    <div className={`p-3 rounded-lg text-sm ${colors[type]}`}>
+    <div className={`${tone} text-sm`} role={type === 'error' ? 'alert' : 'status'} style={{ padding: '12px 14px', borderRadius: 'var(--radius-control)' }}>
       {message}
     </div>
   );

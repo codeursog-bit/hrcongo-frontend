@@ -1,5 +1,10 @@
 'use client';
 
+import { ModulePageFrame, ModulePageSkeleton } from '@/components/requests/ModulePageFrame';
+import { Button } from '@/components/design-system/primitives';
+import './refonte.css';
+import { Modal, useToast } from '@/components/design-system/feedback';
+import { RequestForm, RequestSummaryCard, RequestSuccessScreen } from '@/components/requests';
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   GraduationCap, Plus, Search, Loader2, X, CheckCircle2, Clock,
@@ -13,13 +18,15 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import SessionsView from '@/components/formation/SessionsView';
+import { CERTIFICATE_TEMPLATES, CERTIFICATE_TEMPLATE_KEY, downloadCertificate, type CertificateTemplate } from '@/lib/certificate-templates';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type CourseFormat    = 'ONLINE' | 'IN_PERSON' | 'HYBRID';
 type ProviderType    = 'INTERNAL' | 'EXTERNAL_VENDOR' | 'ONLINE_PLATFORM';
 type TrainingStatus  = 'REQUESTED' | 'APPROVED' | 'PLANNED' | 'IN_PROGRESS' | 'COMPLETION_REQUESTED' | 'COMPLETED' | 'CANCELLED' | 'NOT_STARTED';
-type ActiveView      = 'dashboard' | 'catalog' | 'my-learning' | 'requests' | 'pfa';
+type ActiveView      = 'dashboard' | 'catalog' | 'my-learning' | 'requests' | 'pfa' | 'sessions';
 
 interface Course {
   id: string;
@@ -107,6 +114,7 @@ interface CertificateData {
   validatedBy: string;
   validatedAt: string;
   year: number;
+  companyName?: string | null;
 }
 
 interface Employee {
@@ -121,6 +129,12 @@ interface Employee {
 
 const fmt    = (d?: string) => d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 const fmtCFA = (n?: number) => n != null && n > 0 ? `${Number(n).toLocaleString('fr-FR')} FCFA` : '—';
+
+// Si l'employé est placé dans une session, ses dates/lieu priment sur ceux du cours
+const sessionOverride = (s: any) =>
+  s?.session && s.session.status !== 'CANCELLED'
+    ? { dateSchedule: s.session.startDate, location: s.session.location ?? s.course?.location }
+    : {};
 
 const FORMAT_CFG: Record<CourseFormat, { label: string; color: string; icon: React.ReactNode }> = {
   ONLINE:    { label: 'En ligne',   color: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',       icon: <Video size={10} /> },
@@ -218,10 +232,11 @@ function CourseCard({ course, onOpen, isRH }: { course: Course; onOpen: () => vo
       initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
       whileHover={{ y: -4 }}
       onClick={onOpen}
+      role="button" tabIndex={0} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();onOpen();}}}
       className="group relative bg-slate-800/50 dark:bg-slate-800/50 border border-white/5 rounded-2xl overflow-hidden cursor-pointer hover:border-emerald-500/40 hover:shadow-xl hover:shadow-emerald-500/10 transition-all duration-300 flex flex-col"
     >
       {/* Thumbnail */}
-      <div className="relative aspect-video overflow-hidden bg-white/5 dark:bg-slate-900 shrink-0">
+      <div className="training-media relative aspect-video overflow-hidden bg-white/5 dark:bg-slate-900 shrink-0">
         {course.thumbnailUrl ? (
           <img src={course.thumbnailUrl} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt={course.title} />
         ) : (
@@ -258,9 +273,7 @@ function CourseCard({ course, onOpen, isRH }: { course: Course; onOpen: () => vo
         {/* Hover overlay — effet glace */}
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center justify-center"
           style={{
-            background: 'linear-gradient(135deg, rgba(255,255,255,0.18) 0%, rgba(167,243,208,0.12) 50%, rgba(209,250,229,0.10) 100%)',
-            backdropFilter: 'blur(6px)',
-            WebkitBackdropFilter: 'blur(6px)',
+            background: 'rgba(0,0,0,0.12)',
           }}
         >
           {/* reflets glace */}
@@ -309,7 +322,12 @@ function CourseCard({ course, onOpen, isRH }: { course: Course; onOpen: () => vo
 // ─── Page principale ──────────────────────────────────────────────────────────
 
 export default function FormationPage() {
+  const uiNotify = useToast();
+  const [uiStep, setUiStep] = useState(0);
+  const [uiRequestDone, setUiRequestDone] = useState(false);
+
   const [currentUser, setCurrentUser]   = useState<any>(null);
+  const [certTemplate, setCertTemplate] = useState<CertificateTemplate>('BLUE');
   const [activeView, setActiveView]     = useState<ActiveView>('dashboard');
 
   // Data
@@ -361,6 +379,8 @@ export default function FormationPage() {
   const [budgetForm, setBudgetForm]     = useState('');
   const [reviewNote, setReviewNote]     = useState('');
 
+  useEffect(() => { if (!showRequestModal) setUiStep(0); }, [showRequestModal]);
+
   // ── Rôles ───────────────────────────────────────────────────────────────────
   const isRH      = currentUser && ['ADMIN', 'HR_MANAGER', 'SUPER_ADMIN'].includes(currentUser.role);
   const isManager = currentUser?.role === 'MANAGER';
@@ -369,6 +389,12 @@ export default function FormationPage() {
   useEffect(() => {
     const stored = localStorage.getItem('user');
     if (stored) setCurrentUser(JSON.parse(stored));
+  }, []);
+
+  // Modèle de certificat choisi (mémorisé sur cet appareil)
+  useEffect(() => {
+    const t = localStorage.getItem(CERTIFICATE_TEMPLATE_KEY);
+    if (t === 'BLUE' || t === 'GREEN' || t === 'CLASSIC') setCertTemplate(t);
   }, []);
 
   useEffect(() => {
@@ -509,6 +535,8 @@ export default function FormationPage() {
       await loadDashboard();
       setShowRequestModal(false);
       setRequestForm({ courseId: '', reason: '' });
+      setUiRequestDone(true);
+      uiNotify('success', 'Demande de formation envoyée');
     } catch (e: any) {
       alert(e?.message ?? 'Erreur lors de la demande.');
     } finally { setIsSubmitting(false); }
@@ -526,6 +554,11 @@ export default function FormationPage() {
   };
 
   const generateCertificate = (data: CertificateData) => {
+    // Nouveaux modèles (Bleu moderne / Vert classique) : dessinés par lib/certificate-templates
+    if (certTemplate === 'BLUE' || certTemplate === 'GREEN') {
+      void downloadCertificate(certTemplate, data);
+      return;
+    }
     const canvas = document.createElement('canvas');
     canvas.width  = 1122;
     canvas.height = 794;
@@ -812,13 +845,14 @@ export default function FormationPage() {
       { id: 'requests' as ActiveView, label: 'Demandes', icon: ClipboardList, badge: pendingCount },
     ] : []),
     ...(isRH ? [
+      { id: 'sessions' as ActiveView, label: 'Sessions', icon: Calendar },
       { id: 'pfa' as ActiveView, label: 'Plan Annuel', icon: Target },
     ] : []),
   ];
 
   // ── Render ───────────────────────────────────────────────────────────────────
   return (
-    <div className="max-w-[1800px] mx-auto pb-20 space-y-6 px-4 sm:px-6">
+    <ModulePageFrame kind="dashboard"><div className="formation-refonte"><div className="max-w-[1800px] mx-auto pb-20 space-y-6 px-4 sm:px-6">
 
       {/* HEADER */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -836,20 +870,20 @@ export default function FormationPage() {
 
         <div className="flex items-center gap-2 w-full sm:w-auto">
           {!isRH && (
-            <button
+            <Button variant="ghost"
               onClick={() => setShowRequestModal(true)}
               className="flex items-center justify-center gap-2 px-4 py-2.5 w-full sm:w-auto bg-slate-700/60 hover:bg-slate-700 text-white border border-white/10 rounded-xl text-sm font-bold transition-colors"
             >
               <Send size={14} /> Demander une formation
-            </button>
+            </Button>
           )}
           {isRH && (
-            <button
+            <Button variant="primary"
               onClick={() => setShowAddModal(true)}
               className="flex items-center justify-center gap-2 px-5 py-2.5 w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-black shadow-lg shadow-emerald-500/20 hover:scale-105 transition-colors"
             >
               <Plus size={16} /> Nouveau cours
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -857,7 +891,7 @@ export default function FormationPage() {
       {/* NAV TABS */}
       <div className="flex items-center gap-1 bg-slate-800/60 p-1.5 rounded-2xl border border-white/5 max-w-full overflow-x-auto">
         {navItems.map(item => (
-          <button
+          <Button variant="ghost"
             key={item.id}
             onClick={() => { setActiveView(item.id); setDashPage(1); }}
             className={`relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${
@@ -872,7 +906,7 @@ export default function FormationPage() {
                 {item.badge}
               </span>
             )}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -880,7 +914,7 @@ export default function FormationPage() {
       {activeView === 'dashboard' && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
           {loadingDash ? (
-            <KonzaLoader variant="section" />
+            <ModulePageSkeleton label="Chargement des formations" />
           ) : dashboard ? (
             <>
               {/* KPIs */}
@@ -903,9 +937,9 @@ export default function FormationPage() {
                       <p className="text-xs text-slate-400">Budget par département</p>
                     </div>
                     {isRH && (
-                      <button onClick={() => setActiveView('pfa')} className="text-xs font-bold text-emerald-500 flex items-center gap-1">
+                      <Button variant="ghost" onClick={() => setActiveView('pfa')} className="text-xs font-bold text-emerald-500 flex items-center gap-1">
                         Gérer <ChevronRight size={12}/>
-                      </button>
+                      </Button>
                     )}
                   </div>
                   {(() => {
@@ -916,12 +950,12 @@ export default function FormationPage() {
                       <>
                         {paged.map(d => <BudgetBar key={d.departmentId} dept={d} />)}
                         {hasMore && (
-                          <button
+                          <Button variant="ghost"
                             onClick={() => setDashPage(p => p + 1)}
                             className="w-full mt-3 py-2 text-xs font-bold text-emerald-500 hover:text-emerald-400 flex items-center justify-center gap-1 transition-colors"
                           >
                             Voir plus ({all.length - paged.length} restants) <ChevronRight size={12}/>
-                          </button>
+                          </Button>
                         )}
                       </>
                     ) : <p className="text-sm text-slate-400 text-center py-4">Aucun budget configuré</p>;
@@ -934,9 +968,9 @@ export default function FormationPage() {
                       <h3 className="font-black text-white">Demandes récentes</h3>
                       <p className="text-xs text-slate-400">{dashboard.pendingRequests} en attente</p>
                     </div>
-                    <button onClick={() => setActiveView('requests')} className="text-xs font-bold text-emerald-500 flex items-center gap-1">
+                    <Button variant="ghost" onClick={() => setActiveView('requests')} className="text-xs font-bold text-emerald-500 flex items-center gap-1">
                       Voir tout <ChevronRight size={12}/>
-                    </button>
+                    </Button>
                   </div>
                   <div className="space-y-2">
                     {requests.slice(0, 4).length > 0 ? requests.slice(0, 4).map(req => (
@@ -982,9 +1016,9 @@ export default function FormationPage() {
                       <p className="text-2xl font-black text-emerald-400">{dashboard.certifiedEmployees}</p>
                       <p className="text-[10px] text-emerald-300/60 uppercase font-bold">Certifiés</p>
                     </div>
-                    <button className="ml-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-white text-xs font-bold flex items-center gap-2 transition-colors">
+                    <Button variant="ghost" className="ml-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-white text-xs font-bold flex items-center gap-2 transition-colors">
                       <Download size={13}/> Bilan PDF
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -1015,7 +1049,7 @@ export default function FormationPage() {
             </div>
             <div className="flex gap-2 overflow-x-auto pb-1">
               {categories.map(cat => (
-                <button key={cat} onClick={() => { setSelectedCategory(cat); setDashPage(1); }}
+                <Button variant="ghost" key={cat} onClick={() => { setSelectedCategory(cat); setDashPage(1); }}
                   className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${
                     selectedCategory === cat
                       ? 'bg-slate-700 text-white border-transparent shadow'
@@ -1023,7 +1057,7 @@ export default function FormationPage() {
                   }`}
                 >
                   {cat}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -1033,7 +1067,7 @@ export default function FormationPage() {
             <motion.div
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
               onClick={() => setShowCourseModal(filteredCourses[0])}
-              className="relative h-64 sm:h-72 rounded-2xl overflow-hidden cursor-pointer group"
+              className="training-media relative h-64 sm:h-72 rounded-2xl overflow-hidden cursor-pointer group"
             >
               <img
                 src={filteredCourses[0].thumbnailUrl || 'https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=2070'}
@@ -1054,7 +1088,7 @@ export default function FormationPage() {
 
           {/* Grille */}
           {loadingCourses ? (
-            <KonzaLoader variant="section" />
+            <ModulePageSkeleton label="Chargement des formations" />
           ) : (() => {
             const CATALOG_PAGE_SIZE = 10;
             const pagedCourses = filteredCourses.slice(0, dashPage * CATALOG_PAGE_SIZE);
@@ -1068,13 +1102,13 @@ export default function FormationPage() {
                 </div>
                 {hasMore && (
                   <div className="flex justify-center mt-6">
-                    <button
+                    <Button variant="ghost"
                       onClick={() => setDashPage(p => p + 1)}
                       className="px-6 py-3 bg-slate-800/60 border border-white/10 rounded-xl text-sm font-bold text-white hover:bg-slate-700/60 transition-all flex items-center gap-2"
                     >
                       Voir plus ({filteredCourses.length - pagedCourses.length} restants)
                       <ChevronRight size={14}/>
-                    </button>
+                    </Button>
                   </div>
                 )}
               </>
@@ -1094,7 +1128,7 @@ export default function FormationPage() {
       {activeView === 'my-learning' && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
           {loadingMine ? (
-            <KonzaLoader variant="section" />
+            <ModulePageSkeleton label="Chargement des formations" />
           ) : myTrainings ? (
             <>
               {/* Passeport compétences */}
@@ -1112,7 +1146,7 @@ export default function FormationPage() {
                       </p>
                     </div>
                   </div>
-                  <button
+                  <Button variant="ghost"
                     onClick={() => {
                       myTrainings.completed.forEach((s: any, i: number) => {
                         if (s.certificateUrl) {
@@ -1127,9 +1161,26 @@ export default function FormationPage() {
                     }}
                     className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-white text-xs font-bold flex items-center gap-2 transition-colors shrink-0">
                     <Download size={13}/> Télécharger PDF
-                  </button>
+                  </Button>
                 </div>
-                <div className="mt-4 flex flex-wrap gap-2">
+                <div className="mt-4 flex items-center gap-2 text-xs text-emerald-200/70">
+                  <span>Modèle du certificat :</span>
+                  <select
+                    value={certTemplate}
+                    onChange={(e) => {
+                      const v = e.target.value as CertificateTemplate;
+                      setCertTemplate(v);
+                      localStorage.setItem(CERTIFICATE_TEMPLATE_KEY, v);
+                    }}
+                    className="px-2 py-1 rounded-lg bg-white/10 border border-white/20 text-white text-xs"
+                    aria-label="Modèle du certificat"
+                  >
+                    {CERTIFICATE_TEMPLATES.map((t) => (
+                      <option key={t.id} value={t.id} style={{ color: '#111' }}>{t.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
                   {myTrainings.completed.map((s: any) => (
                     <span key={s.id} className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/10 border border-white/20 rounded-full text-xs font-bold text-white">
                       <BadgeCheck size={10} className="text-emerald-400"/> {s.course?.title}
@@ -1141,6 +1192,16 @@ export default function FormationPage() {
                 </div>
               </div>
 
+              {myTrainings.requested?.length > 0 && (
+                <section className="template-stack" aria-label="Mes demandes de formation">
+                  <h3 className="font-semibold text-[var(--text)]">Mes demandes de formation</h3>
+                  {myTrainings.requested.map((request:any)=><div key={request.id} className="bg-[var(--surface)] rounded-2xl p-5 flex flex-wrap items-start justify-between gap-4">
+                    <div><h4 className="font-semibold text-[var(--text)]">{request.course?.title || 'Demande de formation'}</h4><p className="text-sm text-[var(--text-secondary)]">{request.reason}</p><p className="text-xs text-[var(--text-secondary)]">{fmt(request.createdAt)}</p></div>
+                    <StatusBadge status={request.status}/>
+                  </div>)}
+                </section>
+              )}
+
               {/* Assignées */}
               {myTrainings.assigned.length > 0 && (
                 <div>
@@ -1149,7 +1210,7 @@ export default function FormationPage() {
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {myTrainings.assigned.map((s: any) => (
-                      <CourseCard key={s.id} course={{ ...s.course, status: s.status }} onOpen={() => setShowCourseModal({ ...s.course, status: s.status })} isRH={false}/>
+                      <CourseCard key={s.id} course={{ ...s.course, status: s.status, ...sessionOverride(s) }} onOpen={() => setShowCourseModal({ ...s.course, status: s.status, ...sessionOverride(s) })} isRH={false}/>
                     ))}
                   </div>
                 </div>
@@ -1220,13 +1281,13 @@ export default function FormationPage() {
                 {requests.filter(r => r.status === 'REQUESTED').length} en attente • {requests.length} au total
               </p>
             </div>
-            <button onClick={loadRequests} className="p-2 hover:bg-white/5 dark:hover:bg-white/5 rounded-xl transition-colors">
+            <Button variant="ghost" onClick={loadRequests} className="p-2 hover:bg-white/5 dark:hover:bg-white/5 rounded-xl transition-colors">
               <RotateCcw size={16} className="text-slate-400"/>
-            </button>
+            </Button>
           </div>
 
           {loadingRequests ? (
-            <KonzaLoader variant="section" />
+            <ModulePageSkeleton label="Chargement des formations" />
           ) : requests.length === 0 ? (
             <div className="text-center py-20 text-slate-400">
               <ClipboardList size={40} className="mx-auto mb-3 opacity-20"/>
@@ -1272,31 +1333,31 @@ export default function FormationPage() {
                       <StatusBadge status={req.status}/>
                       {req.status === 'REQUESTED' && (
                         <>
-                          <button
+                          <Button variant="primary"
                             onClick={() => handleReview(req.id, 'APPROVED')}
                             disabled={actionId === req.id}
                             className="p-2 bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 border border-emerald-200 dark:border-emerald-500/30 text-emerald-600 dark:text-emerald-400 rounded-xl transition-colors"
                             title="Approuver"
                           >
                             {actionId === req.id ? <Loader2 size={15} className="animate-spin"/> : <Check size={15}/>}
-                          </button>
-                          <button
+                          </Button>
+                          <Button variant="ghost"
                             onClick={() => handleReview(req.id, 'CANCELLED')}
                             disabled={actionId === req.id}
                             className="p-2 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 border border-red-200 dark:border-red-500/30 text-red-600 dark:text-red-400 rounded-xl transition-colors"
                             title="Refuser"
                           >
                             <X size={15}/>
-                          </button>
+                          </Button>
                         </>
                       )}
                       {req.status === 'COMPLETION_REQUESTED' && (
-                        <button
+                        <Button variant="ghost"
                           onClick={() => setValidateModal({ sessionId: req.id, employeeName: `${req.employee.firstName} ${req.employee.lastName}`, courseTitle: req.course.title })}
                           className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors"
                         >
                           <Award size={13}/> Certifier
-                        </button>
+                        </Button>
                       )}
                       {req.reviewedBy && (
                         <span className="text-[10px] text-slate-400">
@@ -1313,6 +1374,16 @@ export default function FormationPage() {
       )}
 
       {/* ══ VUE PLAN ANNUEL ═══════════════════════════════════════════════════ */}
+      {/* ══ VUE SESSIONS (RH) ══════════════════════════════════════════════════ */}
+      {activeView === 'sessions' && isRH && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <SessionsView
+            courses={courses}
+            onChanged={() => { loadDashboard(); loadRequests(); loadMyTrainings(); loadCourses(); }}
+          />
+        </motion.div>
+      )}
+
       {activeView === 'pfa' && isRH && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5">
           <div className="flex items-center justify-between">
@@ -1322,13 +1393,13 @@ export default function FormationPage() {
               </h2>
               <p className="text-sm text-slate-400">Suivi budgétaire et conformité Loi 45-75</p>
             </div>
-            <button className="flex items-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-sm font-bold shadow hover:scale-105 transition-transform">
+            <Button variant="ghost" className="flex items-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-sm font-bold shadow hover:scale-105 transition-transform">
               <Download size={14}/> Bilan PDF
-            </button>
+            </Button>
           </div>
 
           {loadingPfa ? (
-            <KonzaLoader variant="section" />
+            <ModulePageSkeleton label="Chargement des formations" />
           ) : pfa ? (
             <>
               {/* Résumé global */}
@@ -1384,13 +1455,13 @@ export default function FormationPage() {
                             </div>
                           </td>
                           <td className="px-5 py-4">
-                            <button
+                            <Button variant="ghost"
                               onClick={() => { setShowBudgetModal(dept); setBudgetForm(String(dept.allocated)); }}
                               className="p-1.5 hover:bg-white/5 dark:hover:bg-white/10 rounded-lg transition-colors"
                               title="Modifier le budget"
                             >
                               <Edit3 size={13} className="text-slate-400"/>
-                            </button>
+                            </Button>
                           </td>
                         </tr>
                       ))}
@@ -1423,20 +1494,13 @@ export default function FormationPage() {
       ══════════════════════════════════════════════════════════════════════ */}
       <AnimatePresence>
         {showCourseModal && (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-xl p-2 sm:p-4 md:pl-[300px]"
-          >
-            <motion.div
-              initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
-              className="bg-slate-900 w-full max-w-5xl max-h-[95vh] sm:max-h-[90vh] rounded-2xl shadow-2xl border border-white/10 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden"
-            >
+          <Modal open title={showCourseModal.title} onClose={() => setShowCourseModal(null)}>
               {/* Left — Player */}
-              <div className="flex-1 bg-black relative aspect-video md:aspect-auto md:min-h-0 flex items-center justify-center shrink-0">
+              <div className="training-media flex-1 bg-black relative aspect-video md:aspect-auto md:min-h-0 flex items-center justify-center shrink-0">
                 {/* Close */}
-                <button onClick={() => setShowCourseModal(null)} className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-white/20 text-white rounded-full backdrop-blur-md z-10">
+                <Button variant="ghost" onClick={() => setShowCourseModal(null)} className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-white/20 text-white rounded-full backdrop-blur-md z-10">
                   <X size={18}/>
-                </button>
+                </Button>
 
                 {/* Non inscrit / Planifié */}
                 {(!showCourseModal.status || showCourseModal.status === 'NOT_STARTED' || showCourseModal.status === 'PLANNED') && (
@@ -1449,14 +1513,14 @@ export default function FormationPage() {
                       <h2 className="text-xl sm:text-3xl font-black text-white mt-4 mb-3 leading-tight">{showCourseModal.title}</h2>
                       <p className="text-slate-300 max-w-md mx-auto mb-8 text-sm">{showCourseModal.description}</p>
                       {showCourseModal.status !== 'PLANNED' ? (
-                        <button
+                        <Button variant="primary"
                           onClick={() => handleJoin(showCourseModal)}
                           disabled={isJoining}
                           className="px-6 sm:px-8 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-full hover:scale-105 transition-transform flex items-center gap-2 mx-auto shadow-[0_0_40px_rgba(16,185,129,0.3)] text-sm sm:text-base"
                         >
                           {isJoining ? <Loader2 className="animate-spin" size={16}/> : <Play fill="black" size={16}/>}
                           S'inscrire à cette formation
-                        </button>
+                        </Button>
                       ) : (
                         <div className="px-6 py-3 bg-amber-500/20 border border-amber-500/30 text-amber-300 font-bold rounded-full flex items-center gap-2 mx-auto w-fit">
                           <Calendar size={15}/> Formation assignée — En attente de démarrage
@@ -1474,7 +1538,7 @@ export default function FormationPage() {
                 {/* En cours / Terminé — Présentiel */}
                 {(showCourseModal.status === 'IN_PROGRESS' || showCourseModal.status === 'COMPLETED') && showCourseModal.format === 'IN_PERSON' && (
                   <div className="flex items-center justify-center w-full h-full p-4 sm:p-8">
-                    <div className="bg-slate-800 text-white rounded-2xl p-5 sm:p-7 max-w-sm w-full shadow-2xl relative overflow-hidden border border-white/10">
+                    <div className="loan-document-protected bg-slate-800 text-white rounded-2xl p-5 sm:p-7 max-w-sm w-full shadow-2xl relative overflow-hidden border border-white/10">
                       <div className="absolute top-0 left-0 w-full h-1.5 bg-amber-500"/>
                       <div className="flex items-center justify-between mb-5">
                         <div>
@@ -1583,14 +1647,14 @@ export default function FormationPage() {
                 {/* Footer actions */}
                 <div className="p-5 border-t border-white/8 space-y-2">
                   {showCourseModal.status === 'IN_PROGRESS' && (
-                    <button
+                    <Button variant="primary"
                       onClick={() => handleRequestCompletion(showCourseModal)}
                       disabled={!!actionId}
                       className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-white font-black rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                     >
                       {actionId ? <Loader2 size={16} className="animate-spin"/> : <CheckCircle2 size={16}/>}
                       J'ai terminé cette formation
-                    </button>
+                    </Button>
                   )}
                   {showCourseModal.status === 'COMPLETION_REQUESTED' && (
                     <div className="w-full py-3 bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold rounded-xl flex items-center justify-center gap-2 text-sm">
@@ -1602,7 +1666,7 @@ export default function FormationPage() {
                       <div className="w-full py-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-black rounded-xl flex items-center justify-center gap-2">
                         <BadgeCheck size={16}/> Certification obtenue
                       </div>
-                      <button
+                      <Button variant="ghost"
                         onClick={() => {
                           const s = myTrainings?.completed.find((s: any) => s.course?.id === showCourseModal.id);
                           if (s?.certificateUrl) {
@@ -1614,41 +1678,26 @@ export default function FormationPage() {
                         }}
                         className="w-full py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2 transition-colors">
                         <Download size={13}/> Télécharger l'attestation
-                      </button>
+                      </Button>
                     </>
                   )}
                   {isRH && (
-                    <button
+                    <Button variant="ghost"
                       onClick={() => { setShowCourseModal(null); openAssignModal(showCourseModal); }}
                       className="w-full py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 font-bold rounded-xl text-sm flex items-center justify-center gap-2 transition-colors">
                       <UserCheck size={13}/> Assigner à des employés
-                    </button>
+                    </Button>
                   )}
                 </div>
               </div>
-            </motion.div>
-          </motion.div>
+            </Modal>
         )}
       </AnimatePresence>
 
       {/* ══ MODAL — CRÉER UN COURS ════════════════════════════════════════════ */}
       <AnimatePresence>
         {showAddModal && (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95 }}
-              className="bg-slate-900 rounded-2xl p-6 max-w-lg w-full shadow-2xl border border-white/10 max-h-[90vh] overflow-y-auto"
-            >
-              <div className="flex items-center justify-between mb-5">
-                <div>
-                  <h2 className="text-xl font-black text-white">Créer une formation</h2>
-                  <p className="text-xs text-slate-400">Visible dans le catalogue de l'entreprise</p>
-                </div>
-                <button onClick={() => setShowAddModal(false)} className="p-2 hover:bg-white/5 dark:hover:bg-white/10 rounded-xl"><X size={16} className="text-slate-500"/></button>
-              </div>
+          <Modal open title={"Créer une formation"} onClose={() => setShowAddModal(false)}>
 
               <div className="space-y-4">
                 {[
@@ -1742,97 +1791,53 @@ export default function FormationPage() {
               </div>
 
               <div className="flex gap-3 mt-6">
-                <button onClick={() => setShowAddModal(false)}
+                <Button variant="ghost" onClick={() => setShowAddModal(false)}
                   className="flex-1 py-3 border border-white/8 dark:border-white/10 rounded-xl text-slate-500 font-bold text-sm hover:bg-white/5 dark:hover:bg-white/5 transition-colors">
                   Annuler
-                </button>
-                <button onClick={handleAddCourse} disabled={isSubmitting || !newCourse.title.trim()}
+                </Button>
+                <Button variant="primary" onClick={handleAddCourse} disabled={isSubmitting || !newCourse.title.trim()}
                   className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-xl text-sm shadow-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
                   {isSubmitting ? <Loader2 size={15} className="animate-spin"/> : <CheckCircle2 size={15}/>}
                   Publier
-                </button>
+                </Button>
               </div>
-            </motion.div>
-          </motion.div>
+            </Modal>
         )}
       </AnimatePresence>
 
       {/* ══ MODAL — DEMANDE DE FORMATION ═════════════════════════════════════ */}
       <AnimatePresence>
         {showRequestModal && (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95 }}
-              className="bg-slate-900 rounded-2xl p-6 max-w-md w-full shadow-2xl border border-white/10 max-h-[90vh] overflow-y-auto"
-            >
-              <div className="flex items-center justify-between mb-5">
-                <div>
-                  <h2 className="text-xl font-black text-white">Demander une formation</h2>
-                  <p className="text-xs text-slate-400">Votre demande sera transmise au RH pour validation</p>
-                </div>
-                <button onClick={() => setShowRequestModal(false)} className="p-2 hover:bg-white/5 dark:hover:bg-white/10 rounded-xl"><X size={16} className="text-slate-500"/></button>
-              </div>
-
-              <div className="space-y-4">
-                <div>
+          <Modal open title={"Demander une formation"} onClose={() => setShowRequestModal(false)}><div className="training-request-content"><RequestForm title="Demander une formation" description="Votre demande sera transmise aux RH." step={uiStep} onStepChange={setUiStep} onNext={()=>setUiStep(s=>s+1)} onCancel={()=>setShowRequestModal(false)} onSubmit={handleSendRequest} submitting={isSubmitting} nextDisabled={uiStep===0&&!requestForm.courseId} submitDisabled={isSubmitting||!requestForm.courseId} summary={<RequestSummaryCard entries={[
+ {label:'Formation',value:courses.find(c=>c.id===requestForm.courseId)?.title||'À choisir'},
+ {label:'Durée',value:courses.find(c=>c.id===requestForm.courseId)?.durationHours ? courses.find(c=>c.id===requestForm.courseId)?.durationHours+' h' : 'À confirmer'},
+ {label:'Date',value:fmt(courses.find(c=>c.id===requestForm.courseId)?.dateSchedule)},
+ {label:'Besoin',value:requestForm.reason||'Non renseigné'}
+]}/> }>
+<div hidden={uiStep!==0}><div>
                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Formation souhaitée *</label>
                   <select value={requestForm.courseId} onChange={e => setRequestForm({ ...requestForm, courseId: e.target.value })}
                     className="w-full px-4 py-3 bg-white/5 dark:bg-slate-800 border border-white/8 dark:border-white/10 rounded-xl text-white text-sm focus:outline-none">
                     <option value="">Choisir dans le catalogue…</option>
                     {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
                   </select>
-                </div>
-                <div>
+                </div></div>
+<div hidden={uiStep!==1}><p className="text-sm text-[var(--text-secondary)]">La durée et les dates sont celles du cours choisi. L’organisation de la formation sera confirmée par les RH.</p><dl className="request-summary"><div><dt>Durée</dt><dd>{courses.find(c=>c.id===requestForm.courseId)?.durationHours ?? 'À confirmer'} h</dd></div><div><dt>Date prévue</dt><dd>{fmt(courses.find(c=>c.id===requestForm.courseId)?.dateSchedule)}</dd></div></dl></div>
+<div hidden={uiStep!==2}><div>
                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Justification / Besoin</label>
                   <textarea value={requestForm.reason} onChange={e => setRequestForm({ ...requestForm, reason: e.target.value })}
                     rows={4} placeholder="En quoi cette formation est-elle utile pour votre poste ou vos missions ?"
                     className="w-full px-4 py-3 bg-white/5 dark:bg-slate-800 border border-white/8 dark:border-white/10 rounded-xl text-white text-sm focus:outline-none resize-none"/>
-                </div>
-                <div className="flex items-start gap-2 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-500/20 rounded-xl">
-                  <Info size={13} className="text-emerald-500 shrink-0 mt-0.5"/>
-                  <p className="text-xs text-emerald-700 dark:text-emerald-300">Votre RH recevra une notification et validera sous 48h ouvrées.</p>
-                </div>
-              </div>
-
-              <div className="flex gap-3 mt-6">
-                <button onClick={() => setShowRequestModal(false)}
-                  className="flex-1 py-3 border border-white/8 dark:border-white/10 rounded-xl text-slate-500 font-bold text-sm hover:bg-white/5 dark:hover:bg-white/5 transition-colors">
-                  Annuler
-                </button>
-                <button onClick={handleSendRequest} disabled={isSubmitting || !requestForm.courseId}
-                  className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-xl text-sm shadow-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
-                  {isSubmitting ? <Loader2 size={15} className="animate-spin"/> : <Send size={15}/>}
-                  Envoyer
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
+                </div></div>
+<div hidden={uiStep!==3}><p className="text-sm text-[var(--text-secondary)]">Relisez le récapitulatif avant d’envoyer votre demande aux RH.</p></div>
+</RequestForm></div></Modal>
         )}
       </AnimatePresence>
 
       {/* ══ MODAL — MODIFIER BUDGET DÉPARTEMENT ══════════════════════════════ */}
       <AnimatePresence>
         {showBudgetModal && (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }}
-              className="bg-slate-900 rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-white/10 max-h-[90vh] overflow-y-auto"
-            >
-              <div className="flex items-center justify-between mb-5">
-                <div>
-                  <h2 className="text-lg font-black text-white">Budget Formation</h2>
-                  <p className="text-xs text-slate-400 flex items-center gap-1.5 mt-0.5">
-                    <div className="w-2 h-2 rounded-full" style={{ background: showBudgetModal.color }}/> {showBudgetModal.name}
-                  </p>
-                </div>
-                <button onClick={() => setShowBudgetModal(null)} className="p-2 hover:bg-white/5 dark:hover:bg-white/10 rounded-xl"><X size={16}/></button>
-              </div>
+          <Modal open title={"Budget formation"} onClose={() => setShowBudgetModal(null)}>
               <div>
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Montant alloué (FCFA)</label>
                 <input
@@ -1844,41 +1849,24 @@ export default function FormationPage() {
                 <p className="text-xs text-slate-400 mt-1">Actuellement : {fmtCFA(showBudgetModal.allocated)}</p>
               </div>
               <div className="flex gap-3 mt-5">
-                <button onClick={() => setShowBudgetModal(null)}
+                <Button variant="ghost" onClick={() => setShowBudgetModal(null)}
                   className="flex-1 py-3 border border-white/8 dark:border-white/10 rounded-xl text-slate-500 font-bold text-sm hover:bg-white/5 dark:hover:bg-white/5 transition-colors">
                   Annuler
-                </button>
-                <button onClick={handleUpdateBudget} disabled={isSubmitting || !budgetForm}
+                </Button>
+                <Button variant="primary" onClick={handleUpdateBudget} disabled={isSubmitting || !budgetForm}
                   className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-xl text-sm shadow-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
                   {isSubmitting ? <Loader2 size={15} className="animate-spin"/> : <Check size={15}/>}
                   Enregistrer
-                </button>
+                </Button>
               </div>
-            </motion.div>
-          </motion.div>
+            </Modal>
         )}
       </AnimatePresence>
 
       {/* ══ MODAL — VALIDER FORMATION + MENTION ══════════════════════════════ */}
       <AnimatePresence>
         {validateModal && (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95 }}
-              className="bg-slate-900 rounded-2xl p-6 max-w-md w-full shadow-2xl border border-white/10 max-h-[90vh] overflow-y-auto"
-            >
-              <div className="flex items-center justify-between mb-5">
-                <div>
-                  <h2 className="text-xl font-black text-white">Certifier la formation</h2>
-                  <p className="text-xs text-slate-400 mt-0.5">{validateModal.employeeName}</p>
-                </div>
-                <button onClick={() => setValidateModal(null)} className="p-2 hover:bg-white/5 dark:hover:bg-white/10 rounded-xl">
-                  <X size={16} className="text-slate-500"/>
-                </button>
-              </div>
+          <Modal open title={"Certifier la formation"} onClose={() => setValidateModal(null)}>
               <div className="flex items-center gap-3 p-3 bg-white/5 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/8 mb-5">
                 <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/20 flex items-center justify-center shrink-0">
                   <Award size={18} className="text-amber-500"/>
@@ -1897,7 +1885,7 @@ export default function FormationPage() {
                     { value: 'TRES_BIEN',    label: 'Très Bien',    active: 'border-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300', emoji: '★★' },
                     { value: 'EXCELLENT',    label: 'Excellent',    active: 'border-amber-400 bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300', emoji: '★★★' },
                   ].map(m => (
-                    <button key={m.value}
+                    <Button variant="ghost" key={m.value}
                       onClick={() => setValidateForm({ ...validateForm, mention: m.value })}
                       className={`p-3 rounded-xl border-2 transition-all text-left ${
                         validateForm.mention === m.value ? m.active : 'border-white/8 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20'
@@ -1907,7 +1895,7 @@ export default function FormationPage() {
                         <span className="text-sm font-black">{m.label}</span>
                         <span className="text-[10px] opacity-70">{m.emoji}</span>
                       </div>
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>
@@ -1931,41 +1919,24 @@ export default function FormationPage() {
                 </div>
               )}
               <div className="flex gap-3 mt-5">
-                <button onClick={() => setValidateModal(null)}
+                <Button variant="ghost" onClick={() => setValidateModal(null)}
                   className="flex-1 py-3 border border-white/8 dark:border-white/10 rounded-xl text-slate-500 font-bold text-sm hover:bg-white/5 dark:hover:bg-white/5 transition-colors">
                   Annuler
-                </button>
-                <button onClick={handleValidateCompletion} disabled={isSubmitting || !validateForm.mention}
+                </Button>
+                <Button variant="ghost" onClick={handleValidateCompletion} disabled={isSubmitting || !validateForm.mention}
                   className="flex-1 py-3 bg-amber-500 hover:bg-amber-600 text-white font-black rounded-xl text-sm shadow-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
                   {isSubmitting ? <Loader2 size={15} className="animate-spin"/> : <Award size={15}/>}
                   Émettre le certificat
-                </button>
+                </Button>
               </div>
-            </motion.div>
-          </motion.div>
+            </Modal>
         )}
       </AnimatePresence>
 
       {/* ══ MODAL — ASSIGNER À UN EMPLOYÉ ════════════════════════════════════ */}
       <AnimatePresence>
         {showAssignModal && (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95 }}
-              className="bg-slate-900 rounded-2xl p-6 max-w-md w-full shadow-2xl border border-white/10 max-h-[90vh] overflow-y-auto"
-            >
-              <div className="flex items-center justify-between mb-5">
-                <div>
-                  <h2 className="text-xl font-black text-white">Assigner la formation</h2>
-                  <p className="text-xs text-slate-400 mt-0.5 line-clamp-1">{showAssignModal.title}</p>
-                </div>
-                <button onClick={() => setShowAssignModal(null)} className="p-2 hover:bg-white/5 dark:hover:bg-white/10 rounded-xl">
-                  <X size={16} className="text-slate-500"/>
-                </button>
-              </div>
+          <Modal open title={"Assigner la formation"} onClose={() => setShowAssignModal(null)}>
               <div className="flex items-center gap-3 p-3 bg-white/5 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/8 mb-5">
                 <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
                   <GraduationCap size={18} className="text-emerald-500"/>
@@ -1982,13 +1953,13 @@ export default function FormationPage() {
               <div>
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Choisir l'employé *</label>
                 {loadingEmployees ? (
-                  <KonzaLoader variant="section" />
+                  <ModulePageSkeleton label="Chargement des formations" />
                 ) : (
                   <div className="max-h-64 overflow-y-auto space-y-2 pr-1">
                     {employees.length === 0 ? (
                       <p className="text-sm text-slate-400 text-center py-4">Aucun employé trouvé</p>
                     ) : employees.map((emp: Employee) => (
-                      <button key={emp.id} onClick={() => setSelectedEmployeeId(emp.id)}
+                      <Button variant="ghost" key={emp.id} onClick={() => setSelectedEmployeeId(emp.id)}
                         className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
                           selectedEmployeeId === emp.id
                             ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-300 dark:border-emerald-500/40'
@@ -2003,27 +1974,26 @@ export default function FormationPage() {
                           <p className="text-[11px] text-slate-400 truncate">{emp.position}{emp.department && ` • ${emp.department.name}`}</p>
                         </div>
                         {selectedEmployeeId === emp.id && <CheckCircle2 size={16} className="text-emerald-500 shrink-0"/>}
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 )}
               </div>
               <div className="flex gap-3 mt-5">
-                <button onClick={() => setShowAssignModal(null)}
+                <Button variant="ghost" onClick={() => setShowAssignModal(null)}
                   className="flex-1 py-3 border border-white/8 dark:border-white/10 rounded-xl text-slate-500 font-bold text-sm hover:bg-white/5 dark:hover:bg-white/5 transition-colors">
                   Annuler
-                </button>
-                <button onClick={handleAssign} disabled={isSubmitting || !selectedEmployeeId}
+                </Button>
+                <Button variant="primary" onClick={handleAssign} disabled={isSubmitting || !selectedEmployeeId}
                   className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-xl text-sm shadow-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
                   {isSubmitting ? <Loader2 size={15} className="animate-spin"/> : <UserCheck size={15}/>}
                   Assigner
-                </button>
+                </Button>
               </div>
-            </motion.div>
-          </motion.div>
+            </Modal>
         )}
       </AnimatePresence>
 
-    </div>
+    </div>{uiRequestDone && <Modal open title="Demande envoyée" onClose={()=>setUiRequestDone(false)}><RequestSuccessScreen handler="Le service RH" next="Vous retrouverez le suivi dans vos formations." onView={()=>{setUiRequestDone(false);setActiveView('my-learning');}} onAnother={()=>{setUiRequestDone(false);setShowRequestModal(true);}}/></Modal>}</div></ModulePageFrame>
   );
 }

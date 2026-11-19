@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Users, Pencil , Wallet, Search, Filter, Trash2, AlertCircle, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GlobalLoader } from '@/components/ui/GlobalLoader';
+import { ModulePageFrame, ModulePageSkeleton } from '@/components/requests/ModulePageFrame';
 import { api } from '@/services/api';
 
 import { PayrollStatsCards } from './components/PayrollStatsCards';
@@ -205,15 +205,16 @@ export default function PayrollPage() {
   const selectAll = () =>
     setSelectedIds(selectedIds.length === paginatedEntries.length ? [] : paginatedEntries.map(e => e.id));
 
-  if (isLoading) return <GlobalLoader />;
+  if (isLoading) return <ModulePageSkeleton label="Chargement des bulletins de paie" />;
 
   return (
+    <ModulePageFrame kind="list">
     <div className="space-y-6 min-h-screen pb-32" onClick={() => setShowMonthSelector(false)}>
 
       {/* ── HEADER ── */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div>
-          <h1 className="text-3xl font-bold text-[var(--text)]">Gestion de Paie</h1>
+          <h1 className="text-3xl font-semibold text-[var(--text)]">Gestion de Paie</h1>
           <p className="text-[var(--text-muted)]">Gérez les bulletins, validations et paiements.</p>
         </div>
 
@@ -226,19 +227,22 @@ export default function PayrollPage() {
           onToggle={e => { e.stopPropagation(); setShowMonthSelector(!showMonthSelector); }}
         />
 
-        <div className="flex items-center gap-3">
-          <Link href={bp('/paie/manuel')}
-            className="px-4 py-2.5 rounded-xl border border-[var(--border)] text-[var(--text)] font-bold hover:bg-[var(--surface-2)] transition-colors flex items-center gap-2">
+        <div data-guide="paie-modes" className="flex items-center gap-3">
+          <Link data-guide="paie-manuelle" href={bp('/paie/manuel')}
+            aria-label="Saisie manuelle de la paie"
+            className="k-button k-button-secondary whitespace-nowrap">
             <Pencil size={18} />
             <span className="hidden sm:inline">Saisie manuelle</span>
           </Link>
-          <Link href={bp('/paie/masse')}
-            className="px-4 py-2.5 rounded-xl border border-[var(--border)] text-[var(--text)] font-bold hover:bg-[var(--surface-2)] transition-colors flex items-center gap-2">
+          <Link data-guide="paie-masse" href={bp('/paie/masse')}
+            aria-label="Paie en masse"
+            className="k-button k-button-secondary whitespace-nowrap">
             <Users size={18} />
             <span className="hidden sm:inline">Paie en Masse</span>
           </Link>
-          <Link href={bp('/paie/nouveau')}
-            className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-2">
+          <Link data-guide="paie-individuelle" href={bp('/paie/nouveau')}
+            aria-label="Créer une paie"
+            className="k-button k-button-primary whitespace-nowrap">
             <Wallet size={18} />
             <span className="hidden sm:inline">Créer Paie</span>
           </Link>
@@ -270,8 +274,10 @@ export default function PayrollPage() {
               { id: 'Paid',      label: 'Payés',      count: entries.filter(e => e.status === 'Paid').length },
             ].map(tab => (
               <button key={tab.id}
+                type="button"
+                aria-pressed={activeTab === tab.id}
                 onClick={() => { setActiveTab(tab.id as any); setCurrentPage(1); }}
-                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap flex items-center gap-2
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap flex items-center gap-2
                   ${activeTab === tab.id ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}
               >
                 {tab.label}
@@ -285,14 +291,14 @@ export default function PayrollPage() {
 
           <div className="flex items-center gap-3 w-full sm:w-auto">
             <div className="relative flex-1 sm:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" size={16} />
               <input type="text" placeholder="Rechercher..." value={searchQuery}
                 onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                className="w-full pl-9 pr-4 py-2 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                className="w-full pl-9 pr-4 py-2 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm focus:ring-2 focus:ring-[var(--focus)] focus:border-[var(--border)]"
               />
             </div>
-            <button onClick={() => setShowFilters(!showFilters)}
-              className={`p-2 rounded-xl border ${showFilters ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30 text-emerald-600 dark:text-emerald-400' : 'border-[var(--border)] text-gray-500'}`}>
+            <button type="button" aria-label="Filtres" aria-pressed={showFilters} onClick={() => setShowFilters(!showFilters)}
+              className={`p-2 rounded-xl border ${showFilters ? 'bg-[var(--brand-soft)]  border-[var(--border)]  text-[var(--action)] ' : 'border-[var(--border)] text-[var(--text-secondary)]'}`}>
               <Filter size={18} />
             </button>
           </div>
@@ -301,13 +307,15 @@ export default function PayrollPage() {
         {/* Tableau */}
         <div className="flex-1 overflow-x-auto">
           <table className="w-full text-left border-collapse">
-            <thead className="bg-[var(--surface-2)] text-xs uppercase text-gray-500 font-semibold sticky top-0 z-10">
+            <thead className="bg-[var(--surface-2)] text-xs uppercase text-[var(--text-secondary)] font-semibold sticky top-0 z-10">
               <tr>
                 <th className="px-6 py-4 w-10">
+                  <span className="k-sr-only">Sélection</span>
                   <input type="checkbox"
+                    aria-label="Sélectionner tous les bulletins de la page"
                     checked={selectedIds.length === paginatedEntries.length && paginatedEntries.length > 0}
                     onChange={selectAll}
-                    className="rounded border-gray-300 text-emerald-500 focus:ring-emerald-500"
+                    className="rounded border-[var(--border)] text-[var(--success-text)] focus:ring-[var(--focus)]"
                   />
                 </th>
                 <th className="px-6 py-4">Employé</th>
@@ -322,7 +330,7 @@ export default function PayrollPage() {
               {paginatedEntries.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-20 text-center">
-                    <p className="text-gray-500">Aucun bulletin trouvé.</p>
+                    <p className="text-[var(--text-secondary)]">Aucun bulletin trouvé.</p>
                   </td>
                 </tr>
               ) : (
@@ -370,17 +378,19 @@ export default function PayrollPage() {
 
       {/* ── IMPRESSION GROUPÉE — rendu hors-écran, invisible, démonté après usage ── */}
       {printBatchIds && (
-        <BulletinBatchPrintHidden
-          payrollIds={printBatchIds}
-          onReady={() => {
-            printBulletinBatch('bul-batch-root');
-            setPrintBatchIds(null);
-          }}
-          onError={(msg) => {
-            alert(`❌ ${msg}`);
-            setPrintBatchIds(null);
-          }}
-        />
+        <div className="loan-document-protected">
+          <BulletinBatchPrintHidden
+            payrollIds={printBatchIds}
+            onReady={() => {
+              printBulletinBatch('bul-batch-root');
+              setPrintBatchIds(null);
+            }}
+            onError={(msg) => {
+              alert(`❌ ${msg}`);
+              setPrintBatchIds(null);
+            }}
+          />
+        </div>
       )}
 
       {/* ── MODAL SUPPRESSION DÉFINITIVE ── */}
@@ -388,7 +398,7 @@ export default function PayrollPage() {
         {deleteModal.open && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[rgb(0_0_0_/.48)]  p-4"
             onClick={() => !isDeleting && setDeleteModal({ open: false, id: '', name: '' })}
           >
             <motion.div
@@ -398,11 +408,11 @@ export default function PayrollPage() {
             >
               <div className="flex flex-col items-center text-center">
                 {/* Icône */}
-                <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4">
-                  <Trash2 size={32} className="text-red-600 dark:text-red-400" />
+                <div className="w-16 h-16 bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  rounded-full flex items-center justify-center mb-4">
+                  <Trash2 size={32} className="text-[var(--danger-text)] " />
                 </div>
 
-                <h3 className="text-xl font-bold text-[var(--text)] mb-2">
+                <h3 className="text-xl font-semibold text-[var(--text)] mb-2">
                   Supprimer définitivement ?
                 </h3>
                 <p className="text-[var(--text-muted)] text-sm mb-3">
@@ -410,9 +420,9 @@ export default function PayrollPage() {
                 </p>
 
                 {/* Avertissement */}
-                <div className="w-full mb-5 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-start gap-2 text-left">
-                  <AlertCircle size={14} className="text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
-                  <p className="text-xs text-red-700 dark:text-red-300 font-medium">
+                <div className="w-full mb-5 p-3 bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  border border-[var(--border)]  rounded-xl flex items-start gap-2 text-left">
+                  <AlertCircle size={14} className="text-[var(--danger-text)]  shrink-0 mt-0.5" />
+                  <p className="text-xs text-[var(--danger-text)]  font-medium">
                     Action irréversible. Vous devrez recréer le bulletin si nécessaire.
                   </p>
                 </div>
@@ -421,14 +431,14 @@ export default function PayrollPage() {
                   <button
                     onClick={() => setDeleteModal({ open: false, id: '', name: '' })}
                     disabled={isDeleting}
-                    className="flex-1 py-3 border border-[var(--border)] rounded-xl font-bold hover:bg-[var(--surface-2)] transition-colors disabled:opacity-50"
+                    className="flex-1 py-3 border border-[var(--border)] rounded-xl font-semibold hover:bg-[var(--surface-2)] transition-colors disabled:opacity-50"
                   >
                     Annuler
                   </button>
                   <button
                     onClick={handleDelete}
                     disabled={isDeleting}
-                    className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl flex justify-center items-center gap-2 transition-colors disabled:opacity-50"
+                    className="flex-1 py-3 bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] text-[var(--danger-text)] font-semibold rounded-xl flex justify-center items-center gap-2 transition-colors disabled:opacity-50"
                   >
                     {isDeleting ? <Loader2 className="animate-spin" size={20} /> : <Trash2 size={18} />}
                     {isDeleting ? 'Suppression...' : 'Supprimer'}
@@ -450,5 +460,6 @@ export default function PayrollPage() {
         />
       )}
     </div>
+    </ModulePageFrame>
   );
 }

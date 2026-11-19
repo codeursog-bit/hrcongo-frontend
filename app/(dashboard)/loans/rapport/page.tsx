@@ -1,4 +1,7 @@
 'use client';
+import { Button } from '@/components/design-system/primitives';
+import { useLoanPageVisuals } from '@/components/loans/LoanModuleFrame';
+import { LoanModuleFrame, LoanModuleSkeleton } from '@/components/loans/LoanModuleFrame';
 
 // ============================================================================
 // 📁 app/(dashboard)/loans/rapport/page.tsx
@@ -24,11 +27,13 @@ const MONTHS_FR = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 
 const MONTHS_FULL = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
 const TYPE_LABEL: Record<string, string> = { ARGENT: 'Prêt argent', MARCHANDISE: 'Marchandise', AUTRE: 'Autre prêt', AVANCE: 'Avance sur salaire' };
 // Palette de l'app (sky / emerald / amber / violet / rose) — pas les couleurs du fichier Excel
-const TYPE_COLOR: Record<string, string> = { ARGENT: '#0ea5e9', MARCHANDISE: '#8b5cf6', AUTRE: '#f59e0b', AVANCE: '#10b981' };
-const DEPT_COLORS = ['#0ea5e9', '#f59e0b', '#8b5cf6', '#10b981', '#ef4444', '#ec4899', '#14b8a6'];
+const TYPE_COLOR: Record<string, string> = { ARGENT: 'var(--loan-chart-2, #0ea5e9)', MARCHANDISE: 'var(--loan-chart-3, #8b5cf6)', AUTRE: 'var(--loan-chart-3, #f59e0b)', AVANCE: 'var(--loan-chart-2, #10b981)' };
+const DEPT_COLORS = ['var(--loan-chart-2, #0ea5e9)', 'var(--loan-chart-3, #f59e0b)', 'var(--loan-chart-3, #8b5cf6)', 'var(--loan-chart-2, #10b981)', 'var(--loan-chart-3, #ef4444)', 'var(--loan-chart-1, #ec4899)', 'var(--loan-chart-2, #14b8a6)'];
 const fmt = (n: number) => Math.round(n).toLocaleString('fr-FR') + ' FCFA';
 
 export default function LoansReportPage() {
+  const {refonte,motion}=useLoanPageVisuals();
+  const [refonteError,setRefonteError]=useState('');
   const [loans, setLoans] = useState<any[]>([]);
   const [advances, setAdvances] = useState<any[]>([]);
   const [userRole, setUserRole] = useState('');
@@ -46,7 +51,7 @@ export default function LoansReportPage() {
       try {
         const [l, a]: any = await Promise.all([api.get('/loans'), api.get('/loans/advances')]);
         setLoans(l || []); setAdvances(a || []);
-      } catch (e) { console.error('Erreur chargement rapport', e); }
+      } catch (e) { console.error('Erreur chargement rapport', e); setRefonteError('Le chargement a échoué. Réessayez dans un instant.'); }
       finally { setIsLoading(false); }
     })();
   }, []);
@@ -103,7 +108,7 @@ export default function LoansReportPage() {
     const result = top.map(([name, montant], i) => ({ name, montant, pct: monthTotal ? Math.round((montant / monthTotal) * 1000) / 10 : 0, color: DEPT_COLORS[i % DEPT_COLORS.length] }));
     if (rest.length > 0) {
       const autresMontant = rest.reduce((s, [, m]) => s + m, 0);
-      result.push({ name: `Autres (${rest.length})`, montant: autresMontant, pct: monthTotal ? Math.round((autresMontant / monthTotal) * 1000) / 10 : 0, color: '#94a3b8' });
+      result.push({ name: `Autres (${rest.length})`, montant: autresMontant, pct: monthTotal ? Math.round((autresMontant / monthTotal) * 1000) / 10 : 0, color: 'var(--loan-chart-3, #94a3b8)' });
     }
     return result;
   }, [monthDebts, monthTotal]);
@@ -168,10 +173,10 @@ export default function LoansReportPage() {
     return Array.from(map.values()).sort((a, b) => b.montant - a.montant).slice(0, 20);
   }, [monthDebts, allDebts, top20Mode, year]);
 
-  if (isLoading) return <KonzaLoader variant="page" />;
+  if (isLoading) return <LoanModuleSkeleton />;
 
   return (
-    <div className="max-w-[1500px] mx-auto pb-24 space-y-6">
+    <LoanModuleFrame kind="dashboard" error={refonteError}><div className="max-w-[1500px] mx-auto pb-24 space-y-6">
       <FinanceSubNav userRole={userRole} />
       <div>
         <h1 className="text-xl font-bold text-[var(--text)]">Rapport — Prêts, avances & retenues</h1>
@@ -181,9 +186,9 @@ export default function LoansReportPage() {
       {/* ══════════════════ ONGLETS MOIS ══════════════════ */}
       <div className="flex flex-wrap gap-1 bg-[var(--surface-2)] p-1 rounded-xl w-fit">
         {MONTHS_FR.map((m, i) => (
-          <button key={m} onClick={() => setMonth(i + 1)} className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-all ${month === i + 1 ? 'bg-emerald-500 text-white shadow-sm' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'}`}>
+          <Button variant="ghost" key={m} onClick={() => setMonth(i + 1)} className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-all ${month === i + 1 ? 'bg-emerald-500 text-white shadow-sm' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'}`}>
             {m}
-          </button>
+          </Button>
         ))}
         <select value={year} onChange={e => setYear(Number(e.target.value))} className="ml-1 text-xs px-2 rounded-lg border-0 bg-[var(--surface)] font-bold text-[var(--text-muted)]">
           {availableYears.map(y => <option key={y} value={y}>{y}</option>)}
@@ -252,7 +257,7 @@ export default function LoansReportPage() {
               <div className="flex flex-col sm:flex-row items-center gap-4">
                 <ResponsiveContainer width="100%" height={220} className="sm:!w-1/2">
                   <PieChart>
-                    <Pie data={byTypeMonth} dataKey="montant" nameKey="label" innerRadius={50} outerRadius={95} paddingAngle={2}>
+                    <Pie data={byTypeMonth} dataKey="montant" nameKey="label" innerRadius={50} outerRadius={95} paddingAngle={refonte ? 5 : 2} cornerRadius={refonte ? 8 : 0} animationDuration={refonte ? 700 : undefined} isAnimationActive={refonte ? motion : undefined}>
                       {byTypeMonth.map((t, i) => <Cell key={i} fill={TYPE_COLOR[t.type]} stroke="none" />)}
                     </Pie>
                     <Tooltip formatter={(v: number) => fmt(v)} />
@@ -269,7 +274,7 @@ export default function LoansReportPage() {
               <div className="flex flex-col sm:flex-row items-center gap-4">
                 <ResponsiveContainer width="100%" height={220} className="sm:!w-1/2">
                   <PieChart>
-                    <Pie data={byDeptMonth} dataKey="montant" nameKey="name" innerRadius={55} outerRadius={95} paddingAngle={2}>
+                    <Pie data={byDeptMonth} dataKey="montant" nameKey="name" innerRadius={55} outerRadius={95} paddingAngle={refonte ? 5 : 2} cornerRadius={refonte ? 8 : 0} animationDuration={refonte ? 700 : undefined} isAnimationActive={refonte ? motion : undefined}>
                       {byDeptMonth.map((d, i) => <Cell key={i} fill={d.color} stroke="none" />)}
                     </Pie>
                     <Tooltip formatter={(v: number) => fmt(v)} />
@@ -307,7 +312,7 @@ export default function LoansReportPage() {
                 <Tooltip formatter={(v: number) => fmt(v)} />
                 <Legend />
                 {Object.entries(TYPE_LABEL).map(([type, label]) => (
-                  <Area key={type} type="monotone" dataKey={label} stackId="1" stroke={TYPE_COLOR[type]} fill={TYPE_COLOR[type]} fillOpacity={0.55} />
+                  <Area key={type} type="monotone" dataKey={label} stackId="1" stroke={TYPE_COLOR[type]} fill={TYPE_COLOR[type]} fillOpacity={0.55} animationDuration={refonte ? 700 : undefined} isAnimationActive={refonte ? motion : undefined} />
                 ))}
               </AreaChart>
             </ResponsiveContainer>
@@ -320,7 +325,7 @@ export default function LoansReportPage() {
               <>
                 <ResponsiveContainer width="100%" height={160}>
                   <PieChart>
-                    <Pie data={annualByType} dataKey="montant" nameKey="label" innerRadius={45} outerRadius={75} paddingAngle={2}>
+                    <Pie data={annualByType} dataKey="montant" nameKey="label" innerRadius={45} outerRadius={75} paddingAngle={refonte ? 5 : 2} cornerRadius={refonte ? 8 : 0} animationDuration={refonte ? 700 : undefined} isAnimationActive={refonte ? motion : undefined}>
                       {annualByType.map((t, i) => <Cell key={i} fill={TYPE_COLOR[t.type]} stroke="none" />)}
                     </Pie>
                     <Tooltip formatter={(v: number) => fmt(v)} />
@@ -349,7 +354,7 @@ export default function LoansReportPage() {
               <XAxis dataKey="mois" fontSize={12} />
               <YAxis fontSize={12} tickFormatter={(v) => `${Math.round(v / 1000)}k`} />
               <Tooltip formatter={(v: number) => fmt(v)} />
-              <Area type="monotone" dataKey="Montant" stroke="#0ea5e9" fill="#0ea5e9" fillOpacity={0.35} />
+              <Area type="monotone" dataKey="Montant" stroke="var(--loan-chart-2, #0ea5e9)" fill="var(--loan-chart-2, #0ea5e9)" fillOpacity={0.35} animationDuration={refonte ? 700 : undefined} isAnimationActive={refonte ? motion : undefined} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -360,8 +365,8 @@ export default function LoansReportPage() {
         <div className="p-4 flex items-center justify-between border-b border-[var(--border)]">
           <p className="text-sm font-bold text-[var(--text)] flex items-center gap-2"><Users2 size={16} /> Top 20 — employés avec le plus de dettes</p>
           <div className="flex gap-1 bg-[var(--surface-2)] p-1 rounded-lg">
-            <button onClick={() => setTop20Mode('mois')} className={`px-3 py-1 rounded-md text-xs font-semibold ${top20Mode === 'mois' ? 'bg-[var(--surface)] shadow-sm text-[var(--text)]' : 'text-[var(--text-muted)]'}`}>{MONTHS_FULL[month - 1]}</button>
-            <button onClick={() => setTop20Mode('annee')} className={`px-3 py-1 rounded-md text-xs font-semibold ${top20Mode === 'annee' ? 'bg-[var(--surface)] shadow-sm text-[var(--text)]' : 'text-[var(--text-muted)]'}`}>Annuel {year}</button>
+            <Button variant="ghost" onClick={() => setTop20Mode('mois')} className={`px-3 py-1 rounded-md text-xs font-semibold ${top20Mode === 'mois' ? 'bg-[var(--surface)] shadow-sm text-[var(--text)]' : 'text-[var(--text-muted)]'}`}>{MONTHS_FULL[month - 1]}</Button>
+            <Button variant="ghost" onClick={() => setTop20Mode('annee')} className={`px-3 py-1 rounded-md text-xs font-semibold ${top20Mode === 'annee' ? 'bg-[var(--surface)] shadow-sm text-[var(--text)]' : 'text-[var(--text-muted)]'}`}>Annuel {year}</Button>
           </div>
         </div>
         <table className="w-full text-sm">
@@ -385,7 +390,7 @@ export default function LoansReportPage() {
           </tbody>
         </table>
       </div>
-    </div>
+    </div></LoanModuleFrame>
   );
 }
 

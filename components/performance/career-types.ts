@@ -70,10 +70,10 @@ export const PROPOSAL_TYPE_LABEL: Record<Proposal['type'], string> = {
 };
 
 export const PROPOSAL_STATUS: Record<PromotionStatus, { label: string; cls: string }> = {
-  PENDING:   { label: 'En attente', cls: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300' },
-  APPROVED:  { label: 'Validée',    cls: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300' },
-  REJECTED:  { label: 'Refusée',    cls: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' },
-  CANCELLED: { label: 'Annulée',    cls: 'bg-gray-100 dark:bg-gray-700 text-gray-500' },
+  PENDING:   { label: 'En attente', cls: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)]' },
+  APPROVED:  { label: 'Validée',    cls: 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)]' },
+  REJECTED:  { label: 'Refusée',    cls: 'bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] text-[var(--danger-text)]' },
+  CANCELLED: { label: 'Annulée',    cls: 'bg-[var(--surface-2)] text-[var(--text-secondary)]' },
 };
 
 export type ActionStatus = 'TODO' | 'IN_PROGRESS' | 'DONE';

@@ -1,4 +1,7 @@
 'use client';
+import { AttendanceModuleFrame as ModulePageFrame } from '@/components/attendance/AttendanceModuleFrame';
+import { ModulePageSkeleton } from '@/components/requests/ModulePageFrame';
+import { Button } from '@/components/design-system/primitives';
 
 // ============================================================================
 // 📁 app/(dashboard)/presences/permissions/page.tsx
@@ -34,19 +37,20 @@ import { effectiveDeparture, returnState, isReturnPending, needsAdminAction, fmt
 type Status = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
 
 const STATUS_CONFIG: Record<Status, { label: string; badge: string; icon: any }> = {
-  PENDING:   { label: 'En attente', badge: 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800', icon: Clock },
-  APPROVED:  { label: 'Autorisé',   badge: 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800', icon: CheckCircle2 },
-  REJECTED:  { label: 'Refusé',     badge: 'bg-red-50 text-red-700 border-red-100 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800', icon: XCircle },
+  PENDING:   { label: 'En attente', badge: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)] border-[var(--border)]   ', icon: Clock },
+  APPROVED:  { label: 'Autorisé',   badge: 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)] border-[var(--border)]   ', icon: CheckCircle2 },
+  REJECTED:  { label: 'Refusé',     badge: 'bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] text-[var(--danger-text)] border-[var(--border)]   ', icon: XCircle },
   CANCELLED: { label: 'Annulé',     badge: 'bg-[var(--surface-2)] text-[var(--text-muted)]', icon: Ban },
 };
 
 const TYPE_CONFIG: Record<string, { label: string; icon: any; dot: string }> = {
-  URGENCE: { label: 'Urgence', icon: Stethoscope, dot: 'bg-red-400' },
-  MISSION: { label: 'Mission', icon: Briefcase,   dot: 'bg-violet-400' },
+  URGENCE: { label: 'Urgence', icon: Stethoscope, dot: 'bg-[var(--danger)]' },
+  MISSION: { label: 'Mission', icon: Briefcase,   dot: 'bg-[var(--brand)]' },
   AUTRE:   { label: 'Autre',   icon: HelpCircle,  dot: 'bg-[var(--text-muted)]' },
 };
 
 export default function PermissionsManagementPage() {
+ const [uiLoadError,setUiLoadError]=useState('');
   const { bp } = useBasePath();
   const [tab, setTab] = useState<'overview' | 'tickets'>('overview');
   const [tickets, setTickets] = useState<any[]>([]);
@@ -89,7 +93,7 @@ export default function PermissionsManagementPage() {
         if (target) { setTab('tickets'); setFilter('ALL'); }
         setSelectedId(target?.id ?? firstPending?.id ?? tix?.[0]?.id ?? null);
       } catch (e) {
-        console.error('Erreur chargement tickets de permission', e);
+        console.error('Erreur chargement tickets de permission', e); setUiLoadError('Le chargement a échoué. Réessayez dans un instant.');
       } finally {
         setIsLoading(false);
       }
@@ -187,32 +191,32 @@ export default function PermissionsManagementPage() {
     finally { setIsExportingPdf(false); }
   };
 
-  if (isLoading) return <KonzaLoader variant="page" />;
+  if (isLoading) return <ModulePageSkeleton label="Chargement des permissions" />;
 
   return (
-    <div className="max-w-[1600px] mx-auto pb-24 space-y-6">
+    <ModulePageFrame kind="list" error={uiLoadError}><div className="max-w-[1600px] mx-auto pb-24 space-y-6">
       <PresenceModuleSwitcher />
       <PermissionsSubNav userRole={userRole} />
 
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
-          <p className="text-xs font-bold tracking-[0.2em] text-[var(--text-muted)] uppercase mb-1">Ressources Humaines</p>
-          <h1 className="text-3xl font-bold text-[var(--text)]">Tickets de permission</h1>
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 attendance-page-header">
+        <div className="attendance-page-heading">
+          <p className="text-xs font-semibold tracking-[0.2em] text-[var(--text-muted)]  mb-1">Ressources Humaines</p>
+          <h1 className="text-3xl font-semibold text-[var(--text)]">Tickets de permission</h1>
           <p className="text-[var(--text-muted)] text-sm mt-1">Urgences · Missions d&apos;entreprise à l&apos;extérieur</p>
         </div>
-        <Link href={bp('/presences/permissions/nouveau')} className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-sm flex items-center gap-2 shadow-lg shadow-emerald-500/30 w-fit">
+        <Link href={bp('/presences/permissions/nouveau')} className="px-4 py-2.5 rounded-xl bg-[var(--brand)] hover:bg-[var(--brand)] text-[var(--on-brand)] font-semibold text-sm flex items-center gap-2 shadow-lg  w-fit">
           <Plus size={18} /> Nouveau ticket
         </Link>
       </div>
 
       <div className="flex gap-1 bg-[var(--surface-2)] p-1 rounded-xl w-fit">
-        <button onClick={() => setTab('overview')} className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all ${tab === 'overview' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
+        <Button variant="ghost" onClick={() => setTab('overview')} className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-colors ${tab === 'overview' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
           <LayoutDashboard size={14} /> Vue d&apos;ensemble
-        </button>
-        <button onClick={() => setTab('tickets')} className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all ${tab === 'tickets' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
+        </Button>
+        <Button variant="ghost" onClick={() => setTab('tickets')} className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-colors ${tab === 'tickets' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
           <Ticket size={14} /> Tickets
-          {pendingCount > 0 && <span className="bg-amber-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">{pendingCount}</span>}
-        </button>
+          {pendingCount > 0 && <span className="bg-[var(--mustard)] text-[var(--on-brand)] text-[10px] font-semibold w-5 h-5 rounded-full flex items-center justify-center">{pendingCount}</span>}
+        </Button>
       </div>
 
       {tab === 'overview' && (
@@ -228,13 +232,13 @@ export default function PermissionsManagementPage() {
         {/* ── LISTE ── */}
         <div className="lg:col-span-4 space-y-4">
           <div className="flex gap-1 bg-[var(--surface-2)] p-1 rounded-xl w-fit">
-            <button onClick={() => setFilter('PENDING')} className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all ${filter === 'PENDING' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
+            <Button variant="ghost" onClick={() => setFilter('PENDING')} className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-colors ${filter === 'PENDING' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
               À traiter
-              {pendingCount > 0 && <span className="bg-amber-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">{pendingCount}</span>}
-            </button>
-            <button onClick={() => setFilter('ALL')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${filter === 'ALL' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
+              {pendingCount > 0 && <span className="bg-[var(--mustard)] text-[var(--on-brand)] text-[10px] font-semibold w-5 h-5 rounded-full flex items-center justify-center">{pendingCount}</span>}
+            </Button>
+            <Button variant="ghost" onClick={() => setFilter('ALL')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${filter === 'ALL' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
               Toutes
-            </button>
+            </Button>
           </div>
 
           <div className="relative">
@@ -245,7 +249,7 @@ export default function PermissionsManagementPage() {
           <div className="space-y-2 max-h-[70vh] overflow-y-auto pr-1">
             {filtered.length === 0 ? (
               <div className="text-center py-16 bg-[var(--surface)] rounded-2xl border border-[var(--border)]">
-                <CheckCircle2 size={28} className="text-emerald-400 mx-auto mb-2" />
+                <CheckCircle2 size={28} className="text-[var(--success-text)] mx-auto mb-2" />
                 <p className="text-sm text-[var(--text-muted)]">Rien à afficher ici.</p>
               </div>
             ) : filtered.map(t => {
@@ -257,26 +261,26 @@ export default function PermissionsManagementPage() {
                 <div
                   key={t.id}
                   onClick={() => { setSelectedId(t.id); setRejectMode(false); setRejectionReason(''); }}
-                  className={`w-full text-left p-4 rounded-2xl border cursor-pointer transition-all flex gap-3 items-start ${active ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 shadow-sm' : 'border-[var(--border)] bg-[var(--surface)] hover:border-[var(--text-muted)]'}`}
+                  className={`w-full text-left p-4 rounded-2xl border cursor-pointer transition-colors flex gap-3 items-start ${active ? 'border-[var(--border)] bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  shadow-sm' : 'border-[var(--border)] bg-[var(--surface)] hover:border-[var(--text-muted)]'}`}
                 >
-                  <button
+                  <Button variant="ghost"
                     onClick={(e) => { e.stopPropagation(); openEmployeeHistory(t.employee); }}
                     title="Voir l'historique complet de cet employé"
-                    className="w-10 h-10 rounded-xl bg-[var(--surface-2)] flex items-center justify-center font-bold text-[var(--text-muted)] text-xs shrink-0 overflow-hidden hover:ring-2 hover:ring-emerald-400 transition-all"
+                    className="w-10 h-10 rounded-xl bg-[var(--surface-2)] flex items-center justify-center font-semibold text-[var(--text-muted)] text-xs shrink-0 overflow-hidden hover:ring-2 hover:ring-[var(--focus)] transition-colors"
                   >
                     {t.employee?.photoUrl ? <img src={t.employee.photoUrl} className="w-full h-full object-cover" alt={initials} /> : initials}
-                  </button>
+                  </Button>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
-                      <button onClick={(e) => { e.stopPropagation(); openEmployeeHistory(t.employee); }} className="font-semibold text-sm text-[var(--text)] truncate hover:underline text-left">
+                      <Button variant="ghost" onClick={(e) => { e.stopPropagation(); openEmployeeHistory(t.employee); }} className="font-semibold text-sm text-[var(--text)] truncate hover:underline text-left">
                         {t.employee?.firstName} {t.employee?.lastName}
-                      </button>
+                      </Button>
                       <span className={`w-2 h-2 rounded-full shrink-0 ${tCfg.dot}`} />
                     </div>
                     <p className="text-xs text-[var(--text-muted)] truncate">{tCfg.label} · {new Date(t.departureTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</p>
                     <span className={`inline-block mt-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-md border ${sCfg.badge}`}>{sCfg.label}</span>
                     {t.status === 'APPROVED' && isReturnPending(t) && (
-                      <span className="inline-block mt-1.5 ml-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-md border bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800">Retour à valider</span>
+                      <span className="inline-block mt-1.5 ml-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-md border bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)] border-[var(--border)]   ">Retour à valider</span>
                     )}
                   </div>
                 </div>
@@ -295,14 +299,14 @@ export default function PermissionsManagementPage() {
             <motion.div key={selected.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
               <div className="p-6 bg-[var(--surface-2)] border-b border-[var(--border)] flex items-start justify-between gap-4">
                 <div className="flex items-center gap-4">
-                  <button onClick={() => openEmployeeHistory(selected.employee)} className="w-14 h-14 rounded-2xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-base font-bold text-emerald-600 overflow-hidden shrink-0">
+                  <Button variant="ghost" onClick={() => openEmployeeHistory(selected.employee)} className="w-14 h-14 rounded-2xl bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  flex items-center justify-center text-base font-semibold text-[var(--success-text)] overflow-hidden shrink-0">
                     {selected.employee?.photoUrl ? <img src={selected.employee.photoUrl} className="w-full h-full object-cover" alt="" /> : `${selected.employee?.firstName?.[0] ?? ''}${selected.employee?.lastName?.[0] ?? ''}`}
-                  </button>
+                  </Button>
                   <div>
-                    <button onClick={() => openEmployeeHistory(selected.employee)} className="text-xl font-bold text-[var(--text)] hover:underline flex items-center gap-2">
+                    <Button variant="ghost" onClick={() => openEmployeeHistory(selected.employee)} className="text-xl font-semibold text-[var(--text)] hover:underline flex items-center gap-2">
                       {selected.employee?.firstName} {selected.employee?.lastName}
                       <History size={15} className="text-[var(--text-muted)]" />
-                    </button>
+                    </Button>
                     <p className="text-sm text-[var(--text-muted)]">{selected.employee?.position}{selected.employee?.department ? ` · ${selected.employee.department.name}` : ''}</p>
                   </div>
                 </div>
@@ -327,12 +331,12 @@ export default function PermissionsManagementPage() {
                   )}
 
                   <div className="text-sm">
-                    <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Motif</p>
+                    <p className="text-xs font-semibold text-[var(--text-muted)]   mb-1.5">Motif</p>
                     <p className="text-[var(--text-muted)] bg-[var(--surface-2)] p-3.5 rounded-xl">{selected.reason}</p>
                   </div>
 
                   {selected.status === 'REJECTED' && selected.rejectionReason && (
-                    <div className="text-sm flex items-start gap-2 text-red-600 bg-red-50 dark:bg-red-900/20 p-3.5 rounded-xl">
+                    <div className="text-sm flex items-start gap-2 text-[var(--danger-text)] bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  p-3.5 rounded-xl">
                       <Info size={14} className="shrink-0 mt-0.5" /> {selected.rejectionReason}
                     </div>
                   )}
@@ -341,21 +345,21 @@ export default function PermissionsManagementPage() {
                     <div className="pt-2 space-y-3">
                       {!rejectMode ? (
                         <div className="flex gap-2">
-                          <button onClick={() => handleDecision('APPROVED')} disabled={isProcessing} className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2">
+                          <Button variant="primary" onClick={() => handleDecision('APPROVED')} disabled={isProcessing} className="flex-1 py-3 bg-[var(--brand)] hover:bg-[var(--brand)] disabled:opacity-50 text-[var(--on-brand)] text-sm font-semibold rounded-xl flex items-center justify-center gap-2">
                             <Check size={16} /> Autoriser
-                          </button>
-                          <button onClick={() => setRejectMode(true)} disabled={isProcessing} className="flex-1 py-3 border border-[var(--border)] hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-200 hover:text-red-600 text-[var(--text-muted)] text-sm font-bold rounded-xl flex items-center justify-center gap-2">
+                          </Button>
+                          <Button variant="ghost" onClick={() => setRejectMode(true)} disabled={isProcessing} className="flex-1 py-3 border border-[var(--border)] hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] dark:hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] hover:border-[var(--border)] hover:text-[var(--danger-text)] text-[var(--text-muted)] text-sm font-semibold rounded-xl flex items-center justify-center gap-2">
                             <X size={16} /> Refuser
-                          </button>
+                          </Button>
                         </div>
                       ) : (
                         <div className="space-y-2">
-                          <textarea value={rejectionReason} onChange={e => setRejectionReason(e.target.value)} placeholder="Motif du refus…" rows={2} className="w-full px-3 py-2.5 rounded-xl border border-red-200 dark:border-red-800 text-sm resize-none" autoFocus />
+                          <textarea value={rejectionReason} onChange={e => setRejectionReason(e.target.value)} placeholder="Motif du refus…" rows={2} className="w-full px-3 py-2.5 rounded-xl border border-[var(--border)]  text-sm resize-none" autoFocus />
                           <div className="flex gap-2">
-                            <button onClick={() => handleDecision('REJECTED')} disabled={isProcessing || !rejectionReason.trim()} className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 disabled:opacity-40 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2">
+                            <Button variant="ghost" onClick={() => handleDecision('REJECTED')} disabled={isProcessing || !rejectionReason.trim()} className="flex-1 py-2.5 bg-[var(--danger)] hover:bg-[var(--danger)] disabled:opacity-40 text-[var(--on-brand)] text-sm font-semibold rounded-xl flex items-center justify-center gap-2">
                               {isProcessing ? <Loader2 size={16} className="animate-spin" /> : <X size={16} />} Confirmer le refus
-                            </button>
-                            <button onClick={() => { setRejectMode(false); setRejectionReason(''); }} className="px-4 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)]">Annuler</button>
+                            </Button>
+                            <Button variant="ghost" onClick={() => { setRejectMode(false); setRejectionReason(''); }} className="px-4 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)]">Annuler</Button>
                           </div>
                         </div>
                       )}
@@ -372,33 +376,33 @@ export default function PermissionsManagementPage() {
 
                   {/* Admin / RH : enregistrer directement un retour (l'employé n'a pas pu le déclarer) */}
                   {selected.status === 'APPROVED' && returnState(selected) === 'NOT_RETURNED' && canApprove && (
-                    <button onClick={handleMarkReturn} disabled={isProcessing} className="w-full py-3 bg-[var(--text)] text-[var(--bg)] text-sm font-bold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50">
+                    <Button variant="ghost" onClick={handleMarkReturn} disabled={isProcessing} className="w-full py-3 bg-[var(--text)] text-[var(--bg)] text-sm font-semibold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50">
                       {isProcessing ? <Loader2 size={16} className="animate-spin" /> : <LogOut size={16} />} Marquer le retour
-                    </button>
+                    </Button>
                   )}
 
                   {/* ✏️ Imprévu : corriger les heures de sortie / retour (motif obligatoire, tracé) */}
                   {selected.status === 'APPROVED' && canApprove && (
-                    <button onClick={() => setShowEditTimes(true)} className="w-full py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)]">
+                    <Button variant="ghost" onClick={() => setShowEditTimes(true)} className="w-full py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)]">
                       <PencilLine size={16} /> Modifier les heures de sortie / retour
-                    </button>
+                    </Button>
                   )}
 
                   <div className="flex gap-2">
-                    <button onClick={() => setTimeout(() => printTicket(TICKET_ID), 50)} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)]">
+                    <Button variant="ghost" onClick={() => setTimeout(() => printTicket(TICKET_ID), 50)} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)]">
                       <Printer size={16} /> Imprimer
-                    </button>
-                    <button onClick={handleDownloadPdf} disabled={isExportingPdf} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)] disabled:opacity-40">
+                    </Button>
+                    <Button variant="ghost" onClick={handleDownloadPdf} disabled={isExportingPdf} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)] disabled:opacity-40">
                       {isExportingPdf ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} PDF
-                    </button>
+                    </Button>
                   </div>
-                  <button onClick={() => setShowPreviewModal(true)} className="w-full py-2.5 border border-dashed border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)]">
+                  <Button variant="ghost" onClick={() => setShowPreviewModal(true)} className="w-full py-2.5 border border-dashed border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)]">
                     <Eye size={16} /> Aperçu du ticket
-                  </button>
+                  </Button>
                   {canApprove && (
-                    <button onClick={handleDelete} disabled={isProcessing} className="w-full py-2.5 border border-red-200 dark:border-red-900/50 text-sm font-semibold rounded-xl text-red-600 flex items-center justify-center gap-2 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-40">
+                    <Button variant="ghost" onClick={handleDelete} disabled={isProcessing} className="w-full py-2.5 border border-[var(--border)]  text-sm font-semibold rounded-xl text-[var(--danger-text)] flex items-center justify-center gap-2 hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] dark:hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] disabled:opacity-40">
                       <Trash2 size={16} /> Supprimer ce ticket
-                    </button>
+                    </Button>
                   )}
                 </div>
 
@@ -426,23 +430,23 @@ export default function PermissionsManagementPage() {
       <EditTimesModal open={showEditTimes} onClose={() => setShowEditTimes(false)} ticket={selected} onUpdated={mergeTicket} />
 
       <EmployeeTicketHistorySidebar open={!!historyEmployee} onClose={() => setHistoryEmployee(null)} data={historyEmployee} />
-    </div>
+    </div></ModulePageFrame>
   );
 }
 
 function DetailTile({ icon: Icon, label, value, tone }: { icon: any; label: string; value: string; tone: 'slate' | 'sky' | 'emerald' | 'amber' | 'violet' }) {
   const cls: Record<string, string> = {
     slate: 'bg-[var(--surface-2)] text-[var(--text)]',
-    sky: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300',
-    emerald: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300',
-    amber: 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300',
-    violet: 'bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300',
+    sky: 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  text-[var(--success-text)] ',
+    emerald: 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  text-[var(--success-text)] ',
+    amber: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  text-[var(--warning-text)] ',
+    violet: 'bg-[var(--brand-soft)]  text-[var(--action)] ',
   };
   return (
     <div className={`p-3 rounded-xl ${cls[tone]}`}>
       <Icon size={14} className="opacity-60 mb-1.5" />
       <p className="text-[11px] font-semibold uppercase tracking-wide opacity-70">{label}</p>
-      <p className="font-bold text-sm">{value}</p>
+      <p className="font-semibold text-sm">{value}</p>
     </div>
   );
 }

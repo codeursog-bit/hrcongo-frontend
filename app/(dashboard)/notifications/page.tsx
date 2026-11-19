@@ -10,7 +10,11 @@
 //    L'échelle d'urgence contrat (rouge → orange → jaune) est fonctionnelle : conservée.
 // ============================================================================
 
+import { ModulePageFrame, ModulePageSkeleton } from '@/components/requests/ModulePageFrame';
+import { Button } from '@/components/design-system/primitives';
+import './refonte.css';
 import React, { useState, useEffect } from 'react';
+import { useToast } from '@/components/design-system/feedback';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft, Bell, CheckCircle2, Clock, AlertTriangle,
@@ -37,6 +41,8 @@ const getFilters = (role: string) => {
 };
 
 export default function NotificationsPage() {
+  const uiNotify = useToast();
+  const [uiLoadError, setUiLoadError] = useState('');
   const router = useRouter();
   const [notifications, setNotifications] = useState<any[]>([]);
   const [isLoading, setIsLoading]         = useState(true);
@@ -61,6 +67,7 @@ export default function NotificationsPage() {
       setNotifications(data);
     } catch (e) {
       console.error(e);
+      setUiLoadError('Vos notifications n’ont pas pu être chargées. Réessayez dans un instant.');
     } finally {
       setIsLoading(false);
     }
@@ -72,6 +79,7 @@ export default function NotificationsPage() {
     try {
       await api.patch(`/notifications/${id}/read`, {});
       setNotifications(prev => prev.filter(n => n.id !== id));
+      uiNotify('success', 'Notification marquée comme lue');
     } catch (e) {
       console.error(e);
     }
@@ -82,6 +90,7 @@ export default function NotificationsPage() {
     try {
       await api.patch('/notifications/read-all', {});
       setNotifications(prev => prev.filter(n => n.read));
+      uiNotify('success', 'Notifications marquées comme lues');
     } catch (e) {
       console.error(e);
     }
@@ -162,17 +171,18 @@ export default function NotificationsPage() {
   const filters = getFilters(userRole);
 
   return (
-    <div className="max-w-[1000px] mx-auto pb-20 space-y-8">
+    <ModulePageFrame kind="list" error={uiLoadError}><div className="notifications-refonte"><div className="max-w-[1000px] mx-auto pb-20 space-y-8">
 
       {/* HEADER */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <button
+          <Button variant="ghost"
             onClick={() => router.back()}
+            aria-label="Revenir à la page précédente"
             className="p-2 bg-[var(--surface)] text-[var(--text)] rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)] transition-colors"
           >
             <ArrowLeft size={20} />
-          </button>
+          </Button>
           <div>
             <h1 className="text-3xl font-bold text-[var(--text)] flex items-center gap-3">
               Notifications
@@ -191,7 +201,7 @@ export default function NotificationsPage() {
         </div>
 
         {/* ✅ Toujours visible, désactivé s'il n'y a rien à marquer lu */}
-        <button
+        <Button variant="ghost"
           onClick={handleMarkAllAsRead}
           disabled={unreadCount === 0}
           className={`px-4 py-2 text-sm font-bold rounded-xl transition-colors ${
@@ -201,7 +211,7 @@ export default function NotificationsPage() {
           }`}
         >
           Tout marquer comme lu
-        </button>
+        </Button>
       </div>
 
       {/* BANDEAU INFO ROLE */}
@@ -215,7 +225,7 @@ export default function NotificationsPage() {
       {/* TABS */}
       <div className="flex gap-2 pb-2 overflow-x-auto">
         {filters.map(f => (
-          <button
+          <Button variant="ghost"
             key={f.key}
             onClick={() => setFilter(f.key)}
             className={`px-4 py-2 rounded-xl text-sm font-bold border transition-colors whitespace-nowrap ${
@@ -237,13 +247,13 @@ export default function NotificationsPage() {
                 </span>
               ) : null;
             })()}
-          </button>
+          </Button>
         ))}
       </div>
 
       {/* LISTE */}
       {isLoading ? (
-        <KonzaLoader variant="section" />
+        <ModulePageSkeleton label="Chargement des notifications" />
       ) : filtered.length === 0 ? (
         <div className="text-center p-20 text-[var(--text-muted)] bg-[var(--surface)] rounded-2xl border border-dashed border-[var(--border)]">
           <Bell size={48} className="mx-auto mb-4 opacity-20" />
@@ -258,6 +268,8 @@ export default function NotificationsPage() {
             <div
               key={n.id}
               onClick={() => !n.read && handleMarkAsRead(n.id)}
+              role="group"
+              aria-label={n.title}
               className={`bg-[var(--surface)] p-5 rounded-2xl border flex gap-4 transition-colors cursor-pointer hover:bg-[var(--surface-2)] ${getBorderColor(n)}`}
             >
               <div className="p-3 bg-[var(--surface-2)] rounded-xl h-fit shrink-0">
@@ -301,23 +313,23 @@ export default function NotificationsPage() {
                 <div className="flex items-center gap-4 mt-2">
                   {/* Lien direct vers l'employé pour les alertes contrat */}
                   {n.metadata?.notificationType === 'CONTRACT_EXPIRY' && n.link && (
-                    <button
+                    <Button variant="ghost"
                       onClick={(e) => { e.stopPropagation(); router.push(n.link); }}
                       className="text-xs font-bold text-emerald-500 hover:underline"
                     >
                       Voir l'employé →
-                    </button>
+                    </Button>
                   )}
 
                   {/* ✅ Bouton dédié par notification — marque UNE SEULE
                       notification, indépendamment de "Tout marquer comme lu" */}
                   {!n.read && (
-                    <button
+                    <Button variant="ghost"
                       onClick={(e) => { e.stopPropagation(); handleMarkAsRead(n.id); }}
                       className="flex items-center gap-1 text-xs font-bold text-[var(--text-muted)] hover:text-emerald-500 transition-colors"
                     >
                       <CheckCircle2 size={14} /> Marquer comme lue
-                    </button>
+                    </Button>
                   )}
                 </div>
               </div>
@@ -325,6 +337,6 @@ export default function NotificationsPage() {
           ))}
         </div>
       )}
-    </div>
+    </div></div></ModulePageFrame>
   );
 }

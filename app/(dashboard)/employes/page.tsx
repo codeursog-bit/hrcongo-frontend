@@ -386,7 +386,7 @@ export default function EmployeeListPage() {
     {/* --- BOUTON AJOUTER --- */}
     {canCreate ? (
       <Link
-        href={bp("/employes/nouveau")}
+        data-guide="employes-create" href={bp("/employes/nouveau")}
         className="px-5 py-2.5 rounded-xl bg-[var(--action)] hover:bg-[var(--action)] text-[var(--on-brand)] font-bold transition-colors flex items-center gap-2"
       >
         <Plus size={20} /> Ajouter un employé

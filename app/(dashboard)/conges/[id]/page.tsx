@@ -1,4 +1,10 @@
 'use client';
+import { DocumentReader } from '@/components/ui/DocumentReader';
+import '@/components/leave-history/leave-workspace.css';
+import { ModuleSelect } from '@/components/ui/ModuleSelect';
+import { LeaveModuleFrame as ModulePageFrame } from '@/components/leave-history/LeaveModuleFrame';
+import { ModulePageSkeleton } from '@/components/requests/ModulePageFrame';
+import { Button } from '@/components/design-system/primitives';
 
 // ============================================================================
 // 📁 app/(dashboard)/conges/[id]/page.tsx
@@ -37,9 +43,9 @@ import ContactAdminButton from '@/components/chat/ContactAdminButton';
 type Status = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
 
 const STATUS_CONFIG: Record<Status, { label: string; badge: string; icon: any }> = {
-  PENDING:   { label: 'En attente', badge: 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800', icon: Clock },
-  APPROVED:  { label: 'Approuvé',   badge: 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800', icon: CheckCircle2 },
-  REJECTED:  { label: 'Refusé',     badge: 'bg-red-50 text-red-700 border-red-100 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800', icon: XCircle },
+  PENDING:   { label: 'En attente', badge: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)] border-[var(--border)]   ', icon: Clock },
+  APPROVED:  { label: 'Approuvé',   badge: 'bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))] text-[var(--action)] border-[var(--border)]   ', icon: CheckCircle2 },
+  REJECTED:  { label: 'Refusé',     badge: 'bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] text-[var(--danger-text)] border-[var(--border)]   ', icon: XCircle },
   CANCELLED: { label: 'Annulé',     badge: 'bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)]', icon: Ban },
 };
 
@@ -47,6 +53,7 @@ const STATUS_CONFIG: Record<Status, { label: string; badge: string; icon: any }>
 const APPROVER_ROLES = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'];
 
 export default function LeaveDetailPage() {
+  const [uiLoadError,setUiLoadError]=useState('');
   const params = useParams();
   const router = useRouter();
   const { bp } = useBasePath();
@@ -100,7 +107,7 @@ export default function LeaveDetailPage() {
         console.error('Erreur chargement document-data', e);
       }
     } catch (e) {
-      console.error('Erreur chargement du congé', e);
+      console.error('Erreur chargement du congé', e); setUiLoadError('Le chargement a échoué. Réessayez dans un instant.');
     } finally {
       setIsLoading(false);
     }
@@ -294,7 +301,7 @@ export default function LeaveDetailPage() {
     }
   };
 
-  if (isLoading) return <KonzaLoader variant="page" />;
+  if (isLoading) return <ModulePageSkeleton />;
   if (!leave) return <div className="text-center py-24 text-[var(--text-muted)]">Demande introuvable.</div>;
 
   const FORM_ID = 'leave-form-print-root';
@@ -418,27 +425,27 @@ export default function LeaveDetailPage() {
   };
 
   return (
-    <div className="max-w-[1400px] mx-auto pb-24 space-y-6">
+    <ModulePageFrame kind="detail" error={uiLoadError}><div className="max-w-[1400px] mx-auto pb-24 space-y-6">
       <CongeSubNav userRole={userRole} />
 
-      <div className="flex items-center gap-3">
-        <button onClick={() => router.push(bp('/conges'))} className="p-2 rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)]">
+      <div className="flex items-center gap-3 leave-header">
+        <Button variant="ghost" onClick={() => router.push(bp('/conges'))} className="p-2 rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)]">
           <ArrowLeft size={18} />
-        </button>
+        </Button>
         <div>
-          <p className="text-xs font-bold tracking-[0.2em] text-[var(--text-muted)] uppercase mb-1">Demande de congé</p>
-          <h1 className="text-2xl font-bold text-[var(--text)]">{leave.employee?.firstName} {leave.employee?.lastName}</h1>
+          <p className="text-xs font-semibold tracking-[0.2em] text-[var(--text-muted)] uppercase mb-1">Demande de congé</p>
+          <h1 className="text-2xl font-semibold text-[var(--text)]">{leave.employee?.firstName} {leave.employee?.lastName}</h1>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
-        <div className="xl:col-span-2 space-y-4">
+      <div className="leave-document-layout">
+        <div className="space-y-4">
           <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5 space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-sm text-[var(--text-muted)]">{leave.employee?.position}{leave.employee?.department ? ` · ${leave.employee.department.name}` : ''}</span>
               <div className="flex items-center gap-2 shrink-0">
                 {isCarryover && (
-                  <span className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400">
+                  <span className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-[var(--border)]  bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))]  text-[var(--action)] ">
                     Rattrapage — non payé
                   </span>
                 )}
@@ -453,7 +460,7 @@ export default function LeaveDetailPage() {
               <span className="font-mono text-xs">{new Date(leave.startDate).toLocaleDateString('fr-FR')}</span>
               <ArrowRight size={12} className="text-[var(--text-muted)]" />
               <span className="font-mono text-xs">{new Date(leave.endDate).toLocaleDateString('fr-FR')}</span>
-              <span className="ml-auto font-bold text-xs text-[var(--text-muted)]">{Math.round(Number(leave.daysCount))}j</span>
+              <span className="ml-auto font-semibold text-xs text-[var(--text-muted)]">{Math.round(Number(leave.daysCount))}j</span>
             </div>
             {leave.returnDate && (
               <p className="text-xs text-[var(--text-muted)] px-1">
@@ -463,9 +470,9 @@ export default function LeaveDetailPage() {
             )}
 
             {isCarryover ? (
-              <div className="flex items-start gap-2 text-sm px-3.5 py-2.5 rounded-xl border border-emerald-100 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-900/10">
-                <Info size={14} className="text-emerald-500 mt-0.5 shrink-0" />
-                <span className="text-emerald-700 dark:text-emerald-300">
+              <div className="flex items-start gap-2 text-sm px-3.5 py-2.5 rounded-xl border border-[var(--border)]  bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))] ">
+                <Info size={14} className="text-[var(--action)] mt-0.5 shrink-0" />
+                <span className="text-[var(--action)] ">
                   Repos de rattrapage — jours non pris suite au retour anticipé du congé
                   {leave.carriedFromLeave ? ` du ${new Date(leave.carriedFromLeave.startDate).toLocaleDateString('fr-FR')} au ${new Date(leave.carriedFromLeave.endDate).toLocaleDateString('fr-FR')}` : ''}
                   {leave.carriedFromLeave?.actualReturnDate ? ` (retour le ${new Date(leave.carriedFromLeave.actualReturnDate).toLocaleDateString('fr-FR')})` : ''}.
@@ -482,13 +489,13 @@ export default function LeaveDetailPage() {
 
             {leave.reason && (
               <div className="text-sm">
-                <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Motif</p>
+                <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Motif</p>
                 <p className="text-[var(--text-muted)] bg-[var(--surface-2)] p-3.5 rounded-xl">{leave.reason}</p>
               </div>
             )}
 
             {leave.status === 'REJECTED' && leave.rejectionReason && (
-              <div className="text-sm flex items-start gap-2 text-red-600 bg-red-50 dark:bg-red-900/20 p-3.5 rounded-xl">
+              <div className="text-sm flex items-start gap-2 text-[var(--danger-text)] bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  p-3.5 rounded-xl">
                 <Info size={14} className="shrink-0 mt-0.5" /> {leave.rejectionReason}
               </div>
             )}
@@ -519,10 +526,10 @@ export default function LeaveDetailPage() {
                     {leave.type === 'ANNUAL' && !isCarryover && (
                       <div className="space-y-2 pt-3">
                         <div>
-                          <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1 block">Jours d&apos;ancienneté reportés (optionnel)</label>
+                          <label className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1 block">Jours d&apos;ancienneté reportés (optionnel)</label>
                           <input type="number" min="0" step="0.5" value={extraDaysGranted} onChange={e => setExtraDaysGranted(e.target.value)} placeholder="Ex : 6 — laisser vide si non applicable" className="w-full px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
                           {(baseRemaining > 0 || seniorityRemaining > 0) && (
-                            <p className="text-xs text-amber-600 mt-1">
+                            <p className="text-xs text-[var(--warning-text)] mt-1">
                               Congé partiel détecté : {plannedDays}j planifiés — il restera {baseRemaining}j de congé de base
                               {seniorityRemaining > 0 ? ` et ${seniorityRemaining}j d'ancienneté (pré-rempli)` : ''} à reporter.
                             </p>
@@ -530,9 +537,9 @@ export default function LeaveDetailPage() {
                         </div>
                         {(baseRemaining > 0 || Number(extraDaysGranted) > 0) && (
                           <div>
-                            <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1 block">Motif de report (pour la lettre) *</label>
+                            <label className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1 block">Motif de report (pour la lettre) *</label>
                             {leave.reason?.trim() && resumptionNote === leave.reason.trim() && (
-                              <p className="text-xs text-emerald-600 dark:text-emerald-400 mb-1">Repris du motif indiqué à la demande — modifiable si besoin.</p>
+                              <p className="text-xs text-[var(--action)]  mb-1">Repris du motif indiqué à la demande — modifiable si besoin.</p>
                             )}
                             <textarea value={resumptionNote} onChange={e => setResumptionNote(e.target.value)} rows={2} placeholder="Ex : seront récupérés après la période de forte activité du service..." className="w-full px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm resize-none" />
                           </div>
@@ -541,23 +548,23 @@ export default function LeaveDetailPage() {
                     )}
                     <div className="flex gap-2 pt-2">
                       {!awaitingOpinions && (
-                      <button onClick={() => handleDecision('APPROVED')} disabled={isProcessing} className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2">
+                      <Button variant="primary" onClick={() => handleDecision('APPROVED')} disabled={isProcessing} className="flex-1 py-3 bg-[var(--brand)] hover:bg-[var(--brand)] disabled:opacity-50 text-[var(--on-brand)] text-sm font-semibold rounded-xl flex items-center justify-center gap-2">
                         <Check size={16} /> Approuver
-                      </button>
+                      </Button>
                       )}
-                      <button onClick={() => setRejectMode(true)} disabled={isProcessing} className="flex-1 py-3 border border-[var(--border)] hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-200 hover:text-red-600 text-[var(--text-muted)] text-sm font-bold rounded-xl flex items-center justify-center gap-2">
+                      <Button variant="ghost" onClick={() => setRejectMode(true)} disabled={isProcessing} className="flex-1 py-3 border border-[var(--border)] hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  hover:border-[var(--border)] hover:text-[var(--danger-text)] text-[var(--text-muted)] text-sm font-semibold rounded-xl flex items-center justify-center gap-2">
                         <X size={16} /> Refuser
-                      </button>
+                      </Button>
                     </div>
                   </>
                 ) : (
                   <div className="space-y-2 pt-3">
-                    <textarea value={rejectionReason} onChange={e => setRejectionReason(e.target.value)} placeholder="Motif du refus…" rows={2} className="w-full px-3 py-2.5 rounded-xl border border-red-200 dark:border-red-800 text-sm resize-none" autoFocus />
+                    <textarea value={rejectionReason} onChange={e => setRejectionReason(e.target.value)} placeholder="Motif du refus…" rows={2} className="w-full px-3 py-2.5 rounded-xl border border-[var(--border)]  text-sm resize-none" autoFocus />
                     <div className="flex gap-2">
-                      <button onClick={() => handleDecision('REJECTED')} disabled={isProcessing || !rejectionReason.trim()} className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 disabled:opacity-40 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2">
+                      <Button variant="ghost" onClick={() => handleDecision('REJECTED')} disabled={isProcessing || !rejectionReason.trim()} className="flex-1 py-2.5 bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] disabled:opacity-40 text-[var(--danger-text)] text-sm font-semibold rounded-xl flex items-center justify-center gap-2">
                         {isProcessing ? <Loader2 size={16} className="animate-spin" /> : <X size={16} />} Confirmer le refus
-                      </button>
-                      <button onClick={() => { setRejectMode(false); setRejectionReason(''); }} className="px-4 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)]">Annuler</button>
+                      </Button>
+                      <Button variant="ghost" onClick={() => { setRejectMode(false); setRejectionReason(''); }} className="px-4 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)]">Annuler</Button>
                     </div>
                   </div>
                 )}
@@ -565,9 +572,9 @@ export default function LeaveDetailPage() {
             )}
 
             {['PENDING', 'APPROVED'].includes(leave.status) && (
-              <button onClick={handleCancel} disabled={isProcessing} className="w-full py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] hover:bg-[var(--surface-2)] disabled:opacity-40">
+              <Button variant="ghost" onClick={handleCancel} disabled={isProcessing} className="w-full py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] hover:bg-[var(--surface-2)] disabled:opacity-40">
                 Annuler cette demande
-              </button>
+              </Button>
             )}
 
             {/* ✅ Modifier / Supprimer — réservé RH/Admin, quelle que soit
@@ -575,13 +582,13 @@ export default function LeaveDetailPage() {
             {canApprove && (
               <div className="flex gap-2">
                 {['PENDING', 'APPROVED'].includes(leave.status) && (
-                  <button onClick={openEditModal} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 flex items-center justify-center gap-2">
+                  <Button variant="ghost" onClick={openEditModal} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--action)]  hover:bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))]  flex items-center justify-center gap-2">
                     <Pencil size={14} /> Modifier
-                  </button>
+                  </Button>
                 )}
-                <button onClick={() => { setDeleteError(''); setShowDeleteConfirm(true); }} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center justify-center gap-2">
+                <Button variant="ghost" onClick={() => { setDeleteError(''); setShowDeleteConfirm(true); }} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--danger-text)]  hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  flex items-center justify-center gap-2">
                   <Trash2 size={14} /> Supprimer
-                </button>
+                </Button>
               </div>
             )}
 
@@ -589,18 +596,18 @@ export default function LeaveDetailPage() {
               <div className="pt-3 border-t border-[var(--border)]">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2 text-sm">
-                    {leave.printAuthorized ? <Unlock size={14} className="text-emerald-500" /> : <Lock size={14} className="text-[var(--text-muted)]" />}
+                    {leave.printAuthorized ? <Unlock size={14} className="text-[var(--action)]" /> : <Lock size={14} className="text-[var(--text-muted)]" />}
                     <span className="text-[var(--text-muted)]">
                       {leave.printAuthorized ? "Impression autorisée pour l'employé" : "Impression non autorisée"}
                     </span>
                   </div>
-                  <button
+                  <Button variant="ghost"
                     onClick={() => setShowPrintAuthModal(true)}
                     disabled={isTogglingPrintAuth}
                     className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)] disabled:opacity-40"
                   >
                     {leave.printAuthorized ? 'Modifier' : 'Autoriser'}
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
@@ -609,7 +616,7 @@ export default function LeaveDetailPage() {
               <div className="pt-3 border-t border-[var(--border)]">
                 {leave.returnConfirmed ? (
                   <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
+                    <div className="flex items-center gap-2 text-sm text-[var(--action)] ">
                       <CheckCircle2 size={14} /> Retour confirmé
                       {leave.actualReturnDate && (
                         <span className="text-[var(--text-muted)] font-normal">
@@ -618,7 +625,7 @@ export default function LeaveDetailPage() {
                       )}
                     </div>
                     {Number(leave.forfeitedDays) > 0 && (
-                      <div className="text-xs text-amber-600 dark:text-amber-400 pl-6">
+                      <div className="text-xs text-[var(--warning-text)]  pl-6">
                         Retour anticipé : {Number(leave.forfeitedDays)}j de ce congé n'ont pas été pris (non reversés au solde suivant)
                       </div>
                     )}
@@ -634,19 +641,19 @@ export default function LeaveDetailPage() {
                         onChange={(e) => setActualReturnDate(e.target.value)}
                         className="text-sm px-2.5 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)]"
                       />
-                      <button
+                      <Button variant="ghost"
                         onClick={() => actualReturnDate && handleConfirmReturn(actualReturnDate)}
                         disabled={isConfirmingReturn || !actualReturnDate}
-                        className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 disabled:opacity-40 flex items-center gap-1.5"
+                        className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))]  border border-[var(--border)]  text-[var(--action)]  hover:bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))] disabled:opacity-40 flex items-center gap-1.5"
                       >
                         {isConfirmingReturn ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />} Confirmer
-                      </button>
-                      <button
+                      </Button>
+                      <Button variant="ghost"
                         onClick={() => setShowEarlyReturnForm(false)}
                         className="text-xs px-2.5 py-1.5 rounded-lg text-[var(--text-muted)] hover:bg-[var(--surface-2)]"
                       >
                         Annuler
-                      </button>
+                      </Button>
                     </div>
                     {new Date(leave.endDate) > new Date() && (
                       <div className="text-xs text-[var(--text-muted)]">
@@ -656,25 +663,25 @@ export default function LeaveDetailPage() {
                   </div>
                 ) : (
                   <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
+                    <div className="flex items-center gap-2 text-sm text-[var(--warning-text)] ">
                       <Clock size={14} /> Retour à confirmer
                     </div>
                     <div className="flex items-center gap-2">
                       {new Date(leave.endDate) > new Date() && (
-                        <button
+                        <Button variant="ghost"
                           onClick={() => { setActualReturnDate(new Date().toISOString().slice(0, 10)); setShowEarlyReturnForm(true); }}
                           className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)]"
                         >
                           Retour anticipé
-                        </button>
+                        </Button>
                       )}
-                      <button
+                      <Button variant="ghost"
                         onClick={() => handleConfirmReturn()}
                         disabled={isConfirmingReturn}
-                        className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 disabled:opacity-40 flex items-center gap-1.5"
+                        className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))]  border border-[var(--border)]  text-[var(--action)]  hover:bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))] disabled:opacity-40 flex items-center gap-1.5"
                       >
                         {isConfirmingReturn ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />} Confirmer le retour
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -684,12 +691,12 @@ export default function LeaveDetailPage() {
 
           {/* Sélecteur de document */}
           <div className="flex gap-1 bg-[var(--surface-2)] p-1 rounded-xl">
-            <button onClick={() => setActiveDoc('form')} className={`flex-1 px-3 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${activeDoc === 'form' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
+            <Button variant="ghost" onClick={() => setActiveDoc('form')} className={`flex-1 px-3 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${activeDoc === 'form' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
               <FileText size={13} /> Formulaire
-            </button>
-            <button onClick={() => setActiveDoc('letter')} disabled={leave.status !== 'APPROVED'} className={`flex-1 px-3 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all disabled:opacity-40 disabled:cursor-not-allowed ${activeDoc === 'letter' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
+            </Button>
+            <Button variant="ghost" onClick={() => setActiveDoc('letter')} disabled={leave.status !== 'APPROVED'} className={`flex-1 px-3 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all disabled:opacity-40 disabled:cursor-not-allowed ${activeDoc === 'letter' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
               <ScrollText size={13} /> Lettre d&apos;autorisation
-            </button>
+            </Button>
           </div>
           {leave.status !== 'APPROVED' && (
             <p className="text-[11px] text-[var(--text-muted)] -mt-2 px-1">La lettre officielle n&apos;est disponible qu&apos;une fois la demande approuvée.</p>
@@ -701,31 +708,31 @@ export default function LeaveDetailPage() {
             const canPrint = canApprove || (leave.status === 'APPROVED' && !!leave.printAuthorized);
             return (
               <div className="flex gap-2">
-                <button
+                <Button variant="ghost"
                   onClick={() => canPrint && setTimeout(() => printLeaveDocument(activeId), 50)}
                   disabled={!canPrint}
                   title={!canPrint ? "Impression non autorisée par le RH" : undefined}
                   className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)] disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <Printer size={16} /> Imprimer
-                </button>
-                <button
+                </Button>
+                <Button variant="ghost"
                   onClick={handleDownloadPdf}
                   disabled={isExportingPdf || !canPrint}
                   title={!canPrint ? "Impression non autorisée par le RH" : undefined}
                   className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)] disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {isExportingPdf ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} PDF
-                </button>
+                </Button>
                 {isOrca && (
-                  <button
+                  <Button variant="ghost"
                     onClick={() => canPrint && window.open(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/leaves/${leave.id}/document.docx`, '_blank')}
                     disabled={!canPrint}
                     title={!canPrint ? "Impression non autorisée par le RH" : "Télécharger le fichier Word original rempli"}
-                    className="flex-1 py-2.5 border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 text-sm font-semibold rounded-xl text-emerald-700 dark:text-emerald-300 flex items-center justify-center gap-2 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="flex-1 py-2.5 border border-[var(--border)]  bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))]  text-sm font-semibold rounded-xl text-[var(--action)]  flex items-center justify-center gap-2 hover:bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))]  disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <FileDown size={16} /> .docx
-                  </button>
+                  </Button>
                 )}
               </div>
             );
@@ -733,14 +740,12 @@ export default function LeaveDetailPage() {
         </div>
 
         {/* Aperçu */}
-        <div className="xl:col-span-3">
-          <div className="bg-[var(--surface-2)] rounded-2xl p-4 overflow-auto max-h-[85vh] border border-[var(--border)]">
-            <div className="scale-[0.62] origin-top -mb-[38%] shadow-2xl">
+        <div className="min-w-0">
+          <DocumentReader>
               {activeDoc === 'form'
                 ? renderFormDocument(FORM_ID)
                 : <LeaveAuthorizationLetterPrintable id={LETTER_ID} data={letterData as any} />}
-            </div>
-          </div>
+          </DocumentReader>
         </div>
       </div>
 
@@ -761,13 +766,13 @@ export default function LeaveDetailPage() {
       />
 
       {showEditModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-[rgb(0_0_0_/.48)] flex items-center justify-center z-50 p-4">
           <div className="bg-[var(--surface)] rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-[var(--text)]">Modifier ce congé</h2>
-              <button onClick={() => setShowEditModal(false)} className="text-[var(--text-muted)] hover:text-[var(--text)]">
+              <h2 className="text-lg font-semibold text-[var(--text)]">Modifier ce congé</h2>
+              <Button variant="ghost" onClick={() => setShowEditModal(false)} className="text-[var(--text-muted)] hover:text-[var(--text)]">
                 <X size={20} />
-              </button>
+              </Button>
             </div>
             <p className="text-xs text-[var(--text-muted)]">
               {isCarryover
@@ -778,14 +783,14 @@ export default function LeaveDetailPage() {
               {!isCarryover && (
                 <div>
                   <label className="text-xs font-semibold text-[var(--text-muted)]">Type</label>
-                  <select
+                  <ModuleSelect
                     value={editForm.type}
                     onChange={e => setEditForm(f => ({ ...f, type: e.target.value as any }))}
                     className="mt-1 w-full text-sm border border-[var(--border)] bg-[var(--surface)] rounded-lg px-3 py-2"
                   >
                     <option value="ANNUAL">Annuel</option>
                     <option value="ANNUAL_ANTICIPATED">Annuel anticipé</option>
-                  </select>
+                  </ModuleSelect>
                 </div>
               )}
               <div className="grid grid-cols-2 gap-3">
@@ -809,51 +814,51 @@ export default function LeaveDetailPage() {
                 </div>
               </div>
             </div>
-            {editError && <div className="text-xs text-red-500">{editError}</div>}
+            {editError && <div className="text-xs text-[var(--danger-text)]">{editError}</div>}
             <div className="flex justify-end gap-2 pt-2">
-              <button onClick={() => setShowEditModal(false)} className="px-4 py-2 text-sm font-semibold rounded-lg text-[var(--text-muted)] hover:bg-[var(--surface-2)]">
+              <Button variant="ghost" onClick={() => setShowEditModal(false)} className="px-4 py-2 text-sm font-semibold rounded-lg text-[var(--text-muted)] hover:bg-[var(--surface-2)]">
                 Annuler
-              </button>
-              <button
+              </Button>
+              <Button variant="primary"
                 onClick={handleSaveEdit}
                 disabled={isSavingEdit}
-                className="px-4 py-2 text-sm font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-2 disabled:opacity-40"
+                className="px-4 py-2 text-sm font-semibold rounded-lg bg-[var(--brand)] hover:bg-[var(--brand)] text-[var(--on-brand)] flex items-center gap-2 disabled:opacity-40"
               >
                 {isSavingEdit ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Enregistrer
-              </button>
+              </Button>
             </div>
           </div>
         </div>
       )}
 
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-[rgb(0_0_0_/.48)] flex items-center justify-center z-50 p-4">
           <div className="bg-[var(--surface)] rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-900/30 text-red-600 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  text-[var(--danger-text)] flex items-center justify-center shrink-0">
                 <AlertTriangle size={20} />
               </div>
-              <h2 className="text-lg font-bold text-[var(--text)]">Supprimer ce congé ?</h2>
+              <h2 className="text-lg font-semibold text-[var(--text)]">Supprimer ce congé ?</h2>
             </div>
             <p className="text-sm text-[var(--text-muted)]">
               Cette demande sera définitivement supprimée et le solde de congé restauré si elle avait déjà été approuvée. Cette action est irréversible.
             </p>
-            {deleteError && <div className="text-xs text-red-500">{deleteError}</div>}
+            {deleteError && <div className="text-xs text-[var(--danger-text)]">{deleteError}</div>}
             <div className="flex justify-end gap-2 pt-2">
-              <button onClick={() => setShowDeleteConfirm(false)} className="px-4 py-2 text-sm font-semibold rounded-lg text-[var(--text-muted)] hover:bg-[var(--surface-2)]">
+              <Button variant="ghost" onClick={() => setShowDeleteConfirm(false)} className="px-4 py-2 text-sm font-semibold rounded-lg text-[var(--text-muted)] hover:bg-[var(--surface-2)]">
                 Annuler
-              </button>
-              <button
+              </Button>
+              <Button variant="ghost"
                 onClick={handleDelete}
                 disabled={isDeleting}
-                className="px-4 py-2 text-sm font-bold rounded-lg bg-red-600 hover:bg-red-700 text-white flex items-center gap-2 disabled:opacity-40"
+                className="px-4 py-2 text-sm font-semibold rounded-lg bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] text-[var(--danger-text)] flex items-center gap-2 disabled:opacity-40"
               >
                 {isDeleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />} Supprimer
-              </button>
+              </Button>
             </div>
           </div>
         </div>
       )}
-    </div>
+    </div></ModulePageFrame>
   );
 }

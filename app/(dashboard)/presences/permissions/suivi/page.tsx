@@ -1,4 +1,7 @@
 'use client';
+import { AttendanceSelect } from '@/components/attendance/AttendanceSelect';
+import { AttendanceModuleFrame as ModulePageFrame } from '@/components/attendance/AttendanceModuleFrame';
+import { ModulePageSkeleton } from '@/components/requests/ModulePageFrame';
 
 // ============================================================================
 // 📁 app/(dashboard)/presences/permissions/suivi/page.tsx
@@ -20,6 +23,7 @@ const MONTHS_FR = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juill
 const TYPE_LABEL: Record<string, string> = { URGENCE: 'Urgence', MISSION: 'Mission', AUTRE: 'Autre' };
 
 export default function PermissionsSuiviPage() {
+ const [uiLoadError,setUiLoadError]=useState('');
   const { bp } = useBasePath();
   const [tickets, setTickets] = useState<any[]>([]);
   const [userRole, setUserRole] = useState('');
@@ -35,7 +39,7 @@ export default function PermissionsSuiviPage() {
     try { const stored = localStorage.getItem('user'); if (stored) setUserRole(JSON.parse(stored).role || ''); } catch {}
     (async () => {
       try { setTickets((await api.get('/permission-tickets')) || []); }
-      catch (e) { console.error('Erreur chargement suivi permissions', e); }
+      catch (e) { console.error('Erreur chargement suivi permissions', e); setUiLoadError('Le chargement a échoué. Réessayez dans un instant.'); }
       finally { setIsLoading(false); }
     })();
   }, []);
@@ -76,33 +80,33 @@ export default function PermissionsSuiviPage() {
     pending: inPeriod.filter(t => t.status === 'PENDING').length,
   }), [byEmployee, inPeriod]);
 
-  if (isLoading) return <KonzaLoader variant="page" />;
+  if (isLoading) return <ModulePageSkeleton label="Chargement des permissions" />;
 
   return (
-    <div className="max-w-[1500px] mx-auto pb-24 space-y-6">
+    <ModulePageFrame kind="list" error={uiLoadError}><div className="max-w-[1500px] mx-auto pb-24 space-y-6">
       <PresenceModuleSwitcher />
       <PermissionsSubNav userRole={userRole} />
 
-      <div>
-        <h1 className="text-xl font-bold text-[var(--text)]">Suivi des permissions</h1>
+      <div className="attendance-page-heading">
+        <h1 className="text-xl font-semibold text-[var(--text)]">Suivi des permissions</h1>
         <p className="text-sm text-[var(--text-muted)]">Employés ayant demandé une sortie sur la période sélectionnée.</p>
       </div>
 
       {/* ══════════════════ FILTRES ══════════════════ */}
-      <div className="flex flex-wrap gap-2">
-        <select value={month} onChange={e => setMonth(e.target.value === '' ? '' : Number(e.target.value))} className="text-xs px-2 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+      <div className="flex flex-wrap gap-2 attendance-filters">
+        <AttendanceSelect value={month} onChange={e => setMonth(e.target.value === '' ? '' : Number(e.target.value))} className="text-xs px-2 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
           <option value="">Toute l'année</option>
           {MONTHS_FR.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
-        </select>
-        <select value={year} onChange={e => setYear(Number(e.target.value))} className="text-xs px-2 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+        </AttendanceSelect>
+        <AttendanceSelect value={year} onChange={e => setYear(Number(e.target.value))} className="text-xs px-2 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
           {availableYears.map(y => <option key={y} value={y}>{y}</option>)}
-        </select>
+        </AttendanceSelect>
         <FilterSelect icon={Filter} value={typeFilter} onChange={setTypeFilter} placeholder="Tous les types" options={Object.entries(TYPE_LABEL)} />
         {departments.length > 0 && <FilterSelect icon={Users2} value={deptFilter} onChange={setDeptFilter} placeholder="Tous les départements" options={departments.map(d => [d, d] as [string, string])} />}
       </div>
 
       {/* ══════════════════ KPI ══════════════════ */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 attendance-metrics">
         <KpiCard icon={Users2} label="Employés concernés" value={String(kpis.employees)} tone="slate" />
         <KpiCard icon={Ticket} label="Total tickets (période)" value={String(kpis.total)} tone="sky" />
         <KpiCard icon={CheckCircle2} label="Autorisés" value={String(kpis.approved)} tone="emerald" />
@@ -111,10 +115,10 @@ export default function PermissionsSuiviPage() {
 
       {/* ══════════════════ LISTE PAR EMPLOYÉ ══════════════════ */}
       <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto attendance-table-scroll" tabIndex={0} role="region" aria-label="Tableau défilant horizontalement">
+          <table className="w-full text-sm attendance-table">
             <thead className="bg-[var(--surface-2)]">
-              <tr>{['Employé', 'Département', 'Total tickets', 'Autorisés', 'En attente', 'Refusés', ''].map(h => <th key={h} className="px-4 py-3 text-left text-xs font-bold text-[var(--text-muted)] uppercase whitespace-nowrap">{h}</th>)}</tr>
+              <tr>{['Employé', 'Département', 'Total tickets', 'Autorisés', 'En attente', 'Refusés', ''].map(h => <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)]  whitespace-nowrap">{h}</th>)}</tr>
             </thead>
             <tbody className="divide-y divide-[var(--border)]">
               {byEmployee.length === 0 ? (
@@ -122,17 +126,17 @@ export default function PermissionsSuiviPage() {
               ) : byEmployee.map(e => (
                 <tr key={e.employeeId} className="hover:bg-[var(--surface-2)]/40">
                   <td className="px-4 py-3">
-                    <Link href={bp(`/presences/permissions/suivi/${e.employeeId}`)} className="font-semibold text-[var(--text)] hover:text-emerald-600 hover:underline">
+                    <Link href={bp(`/presences/permissions/suivi/${e.employeeId}`)} className="font-semibold text-[var(--text)] hover:text-[var(--success-text)] hover:underline">
                       {e.employee?.firstName} {e.employee?.lastName}
                     </Link>
                   </td>
                   <td className="px-4 py-3 text-[var(--text-muted)]">{e.employee?.department?.name || '—'}</td>
                   <td className="px-4 py-3 font-semibold text-[var(--text)]">{e.total}</td>
-                  <td className="px-4 py-3 text-emerald-600 font-semibold">{e.approved}</td>
-                  <td className="px-4 py-3 text-amber-600">{e.pending}</td>
-                  <td className="px-4 py-3 text-red-500">{e.rejected}</td>
+                  <td className="px-4 py-3 text-[var(--success-text)] font-semibold">{e.approved}</td>
+                  <td className="px-4 py-3 text-[var(--warning-text)]">{e.pending}</td>
+                  <td className="px-4 py-3 text-[var(--danger-text)]">{e.rejected}</td>
                   <td className="px-4 py-3 text-right">
-                    <Link href={bp(`/presences/permissions/suivi/${e.employeeId}`)} className="text-emerald-600 hover:underline text-xs font-semibold flex items-center gap-0.5 justify-end">
+                    <Link href={bp(`/presences/permissions/suivi/${e.employeeId}`)} className="text-[var(--success-text)] hover:underline text-xs font-semibold flex items-center gap-0.5 justify-end">
                       Voir la fiche <ChevronRight size={12} />
                     </Link>
                   </td>
@@ -142,22 +146,22 @@ export default function PermissionsSuiviPage() {
           </table>
         </div>
       </div>
-    </div>
+    </div></ModulePageFrame>
   );
 }
 
 function KpiCard({ icon: Icon, label, value, tone }: { icon: any; label: string; value: string; tone: 'slate' | 'emerald' | 'amber' | 'sky' }) {
   const cls: Record<string, string> = {
     slate: 'bg-[var(--surface-2)] text-[var(--text-muted)]',
-    emerald: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-300',
-    amber: 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-300',
-    sky: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-300',
+    emerald: 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)]  ',
+    amber: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)]  ',
+    sky: 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)]  ',
   };
   return (
     <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-4">
       <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${cls[tone]}`}><Icon size={18} /></div>
       <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-1">{label}</p>
-      <p className="text-lg font-bold text-[var(--text)] truncate">{value}</p>
+      <p className="text-lg font-semibold text-[var(--text)] truncate">{value}</p>
     </div>
   );
 }
@@ -166,10 +170,10 @@ function FilterSelect({ icon: IconEl, value, onChange, placeholder, options }: {
   return (
     <div className="relative">
       <IconEl size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" />
-      <select value={value} onChange={e => onChange(e.target.value)} className="pl-7 pr-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-xs">
+      <AttendanceSelect value={value} onChange={e => onChange(e.target.value)} className="pl-7 pr-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-xs">
         <option value="">{placeholder}</option>
         {options.map(([val, label]) => <option key={val} value={val}>{label}</option>)}
-      </select>
+      </AttendanceSelect>
     </div>
   );
 }

@@ -25,6 +25,7 @@ import { api } from '@/services/api';
 import { useAlert } from '@/components/providers/AlertProvider';
 import { useBasePath } from '@/hooks/useBasePath';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import { ModulePageFrame } from '@/components/requests/ModulePageFrame';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 type ContractKind = 'CONTRAT_TRAVAIL' | 'PRESTATION_SERVICES' | 'CONSULTANT' | 'STAGE';
@@ -987,10 +988,19 @@ function Row({ label, value, bold, muted, highlight }: { label: string; value: n
   );
 }
 
-export default function GenerateContractPage() {
+function GenerateContractPage() {
   return (
     <Suspense fallback={<KonzaLoader variant="page" />}>
       <GenerateContractInner />
     </Suspense>
+  );
+}
+
+
+export default function GenerateContractPageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <GenerateContractPage />
+    </ModulePageFrame>
   );
 }

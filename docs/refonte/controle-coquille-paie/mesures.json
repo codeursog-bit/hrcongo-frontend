@@ -1,0 +1,1138 @@
+{
+  "date": "2026-11-18",
+  "files": {
+    "components/layout/Sidebar.tsx": {
+      "api": {
+        "before": "eec49900ca2d125efc1ab893da1be906d4c5c3e01b52c382a7c900b3b2d6c1f0",
+        "after": "eec49900ca2d125efc1ab893da1be906d4c5c3e01b52c382a7c900b3b2d6c1f0"
+      },
+      "effects": {
+        "before": "8fdef8f6742e210c86258d280e5af10b6527094a0eddc55cacafae673a572968",
+        "after": "8fdef8f6742e210c86258d280e5af10b6527094a0eddc55cacafae673a572968"
+      },
+      "states": {
+        "before": "a8313dcf4c3c6565e1267c3f328e666386d496fb71d665a5c05fd6a2b6e7fb15",
+        "after": "a8313dcf4c3c6565e1267c3f328e666386d496fb71d665a5c05fd6a2b6e7fb15"
+      },
+      "conditions": {
+        "before": "9ec7d24f57d16e3aba544d662e8d4d13812a3c63e36e61ea64941789e694d6dd",
+        "after": "9ec7d24f57d16e3aba544d662e8d4d13812a3c63e36e61ea64941789e694d6dd"
+      }
+    },
+    "components/layout/TopNav.tsx": {
+      "api": {
+        "before": "7eaa17ea117004cb381b16a64a86f33505d930a1866413aafc157812f7561357",
+        "after": "7eaa17ea117004cb381b16a64a86f33505d930a1866413aafc157812f7561357"
+      },
+      "effects": {
+        "before": "a3fb82839772a7bc113ade49dae17ad03b6a7455ce21c81a8fa039e26a21790e",
+        "after": "a3fb82839772a7bc113ade49dae17ad03b6a7455ce21c81a8fa039e26a21790e"
+      },
+      "states": {
+        "before": "98064a9909c5aa00cbb0a5ef898d8efca45d73f7460a37354fd587626b758559",
+        "after": "98064a9909c5aa00cbb0a5ef898d8efca45d73f7460a37354fd587626b758559"
+      },
+      "conditions": {
+        "before": "00cdbc06b4718311de3d7c8ecebcd2a40838e6dbbed5b3523a19515c5438ce27",
+        "after": "00cdbc06b4718311de3d7c8ecebcd2a40838e6dbbed5b3523a19515c5438ce27"
+      }
+    },
+    "components/portfolio/PortfolioSidebar.tsx": {
+      "api": {
+        "before": "db02f866d35ade91269e3b6ded01cd73dbe9812631bf81caefacea96ecc8bb74",
+        "after": "db02f866d35ade91269e3b6ded01cd73dbe9812631bf81caefacea96ecc8bb74"
+      },
+      "effects": {
+        "before": "5ec9ae4d04d32901c150d20c8dce1046241df049d4b0d35cd4cd2a715a472efe",
+        "after": "5ec9ae4d04d32901c150d20c8dce1046241df049d4b0d35cd4cd2a715a472efe"
+      },
+      "states": {
+        "before": "c10878eabea8c5837811a081a6bd926e896dfa821fd2b1b7158760998ff74ec5",
+        "after": "c10878eabea8c5837811a081a6bd926e896dfa821fd2b1b7158760998ff74ec5"
+      },
+      "conditions": {
+        "before": "ef6ff51242f00d48e68424b1c21ae4319bd00a41e2246e676a5c97414ccc9ca2",
+        "after": "ef6ff51242f00d48e68424b1c21ae4319bd00a41e2246e676a5c97414ccc9ca2"
+      }
+    },
+    "components/portfolio/PortfolioTopNav.tsx": {
+      "api": {
+        "before": "7eaa17ea117004cb381b16a64a86f33505d930a1866413aafc157812f7561357",
+        "after": "7eaa17ea117004cb381b16a64a86f33505d930a1866413aafc157812f7561357"
+      },
+      "effects": {
+        "before": "ab1b260e2584a5b2065f0f75a81737440a17197bf187a63fe82ea0342e2b138a",
+        "after": "ab1b260e2584a5b2065f0f75a81737440a17197bf187a63fe82ea0342e2b138a"
+      },
+      "states": {
+        "before": "ce234da0986604e6ea6505d93bf3a7c99f873397e25685e794837814332e33d3",
+        "after": "ce234da0986604e6ea6505d93bf3a7c99f873397e25685e794837814332e33d3"
+      },
+      "conditions": {
+        "before": "de2f1b63b3fe90bd5278fa9bac3b89bed06e296104e288c0833fe0df29154604",
+        "after": "de2f1b63b3fe90bd5278fa9bac3b89bed06e296104e288c0833fe0df29154604"
+      }
+    },
+    "app/(dashboard)/paie/page.tsx": {
+      "api": {
+        "before": "dd4ce18a2f06c00180dc443aec81ec6f1f97192a551ba0738128993ac90343f3",
+        "after": "dd4ce18a2f06c00180dc443aec81ec6f1f97192a551ba0738128993ac90343f3"
+      },
+      "effects": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "states": {
+        "before": "99edea3dee1d8b7cf72c2af5cd1c18924d46c04caaaa9a3bfca664d630b4b7cc",
+        "after": "99edea3dee1d8b7cf72c2af5cd1c18924d46c04caaaa9a3bfca664d630b4b7cc"
+      },
+      "conditions": {
+        "before": "afb6157fa147e3a06125114a0d04c8817b20917a870709a5f37546ba41f8440f",
+        "after": "afb6157fa147e3a06125114a0d04c8817b20917a870709a5f37546ba41f8440f"
+      },
+      "constraints": {
+        "before": "6b9c905846abc1685d7ddc7852eff274c1673d66ca0a746fb58fff028856ec21",
+        "after": "6b9c905846abc1685d7ddc7852eff274c1673d66ca0a746fb58fff028856ec21"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "df329bfabae976d34d2779feef71d4527451db10a9483cc2b379fe8f73de1819",
+        "after": "df329bfabae976d34d2779feef71d4527451db10a9483cc2b379fe8f73de1819"
+      },
+      "protectedDocuments": {
+        "before": "de53bdba16932cdcac6d4ae254054a8ce1ea61c6680a10e673bf26e3dbb93d88",
+        "after": "de53bdba16932cdcac6d4ae254054a8ce1ea61c6680a10e673bf26e3dbb93d88"
+      }
+    },
+    "app/(dashboard)/paie/components/PayrollBatchActionsFooter.tsx": {
+      "api": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "effects": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "states": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "conditions": {
+        "before": "d776c661e053cc972fb566f865e30a67565c0aa942f8b7bc6c7812739a67953d",
+        "after": "d776c661e053cc972fb566f865e30a67565c0aa942f8b7bc6c7812739a67953d"
+      },
+      "constraints": {
+        "before": "7280d59b5f0a947c206b69b2bcad674658ee955091dfd444f156e4d5fe8d7844",
+        "after": "7280d59b5f0a947c206b69b2bcad674658ee955091dfd444f156e4d5fe8d7844"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "protectedDocuments": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/paie/components/PayrollMonthSelector.tsx": {
+      "api": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "effects": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "states": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "conditions": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "constraints": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "414e4ca8f2a6079abf8bd2b9079e1a5722ac3698c733dd4a30387741b9e8ef65",
+        "after": "414e4ca8f2a6079abf8bd2b9079e1a5722ac3698c733dd4a30387741b9e8ef65"
+      },
+      "protectedDocuments": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/paie/components/PayrollPagination.tsx": {
+      "api": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "effects": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "states": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "conditions": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "constraints": {
+        "before": "2779386685bab3d002aedf4c3fa36f47c89a35418f63e191083a1a30eac9aa5a",
+        "after": "2779386685bab3d002aedf4c3fa36f47c89a35418f63e191083a1a30eac9aa5a"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "8740b6093efeefb091ddbe77f8fdc1e2b6413500711c3b90e3473fdcc89bf65f",
+        "after": "8740b6093efeefb091ddbe77f8fdc1e2b6413500711c3b90e3473fdcc89bf65f"
+      },
+      "protectedDocuments": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/paie/components/PayrollStatsCards.tsx": {
+      "api": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "effects": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "states": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "conditions": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "constraints": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "fe9070b30590a469e294ef23a86c945bf2324f0698f1f71c1955fde0557f7190",
+        "after": "fe9070b30590a469e294ef23a86c945bf2324f0698f1f71c1955fde0557f7190"
+      },
+      "protectedDocuments": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/paie/components/PayrollTableRow.tsx": {
+      "api": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "effects": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "states": {
+        "before": "b97757fedc9f37c4248b82fb6cd5e9b7e4942671556e4114d29fba252d289db0",
+        "after": "b97757fedc9f37c4248b82fb6cd5e9b7e4942671556e4114d29fba252d289db0"
+      },
+      "conditions": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "constraints": {
+        "before": "ab4dde12382ecdbf4ad4413ae53e76d8e5e87bc1b56639ea06af1e0e1684f514",
+        "after": "ab4dde12382ecdbf4ad4413ae53e76d8e5e87bc1b56639ea06af1e0e1684f514"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "215841e485f45937a52f6eef17832572186c24a10912a1b8c8eafccd63a79404",
+        "after": "215841e485f45937a52f6eef17832572186c24a10912a1b8c8eafccd63a79404"
+      },
+      "protectedDocuments": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/paie/comptabilite/page.tsx": {
+      "api": {
+        "before": "1e1dd5accecb08b14966a55d308f453e7a2e41c4ad96fd7afbaeb4128917cb8f",
+        "after": "1e1dd5accecb08b14966a55d308f453e7a2e41c4ad96fd7afbaeb4128917cb8f"
+      },
+      "effects": {
+        "before": "66bd5e3804947d2e8e087b5a7219454f193667011b13077965c0b5b75a58f67f",
+        "after": "66bd5e3804947d2e8e087b5a7219454f193667011b13077965c0b5b75a58f67f"
+      },
+      "states": {
+        "before": "e32d8da037e3b6e6a05ab801499e25aeffdc20f1300bfd48d0eddf711d0d07f6",
+        "after": "e32d8da037e3b6e6a05ab801499e25aeffdc20f1300bfd48d0eddf711d0d07f6"
+      },
+      "conditions": {
+        "before": "60b29c24a91872b9f60113113d2ff6abcc8e62a3b142a81adae266b1424459a6",
+        "after": "60b29c24a91872b9f60113113d2ff6abcc8e62a3b142a81adae266b1424459a6"
+      },
+      "constraints": {
+        "before": "d371c012e6f03e0860ad014de6502d2c4010f8224ff0d0e16b40ca3aba88b96c",
+        "after": "d371c012e6f03e0860ad014de6502d2c4010f8224ff0d0e16b40ca3aba88b96c"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "5c6648ca26e5f7ce0ea8b11f24fb2eb0b355cc8832bea085b90ee4db471a874a",
+        "after": "5c6648ca26e5f7ce0ea8b11f24fb2eb0b355cc8832bea085b90ee4db471a874a"
+      },
+      "protectedDocuments": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/paie/impayes/page.tsx": {
+      "api": {
+        "before": "48d293524fe24586fe1b8265a22a7809777d6a14db40b6fc00c7f3d9ca1241dc",
+        "after": "48d293524fe24586fe1b8265a22a7809777d6a14db40b6fc00c7f3d9ca1241dc"
+      },
+      "effects": {
+        "before": "2e7732450ee0771991062b8b847d94c227bbe1ada111ef8eb8d83ba0995707e7",
+        "after": "2e7732450ee0771991062b8b847d94c227bbe1ada111ef8eb8d83ba0995707e7"
+      },
+      "states": {
+        "before": "84956f64b37b18e8ac65b1fcbccd8bf2effdff1aba4a5004c8d03f4a8e52d773",
+        "after": "84956f64b37b18e8ac65b1fcbccd8bf2effdff1aba4a5004c8d03f4a8e52d773"
+      },
+      "conditions": {
+        "before": "09c6488a510eb99bffdf2a20b04522531b26854f9244b31de9f85629bff82fac",
+        "after": "09c6488a510eb99bffdf2a20b04522531b26854f9244b31de9f85629bff82fac"
+      },
+      "constraints": {
+        "before": "bbac787e863becf125753b4d17902fc748b8a6b7b598aba61aa496b550a75dcf",
+        "after": "bbac787e863becf125753b4d17902fc748b8a6b7b598aba61aa496b550a75dcf"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "2f240ed5f7524221ed37a0b2d27cda8a465ab7a34ad695034fc28f28881cc905",
+        "after": "2f240ed5f7524221ed37a0b2d27cda8a465ab7a34ad695034fc28f28881cc905"
+      },
+      "protectedDocuments": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/paie/manuel/page.tsx": {
+      "api": {
+        "before": "2d3c9f69ae6f65e455752ff506e0e4705d27f4f0901329bf0794d8ffd3ce8571",
+        "after": "2d3c9f69ae6f65e455752ff506e0e4705d27f4f0901329bf0794d8ffd3ce8571"
+      },
+      "effects": {
+        "before": "526c8a229d193fdef8625b2c26379bb4bff89ba23691340fd4f70fd143ff12f7",
+        "after": "526c8a229d193fdef8625b2c26379bb4bff89ba23691340fd4f70fd143ff12f7"
+      },
+      "states": {
+        "before": "1fc71929a8ca05fe4c13d29cc44c92e7b30a1e30697115f1d7a7c1d6b5ae4fe0",
+        "after": "1fc71929a8ca05fe4c13d29cc44c92e7b30a1e30697115f1d7a7c1d6b5ae4fe0"
+      },
+      "conditions": {
+        "before": "b87293209d33472b8d58643dd61b69ffc272e6a30b5cd7f71230bd74ca575e0d",
+        "after": "b87293209d33472b8d58643dd61b69ffc272e6a30b5cd7f71230bd74ca575e0d"
+      },
+      "constraints": {
+        "before": "e07a4d7f666cf24e01cb9ffedc539ae1df98d8a4460ae69d5422807824933445",
+        "after": "e07a4d7f666cf24e01cb9ffedc539ae1df98d8a4460ae69d5422807824933445"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "9992d25b948125ffcd0523e15a7452d08352e38549f87cb542b323cec0d830a5",
+        "after": "9992d25b948125ffcd0523e15a7452d08352e38549f87cb542b323cec0d830a5"
+      },
+      "protectedDocuments": {
+        "before": "91d741d7bee84e8c05101402f6ee95ce1c8d64f22c17f405453236cf8a8c0348",
+        "after": "91d741d7bee84e8c05101402f6ee95ce1c8d64f22c17f405453236cf8a8c0348"
+      }
+    },
+    "app/(dashboard)/paie/masse/page.tsx": {
+      "api": {
+        "before": "223417548d15913860543762acbdb16d008dffb953de759f9ae6257d245721f5",
+        "after": "223417548d15913860543762acbdb16d008dffb953de759f9ae6257d245721f5"
+      },
+      "effects": {
+        "before": "756ca10cdcd6c7be7ed82c3ab07db3be551839a6bc84a2be187344ebdf26c15c",
+        "after": "756ca10cdcd6c7be7ed82c3ab07db3be551839a6bc84a2be187344ebdf26c15c"
+      },
+      "states": {
+        "before": "6cddd625969dfc38b4ff0e86f1f048a40db72e519364f603075462cd31a94717",
+        "after": "6cddd625969dfc38b4ff0e86f1f048a40db72e519364f603075462cd31a94717"
+      },
+      "conditions": {
+        "before": "5145d00e79f59aa90cdfe1631396bee3e7da7c4642f7512f5e1100d2a21db77e",
+        "after": "5145d00e79f59aa90cdfe1631396bee3e7da7c4642f7512f5e1100d2a21db77e"
+      },
+      "constraints": {
+        "before": "f16545f9778475f1a5e7b1483ae4598e83b9876e58e43918f2139093c719d92f",
+        "after": "f16545f9778475f1a5e7b1483ae4598e83b9876e58e43918f2139093c719d92f"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "5b2b051ae57cba0071f4fc8b42ee7503dd2db098417817b6b4c743e5577bd019",
+        "after": "5b2b051ae57cba0071f4fc8b42ee7503dd2db098417817b6b4c743e5577bd019"
+      },
+      "protectedDocuments": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/paie/masse/PeriodStep.tsx": {
+      "api": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "effects": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "states": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "conditions": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "constraints": {
+        "before": "0e4df849c83b5908158af55a05bd8bf92e9c64e973690a90113b8fb8778ac0ea",
+        "after": "0e4df849c83b5908158af55a05bd8bf92e9c64e973690a90113b8fb8778ac0ea"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "965f5e158f5eeb3f93dfcf6a23723ce23c11685f27067989cedb181f6ef1d170",
+        "after": "965f5e158f5eeb3f93dfcf6a23723ce23c11685f27067989cedb181f6ef1d170"
+      },
+      "protectedDocuments": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/paie/masse/ProcessingStep.tsx": {
+      "api": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "effects": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "states": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "conditions": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "constraints": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "protectedDocuments": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/paie/masse/SelectionStep.tsx": {
+      "api": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "effects": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "states": {
+        "before": "d6f86b6f5950622a431a59ae4d76965ccfbacc33cf4bac427981ebd42301c9a7",
+        "after": "d6f86b6f5950622a431a59ae4d76965ccfbacc33cf4bac427981ebd42301c9a7"
+      },
+      "conditions": {
+        "before": "89a230764cc0eb2f31d1d00cae07a4ba464206f0402ae426ad77dfc9b9007f01",
+        "after": "89a230764cc0eb2f31d1d00cae07a4ba464206f0402ae426ad77dfc9b9007f01"
+      },
+      "constraints": {
+        "before": "f20368fcf6c205ec7b5a7c7272805656131efe2b676be0df96a83ed305425c21",
+        "after": "f20368fcf6c205ec7b5a7c7272805656131efe2b676be0df96a83ed305425c21"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "9e93c7dc552a41744603db5861c030f1ac60f58d336537830061d5f96144676f",
+        "after": "9e93c7dc552a41744603db5861c030f1ac60f58d336537830061d5f96144676f"
+      },
+      "protectedDocuments": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/paie/masse/StepHeader.tsx": {
+      "api": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "effects": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "states": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "conditions": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "constraints": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "ca47fb1a2a68a228bd6574ba6c11abd43af2ffd293ac1b072b3234cb241fa734",
+        "after": "ca47fb1a2a68a228bd6574ba6c11abd43af2ffd293ac1b072b3234cb241fa734"
+      },
+      "protectedDocuments": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/paie/masse/SuccessModal.tsx": {
+      "api": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "effects": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "states": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "conditions": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "constraints": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "8f15e6f878331f88fee27a2772789e64325a9986491e4e6f6b3b2bd1662532b8",
+        "after": "8f15e6f878331f88fee27a2772789e64325a9986491e4e6f6b3b2bd1662532b8"
+      },
+      "protectedDocuments": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/paie/nouveau/page.tsx": {
+      "api": {
+        "before": "1ef7dae9cb6bd038360c09df95dbba645f3208536c0d25b6219ffb56ed6f2d5e",
+        "after": "1ef7dae9cb6bd038360c09df95dbba645f3208536c0d25b6219ffb56ed6f2d5e"
+      },
+      "effects": {
+        "before": "0d264a118a948d47500dc585736c630cf2c249e94c2f867e921cd8d8c36ddc37",
+        "after": "0d264a118a948d47500dc585736c630cf2c249e94c2f867e921cd8d8c36ddc37"
+      },
+      "states": {
+        "before": "9460aabe3f2846fed62f03d6e4a53548d9f03a577c9616f20d718790cfea4837",
+        "after": "9460aabe3f2846fed62f03d6e4a53548d9f03a577c9616f20d718790cfea4837"
+      },
+      "conditions": {
+        "before": "ca530cd1bb13603981b160773ee0e577206e62ebb1a71b5369146640b878d939",
+        "after": "ca530cd1bb13603981b160773ee0e577206e62ebb1a71b5369146640b878d939"
+      },
+      "constraints": {
+        "before": "08fe23c8de6890635009810735f3075dce62cd93769cbf81aa30c3631fb7172c",
+        "after": "08fe23c8de6890635009810735f3075dce62cd93769cbf81aa30c3631fb7172c"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "fa4e5ce3d0f731a7691d9cb002629cdec54c0be13d2ddd29aefc014b23d0a71f",
+        "after": "fa4e5ce3d0f731a7691d9cb002629cdec54c0be13d2ddd29aefc014b23d0a71f"
+      },
+      "protectedDocuments": {
+        "before": "64b7cd988b4d86aa58f0dd262defe92d8131b06be45f6ebbb25f2016fff4787d",
+        "after": "64b7cd988b4d86aa58f0dd262defe92d8131b06be45f6ebbb25f2016fff4787d"
+      }
+    },
+    "app/(dashboard)/paie/simulateur/page.tsx": {
+      "api": {
+        "before": "3b564f6c1df6c4d3f3a568fffe8edf56a96bd8444a4a9d94fdf8dcc6c26144ca",
+        "after": "3b564f6c1df6c4d3f3a568fffe8edf56a96bd8444a4a9d94fdf8dcc6c26144ca"
+      },
+      "effects": {
+        "before": "dd47375535a89e93a5a1e32b1d143861f74e4366f74fcaf45feda5030f06209f",
+        "after": "dd47375535a89e93a5a1e32b1d143861f74e4366f74fcaf45feda5030f06209f"
+      },
+      "states": {
+        "before": "a36d93326c4b1016a0f24669064de68d310a1df4248c839972aad570485bc6ae",
+        "after": "a36d93326c4b1016a0f24669064de68d310a1df4248c839972aad570485bc6ae"
+      },
+      "conditions": {
+        "before": "1518de2211217ef9efbab8733a0ac4df2c138c86b7222e1c4cb526ecff48cccb",
+        "after": "1518de2211217ef9efbab8733a0ac4df2c138c86b7222e1c4cb526ecff48cccb"
+      },
+      "constraints": {
+        "before": "e7a4dfde3409fc7f669b9800840c40bb8785b604ca68d609f817eb1047ef3989",
+        "after": "e7a4dfde3409fc7f669b9800840c40bb8785b604ca68d609f817eb1047ef3989"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "b30c6a12f364acd8fb0927ec6df46ea4a198d3f26af3200d09bc284726dddf05",
+        "after": "b30c6a12f364acd8fb0927ec6df46ea4a198d3f26af3200d09bc284726dddf05"
+      },
+      "protectedDocuments": {
+        "before": "b06130adf2e0724dbdd8db810eaf1fee2b5da7adecb531613247fb4a1f1c6f43",
+        "after": "b06130adf2e0724dbdd8db810eaf1fee2b5da7adecb531613247fb4a1f1c6f43"
+      }
+    },
+    "app/(dashboard)/paie/[id]/page.tsx": {
+      "api": {
+        "before": "606f2630afe2dbd2c507d86be0f7ebb299a4c39de41ea0000bff5dda0ca46148",
+        "after": "606f2630afe2dbd2c507d86be0f7ebb299a4c39de41ea0000bff5dda0ca46148"
+      },
+      "effects": {
+        "before": "08167ae4a90e1f04893f882fef2ba4d56bafda92c78787b0a9b5f85458bf6f7a",
+        "after": "08167ae4a90e1f04893f882fef2ba4d56bafda92c78787b0a9b5f85458bf6f7a"
+      },
+      "states": {
+        "before": "9657b870d1651018767c4e253e6c200796a49da01fa504cb7881bfa6baf072ce",
+        "after": "9657b870d1651018767c4e253e6c200796a49da01fa504cb7881bfa6baf072ce"
+      },
+      "conditions": {
+        "before": "21c5acb77eee61f46fe6f4a86c755ae40eecfc73386eccedc060f7d130860a32",
+        "after": "21c5acb77eee61f46fe6f4a86c755ae40eecfc73386eccedc060f7d130860a32"
+      },
+      "constraints": {
+        "before": "094dee49e35cb7f82654f92de24d8d2b8660596c4fae38b947f40aa44ae8794f",
+        "after": "094dee49e35cb7f82654f92de24d8d2b8660596c4fae38b947f40aa44ae8794f"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "45bb906348c7495f83acd869f867ee463fbf6ecc180b1740de20c366ef10d3c2",
+        "after": "45bb906348c7495f83acd869f867ee463fbf6ecc180b1740de20c366ef10d3c2"
+      },
+      "protectedDocuments": {
+        "before": "89da9a10ea3e8cc8f28d21f731d20860c2279e9d9e53523d7624d345f05200e6",
+        "after": "89da9a10ea3e8cc8f28d21f731d20860c2279e9d9e53523d7624d345f05200e6"
+      }
+    },
+    "app/(dashboard)/paie/nouveau/components/DeductionsSection.tsx": {
+      "api": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "effects": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "states": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "conditions": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "constraints": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "f3c6572b7b94b1f728edac65c605bf6fe2a5be55f48eaaa024ab415073145ee7",
+        "after": "f3c6572b7b94b1f728edac65c605bf6fe2a5be55f48eaaa024ab415073145ee7"
+      },
+      "protectedDocuments": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/paie/nouveau/components/EmployeeSelector.tsx": {
+      "api": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "effects": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "states": {
+        "before": "1ba255d9a34ab69902a22a95292dc8ce44c0eef5543da42a219d1ec241328b16",
+        "after": "1ba255d9a34ab69902a22a95292dc8ce44c0eef5543da42a219d1ec241328b16"
+      },
+      "conditions": {
+        "before": "3fa7db5c8a1610a4a9db3b34f3a2cf91840d304acb9a5ee788a6cc8d6e06a15d",
+        "after": "3fa7db5c8a1610a4a9db3b34f3a2cf91840d304acb9a5ee788a6cc8d6e06a15d"
+      },
+      "constraints": {
+        "before": "8a33f284bcad755ca9e7002e40f3fa2d8d258b69810d5a5509372aee960f8a9f",
+        "after": "8a33f284bcad755ca9e7002e40f3fa2d8d258b69810d5a5509372aee960f8a9f"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "a067a5eacd8651c5393b03a25d748bcd3fceb49ddbecbb432ec8f4f30407761b",
+        "after": "a067a5eacd8651c5393b03a25d748bcd3fceb49ddbecbb432ec8f4f30407761b"
+      },
+      "protectedDocuments": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/paie/nouveau/components/OvertimeSection.tsx": {
+      "api": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "effects": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "states": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "conditions": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "constraints": {
+        "before": "f1ec317222fac30267858a996d0b88b7332359c2c8b4d4ac5cce1b6ac6b8435d",
+        "after": "f1ec317222fac30267858a996d0b88b7332359c2c8b4d4ac5cce1b6ac6b8435d"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "70ef74404ad8ae84568adf8ec803b31efe11de6b1a7016c2c8f8835e52f1ebf1",
+        "after": "70ef74404ad8ae84568adf8ec803b31efe11de6b1a7016c2c8f8835e52f1ebf1"
+      },
+      "protectedDocuments": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/paie/nouveau/components/PayrollPreviewCard.tsx": {
+      "api": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "effects": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "states": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "conditions": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "constraints": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "83d73706246272f50fdd62188d3b516552b026bb46517a4601d22bfb3c69b304",
+        "after": "83d73706246272f50fdd62188d3b516552b026bb46517a4601d22bfb3c69b304"
+      },
+      "protectedDocuments": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/paie/[id]/components/PayslipBreakdown.tsx": {
+      "api": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "effects": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "states": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "conditions": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "constraints": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "4cfc9abae919583d8ce31e12cffcd4eed7b9abd4f45a5a35d5c4b3a8a5bd224b",
+        "after": "4cfc9abae919583d8ce31e12cffcd4eed7b9abd4f45a5a35d5c4b3a8a5bd224b"
+      },
+      "protectedDocuments": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/paie/[id]/components/PayslipEmployeeInfo.tsx": {
+      "api": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "effects": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "states": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "conditions": {
+        "before": "176342a429c29675ccecc2875c4469ae0f1b5d1fe65909ab9ed5474fff36319e",
+        "after": "176342a429c29675ccecc2875c4469ae0f1b5d1fe65909ab9ed5474fff36319e"
+      },
+      "constraints": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "bc54e227a4b479d6ef6939b390f23b2b8b50ca53c53032648e190f83cc33d3ca",
+        "after": "bc54e227a4b479d6ef6939b390f23b2b8b50ca53c53032648e190f83cc33d3ca"
+      },
+      "protectedDocuments": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/paie/[id]/components/PayslipFooter.tsx": {
+      "api": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "effects": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "states": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "conditions": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "constraints": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "de27f554ca60ab83573bd93dc8bbe4ed1a43be5ef042f558c8afbba3bace3907",
+        "after": "de27f554ca60ab83573bd93dc8bbe4ed1a43be5ef042f558c8afbba3bace3907"
+      },
+      "protectedDocuments": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/paie/[id]/components/PayslipHeader.tsx": {
+      "api": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "effects": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "states": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "conditions": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "constraints": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "0055d7af17494593d38b4b186d26ce1c29a8f98b7f76b5e25da313a841396011",
+        "after": "0055d7af17494593d38b4b186d26ce1c29a8f98b7f76b5e25da313a841396011"
+      },
+      "protectedDocuments": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/paie/[id]/modifier/page.tsx": {
+      "api": {
+        "before": "86905f8246fc10df1f4d7330eec026890b519a546d988105ea28d1b26faaed8d",
+        "after": "86905f8246fc10df1f4d7330eec026890b519a546d988105ea28d1b26faaed8d"
+      },
+      "effects": {
+        "before": "d10c226169212c28c98b1915e12f4add642217e9069760aa93155949be4f3b96",
+        "after": "d10c226169212c28c98b1915e12f4add642217e9069760aa93155949be4f3b96"
+      },
+      "states": {
+        "before": "fb6c5c5eb9733adabee73a5ee1d13f4067acbce7083871e0d28cb47e9d3ff5b9",
+        "after": "fb6c5c5eb9733adabee73a5ee1d13f4067acbce7083871e0d28cb47e9d3ff5b9"
+      },
+      "conditions": {
+        "before": "2457f8ea34f1b2645bf00468eba0a8afb08249de8b55d4b42b1be08073b88c8f",
+        "after": "2457f8ea34f1b2645bf00468eba0a8afb08249de8b55d4b42b1be08073b88c8f"
+      },
+      "constraints": {
+        "before": "6ff4cc26c1441d26012ce60fe8cd6537fe65c3499c299cceb86fba2c37ba1271",
+        "after": "6ff4cc26c1441d26012ce60fe8cd6537fe65c3499c299cceb86fba2c37ba1271"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "6f52d55247c75cd27cccd805216bf306227200792822fee135d16d567c0f383d",
+        "after": "6f52d55247c75cd27cccd805216bf306227200792822fee135d16d567c0f383d"
+      },
+      "protectedDocuments": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    }
+  },
+  "audit": {
+    "payrollPalette": {
+      "before": 1752,
+      "after": 35
+    },
+    "globalBefore": {
+      "palette": 15131,
+      "hex": 1713,
+      "emojis": 406,
+      "gradients": 243,
+      "blur": 179
+    },
+    "globalAfter": {
+      "palette": 13415,
+      "hex": 1675,
+      "emojis": 406,
+      "gradients": 243,
+      "blur": 175
+    },
+    "payrollInterfacePalette": {
+      "before": 1717,
+      "after": 0,
+      "protectedClassesPreserved": 35
+    }
+  },
+  "validation": {
+    "typescript": "tsc --noEmit --incremental false : exit 0",
+    "tests": [
+      "check-shell-payroll-review.cjs",
+      "check-shell-payroll-demo.cjs",
+      "check-presence-demo.cjs",
+      "check-module-nav-layout.cjs"
+    ],
+    "visual": "Revue visuelle réelle non effectuée ; clair/sombre/mobile et comparaison des impressions en attente."
+  }
+}

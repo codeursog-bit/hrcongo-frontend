@@ -3,6 +3,7 @@
 import React from 'react';
 import { Calendar, CalendarDays, CalendarRange } from 'lucide-react';
 import { FancySelect } from '@/components/ui/FancySelect';
+import '@/components/ui/select.css';
 
 // ─────────────────────────────────────────────────────────────────────────
 // ✅ Sélecteur de période partagé — même composant (FancySelect) et même
@@ -66,7 +67,7 @@ export default function PeriodSelector({ value, onChange, minYear, maxYear, mode
     <div className="flex flex-wrap items-end gap-3">
       {/* Sélecteur de mode — même esprit que les filtres Effectifs, en pilules */}
       {availableModes.length > 1 && (
-        <div className="flex rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--surface)] h-[46px] self-end">
+        <div className="k-segmented self-end" role="group" aria-label="Type de période">
           {availableModes.map((m) => {
             const Icon = MODE_META[m].icon;
             const active = value.mode === m;
@@ -75,13 +76,10 @@ export default function PeriodSelector({ value, onChange, minYear, maxYear, mode
                 key={m}
                 type="button"
                 onClick={() => setMode(m)}
-                className={`flex items-center gap-1.5 px-3 h-full text-sm font-medium transition-colors ${
-                  active
-                    ? 'bg-[var(--brand-soft)] text-[var(--brand)]'
-                    : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'
-                }`}
+                aria-pressed={active}
+                className="k-segmented-item"
               >
-                <Icon size={16} />
+                <Icon size={16} strokeWidth={1.5} aria-hidden="true" />
                 {MODE_META[m].label}
               </button>
             );

@@ -1,0 +1,33 @@
+{
+  "date": "2026-11-18",
+  "sources": 23,
+  "before": 2014,
+  "after": 165,
+  "remaining": [
+    {
+      "file": "app/(dashboard)/performance/fiche/[id]/page.tsx",
+      "palette": 121
+    },
+    {
+      "file": "components/performance/ScorePicker.tsx",
+      "palette": 16
+    },
+    {
+      "file": "components/performance/sheet-types.ts",
+      "palette": 28
+    }
+  ],
+  "explanation": "Classes restantes : fiche imprimable et dépendances de notation/statuts partagées avec ce document. Leurs styles écran sont isolés de l’impression.",
+  "global": {
+    "before": {
+      "palette": 10014,
+      "hex": 1438,
+      "emojis": 393
+    },
+    "after": {
+      "palette": 8165,
+      "hex": 1438,
+      "emojis": 375
+    }
+  }
+}

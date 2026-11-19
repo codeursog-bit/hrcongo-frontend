@@ -24,6 +24,7 @@ import { CareerTimeline } from '@/components/performance/CareerTimeline';
 import { DevelopmentPlans } from '@/components/performance/DevelopmentPlans';
 import { CareerData, PlansData } from '@/components/performance/career-types';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import { PerformanceFrame as ModulePageFrame } from '@/components/performance/PerformanceFrame';
 
 interface MeData {
   employeeId: string | null;
@@ -40,7 +41,7 @@ interface MeData {
 }
 
 const cardCls =
-  'bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm';
+  'bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm';
 
 function GoalProgress({ goal, onSaved }: { goal: MeData['goals'][number]; onSaved: () => void }) {
   const [value, setValue] = useState(goal.progress);
@@ -67,11 +68,11 @@ function GoalProgress({ goal, onSaved }: { goal: MeData['goals'][number]; onSave
     <div className={`${cardCls} p-4 sm:p-5`}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="font-bold text-gray-900 dark:text-white break-words">{goal.title}</h3>
-          {goal.kpi && <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5 break-words">{goal.kpi}</p>}
+          <h3 className="font-semibold text-[var(--text)] break-words">{goal.title}</h3>
+          {goal.kpi && <p className="text-sm text-[var(--text-secondary)] mt-0.5 break-words">{goal.kpi}</p>}
         </div>
         {goal.weight !== null && goal.weight !== undefined && Number(goal.weight) > 0 && (
-          <span className="px-2.5 py-1 rounded-lg bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs font-bold shrink-0">
+          <span className="px-2.5 py-1 rounded-lg bg-[var(--brand-soft)] text-[var(--action)] text-xs font-semibold shrink-0">
             {Number(goal.weight)} %
           </span>
         )}
@@ -79,9 +80,9 @@ function GoalProgress({ goal, onSaved }: { goal: MeData['goals'][number]; onSave
 
       <div className="mt-4">
         <div className="flex items-center justify-between text-sm mb-2">
-          <span className="font-medium text-gray-700 dark:text-gray-300">Progression</span>
-          <span className="font-bold text-purple-600 dark:text-purple-400 flex items-center gap-1.5">
-            {saving && <Loader2 size={12} className="animate-spin" />}{value} %
+          <span className="font-medium text-[var(--text)]">Progression</span>
+          <span className="font-semibold text-[var(--action)] flex items-center gap-1.5">
+            {saving && <Loader2 strokeWidth={1.5} size={12} className="animate-spin" />}{value} %
           </span>
         </div>
         <input
@@ -93,17 +94,17 @@ function GoalProgress({ goal, onSaved }: { goal: MeData['goals'][number]; onSave
         />
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 text-xs text-gray-400">
-        <span className="flex items-center gap-1"><Calendar size={12} /> Échéance : {fmtDate(goal.endDate)}</span>
-        {late && <span className="text-amber-600 dark:text-amber-400 font-medium">Échéance dépassée</span>}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 text-xs text-[var(--text-secondary)]">
+        <span className="flex items-center gap-1"><Calendar strokeWidth={1.5} size={12} /> Échéance : {fmtDate(goal.endDate)}</span>
+        {late && <span className="text-[var(--warning-text)] font-medium">Échéance dépassée</span>}
         {goal.support && <span className="break-words">Support : {goal.support}</span>}
       </div>
-      {error && <p className="text-xs text-red-500 mt-2">{error}</p>}
+      {error && <p className="text-xs text-[var(--danger-text)] mt-2">{error}</p>}
     </div>
   );
 }
 
-export default function MyPerformancePage() {
+function MyPerformancePage() {
   const { bp } = useBasePath();
   const [data, setData] = useState<MeData | null>(null);
   const [comp, setComp] = useState<EmployeeCompetencies | null>(null);
@@ -133,15 +134,15 @@ export default function MyPerformancePage() {
   }
 
   if (error || !data) {
-    return <div className="max-w-xl mx-auto py-20 text-center text-gray-600 dark:text-gray-300">{error ?? 'Aucune donnée'}</div>;
+    return <div className="max-w-xl mx-auto py-20 text-center text-[var(--text-secondary)]">{error ?? 'Aucune donnée'}</div>;
   }
 
   if (!data.employeeId) {
     return (
       <div className="max-w-xl mx-auto py-20 text-center space-y-3">
-        <UserX className="mx-auto text-gray-300" size={40} />
-        <p className="font-bold text-gray-900 dark:text-white">Compte non relié à une fiche employé</p>
-        <p className="text-sm text-gray-500 dark:text-gray-400">Demandez à votre RH de relier votre compte à votre fiche pour accéder à votre espace performance.</p>
+        <UserX strokeWidth={1.5} className="mx-auto text-[var(--text-secondary)]" size={40} />
+        <p className="font-semibold text-[var(--text)]">Compte non relié à une fiche employé</p>
+        <p className="text-sm text-[var(--text-secondary)]">Demandez à votre RH de relier votre compte à votre fiche pour accéder à votre espace performance.</p>
       </div>
     );
   }
@@ -154,35 +155,35 @@ export default function MyPerformancePage() {
       <PerformanceNav />
 
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex items-start justify-between gap-4 performance-header">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Ma performance</h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base">Ici : ce que vous devez faire, vos objectifs et vos évaluations.</p>
+          <h1 className="text-2xl sm:text-3xl font-semibold text-[var(--text)] tracking-tight">Ma performance</h1>
+          <p className="text-[var(--text-secondary)] text-sm sm:text-base">Ici : ce que vous devez faire, vos objectifs et vos évaluations.</p>
         </div>
         <button onClick={load} aria-label="Actualiser"
-          className="p-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-500 hover:text-gray-700 transition-colors shrink-0">
-          <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+          className="p-2.5 rounded-xl border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors shrink-0">
+          <RefreshCw strokeWidth={1.5} size={16} className={loading ? 'animate-spin' : ''} />
         </button>
       </div>
 
       {/* À faire */}
       <section className="space-y-3">
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white">À faire</h2>
+        <h2 className="text-lg font-semibold text-[var(--text)]">À faire</h2>
         {nothingToDo && (
-          <div className={`${cardCls} p-5 flex items-center gap-3 text-emerald-700 dark:text-emerald-400`}>
-            <CheckCircle2 size={20} /> <span className="text-sm font-medium">Rien à faire pour le moment. Tout est à jour 👍</span>
+          <div className={`${cardCls} p-5 flex items-center gap-3 text-[var(--success-text)]`}>
+            <CheckCircle2 strokeWidth={1.5} size={20} /> <span className="text-sm font-medium">Rien à faire pour le moment. Tout est à jour </span>
           </div>
         )}
         {toAck.map(r => (
           <motion.div key={r.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
             <Link href={bp(`/performance/fiche/${r.id}`)}
-              className={`${cardCls} p-4 sm:p-5 flex items-center gap-4 border-l-4 !border-l-amber-400 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors`}>
-              <div className="w-11 h-11 rounded-xl bg-amber-100 dark:bg-amber-900/30 text-amber-600 flex items-center justify-center shrink-0"><ThumbsUp size={20} /></div>
+              className={`${cardCls} p-4 sm:p-5 flex items-center gap-4 border-l-4 !border-l-[var(--mustard)] hover:bg-[var(--surface-2)] transition-colors`}>
+              <div className="w-11 h-11 rounded-xl bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)] flex items-center justify-center shrink-0"><ThumbsUp strokeWidth={1.5} size={20} /></div>
               <div className="flex-1 min-w-0">
-                <p className="font-bold text-gray-900 dark:text-white">Lire mon évaluation et accuser réception</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{r.period}{r.reviewer ? ` · par ${r.reviewer.firstName} ${r.reviewer.lastName}` : ''}</p>
+                <p className="font-semibold text-[var(--text)]">Lire mon évaluation et accuser réception</p>
+                <p className="text-sm text-[var(--text-secondary)] truncate">{r.period}{r.reviewer ? ` · par ${r.reviewer.firstName} ${r.reviewer.lastName}` : ''}</p>
               </div>
-              <ChevronRight size={18} className="text-gray-400 shrink-0" />
+              <ChevronRight strokeWidth={1.5} size={18} className="text-[var(--text-secondary)] shrink-0" />
             </Link>
           </motion.div>
         ))}
@@ -190,9 +191,9 @@ export default function MyPerformancePage() {
 
       {/* Objectifs en cours */}
       <section className="space-y-3">
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2"><Target size={18} className="text-purple-600" /> Mes objectifs</h2>
+        <h2 className="text-lg font-semibold text-[var(--text)] flex items-center gap-2"><Target strokeWidth={1.5} size={18} className="text-[var(--action)]" /> Mes objectifs</h2>
         {data.goals.length === 0 ? (
-          <div className={`${cardCls} p-8 text-center text-sm text-gray-500`}>
+          <div className={`${cardCls} p-8 text-center text-sm text-[var(--text-secondary)]`}>
             Aucun objectif pour le moment. Votre responsable vous en fixera lors de votre évaluation.
           </div>
         ) : (
@@ -205,7 +206,7 @@ export default function MyPerformancePage() {
       {/* Plan de développement */}
       {plans && plans.plans.length > 0 && (
         <section className="space-y-3">
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2"><Sparkles size={18} className="text-purple-600" /> Mon plan de développement</h2>
+          <h2 className="text-lg font-semibold text-[var(--text)] flex items-center gap-2"><Sparkles strokeWidth={1.5} size={18} className="text-[var(--action)]" /> Mon plan de développement</h2>
           <DevelopmentPlans data={plans} canEdit={false} onChanged={load} />
         </section>
       )}
@@ -213,7 +214,7 @@ export default function MyPerformancePage() {
       {/* Compétences */}
       {comp?.profile && (
         <section className="space-y-3">
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2"><GraduationCap size={18} className="text-purple-600" /> Mes compétences</h2>
+          <h2 className="text-lg font-semibold text-[var(--text)] flex items-center gap-2"><GraduationCap strokeWidth={1.5} size={18} className="text-[var(--action)]" /> Mes compétences</h2>
           <CompetencyGaps data={comp} mode="self" onChanged={load} />
         </section>
       )}
@@ -221,16 +222,16 @@ export default function MyPerformancePage() {
       {/* Parcours */}
       {career && career.items.length > 1 && (
         <section className="space-y-3">
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2"><Route size={18} className="text-purple-600" /> Mon parcours</h2>
+          <h2 className="text-lg font-semibold text-[var(--text)] flex items-center gap-2"><Route strokeWidth={1.5} size={18} className="text-[var(--action)]" /> Mon parcours</h2>
           <CareerTimeline items={career.items} />
         </section>
       )}
 
       {/* Historique */}
       <section className="space-y-3">
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2"><Award size={18} className="text-purple-600" /> Mes évaluations</h2>
+        <h2 className="text-lg font-semibold text-[var(--text)] flex items-center gap-2"><Award strokeWidth={1.5} size={18} className="text-[var(--action)]" /> Mes évaluations</h2>
         {data.reviews.length === 0 ? (
-          <div className={`${cardCls} p-8 text-center text-sm text-gray-500`}>Aucune évaluation pour le moment.</div>
+          <div className={`${cardCls} p-8 text-center text-sm text-[var(--text-secondary)]`}>Aucune évaluation pour le moment.</div>
         ) : (
           <div className="grid gap-3">
             {data.reviews.map(r => {
@@ -238,16 +239,16 @@ export default function MyPerformancePage() {
               const st = STATUS_LABEL[r.status];
               return (
                 <Link key={r.id} href={bp(`/performance/fiche/${r.id}`)}
-                  className={`${cardCls} p-4 sm:p-5 flex items-center gap-4 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors`}>
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center font-bold text-lg shrink-0 ${score > 0 ? scoreTone(score) : 'bg-gray-100 dark:bg-gray-700 text-gray-400'}`}>
+                  className={`${cardCls} p-4 sm:p-5 flex items-center gap-4 hover:bg-[var(--surface-2)] transition-colors`}>
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center font-semibold text-lg shrink-0 ${score > 0 ? scoreTone(score) : 'bg-[var(--surface-2)] text-[var(--text-secondary)]'}`}>
                     {score > 0 ? score.toFixed(1) : '—'}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-gray-900 dark:text-white truncate">{r.period}</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{r.verdict ?? 'Sans verdict'} · {fmtDate(r.date)}</p>
+                    <p className="font-semibold text-[var(--text)] truncate">{r.period}</p>
+                    <p className="text-sm text-[var(--text-secondary)] truncate">{r.verdict ?? 'Sans verdict'} · {fmtDate(r.date)}</p>
                   </div>
-                  <span className={`hidden sm:inline px-2.5 py-1 rounded-lg text-xs font-bold ${st.cls}`}>{st.label}</span>
-                  <ChevronRight size={18} className="text-gray-400 shrink-0" />
+                  <span className={`hidden sm:inline px-2.5 py-1 rounded-lg text-xs font-semibold ${st.cls}`}>{st.label}</span>
+                  <ChevronRight strokeWidth={1.5} size={18} className="text-[var(--text-secondary)] shrink-0" />
                 </Link>
               );
             })}
@@ -255,5 +256,14 @@ export default function MyPerformancePage() {
         )}
       </section>
     </div>
+  );
+}
+
+
+export default function MyPerformancePageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <MyPerformancePage />
+    </ModulePageFrame>
   );
 }

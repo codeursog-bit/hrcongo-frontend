@@ -4,7 +4,8 @@
 // ===========================
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Check, Wallet, Loader2, RotateCcw } from 'lucide-react';
+import { Wallet, Loader2, RotateCcw } from 'lucide-react';
+import { Badge, Button, Card, EmptyState, Input } from '@/components/design-system/primitives';
 
 interface SelectionStepProps {
   employees: any[];
@@ -52,24 +53,26 @@ export default function SelectionStep({
 
         {/* Liste employés */}
         <div className="lg:col-span-2 flex flex-col min-h-0">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="font-bold text-[var(--text)]">
-              Employés ({selectedIds.length}/{employees.length})
-            </h3>
-            <button
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 className="font-semibold text-[var(--text)]">Employés à inclure</h3>
+              <p className="mt-1 text-xs text-[var(--text-secondary)]">{month} {year} · Les jours restent modifiables par personne.</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge tone="info">{selectedIds.length} / {employees.length} sélectionné(s)</Badge>
+              <Button variant="ghost"
               onClick={() => onSelectionChange(
                 selectedIds.length === employees.length ? [] : employees.map(e => e.id)
               )}
-              className="text-sm font-bold text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 px-3 py-1 rounded-lg"
-            >
+              >
               {selectedIds.length === employees.length ? 'Tout désélectionner' : 'Tout sélectionner'}
-            </button>
+              </Button>
+            </div>
           </div>
 
           {/* Appliquer le même nombre de jours à tous (ex. pointeuse en panne) */}
-          <div className="flex flex-wrap items-center gap-2 mb-3 p-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)]/50">
-            <span className="text-xs font-bold text-[var(--text)]">Jours travaillés pour tous :</span>
-            <input
+          <div className="mb-3 grid items-end gap-3 rounded-xl bg-[var(--surface-2)] p-4 sm:grid-cols-[minmax(160px,1fr)_auto]">
+            <Input label="Jours travaillés pour tous"
               type="number"
               inputMode="decimal"
               min={0}
@@ -83,74 +86,54 @@ export default function SelectionStep({
                 setBulkDays(v !== '' && n > workDays ? String(workDays) : (n < 0 ? '0' : v));
               }}
               onKeyDown={e => { if (e.key === 'Enter' && bulkValid) onApplyAll(bulkDays); }}
-              className="w-20 px-2 py-1 text-right font-mono text-xs font-bold rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="max-w-36 font-mono tabular-nums"
             />
-            <span className="text-xs text-gray-400">j</span>
-            <button
-              type="button"
-              disabled={!bulkValid}
-              onClick={() => onApplyAll(bulkDays)}
-              className="text-xs font-bold px-3 py-1.5 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              Appliquer à tous
-            </button>
-            {editedCount > 0 && (
-              <button
-                type="button"
-                onClick={() => { onResetAll(); setBulkDays(''); }}
-                className="ml-auto flex items-center gap-1 text-xs font-bold text-amber-500 hover:text-amber-600"
-              >
-                <RotateCcw size={12} /> Revenir au pointage ({editedCount})
-              </button>
-            )}
+            <div className="flex flex-wrap items-center gap-2">
+              <Button type="button" disabled={!bulkValid} onClick={() => onApplyAll(bulkDays)}>Appliquer à tous</Button>
+              {editedCount > 0 && <Button variant="ghost" type="button" onClick={() => { onResetAll(); setBulkDays(''); }}>
+                <RotateCcw size={14} strokeWidth={1.5} />Revenir au pointage ({editedCount})
+              </Button>}
+            </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto border border-[var(--border)] rounded-2xl bg-[var(--surface-2)]/50 p-2 space-y-1 max-h-[400px]">
-            {employees.map(emp => (
+          <div className="max-h-[400px] flex-1 space-y-2 overflow-y-auto">
+            {employees.length === 0 ? (
+              <EmptyState title="Aucun employé disponible">Vérifiez l’accès à la liste des employés, puis réessayez.</EmptyState>
+            ) : employees.map(emp => (
               <div
                 key={emp.id}
-                onClick={() => onSelectionChange(
+                className={`grid grid-cols-1 items-center gap-3 rounded-xl border p-3 transition-colors sm:grid-cols-[minmax(0,1fr)_auto] ${
                   selectedIds.includes(emp.id)
-                    ? selectedIds.filter(id => id !== emp.id)
-                    : [...selectedIds, emp.id]
-                )}
-                className={`p-3 rounded-xl flex items-center justify-between cursor-pointer border transition-all ${
-                  selectedIds.includes(emp.id)
-                    ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800'
-                    : 'bg-[var(--surface)] border-transparent hover:border-[var(--border)]'
+                    ? 'border-[var(--brand)] bg-[var(--brand-soft)]'
+                    : 'border-[var(--border)] bg-[var(--surface)]'
                 }`}
               >
-                <div className="flex items-center gap-3">
-                  <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${
-                    selectedIds.includes(emp.id) ? 'bg-emerald-500 border-emerald-500' : 'border-gray-300'
-                  }`}>
-                    {selectedIds.includes(emp.id) && <Check size={12} className="text-white" />}
-                  </div>
-                  <div>
-                    <p className="font-bold text-sm text-[var(--text)]">
-                      {emp.firstName} {emp.lastName}
-                    </p>
-                    {emp.position && <p className="text-xs text-gray-400">{emp.position}</p>}
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
+                <label className="flex min-w-0 cursor-pointer items-center gap-3">
+                  <input type="checkbox" checked={selectedIds.includes(emp.id)}
+                    onChange={() => onSelectionChange(selectedIds.includes(emp.id)
+                      ? selectedIds.filter(id => id !== emp.id)
+                      : [...selectedIds, emp.id])}
+                    className="h-4 w-4 accent-[var(--action)]" />
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-semibold text-[var(--text)]">{emp.firstName} {emp.lastName}</span>
+                    {emp.position && <span className="mt-0.5 block truncate text-xs text-[var(--text-secondary)]">{emp.position}</span>}
+                  </span>
+                </label>
+                <div className="flex flex-wrap items-end justify-between gap-3 sm:justify-end">
                   {selectedIds.includes(emp.id) && (() => {
                     const auto = autoDays[emp.id];
                     const edited = daysInput[emp.id] !== undefined;
                     const shown = edited ? daysInput[emp.id] : (auto !== undefined ? String(auto) : '');
                     return (
-                      <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+                      <div className="flex items-end gap-2">
                         {edited && (
-                          <button
-                            type="button"
+                          <Button variant="ghost" type="button" aria-label={`Réinitialiser les jours de ${emp.firstName} ${emp.lastName}`}
                             title={auto !== undefined ? `Revenir à ${auto} j (présences)` : 'Réinitialiser'}
-                            onClick={() => onDaysReset(emp.id)}
-                            className="p-1 text-amber-500 hover:text-amber-600"
-                          >
-                            <RotateCcw size={12} />
-                          </button>
+                            onClick={() => onDaysReset(emp.id)} className="!min-h-10 !px-2">
+                            <RotateCcw size={14} strokeWidth={1.5} />
+                          </Button>
                         )}
-                        <input
+                        <Input label="Jours travaillés" aria-label={`Jours travaillés pour ${emp.firstName} ${emp.lastName}`}
                           type="number"
                           inputMode="decimal"
                           min={0}
@@ -164,17 +147,12 @@ export default function SelectionStep({
                             // borne haute : jamais plus que les jours théoriques
                             onDaysChange(emp.id, v !== '' && n > workDays ? String(workDays) : (n < 0 ? '0' : v));
                           }}
-                          className={`w-16 px-2 py-1 text-right font-mono text-xs font-bold rounded-lg border bg-[var(--surface)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
-                            edited ? 'border-amber-400' : 'border-[var(--border)]'
-                          }`}
+                          className={`w-24 text-right font-mono tabular-nums ${edited ? 'border-[var(--warning-text)]' : ''}`}
                         />
-                        <span className="text-xs text-gray-400">j</span>
                       </div>
                     );
                   })()}
-                  <span className="font-mono text-xs font-bold text-gray-600 dark:text-slate-400">
-                    {Number(emp.baseSalary || 0).toLocaleString()} F
-                  </span>
+                  <Badge tone="neutral">{Number(emp.baseSalary || 0).toLocaleString('fr-FR')} FCFA</Badge>
                 </div>
               </div>
             ))}
@@ -183,57 +161,37 @@ export default function SelectionStep({
 
         {/* Estimation — données du back */}
         <div className="lg:col-span-1">
-          <div className="bg-gray-900 dark:bg-black rounded-3xl p-6 text-white shadow-xl sticky top-0">
-            <div className="flex items-center gap-2 mb-6 opacity-80">
-              <Wallet size={20} />
-              <span className="text-sm font-bold uppercase tracking-wider">Estimation</span>
-              {isLoadingEstimation && <Loader2 size={14} className="animate-spin ml-auto text-emerald-400" />}
-            </div>
-            <p className="text-xs text-gray-400 -mt-4 mb-5">Période : <span className="font-bold text-white">{month} {year}</span></p>
-
-            <div className={`space-y-4 mb-8 transition-opacity ${isLoadingEstimation ? 'opacity-40' : 'opacity-100'}`}>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-400">Effectif</span>
-                <span className="font-bold">{estimation.count}</span>
+          <Card title="Estimation du lot" action={isLoadingEstimation ? <Loader2 size={16} className="animate-spin text-[var(--brand-strong)]" aria-label="Calcul en cours" /> : <Badge tone="info">{month} {year}</Badge>}
+            className="sticky top-4">
+            <p className="mb-4 text-xs leading-5 text-[var(--text-secondary)]"><Wallet size={14} className="mr-1 inline-block" aria-hidden="true" />Montants transmis par le calculateur serveur.</p>
+            <div className={`space-y-3 transition-opacity ${isLoadingEstimation ? 'opacity-50' : 'opacity-100'}`}>
+              <EstimateRow label="Effectif calculé" value={String(estimation.count)} />
+              <EstimateRow label="Total brut" value={`${fmt(estimation.gross)} FCFA`} />
+              <EstimateRow label="Primes et indemnités" value={`${fmt(estimation.bonuses || 0)} FCFA`} />
+              <EstimateRow label="Total retenues" value={`− ${fmt(estimation.deductions || 0)} FCFA`} />
+              <div className="border-t border-[var(--border)] pt-3">
+                <EstimateRow label="Net estimé" value={`${fmt(estimation.net)} FCFA`} emphasis />
               </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-400">Total Brut</span>
-                <span className="font-mono font-bold">{fmt(estimation.gross)}</span>
-              </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-400">dont primes / indemnités</span>
-                <span className="font-mono font-bold">{fmt(estimation.bonuses || 0)}</span>
-              </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-400">Total retenues</span>
-                <span className="font-mono font-bold text-red-400">- {fmt(estimation.deductions || 0)}</span>
-              </div>
-              <div className="h-px bg-white/10 w-full" />
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-emerald-400 font-bold">Net Estimé</span>
-                <span className="font-mono font-bold text-emerald-400 text-lg">{fmt(estimation.net)}</span>
-              </div>
-              <div className="h-px bg-white/10 w-full" />
-              <div>
-                <p className="text-xs text-gray-400 mb-1">Masse Salariale Totale</p>
-                <p className="text-2xl font-bold">{fmt(estimation.cost)}</p>
-                <p className="text-xs text-gray-500 mt-0.5">Brut + charges patronales</p>
+              <div className="rounded-xl bg-[var(--surface-2)] p-4">
+                <p className="text-xs text-[var(--text-secondary)]">Masse salariale totale</p>
+                <p className="mt-1 text-xl font-semibold tabular-nums text-[var(--text)]">{fmt(estimation.cost)} FCFA</p>
+                <p className="mt-1 text-xs text-[var(--text-secondary)]">Brut + charges patronales</p>
               </div>
             </div>
-
-            {!!estimation.failed && (
-              <p className="text-xs text-center text-amber-400 mb-2">
-                {estimation.failed} employé(s) non calculé(s) — voir le détail à l'étape suivante.
-              </p>
-            )}
-            {isLoadingEstimation && (
-              <p className="text-xs text-center text-gray-500">
-                Calcul en cours depuis le serveur...
-              </p>
-            )}
-          </div>
+            {!!estimation.failed && <p className="mt-4"><Badge tone="warning">{estimation.failed} calcul(s) à vérifier</Badge></p>}
+            {isLoadingEstimation && <p className="mt-3 text-xs text-[var(--text-secondary)]">Calcul en cours depuis le serveur…</p>}
+          </Card>
         </div>
       </div>
     </motion.div>
+  );
+}
+
+function EstimateRow({ label, value, emphasis = false }: { label: string; value: string; emphasis?: boolean }) {
+  return (
+    <div className="flex items-center justify-between gap-3 text-sm">
+      <span className={emphasis ? 'font-semibold text-[var(--text)]' : 'text-[var(--text-secondary)]'}>{label}</span>
+      <span className={`text-right font-mono tabular-nums ${emphasis ? 'font-semibold text-[var(--success-text)]' : 'font-medium text-[var(--text)]'}`}>{value}</span>
+    </div>
   );
 }

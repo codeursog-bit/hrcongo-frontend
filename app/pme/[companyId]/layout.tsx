@@ -8,7 +8,6 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { api } from '@/services/api';
-import OnboardingChecklist from '@/components/onboarding/OnboardingChecklist';
 
 interface CabinetBranding {
   name:           string;
@@ -87,10 +86,6 @@ export default function PmeLayout({ children }: { children: React.ReactNode }) {
       basePath={`/pme/${companyId}`}
       skipAuthCheck
     >
-      {/* Onboarding uniquement pour ADMIN — sans étape paie (gérée par le cabinet) */}
-      {userRole === 'ADMIN' && (
-        <OnboardingChecklist hidePaie />
-      )}
       {children}
     </DashboardShell>
   );

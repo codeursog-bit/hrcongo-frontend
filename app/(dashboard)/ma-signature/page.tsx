@@ -15,11 +15,12 @@ import { ArrowLeft, Loader2, PenTool, Trash2, Upload, ShieldCheck, Lock } from '
 import { useAlert } from '@/components/providers/AlertProvider';
 import { approvalsApi, MyApprovalContext } from '@/services/approvals';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import { ModulePageFrame } from '@/components/requests/ModulePageFrame';
 
 const MAX_BYTES = 2 * 1024 * 1024;
 const ALLOWED = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
-export default function MaSignaturePage() {
+function MaSignaturePage() {
   const router = useRouter();
   const alert = useAlert();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -226,5 +227,14 @@ export default function MaSignaturePage() {
         </div>
       )}
     </div>
+  );
+}
+
+
+export default function MaSignaturePageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <MaSignaturePage />
+    </ModulePageFrame>
   );
 }

@@ -50,8 +50,10 @@ export default function CabinetLayout({
 }) {
   return (
     <CabinetAccessProvider>
+      <div className="theme-legacy">
       <CabinetChecklist />
       {children}
+      </div>
     </CabinetAccessProvider>
   );
 }

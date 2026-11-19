@@ -16,8 +16,9 @@ import { useBasePath } from '@/hooks/useBasePath';
 import { CompetencyGaps } from '@/components/performance/CompetencyGaps';
 import { EmployeeCompetencies } from '@/components/performance/competency-types';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import { PerformanceFrame as ModulePageFrame } from '@/components/performance/PerformanceFrame';
 
-export default function EmployeeCompetenciesPage() {
+function EmployeeCompetenciesPage() {
   const params = useParams();
   const id = params?.id as string;
   const { bp } = useBasePath();
@@ -39,9 +40,9 @@ export default function EmployeeCompetenciesPage() {
   if (error || !data) {
     return (
       <div className="max-w-xl mx-auto py-20 text-center space-y-4">
-        <AlertTriangle className="mx-auto text-amber-500" size={36} />
-        <p className="text-gray-700 dark:text-gray-300">{error ?? 'Introuvable'}</p>
-        <Link href={bp('/performance/competences')} className="inline-flex items-center gap-2 text-purple-600 font-bold"><ArrowLeft size={16} /> Retour</Link>
+        <AlertTriangle strokeWidth={1.5} className="mx-auto text-[var(--warning-text)]" size={36} />
+        <p className="text-[var(--text)]">{error ?? 'Introuvable'}</p>
+        <Link href={bp('/performance/competences')} className="inline-flex items-center gap-2 text-[var(--action)] font-semibold"><ArrowLeft strokeWidth={1.5} size={16} /> Retour</Link>
       </div>
     );
   }
@@ -50,15 +51,24 @@ export default function EmployeeCompetenciesPage() {
     <div className="max-w-4xl mx-auto pb-32 space-y-6">
       <PerformanceNav />
       <div>
-        <Link href={bp('/performance/competences')} className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-purple-600 mb-2">
-          <ArrowLeft size={14} /> Compétences
+        <Link href={bp('/performance/competences')} className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--action)] mb-2">
+          <ArrowLeft strokeWidth={1.5} size={14} /> Compétences
         </Link>
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-semibold text-[var(--text)] tracking-tight">
           {data.employee?.firstName} {data.employee?.lastName}
         </h1>
-        <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base">{data.employee?.position}</p>
+        <p className="text-[var(--text-secondary)] text-sm sm:text-base">{data.employee?.position}</p>
       </div>
       <CompetencyGaps data={data} mode={data.canAssess ? 'supervisor' : 'self'} onChanged={load} />
     </div>
+  );
+}
+
+
+export default function EmployeeCompetenciesPageWithFrame() {
+  return (
+    <ModulePageFrame kind="detail">
+      <EmployeeCompetenciesPage />
+    </ModulePageFrame>
   );
 }

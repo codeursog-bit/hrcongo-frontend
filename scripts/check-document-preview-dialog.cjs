@@ -1,0 +1,14 @@
+const fs=require('fs'),path=require('path'),Module=require('module'),ts=require('typescript'),assert=require('node:assert/strict'),React=require('react');
+const root=path.resolve(__dirname,'..'),file=path.join(root,'components/loans/DocumentPreviewModal.tsx'),load=Module._load;let pathname='/presences/permissions',effects=[],closed=0,shown=0,focused=0,prevented=0;
+const dialog={showModal(){shown++;},close(){closed++;},getBoundingClientRect:()=>({left:10,right:800,top:20,bottom:700})};
+global.document={body:{nodeType:1},activeElement:{isConnected:true,focus(){focused++;}}};
+Module._load=function(name,parent,...args){if(name==='react')return{...React,useEffect:fn=>effects.push(fn),useRef:()=>({current:dialog})};if(name==='react-dom')return{createPortal:node=>node};if(name==='next/navigation')return{usePathname:()=>pathname};if(name==='@/components/ui/DocumentReader')return{DocumentReader:()=>null};return load.call(this,name,parent,...args);};
+const m=new Module(file);m.filename=file;m.paths=Module._nodeModulePaths(path.dirname(file));m._compile(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:1,jsx:4,target:9,esModuleInterop:true}}).outputText,file);
+const Preview=m.exports.default,child=React.createElement('article',{id:'unchanged-print'},'Original');let onClose=0;
+assert.equal(Preview({open:false,onClose(){},children:child}),null);
+const reader=Preview({open:true,onClose(){onClose++;},children:child});const tree=reader.type(reader.props),cleanup=effects.shift()();assert.equal(tree.type,'dialog');assert.equal(shown,1);
+tree.props.onCancel({preventDefault(){prevented++;}});assert.equal(onClose,1);assert.equal(prevented,1);
+tree.props.onClick({target:dialog,currentTarget:dialog,clientX:100,clientY:100});assert.equal(onClose,1);tree.props.onClick({target:dialog,currentTarget:dialog,clientX:0,clientY:0});assert.equal(onClose,2);
+assert.equal(React.Children.toArray(tree.props.children)[1].props.children,child);cleanup();assert.equal(closed,1);assert.equal(focused,1);
+pathname='/cabinet/example';assert.equal(Preview({open:true,onClose(){},children:child}).type,'div');
+console.log('Aperçu : dialogue natif, ouverture, Échap, clic extérieur, restitution du focus, contenu inchangé et repli cabinet vérifiés.');

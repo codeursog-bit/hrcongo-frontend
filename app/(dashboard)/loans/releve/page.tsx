@@ -1,4 +1,6 @@
 'use client';
+import { Button } from '@/components/design-system/primitives';
+import { LoanModuleFrame, LoanModuleSkeleton } from '@/components/loans/LoanModuleFrame';
 
 // ============================================================================
 // 📁 app/(dashboard)/loans/releve/page.tsx
@@ -22,6 +24,7 @@ const MONTHS_FR = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juill
 const fmt = (n: number) => Math.round(n).toLocaleString('fr-FR') + ' FCFA';
 
 export default function ReleveRecapPage() {
+  const [refonteError,setRefonteError]=useState('');
   const { bp } = useBasePath();
   const [loans, setLoans] = useState<any[]>([]);
   const [advances, setAdvances] = useState<any[]>([]);
@@ -39,7 +42,7 @@ export default function ReleveRecapPage() {
       try {
         const [l, a]: any = await Promise.all([api.get('/loans'), api.get('/loans/advances')]);
         setLoans(l || []); setAdvances(a || []);
-      } catch (e) { console.error('Erreur chargement relevé', e); }
+      } catch (e) { console.error('Erreur chargement relevé', e); setRefonteError('Le chargement a échoué. Réessayez dans un instant.'); }
       finally { setIsLoading(false); }
     })();
   }, []);
@@ -130,12 +133,12 @@ export default function ReleveRecapPage() {
     nbEmployes: rows.length,
   }), [rows]);
 
-  if (isLoading) return <KonzaLoader variant="page" />;
+  if (isLoading) return <LoanModuleSkeleton />;
 
   const initials = (emp: any) => `${emp?.firstName?.[0] ?? ''}${emp?.lastName?.[0] ?? ''}`;
 
   return (
-    <div className="max-w-[1500px] mx-auto pb-24 space-y-6">
+    <LoanModuleFrame kind="list" error={refonteError}><div className="max-w-[1500px] mx-auto pb-24 space-y-6">
       <FinanceSubNav userRole={userRole} />
 
       <div>
@@ -162,8 +165,8 @@ export default function ReleveRecapPage() {
           />
         </div>
         <div className="flex rounded-lg border border-[var(--border)] overflow-hidden text-xs">
-          <button onClick={() => { if (month === '') setMonth(now.getMonth() + 1); }} className={`px-3 py-1.5 font-bold transition-colors ${month !== '' ? 'bg-emerald-500 text-white' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'}`}>Mensuelle</button>
-          <button onClick={() => setMonth('')} className={`px-3 py-1.5 font-bold transition-colors ${month === '' ? 'bg-emerald-500 text-white' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'}`}>Annuelle</button>
+          <Button variant="ghost" onClick={() => { if (month === '') setMonth(now.getMonth() + 1); }} className={`px-3 py-1.5 font-bold transition-colors ${month !== '' ? 'bg-emerald-500 text-white' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'}`}>Mensuelle</Button>
+          <Button variant="ghost" onClick={() => setMonth('')} className={`px-3 py-1.5 font-bold transition-colors ${month === '' ? 'bg-emerald-500 text-white' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'}`}>Annuelle</Button>
         </div>
         {month !== '' && (
           <select value={month} onChange={e => setMonth(Number(e.target.value))} className="text-xs px-2 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
@@ -225,7 +228,7 @@ export default function ReleveRecapPage() {
           </tbody>
         </table>
       </div>
-    </div>
+    </div></LoanModuleFrame>
   );
 }
 

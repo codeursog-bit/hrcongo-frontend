@@ -10,11 +10,14 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Loader2, Filter, Users2, Download, ChevronRight, Wallet, Banknote, PiggyBank, TrendingDown, Search } from 'lucide-react';
+import { Download, ChevronRight } from 'lucide-react';
+import { ListPage } from '@/components/templates';
+import { Button, Card, Input, Select, DataTable, EmptyState, Skeleton, type Column } from '@/components/design-system/primitives';
+import { LoanSpaceKpi } from '@/components/loans/LoanSpaceView';
+import '@/components/loans/debt-tracking.css';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import FinanceSubNav from '@/components/FinanceSubNav';
-import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 const MONTHS_FR = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
 const TYPE_LABEL: Record<string, string> = { ARGENT: 'Prêt argent', MARCHANDISE: 'Marchandise', AUTRE: 'Autre prêt', AVANCE: 'Avance sur salaire' };
@@ -22,6 +25,7 @@ const fmt = (n: number) => Math.round(n).toLocaleString('fr-FR') + ' FCFA';
 
 export default function SuiviDettesPage() {
   const { bp } = useBasePath();
+  const [loadError, setLoadError] = useState('');
   const [loans, setLoans] = useState<any[]>([]);
   const [advances, setAdvances] = useState<any[]>([]);
   const [userRole, setUserRole] = useState('');
@@ -41,7 +45,7 @@ export default function SuiviDettesPage() {
       try {
         const [l, a]: any = await Promise.all([api.get('/loans'), api.get('/loans/advances')]);
         setLoans(l || []); setAdvances(a || []);
-      } catch (e) { console.error('Erreur chargement suivi des dettes', e); }
+      } catch (e) { console.error('Erreur chargement suivi des dettes', e); setLoadError('Le suivi des dettes n’a pas pu être chargé. Réessayez dans un instant.'); }
       finally { setIsLoading(false); }
     })();
   }, []);
@@ -175,121 +179,30 @@ export default function SuiviDettesPage() {
     } catch (e: any) { alert(e?.message || 'Erreur'); } finally { setIsExporting(false); }
   };
 
-  if (isLoading) return <KonzaLoader variant="page" />;
-
-  return (
-    <div className="max-w-[1500px] mx-auto pb-24 space-y-6">
-      <FinanceSubNav userRole={userRole} />
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-[var(--text)]">Suivi des dettes</h1>
-          <p className="text-sm text-[var(--text-muted)]">Le solde restant est toujours à jour ; "accordé" et "remboursé" reflètent l'activité de la période affichée.</p>
-        </div>
-        <button onClick={handleExport} disabled={isExporting} className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white text-sm font-bold rounded-xl flex items-center gap-2 shrink-0">
-          {isExporting ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} Exporter en Excel
-        </button>
-      </div>
-
-      {/* ══════════════════ KPI — cumul global (jamais filtré) ══════════════════ */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard icon={Users2} label="Employés concernés" value={String(kpis.employees)} tone="slate" />
-        <KpiCard icon={Banknote} label="Montant total accordé" value={fmt(kpis.totalGranted)} tone="sky" />
-        <KpiCard icon={PiggyBank} label="Total remboursé (cumul)" value={fmt(kpis.totalRepaidCumul)} tone="emerald" />
-        <KpiCard icon={Wallet} label="Solde restant (à ce jour)" value={fmt(kpis.totalRemaining)} tone="amber" />
-      </div>
-
-      {/* ══════════════════ FILTRES + KPI de la période ══════════════════ */}
-      <div className="flex flex-wrap gap-2">
-        <div className="relative">
-          <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" />
-          <input
-            type="text" value={nameFilter} onChange={e => setNameFilter(e.target.value)}
-            placeholder="Rechercher un nom..."
-            className="pl-7 pr-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-xs w-48"
-          />
-        </div>
-        <div className="flex rounded-lg border border-[var(--border)] overflow-hidden text-xs">
-          <button onClick={() => { if (month === '') setMonth(now.getMonth() + 1); }} className={`px-3 py-1.5 font-bold transition-colors ${month !== '' ? 'bg-emerald-500 text-white' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'}`}>Mensuelle</button>
-          <button onClick={() => setMonth('')} className={`px-3 py-1.5 font-bold transition-colors ${month === '' ? 'bg-emerald-500 text-white' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'}`}>Annuelle</button>
-        </div>
-        {month !== '' && (
-          <select value={month} onChange={e => setMonth(Number(e.target.value))} className="text-xs px-2 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
-            {MONTHS_FR.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
-          </select>
-        )}
-        <select value={year} onChange={e => setYear(Number(e.target.value))} className="text-xs px-2 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
-          {availableYears.map(y => <option key={y} value={y}>{y}</option>)}
-        </select>
-        <FilterSelect icon={Filter} value={typeFilter} onChange={setTypeFilter} placeholder="Tous les types" options={Object.entries(TYPE_LABEL)} />
-        {departments.length > 0 && <FilterSelect icon={Users2} value={deptFilter} onChange={setDeptFilter} placeholder="Tous les départements" options={departments.map(d => [d, d] as [string, string])} />}
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <KpiCard icon={Banknote} label={`Accordé (${month !== '' ? MONTHS_FR[month - 1] : year})`} value={fmt(kpis.totalGiven)} tone="sky" />
-        <KpiCard icon={PiggyBank} label={`Remboursé (${month !== '' ? MONTHS_FR[month - 1] : year})`} value={fmt(kpis.totalPaid)} tone="emerald" />
-      </div>
-
-      {/* ══════════════════ LISTE PAR EMPLOYÉ ══════════════════ */}
-      <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-[var(--surface-2)]">
-              <tr>{['Employé', 'Département', 'Type(s)', `Accordé (${month !== '' ? MONTHS_FR[month - 1] : year})`, `Remboursé (${month !== '' ? MONTHS_FR[month - 1] : year})`, 'Solde restant (à ce jour)', ''].map(h => <th key={h} className="px-4 py-3 text-left text-xs font-bold text-[var(--text-muted)] uppercase whitespace-nowrap">{h}</th>)}</tr>
-            </thead>
-            <tbody className="divide-y divide-[var(--border)]">
-              {byEmployee.length === 0 ? (
-                <tr><td colSpan={7} className="text-center py-14 text-[var(--text-muted)]">Aucun employé avec un prêt ou une avance.</td></tr>
-              ) : byEmployee.map(e => (
-                <tr key={e.employeeId} className="hover:bg-[var(--surface-2)]/40">
-                  <td className="px-4 py-3">
-                    <Link href={bp(`/loans/suivi-dettes/${e.employeeId}`)} className="font-semibold text-[var(--text)] hover:text-emerald-600 hover:underline">
-                      {e.employee?.firstName} {e.employee?.lastName}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 text-[var(--text-muted)]">{e.employee?.department?.name || '—'}</td>
-                  <td className="px-4 py-3 text-[var(--text-muted)]">{Array.from(e.types as Set<string>).map((t: string) => TYPE_LABEL[t] ?? t).join(', ') || '—'}</td>
-                  <td className="px-4 py-3 font-semibold text-[var(--text)] whitespace-nowrap">{e.givenInPeriod > 0 ? fmt(e.givenInPeriod) : '—'}</td>
-                  <td className="px-4 py-3 text-emerald-600 whitespace-nowrap">{e.paidInPeriod > 0 ? fmt(e.paidInPeriod) : '—'}</td>
-                  <td className="px-4 py-3 text-amber-600 font-semibold whitespace-nowrap">{fmt(e.totalRemaining)}</td>
-                  <td className="px-4 py-3 text-right">
-                    <Link href={bp(`/loans/suivi-dettes/${e.employeeId}`)} className="text-emerald-600 hover:underline text-xs font-semibold flex items-center gap-0.5 justify-end">
-                      Voir la fiche <ChevronRight size={12} />
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
+  if (isLoading) return <DebtTrackingSkeleton />;
+  type DebtRow = (typeof byEmployee)[number];
+  const period = month !== '' ? MONTHS_FR[month - 1] : year;
+  const columns: Column<DebtRow>[] = [
+    { key:'employee',label:'Employé',render:e=><Link href={bp(`/loans/suivi-dettes/${e.employeeId}`)}>{[e.employee?.firstName,e.employee?.lastName].filter(Boolean).join(' ') || 'Employé'}</Link> },
+    { key:'department',label:'Département',render:e=>e.employee?.department?.name || '—' },
+    { key:'types',label:'Type(s)',render:e=>Array.from(e.types as Set<string>).map((t:string)=>TYPE_LABEL[t]??t).join(', ')||'—' },
+    { key:'given',label:`Accordé (${period})`,render:e=><span className="debt-tracking-money">{e.givenInPeriod>0?fmt(e.givenInPeriod):'—'}</span> },
+    { key:'paid',label:`Remboursé (${period})`,render:e=><span className="debt-tracking-money debt-tracking-paid">{e.paidInPeriod>0?fmt(e.paidInPeriod):'—'}</span> },
+    { key:'remaining',label:'Solde restant (à ce jour)',render:e=><span className="debt-tracking-money debt-tracking-remaining">{fmt(e.totalRemaining)}</span> },
+    { key:'view',label:'Fiche',render:e=><Link href={bp(`/loans/suivi-dettes/${e.employeeId}`)} className="debt-tracking-view">Voir la fiche <ChevronRight size={16} strokeWidth={1.5}/></Link> },
+  ];
+  return <div className="debt-tracking"><ListPage title="Suivi des dettes" description="Le solde restant est toujours à jour ; accordé et remboursé reflètent l’activité de la période affichée." navigation={<FinanceSubNav userRole={userRole}/>} error={loadError}
+    action={<Button onClick={handleExport} loading={isExporting}><Download size={17} strokeWidth={1.5}/>Exporter en Excel</Button>}
+    summary={<div className="debt-tracking-summary"><LoanSpaceKpi label="Employés concernés" value={kpis.employees} isCount/><LoanSpaceKpi label="Montant total accordé" value={kpis.totalGranted}/><LoanSpaceKpi label="Total remboursé (cumul)" value={kpis.totalRepaidCumul} tone="success"/><LoanSpaceKpi label="Solde restant (à ce jour)" value={kpis.totalRemaining} tone="warning"/></div>}>
+    <Card title="Période et filtres"><div className="template-stack"><div className="debt-tracking-mode" role="group" aria-label="Période du suivi"><Button variant="secondary" aria-pressed={month!==''} onClick={()=>{if(month==='')setMonth(now.getMonth()+1);}}>Mensuelle</Button><Button variant="secondary" aria-pressed={month===''} onClick={()=>setMonth('')}>Annuelle</Button></div><div className="debt-tracking-filters">
+      <Input label="Rechercher un employé" value={nameFilter} onChange={e=>setNameFilter(e.target.value)} placeholder="Nom ou prénom"/>
+      {month!==''&&<Select label="Mois" value={month} onChange={e=>setMonth(Number(e.target.value))}>{MONTHS_FR.map((name,i)=><option key={name} value={i+1}>{name}</option>)}</Select>}
+      <Select label="Année" value={year} onChange={e=>setYear(Number(e.target.value))}>{availableYears.map(value=><option key={value} value={value}>{value}</option>)}</Select>
+      <Select label="Département" value={deptFilter} onChange={e=>setDeptFilter(e.target.value)}><option value="">Tous les départements</option>{departments.map(value=><option key={value} value={value}>{value}</option>)}</Select>
+      <Select label="Type de demande" value={typeFilter} onChange={e=>setTypeFilter(e.target.value)}><option value="">Tous les types</option>{Object.entries(TYPE_LABEL).map(([value,label])=><option key={value} value={value}>{label}</option>)}</Select>
+    </div><p className="k-help">La période filtre l’activité. Le solde restant conserve les dettes encore dues, même lorsqu’elles sont plus anciennes.</p></div></Card>
+    <div className="debt-tracking-period"><LoanSpaceKpi label={`Accordé (${period})`} value={kpis.totalGiven}/><LoanSpaceKpi label={`Remboursé (${period})`} value={kpis.totalPaid} tone="success"/></div>
+    <Card title="Employés concernés"><div className="debt-tracking-table"><DataTable caption="Suivi des dettes par employé" columns={columns} rows={byEmployee} rowKey={e=>e.employeeId} empty={<EmptyState title="Les dettes validées apparaîtront ici">Aucun employé ne correspond aux filtres avec un prêt ou une avance validés. Essayez un autre nom, département ou type.</EmptyState>}/></div></Card>
+  </ListPage></div>;
 }
-
-function KpiCard({ icon: Icon, label, value, tone }: { icon: any; label: string; value: string; tone: 'slate' | 'emerald' | 'amber' | 'sky' }) {
-  const cls: Record<string, string> = {
-    slate: 'bg-[var(--surface-2)] text-[var(--text-muted)]',
-    emerald: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-300',
-    amber: 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-300',
-    sky: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-300',
-  };
-  return (
-    <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-4">
-      <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${cls[tone]}`}><Icon size={18} /></div>
-      <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-1">{label}</p>
-      <p className="text-lg font-bold text-[var(--text)] truncate">{value}</p>
-    </div>
-  );
-}
-
-function FilterSelect({ icon: IconEl, value, onChange, placeholder, options }: { icon: any; value: string; onChange: (v: string) => void; placeholder: string; options: [string, string][] }) {
-  return (
-    <div className="relative">
-      <IconEl size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" />
-      <select value={value} onChange={e => onChange(e.target.value)} className="pl-7 pr-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-xs">
-        <option value="">{placeholder}</option>
-        {options.map(([val, label]) => <option key={val} value={val}>{label}</option>)}
-      </select>
-    </div>
-  );
-}
+function DebtTrackingSkeleton(){return <div className="debt-tracking template-page" role="status" aria-label="Chargement du suivi des dettes"><Skeleton style={{height:36,width:240}}/><div className="debt-tracking-summary">{[0,1,2,3].map(i=><Card key={i}><Skeleton/><Skeleton style={{height:28,marginTop:16}}/></Card>)}</div><Card><Skeleton style={{height:100}}/></Card><div className="debt-tracking-period">{[0,1].map(i=><Card key={i}><Skeleton/><Skeleton style={{height:28,marginTop:16}}/></Card>)}</div><Card><div className="template-stack">{[0,1,2].map(i=><Skeleton key={i} style={{height:40}}/>)}</div></Card></div>;}

@@ -19,14 +19,14 @@
 //    un frère du conteneur scrollable, plus jamais coupé par lui.
 // ============================================================================
 
-import React, { useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React from 'react';
 import {
   LayoutDashboard, ClipboardList, DollarSign, UsersRound, Building2,
   UserCircle, BarChart3, UmbrellaOff, BookOpen, CalendarDays,
-  MoreHorizontal, ChevronDown, Check, ReceiptText, FileSpreadsheet, ArrowRightLeft,
+  ReceiptText, FileSpreadsheet, ArrowRightLeft,
 } from 'lucide-react';
 import { useBasePath } from '@/hooks/useBasePath';
+import ModuleNav from '@/components/requests/ModuleNav';
 
 const PRIMARY = [
   { href: '/rapports',                label: "Vue d'ensemble", Icon: LayoutDashboard },
@@ -43,7 +43,6 @@ const MORE = [
   { href: '/rapports/das-declaration',     label: 'DAS annuelle',        Icon: FileSpreadsheet },
   { href: '/rapports/recap-bulletins-annuel',     label: 'Récap Bulletin Annuel',     Icon: BookOpen },
   { href: '/rapports/its-bnc',             label: 'ITS / BNC par mois',  Icon: DollarSign },
-  { href: '/rapports/employes',            label: 'Employés',            Icon: UserCircle },
   { href: '/rapports/indicateurs',         label: 'Indicateurs RH',      Icon: BarChart3 },
   { href: '/rapports/analyse-conges',      label: 'Congés',               Icon: UmbrellaOff },
   { href: '/rapports/observatoire-conges', label: 'Observatoire congés',  Icon: UmbrellaOff },
@@ -52,76 +51,11 @@ const MORE = [
 ];
 
 export default function RapportsSubNav({ active }: { active: string }) {
-  const router = useRouter();
   const { bp } = useBasePath();
-  const [open, setOpen] = useState(false);
-  const wrapRef = useRef<HTMLDivElement>(null);
-
-  const activeInMore = MORE.find((m) => m.href === active);
-
-  useEffect(() => {
-    function onClickOutside(e: MouseEvent) {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
-    }
-    document.addEventListener('mousedown', onClickOutside);
-    return () => document.removeEventListener('mousedown', onClickOutside);
-  }, []);
-
-  function go(href: string) {
-    setOpen(false);
-    router.push(bp(href));
-  }
-
-  return (
-    <div className="flex items-center gap-2">
-      {/* ✅ Seule la rangée de boutons principaux défile horizontalement */}
-      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
-        {PRIMARY.map(({ href, label, Icon }) => (
-          <button
-            key={href}
-            onClick={() => go(href)}
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all shrink-0 ${
-              active === href
-                ? 'bg-[var(--brand)] text-white shadow-sm'
-                : 'bg-[var(--surface)] border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)]'
-            }`}
-          >
-            <Icon size={14} /> {label}
-          </button>
-        ))}
-      </div>
-
-      {/* ✅ Le menu "Plus" est maintenant HORS du conteneur à overflow-x-auto */}
-      <div className="relative shrink-0" ref={wrapRef}>
-        <button
-          onClick={() => setOpen((o) => !o)}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
-            activeInMore
-              ? 'bg-[var(--brand)] text-white shadow-sm'
-              : 'bg-[var(--surface)] border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)]'
-          }`}
-        >
-          {activeInMore ? <activeInMore.Icon size={14} /> : <MoreHorizontal size={14} />}
-          {activeInMore ? activeInMore.label : 'Plus'}
-          <ChevronDown size={12} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
-        </button>
-
-        {open && (
-          <div className="absolute left-0 top-full mt-2 w-56 bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-xl z-20 py-1.5 overflow-hidden">
-            {MORE.map(({ href, label, Icon }) => (
-              <button
-                key={href}
-                onClick={() => go(href)}
-                className="w-full flex items-center gap-2.5 px-4 py-2 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] text-left"
-              >
-                <Icon size={15} className="text-[var(--text-muted)] shrink-0" />
-                <span className="flex-1">{label}</span>
-                {active === href && <Check size={14} className="text-[var(--brand)]" />}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
+  // Même barre que tous les modules : les rapports qui ne tiennent pas passent dans « Plus ».
+  const items = [
+    ...PRIMARY.map(({ href, label, Icon }) => ({ href: bp(href), label, icon: Icon, group: 'main', active: active === href })),
+    ...MORE.map(({ href, label, Icon }) => ({ href: bp(href), label, icon: Icon, group: 'more', active: active === href })),
+  ];
+  return <ModuleNav items={items} groupLabels={{ main: 'Rapports principaux', more: 'Autres rapports' }} ariaLabel="Navigation des rapports" />;
 }

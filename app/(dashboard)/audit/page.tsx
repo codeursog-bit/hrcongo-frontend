@@ -22,6 +22,7 @@ import PayrollControlsTab from '@/components/audit/PayrollControlsTab';
 import ActivityPanel from '@/components/audit/charts/ActivityPanel';
 import { ACTION_LABEL, ENTITY_LABEL, VERIFY_REASON_LABEL } from '@/lib/audit-labels';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import { ModulePageFrame } from '@/components/requests/ModulePageFrame';
 
 const VIEW_ROLES = ['ADMIN', 'HR_MANAGER', 'CABINET_ADMIN', 'SUPER_ADMIN'];
 const VERIFY_ROLES = ['ADMIN', 'SUPER_ADMIN'];
@@ -40,7 +41,7 @@ const EMPTY: Filters = { severity: '', entity: '', action: '', from: '', to: '' 
 const field = 'px-3 py-2 text-sm rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]';
 const lbl = 'block text-xs font-semibold text-[var(--text-muted)] mb-1';
 
-export default function AuditPage() {
+function AuditPage() {
   const { bp, companyId, isPme } = useBasePath();
   const [role, setRole] = useState<string | null | undefined>(undefined);
   const [tab, setTab] = useState<'journal' | 'controles' | 'integrite'>('journal');
@@ -314,5 +315,14 @@ function IntegrityTab({ canVerify, companyId }: { canVerify: boolean; companyId?
         </div>
       )}
     </div>
+  );
+}
+
+
+export default function AuditPageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <AuditPage />
+    </ModulePageFrame>
   );
 }

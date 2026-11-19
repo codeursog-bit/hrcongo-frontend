@@ -1,0 +1,517 @@
+[
+  {
+    "lot": 1,
+    "files": [
+      {
+        "path": "app/(dashboard)/rapports/analyse-conges/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/rapports/analyse-paie/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/rapports/complet/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/rapports/comptabilite/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/rapports/departements/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/rapports/effectifs/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/rapports/indicateurs/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/rapports/its-bnc/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/rapports/mouvements-effectifs/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/rapports/observatoire-conges/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/parametres/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/parametres/circuits/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/parametres/departements/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/parametres/entreprise/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/parametres/paie/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/parametres/primes/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/parametres/securite/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/parametres/subscription/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/parametres/taxes/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/parametres/users/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/contrats/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/contrats/rupture/pse/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/avis/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/audit/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/finances/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/primes/attribuer/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/demandes/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/onboarding/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/ma-signature/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/rh-blog/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/rh-blog/nouveau/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/rh-blog/[slug]/edit/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/performance/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/performance/carriere/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/performance/carriere/employe/[id]/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/performance/competences/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/performance/competences/employe/[id]/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/performance/cycles/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/performance/cycles/[id]/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/performance/modeles/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/performance/mon-espace/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/performance/objectifs/page.tsx",
+        "exists": true,
+        "frame": true
+      }
+    ]
+  },
+  {
+    "lot": 2,
+    "files": [
+      {
+        "path": "app/(dashboard)/rapports/das-declaration/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/rapports/journal-paie/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/rapports/recap-bulletins-annuel/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/rapports/recap-personnel/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/performance/fiche/[id]/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/ma-paie/page.tsx",
+        "exists": true,
+        "frame": false
+      },
+      {
+        "path": "app/(dashboard)/contrats/generer/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/contrats/employe/[employeeId]/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/contrats/rupture/page.tsx",
+        "exists": true,
+        "frame": true
+      }
+    ]
+  },
+  {
+    "lot": 3,
+    "files": [
+      {
+        "path": "app/(dashboard)/parametres/bulletin/page.tsx",
+        "exists": true,
+        "frame": false
+      },
+      {
+        "path": "app/(dashboard)/offline/page.tsx",
+        "exists": true,
+        "frame": false
+      },
+      {
+        "path": "components/ui/ErrorLayout.tsx",
+        "exists": true,
+        "frame": false
+      },
+      {
+        "path": "components/AccessDenied.tsx",
+        "exists": true,
+        "frame": false
+      },
+      {
+        "path": "app/pme/[companyId]/bulletins/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/pme/[companyId]/paie/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/pme/[companyId]/parametres/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/pme/[companyId]/parametres/subscription/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/pme/[companyId]/rapports/comptabilite/page.tsx",
+        "exists": true,
+        "frame": true
+      }
+    ]
+  },
+  {
+    "lot": 4,
+    "files": [
+      {
+        "path": "components/layout/Sidebar.tsx",
+        "exists": true,
+        "frame": false
+      },
+      {
+        "path": "components/layout/TopNav.tsx",
+        "exists": true,
+        "frame": false
+      },
+      {
+        "path": "components/layout/ShellSearch.tsx",
+        "exists": true,
+        "frame": false
+      },
+      {
+        "path": "components/layout/ThemeControl.tsx",
+        "exists": true,
+        "frame": false
+      },
+      {
+        "path": "components/layout/shell.css",
+        "exists": true,
+        "frame": false
+      },
+      {
+        "path": "lib/shell/page-index.ts",
+        "exists": true,
+        "frame": false
+      }
+    ]
+  },
+  {
+    "lot": 5,
+    "files": [
+      {
+        "path": "hooks/useCompanyLogo.ts",
+        "exists": true,
+        "frame": false
+      },
+      {
+        "path": "components/requests/ModuleNav.tsx",
+        "exists": true,
+        "frame": false
+      },
+      {
+        "path": "components/requests/module-nav.css",
+        "exists": true,
+        "frame": false
+      },
+      {
+        "path": "components/ui/select.css",
+        "exists": true,
+        "frame": false
+      },
+      {
+        "path": "components/ui/FancySelect.tsx",
+        "exists": true,
+        "frame": false
+      },
+      {
+        "path": "components/ui/SearchSelect.tsx",
+        "exists": true,
+        "frame": false
+      },
+      {
+        "path": "components/PeriodSelector.tsx",
+        "exists": true,
+        "frame": false
+      },
+      {
+        "path": "components/ui/StatCard.tsx",
+        "exists": true,
+        "frame": false
+      },
+      {
+        "path": "components/ui/useToast.tsx",
+        "exists": true,
+        "frame": false
+      },
+      {
+        "path": "components/ui/PlaceholderPage.tsx",
+        "exists": true,
+        "frame": false
+      },
+      {
+        "path": "components/ui/ProfileAvatar.tsx",
+        "exists": true,
+        "frame": false
+      },
+      {
+        "path": "components/ui/KonzaLoader.tsx",
+        "exists": true,
+        "frame": false
+      },
+      {
+        "path": "components/ui/basic.tsx",
+        "exists": true,
+        "frame": false
+      }
+    ]
+  },
+  {
+    "lot": 6,
+    "files": [
+      {
+        "path": "app/(dashboard)/portefeuille/absences/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/portefeuille/avis/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/portefeuille/conges/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/portefeuille/dashboard/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/portefeuille/demandes/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/portefeuille/effectifs/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/portefeuille/employes/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/portefeuille/equipe/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/portefeuille/mes-entreprises/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/portefeuille/paie/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/portefeuille/paie/liste/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/portefeuille/presences/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/portefeuille/prets/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/portefeuille/rapports/page.tsx",
+        "exists": true,
+        "frame": true
+      },
+      {
+        "path": "app/(dashboard)/portefeuille/layout.tsx",
+        "exists": true,
+        "frame": false
+      },
+      {
+        "path": "components/portfolio/PortfolioSidebar.tsx",
+        "exists": true,
+        "frame": false
+      },
+      {
+        "path": "components/portfolio/PortfolioTopNav.tsx",
+        "exists": true,
+        "frame": false
+      },
+      {
+        "path": "components/ui/AlertBadge.tsx",
+        "exists": true,
+        "frame": false
+      }
+    ]
+  }
+]

@@ -1,0 +1,21 @@
+/* Explicit sizing keeps this dialog usable on short screens and at browser zoom. */
+.cash-payment-backdrop { overflow-y:auto; overscroll-behavior:contain; padding:16px; }
+.cash-payment-backdrop .cash-payment-panel { width:min(100%,440px);max-width:440px;max-height:calc(100dvh - 32px);overflow-y:auto;overscroll-behavior:contain;min-height:0;flex-shrink:0; }
+.cash-payment-panel .cash-payment-form { padding:24px; }
+.cash-payment-panel .cash-payment-form>div:first-child { align-items:flex-start; }
+.cash-payment-panel .cash-payment-form>div:first-child>div { min-width:0; }
+.cash-payment-panel .cash-payment-form>div:first-child>div>div:first-child { display:none; }
+.loan-module .loan-module-content .cash-payment-panel .cash-payment-amount,
+.cash-payment-panel .cash-payment-amount { display:flex;align-items:center;gap:12px;min-width:0;height:52px;padding:0 14px;background:var(--surface-2);border:1px solid transparent;border-radius:var(--radius-control);box-shadow:none; }
+.loan-module .loan-module-content .cash-payment-panel .cash-payment-amount input,
+.cash-payment-panel .cash-payment-amount input { flex:1 1 0%;min-width:0;width:0;height:50px;min-height:0;padding:0;border:0;border-radius:0;background:transparent;font-size:20px;line-height:1.2;font-weight:600;box-shadow:none; }
+.cash-payment-panel .cash-payment-amount span { flex:none;font-size:12px; }
+.cash-payment-panel .cash-payment-amount:focus-within { outline:2px solid var(--focus);outline-offset:2px; }
+.cash-payment-panel .cash-payment-period-header { flex-wrap:wrap;gap:8px; }
+.cash-payment-panel select { min-width:0;height:44px; }
+@media(max-width:480px) {
+ .cash-payment-backdrop { padding:8px;align-items:center; }
+ .cash-payment-backdrop .cash-payment-panel { max-height:calc(100dvh - 16px); }
+ .cash-payment-panel .cash-payment-form { padding:20px; }
+}
+@media(max-height:650px) { .cash-payment-panel .cash-payment-form { padding:16px 20px; }.cash-payment-form .mb-5 {margin-bottom:12px;}.cash-payment-form .mt-5,.cash-payment-form .mt-6 {margin-top:16px;} }

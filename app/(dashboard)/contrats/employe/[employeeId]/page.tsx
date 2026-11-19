@@ -24,6 +24,7 @@ import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import ContractChainPanel from '@/components/contracts/ContractChainPanel';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import { ModulePageFrame } from '@/components/requests/ModulePageFrame';
 
 interface GeneratedContract {
   id: string;
@@ -79,7 +80,7 @@ function anciennete(hireDate: string): string {
   return parts.join(' et ');
 }
 
-export default function EmployeeContractPage() {
+function EmployeeContractPage() {
   const params = useParams();
   const router = useRouter();
   const { bp } = useBasePath();
@@ -88,11 +89,13 @@ export default function EmployeeContractPage() {
   const [employee, setEmployee] = useState<EmployeeSummary | null>(null);
   const [contracts, setContracts] = useState<GeneratedContract[]>([]);
   const [loading, setLoading] = useState(true);
+  const [uiLoadError, setUiLoadError] = useState(false);
 
   useEffect(() => {
     if (!employeeId) return;
     (async () => {
       setLoading(true);
+      setUiLoadError(false);
       try {
         const [emp, list] = await Promise.all([
           api.get(`/employees/${employeeId}`),
@@ -100,6 +103,8 @@ export default function EmployeeContractPage() {
         ]);
         setEmployee(emp as any);
         setContracts(list as any);
+      } catch {
+        setUiLoadError(true);
       } finally {
         setLoading(false);
       }
@@ -108,6 +113,10 @@ export default function EmployeeContractPage() {
 
   if (loading) {
     return <KonzaLoader variant="page" />;
+  }
+
+  if (uiLoadError) {
+    return <div role="alert" className="p-6 space-y-4 text-[var(--text)]"><p>Impossible de charger les informations contractuelles.</p><button type="button" className="k-button k-button-secondary" onClick={() => window.location.reload()}>Réessayer</button></div>;
   }
 
   if (!employee) {
@@ -286,5 +295,14 @@ function ContractCard({ contract, featured }: { contract: GeneratedContract; fea
         </button>
       </div>
     </motion.div>
+  );
+}
+
+
+export default function EmployeeContractPageWithFrame() {
+  return (
+    <ModulePageFrame kind="detail">
+      <EmployeeContractPage />
+    </ModulePageFrame>
   );
 }

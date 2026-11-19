@@ -1,0 +1,24 @@
+.konza-brand-logo { display:flex; align-items:center; justify-content:center; flex-shrink:0; box-sizing:border-box; }
+.konza-brand-logo > img { width:100%; height:100%; object-fit:contain; display:block; }
+.konza-brand-logo .konza-brand-dark { display:none; }
+.dark .konza-brand-logo .konza-brand-light { display:none; }
+.dark .konza-brand-logo .konza-brand-dark { display:block; }
+.konza-brand-logo--sidebar { width:194px; max-width:100%; height:76px; }
+.konza-brand-logo--loader { width:196px; max-width:75vw; height:88px; }
+.konza-brand-logo--compact { width:44px; height:44px; }
+.konza-brand-logo--compact [class~="dark:block"] { display:none!important; }
+.dark .konza-brand-logo--compact [class~="dark:hidden"] { display:none!important; }
+.dark .konza-brand-logo--compact [class~="dark:block"] { display:block!important; }
+.konza-brand-logo.is-company { background:white; border-radius:12px; padding:8px; }
+.konza-brand-logo--compact.is-company { padding:4px; }
+.brand-loader { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:22px; color:var(--text); }
+.brand-loader--screen { min-height:100dvh; width:100%; }
+.brand-loader--page { min-height:55vh; padding:48px 16px; }
+.brand-loader--section { padding:36px 16px; }
+.brand-loader--inline { flex-direction:row; gap:12px; padding:8px 0; }
+.brand-loader--section .konza-brand-logo--loader { width:148px; height:64px; }
+.brand-loader p { margin:0; font-size:13px; color:var(--text-secondary); }
+.brand-loader-track { display:block; width:148px; max-width:65vw; height:4px; overflow:hidden; border-radius:999px; background:var(--surface-2); }
+.brand-loader-track::after { content:''; display:block; width:40%; height:100%; border-radius:inherit; background:var(--brand); animation:brand-loader-progress 1.4s ease-in-out infinite; }
+@keyframes brand-loader-progress { from { transform:translateX(-110%); } to { transform:translateX(360%); } }
+@media(prefers-reduced-motion:reduce) { .brand-loader-track::after { animation:none; transform:translateX(75%); } }

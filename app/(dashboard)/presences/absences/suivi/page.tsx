@@ -1,4 +1,9 @@
 'use client';
+import { AttendanceSelect } from '@/components/attendance/AttendanceSelect';
+import { AttendanceModuleFrame as ModulePageFrame } from '@/components/attendance/AttendanceModuleFrame';
+import { useModuleVisuals } from '@/components/requests/ModulePageFrame';
+import { ModulePageSkeleton } from '@/components/requests/ModulePageFrame';
+import { Button } from '@/components/design-system/primitives';
 
 // ============================================================================
 // 📁 app/(dashboard)/absences-employe/page.tsx
@@ -20,7 +25,7 @@ import {
   Percent, ChevronLeft, ChevronRight, Stethoscope, FileCheck2, FileX2, Trophy,
 } from 'lucide-react';
 import {
-  ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, LineChart, Line,
+  ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell, BarChart, Bar, LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend as RLegend,
 } from 'recharts';
 import { api } from '@/services/api';
@@ -34,8 +39,8 @@ const MONTHS = ['JAN', 'FÉV', 'MAR', 'AVR', 'MAI', 'JUIN', 'JUIL', 'AOÛ', 'SEP
 const MONTHS_FULL = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
 const MONTHS_FR = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
 const WEEKDAY_ABBR = ['DIM', 'LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM'];
-const YEAR_PALETTE = ['#0ea5e9', '#8b5cf6', '#10b981', '#f59e0b', '#ec4899'];
-const DEPT_PALETTE = ['#ec4899', '#f59e0b', '#3b82f6', '#10b981', '#22d3ee', '#8b5cf6', '#f97316', '#f43f5e', '#14b8a6', '#a78bfa'];
+const YEAR_PALETTE = ['var(--brand)', 'var(--green)', 'var(--mustard)', 'var(--text-secondary)', 'var(--surface-2)'];
+const DEPT_PALETTE = ['var(--brand)', 'var(--green)', 'var(--mustard)', 'var(--text-secondary)'];
 
 type Tab = 'dashboard' | 'grille' | 'journal' | 'comparatif';
 type LeaderboardKey = 'maladie' | 'conventionnelle' | 'exceptionnelle' | 'injustifiee';
@@ -68,8 +73,8 @@ function AbsencesEmployeContent() {
     <div className="max-w-[1500px] mx-auto pb-24 space-y-6">
       <PresenceModuleSwitcher />
        <AbsenceSubNav userRole={userRole} />
-      <div>
-        <h1 className="text-xl font-bold text-[var(--text)]">Absences employés</h1>
+      <div className="attendance-page-heading">
+        <h1 className="text-xl font-semibold text-[var(--text)]">Absences employés</h1>
         <p className="text-sm text-[var(--text-muted)]">Congés, maladie, maternité, paternité, mariage, décès, naissance, non justifiée — tout au même endroit.</p>
       </div>
 
@@ -77,13 +82,13 @@ function AbsencesEmployeContent() {
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
         <div className="flex flex-wrap gap-1.5">
           {MONTHS.map((m, i) => (
-            <button
+            <Button variant="ghost"
               key={m}
               onClick={() => setMonth(i + 1)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${month === i + 1 ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-[var(--border)] text-[var(--text-muted)] hover:border-emerald-300'}`}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${month === i + 1 ? 'bg-[var(--brand)] border-[var(--border)] text-[var(--on-brand)]' : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--border)]'}`}
             >
               {m}
-            </button>
+            </Button>
           ))}
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -94,15 +99,15 @@ function AbsencesEmployeContent() {
               ['journal', 'Journal'],
               ['comparatif', 'Comparatif'],
             ] as [Tab, string][]).map(([key, label]) => (
-              <button key={key} onClick={() => setTab(key)} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${tab === key ? 'bg-emerald-500 text-white shadow-sm' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'}`}>
+              <Button variant="ghost" key={key} onClick={() => setTab(key)} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${tab === key ? 'bg-[var(--brand)] text-[var(--on-brand)] shadow-sm' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'}`}>
                 {label}
-              </button>
+              </Button>
             ))}
           </div>
           <div className="flex items-center gap-1 bg-[var(--surface-2)] rounded-xl px-2 py-1.5">
-            <button onClick={() => setYear(y => y - 1)} className="p-1 text-[var(--text-muted)]"><ChevronLeft size={14} /></button>
-            <span className="text-xs font-bold px-1">{year}</span>
-            <button onClick={() => setYear(y => y + 1)} className="p-1 text-[var(--text-muted)]"><ChevronRight size={14} /></button>
+            <Button variant="ghost" onClick={() => setYear(y => y - 1)} className="p-1 text-[var(--text-muted)]" aria-label="Période précédente"><ChevronLeft size={14} /></Button>
+            <span className="text-xs font-semibold px-1">{year}</span>
+            <Button variant="ghost" onClick={() => setYear(y => y + 1)} className="p-1 text-[var(--text-muted)]" aria-label="Période suivante"><ChevronRight size={14} /></Button>
           </div>
         </div>
       </div>
@@ -124,6 +129,7 @@ function qs(params: Record<string, string | number | undefined>) {
 // ONGLET 1 — TABLEAU DE BORD (donuts + KPI + vue annuelle + top scores)
 // ============================================================================
 function DashboardTab({ year, month }: { year: number; month: number; shiftMonth: (d: number) => void }) {
+ const {refonte:uiRefonte,motion:uiMotion}=useModuleVisuals();
   const [data, setData] = useState<any>(null);
   const [yearOverview, setYearOverview] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -179,13 +185,13 @@ function DashboardTab({ year, month }: { year: number; month: number; shiftMonth
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 attendance-metrics">
         <KpiCard icon={Users} label={`${MONTHS_FULL[month - 1]} ${year}`} value={String(data.employeeCount)} sub="employé(s) suivis" tone="sky" />
         <KpiCard icon={AlertTriangle} label="Absents aujourd'hui" value={String(absentTodayTotal)} sub={`sur ${data.employeeCount}`} tone="rose" />
         <KpiCard icon={TrendingUp} label="Jours d'absence" value={String(totalAbsenceDays)} sub="cumulés ce mois" tone="amber" />
         <KpiCard icon={Trophy} label="Le plus concerné" value={data.top20Month[0]?.name?.split(' ')[0] ?? '—'} sub={data.top20Month[0] ? `${data.top20Month[0].days} jour(s) d'absence` : '—'} tone="violet" />
       </div>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 attendance-metrics">
         <KpiCard icon={ListChecks} label="Jours à surveiller" value={String(trackableDays)} sub="hors congé statutaire" tone="violet" small />
         <KpiCard icon={Percent} label="Taux d'absentéisme" value={`${data.absenteeismRatePercent}%`} sub="jours ouvrés × effectif" tone="rose" small />
         <KpiCard icon={CalendarClock} label="Jours ouvrés" value={String(data.workingDaysInMonth)} sub="dans le mois" tone="sky" small />
@@ -197,21 +203,21 @@ function DashboardTab({ year, month }: { year: number; month: number; shiftMonth
           volontairement exclu, ce n'est pas un sujet de suivi RH */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
-          <p className="text-sm font-bold text-[var(--text)] mb-1">Absences à surveiller par catégorie — {MONTHS_FULL[month - 1]}</p>
+          <p className="text-sm font-semibold text-[var(--text)] mb-1">Absences à surveiller par catégorie — {MONTHS_FULL[month - 1]}</p>
           <p className="text-[11px] text-[var(--text-muted)] mb-4">Hors congé annuel/anticipé (droit acquis, pas un sujet RH)</p>
           {trackableDonut.length === 0 ? <EmptyLine /> : (
             <div className="flex items-center gap-5">
               <div className="w-[130px] h-[130px] relative shrink-0">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie data={trackableDonut} dataKey="value" nameKey="name" innerRadius={38} outerRadius={62} paddingAngle={2} stroke="none">
+                    <Pie data={trackableDonut} dataKey="value" nameKey="name" innerRadius={38} outerRadius={62} paddingAngle={uiRefonte ? 5 : 2} stroke="none" cornerRadius={uiRefonte ? 8 : 0} isAnimationActive={uiRefonte ? uiMotion : undefined} animationDuration={uiRefonte ? 700 : undefined}>
                       {trackableDonut.map((d, i) => <Cell key={i} fill={d.color} />)}
                     </Pie>
                     <Tooltip formatter={(v: any, n: any) => [`${v} j`, n]} />
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className="text-base font-bold text-[var(--text)]">{trackableTotal}</span>
+                  <span className="text-base font-semibold text-[var(--text)]">{trackableTotal}</span>
                   <span className="text-[8.5px] text-[var(--text-muted)] text-center max-w-[55px]">jours à surveiller</span>
                 </div>
               </div>
@@ -220,7 +226,7 @@ function DashboardTab({ year, month }: { year: number; month: number; shiftMonth
                   <div key={i} className="flex items-center gap-2 text-xs">
                     <span className="w-2 h-2 rounded-sm shrink-0" style={{ background: d.color }} />
                     <span className="text-[var(--text-muted)] flex-1 truncate">{d.name}</span>
-                    <span className="font-bold text-[var(--text)]">{d.pct}%</span>
+                    <span className="font-semibold text-[var(--text)]">{d.pct}%</span>
                   </div>
                 ))}
               </div>
@@ -235,7 +241,7 @@ function DashboardTab({ year, month }: { year: number; month: number; shiftMonth
               <>
                 <div className="flex items-center gap-2 mb-1">
                   <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: topMotif.color }} />
-                  <span className="text-sm font-bold text-[var(--text)] truncate">{topMotif.name}</span>
+                  <span className="text-sm font-semibold text-[var(--text)] truncate">{topMotif.name}</span>
                 </div>
                 <p className="text-xs text-[var(--text-muted)]">{topMotif.value} j · {topMotif.pct}% des absences suivies</p>
               </>
@@ -245,7 +251,7 @@ function DashboardTab({ year, month }: { year: number; month: number; shiftMonth
             <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-2">Département le plus concerné</p>
             {topDept ? (
               <>
-                <p className="text-sm font-bold text-[var(--text)] truncate">{topDept.name}</p>
+                <p className="text-sm font-semibold text-[var(--text)] truncate">{topDept.name}</p>
                 <p className="text-xs text-[var(--text-muted)]">{topDept.days} j à surveiller ce mois</p>
               </>
             ) : <EmptyLine />}
@@ -261,38 +267,38 @@ function DashboardTab({ year, month }: { year: number; month: number; shiftMonth
 
       {/* classement par motif */}
       <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
-        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-          <p className="text-sm font-bold text-[var(--text)]">Classement par motif — qui, quel département</p>
-          <select value={leaderboardKey} onChange={e => setLeaderboardKey(e.target.value as LeaderboardKey)} className="text-xs px-2 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-2 attendance-filters">
+          <p className="text-sm font-semibold text-[var(--text)]">Classement par motif — qui, quel département</p>
+          <AttendanceSelect value={leaderboardKey} onChange={e => setLeaderboardKey(e.target.value as LeaderboardKey)} className="text-xs px-2 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
             {Object.entries(LEADERBOARD_LABELS).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
-          </select>
+          </AttendanceSelect>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2">Top employés</p>
+            <p className="text-[10px] font-semibold text-[var(--text-muted)]   mb-2">Top employés</p>
             {data.leaderboards[leaderboardKey].length === 0 ? <EmptyLine /> : data.leaderboards[leaderboardKey].map((e: any, i: number) => (
-              <button key={e.employeeId} onClick={() => setDetailEmployeeId(e.employeeId)} className="w-full flex items-center gap-3 py-2 border-b border-[var(--border)] last:border-0 text-left hover:bg-[var(--surface-2)]/30 rounded-lg px-1">
+              <Button variant="ghost" key={e.employeeId} onClick={() => setDetailEmployeeId(e.employeeId)} className="w-full flex items-center gap-3 py-2 border-b border-[var(--border)] last:border-0 text-left hover:bg-[var(--surface-2)]/30 rounded-lg px-1">
                 <RankBadge i={i} />
                 <span className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-[var(--text)] truncate">{e.name}</p>
                   {e.departmentName && <p className="text-[11px] text-[var(--text-muted)]">{e.departmentName}</p>}
                 </span>
-                <span className="text-sm font-bold text-[var(--text)]">{e.days} j</span>
-              </button>
+                <span className="text-sm font-semibold text-[var(--text)]">{e.days} j</span>
+              </Button>
             ))}
           </div>
           <div>
-            <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2">Top départements</p>
+            <p className="text-[10px] font-semibold text-[var(--text-muted)]   mb-2">Top départements</p>
             {data.departmentLeaderboards[leaderboardKey].length === 0 ? <EmptyLine /> : data.departmentLeaderboards[leaderboardKey].map((d: any) => {
               const max = data.departmentLeaderboards[leaderboardKey][0]?.days || 1;
               return (
                 <div key={d.departmentId} className="py-2">
                   <div className="flex items-center justify-between text-sm mb-1">
                     <span className="font-medium text-[var(--text)]">{d.name}</span>
-                    <span className="font-bold text-[var(--text)]">{d.days} j</span>
+                    <span className="font-semibold text-[var(--text)]">{d.days} j</span>
                   </div>
                   <div className="h-1.5 rounded-full bg-[var(--surface-2)] overflow-hidden">
-                    <div className="h-full rounded-full bg-amber-500" style={{ width: `${(d.days / max) * 100}%` }} />
+                    <div className="h-full rounded-full bg-[var(--mustard)]" style={{ width: `${(d.days / max) * 100}%` }} />
                   </div>
                 </div>
               );
@@ -304,15 +310,15 @@ function DashboardTab({ year, month }: { year: number; month: number; shiftMonth
       {/* vue annuelle + top scores, comme la maquette */}
       <div className="grid grid-cols-1 lg:grid-cols-[1.6fr_1fr] gap-6">
         <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
-          <p className="text-sm font-bold text-[var(--text)] mb-4">Vue annuelle des jours d&apos;absence — tous les employés</p>
+          <p className="text-sm font-semibold text-[var(--text)] mb-4">Vue annuelle des jours d&apos;absence — tous les employés</p>
           <ResponsiveContainer width="100%" height={230}>
             <BarChart data={annualSeries} barSize={18}>
               <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.15} />
               <XAxis dataKey="mois" fontSize={11} />
               <YAxis fontSize={11} allowDecimals={false} />
               <Tooltip formatter={(v: any) => [`${v} j`, 'Absences']} />
-              <Bar dataKey="total" radius={[5, 5, 0, 0]}>
-                {annualSeries.map((d: any, i: number) => <Cell key={i} fill={d.isCurrent ? '#0ea5e9' : '#0ea5e955'} />)}
+              <Bar dataKey="total" radius={uiRefonte ? [10,10,10,10] : [5, 5, 0, 0]} maxBarSize={uiRefonte ? 16 : undefined} background={uiRefonte ? {fill:"var(--surface-2)",radius:10} : undefined} isAnimationActive={uiRefonte ? uiMotion : undefined} animationDuration={uiRefonte ? 700 : undefined}>
+                {annualSeries.map((d: any, i: number) => <Cell key={i} fill={d.isCurrent ? 'var(--brand)' : 'var(--brand-soft)'} />)}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
@@ -320,19 +326,19 @@ function DashboardTab({ year, month }: { year: number; month: number; shiftMonth
 
         <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-sm font-bold text-[var(--text)]">Top scores d&apos;absences</p>
+            <p className="text-sm font-semibold text-[var(--text)]">Top scores d&apos;absences</p>
             <span className="text-xs text-[var(--text-muted)]">{MONTHS_FULL[month - 1]}</span>
           </div>
           <div className="space-y-0.5 max-h-[260px] overflow-y-auto">
             {data.top20Month.length === 0 ? <EmptyLine /> : data.top20Month.map((e: any, i: number) => (
-              <button key={e.employeeId} onClick={() => setDetailEmployeeId(e.employeeId)} className="w-full flex items-center gap-3 py-2 border-b border-[var(--border)] last:border-0 text-left hover:bg-[var(--surface-2)]/30 rounded-lg px-1">
+              <Button variant="ghost" key={e.employeeId} onClick={() => setDetailEmployeeId(e.employeeId)} className="w-full flex items-center gap-3 py-2 border-b border-[var(--border)] last:border-0 text-left hover:bg-[var(--surface-2)]/30 rounded-lg px-1">
                 <RankBadge i={i} />
                 <span className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-[var(--text)] truncate">{e.name}</p>
                   {e.departmentName && <p className="text-[11px] text-[var(--text-muted)]">{e.departmentName}</p>}
                 </span>
-                <span className={`text-sm font-bold ${e.days > 6 ? 'text-red-500' : e.days > 2 ? 'text-amber-500' : 'text-[var(--text-muted)]'}`}>{e.days}j</span>
-              </button>
+                <span className={`text-sm font-semibold ${e.days > 6 ? 'text-[var(--danger-text)]' : e.days > 2 ? 'text-[var(--warning-text)]' : 'text-[var(--text-muted)]'}`}>{e.days}j</span>
+              </Button>
             ))}
           </div>
         </div>
@@ -391,13 +397,13 @@ function GrilleTab({ year, month }: { year: number; month: number; shiftMonth: (
     <div className="space-y-4">
       {/* bandeau "aujourd'hui", identique au module Présences */}
       {currentDay && (
-        <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-4 flex items-center gap-3">
-          <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+        <div className="bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  border border-[var(--border)]  rounded-xl p-4 flex items-center gap-3">
+          <div className="w-2 h-2 bg-[var(--brand)] rounded-full " />
           <div className="flex-1">
-            <p className="text-sm text-emerald-700 dark:text-emerald-300">
-              📅 <strong>Aujourd&apos;hui :</strong> {currentDay} {MONTHS_FULL[month - 1]} {year}
+            <p className="text-sm text-[var(--success-text)] ">
+               <strong>Aujourd&apos;hui :</strong> {currentDay} {MONTHS_FULL[month - 1]} {year}
             </p>
-            <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">
+            <p className="text-xs text-[var(--success-text)]  mt-1">
               Jours ouvrables : {workingDaysCount} ce mois-ci
             </p>
           </div>
@@ -406,19 +412,19 @@ function GrilleTab({ year, month }: { year: number; month: number; shiftMonth: (
 
       {/* légende — uniquement les motifs présents ce mois-ci, groupés par famille, avec le sigle affiché dans les cases */}
       <div className="bg-[var(--surface)] rounded-2xl p-4 border border-[var(--border)]">
-        <h4 className="text-sm font-bold text-[var(--text-muted)] mb-3">
+        <h4 className="text-sm font-semibold text-[var(--text-muted)] mb-3">
           Légende <span className="font-normal text-xs">— motifs présents ce mois-ci</span>
         </h4>
         <div className="flex flex-wrap gap-x-8 gap-y-4">
           {legendGroups.map(g => (
             <div key={g.family}>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1.5">{FAMILY_LABEL[g.family] ?? g.family}</p>
+              <p className="text-[10px] font-semibold   text-[var(--text-muted)] mb-1.5">{FAMILY_LABEL[g.family] ?? g.family}</p>
               <div className="flex flex-wrap gap-x-4 gap-y-2">
                 {g.items.map((l: any) => {
                   const c = colorFor(l.colorKey);
                   return (
                     <div key={l.code} className="flex items-center gap-2">
-                      <div className="min-w-[2rem] h-6 px-1 rounded flex items-center justify-center text-[9px] font-bold leading-none" style={{ background: c.hex, color: c.fg }}>
+                      <div className="min-w-[2rem] h-6 px-1 rounded flex items-center justify-center text-[9px] font-semibold leading-none" style={{ background: c.hex, color: c.fg }}>
                         {cellText(l.code)}
                       </div>
                       <span className="text-xs text-[var(--text-muted)]">{l.label}</span>
@@ -429,7 +435,7 @@ function GrilleTab({ year, month }: { year: number; month: number; shiftMonth: (
             </div>
           ))}
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1.5">Calendrier</p>
+            <p className="text-[10px] font-semibold   text-[var(--text-muted)] mb-1.5">Calendrier</p>
             <div className="flex items-center gap-2">
               <div className="min-w-[2rem] h-6 rounded bg-[var(--border)]" />
               <span className="text-xs text-[var(--text-muted)]">Jour de repos ou férié</span>
@@ -441,17 +447,17 @@ function GrilleTab({ year, month }: { year: number; month: number; shiftMonth: (
       {/* grille */}
       <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] overflow-hidden min-h-[600px]">
         <div className="p-4 border-b border-[var(--border)] flex items-center justify-between flex-wrap gap-2">
-          <h3 className="font-bold text-[var(--text)]">
+          <h3 className="font-semibold text-[var(--text)]">
             Grille mensuelle
             <span className="text-sm font-normal text-[var(--text-muted)] ml-2">
               ({workingDaysCount} jours ouvrables / {data.daysInMonth} jours au total)
             </span>
           </h3>
           {departments.length > 0 && (
-            <select value={deptFilter} onChange={e => setDeptFilter(e.target.value)} className="text-xs px-2 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+            <AttendanceSelect value={deptFilter} onChange={e => setDeptFilter(e.target.value)} className="text-xs px-2 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
               <option value="">Tous les départements</option>
               {departments.map(d => <option key={d} value={d}>{d}</option>)}
-            </select>
+            </AttendanceSelect>
           )}
         </div>
 
@@ -460,11 +466,11 @@ function GrilleTab({ year, month }: { year: number; month: number; shiftMonth: (
             <p className="text-sm">Aucun employé à afficher.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: '#0ea5e9 transparent' }}>
+          <div className="overflow-x-auto attendance-table-scroll" style={{ scrollbarWidth: 'thin', scrollbarColor: 'var(--brand) transparent' }} tabIndex={0} role="region" aria-label="Tableau défilant horizontalement">
             <div className="inline-block min-w-full align-middle">
               {/* en-tête jours */}
               <div className="border-b border-[var(--border)] flex">
-                <div className="sticky left-0 z-20 w-48 shrink-0 bg-[var(--surface-2)] p-3 font-bold text-xs uppercase border-r text-[var(--text-muted)]">
+                <div className="sticky left-0 z-20 w-48 shrink-0 bg-[var(--surface-2)] p-3 font-semibold text-xs  border-r text-[var(--text-muted)]">
                   Employé
                 </div>
                 {days.map(d => {
@@ -474,17 +480,17 @@ function GrilleTab({ year, month }: { year: number; month: number; shiftMonth: (
                   const holidayName = holidayByDay.get(String(d).padStart(2, '0')) as string | undefined;
                   return (
                     <div key={d} title={holidayName ?? ''} className={`w-10 shrink-0 text-center p-2 border-r ${
-                      isToday ? 'bg-emerald-100 dark:bg-emerald-900/50'
+                      isToday ? 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] '
                       : !isWorking || holidayName ? 'bg-[var(--border)]'
                       : 'bg-[var(--surface-2)]'
                     }`}>
-                      <div className={`text-[10px] font-bold ${isToday ? 'text-emerald-600 dark:text-emerald-400' : !isWorking || holidayName ? 'text-[var(--text-muted)]' : 'text-[var(--text-muted)]'}`}>
+                      <div className={`text-[10px] font-semibold ${isToday ? 'text-[var(--success-text)] ' : !isWorking || holidayName ? 'text-[var(--text-muted)]' : 'text-[var(--text-muted)]'}`}>
                         {getDayName(d)}
                       </div>
-                      <div className={`text-xs font-bold ${isToday ? 'text-emerald-600 dark:text-emerald-400' : !isWorking || holidayName ? 'text-[var(--text-muted)]' : 'text-[var(--text-muted)]'}`}>
+                      <div className={`text-xs font-semibold ${isToday ? 'text-[var(--success-text)] ' : !isWorking || holidayName ? 'text-[var(--text-muted)]' : 'text-[var(--text-muted)]'}`}>
                         {d}
                       </div>
-                      {isToday && <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full mx-auto mt-0.5" />}
+                      {isToday && <div className="w-1.5 h-1.5 bg-[var(--brand)] rounded-full mx-auto mt-0.5" />}
                     </div>
                   );
                 })}
@@ -494,15 +500,15 @@ function GrilleTab({ year, month }: { year: number; month: number; shiftMonth: (
               <div className="divide-y divide-[var(--border)]">
                 {filteredEmployees.map((emp: any) => (
                   <div key={emp.id} className="flex hover:bg-[var(--surface-2)] transition-colors">
-                    <button onClick={() => setDetailEmployeeId(emp.id)} className="sticky left-0 z-10 w-48 shrink-0 bg-[var(--surface)] p-3 border-r flex items-center gap-3 text-left hover:text-emerald-600">
-                      <div className="w-8 h-8 rounded-full bg-[var(--border)] flex items-center justify-center text-xs font-bold text-[var(--text-muted)] shrink-0">
+                    <Button variant="ghost" onClick={() => setDetailEmployeeId(emp.id)} className="sticky left-0 z-10 w-48 shrink-0 bg-[var(--surface)] p-3 border-r flex items-center gap-3 text-left hover:text-[var(--success-text)]">
+                      <div className="w-8 h-8 rounded-full bg-[var(--border)] flex items-center justify-center text-xs font-semibold text-[var(--text-muted)] shrink-0">
                         {emp.name?.[0] ?? '?'}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-bold truncate text-[var(--text)]">{emp.name}</p>
+                        <p className="text-sm font-semibold truncate text-[var(--text)]">{emp.name}</p>
                         <p className="text-[10px] text-[var(--text-muted)] truncate">{emp.departmentName || '—'}</p>
                       </div>
-                    </button>
+                    </Button>
                     {days.map(d => {
                       const dayStr = String(d).padStart(2, '0');
                       const cell = emp.cells[dayStr];
@@ -515,7 +521,7 @@ function GrilleTab({ year, month }: { year: number; month: number; shiftMonth: (
                         <div
                           key={d}
                           title={cell?.label ?? (holidayName || (!isWorking ? 'Jour non ouvrable' : ''))}
-                          className={`w-10 shrink-0 min-h-[32px] border-b border-r border-[var(--border)] flex items-center justify-center text-[9px] font-bold leading-none ${isToday ? 'ring-2 ring-emerald-500 ring-inset' : ''} ${!cell && (!isWorking || holidayName) ? 'bg-[var(--border)]' : ''}`}
+                          className={`w-10 shrink-0 min-h-[32px] border-b border-r border-[var(--border)] flex items-center justify-center text-[9px] font-semibold leading-none ${isToday ? 'ring-2 ring-[var(--focus)] ring-inset' : ''} ${!cell && (!isWorking || holidayName) ? 'bg-[var(--border)]' : ''}`}
                           style={cell ? { background: c!.hex, color: c!.fg } : undefined}
                         >
                           {cell ? cellText(cell.code) : null}
@@ -563,29 +569,29 @@ function JournalTab({ year, month }: { year: number; month: number }) {
 
   return (
     <div className="space-y-6">
-      <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-900/40 rounded-2xl p-4">
-        <p className="text-sm text-emerald-800 dark:text-emerald-200">{data.summary}</p>
+      <div className="bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  border border-[var(--border)]  rounded-2xl p-4">
+        <p className="text-sm text-[var(--success-text)] ">{data.summary}</p>
       </div>
 
       <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
         <div className="p-4 flex items-center justify-between border-b border-[var(--border)] flex-wrap gap-2">
-          <p className="text-sm font-bold text-[var(--text)]">Journal — {MONTHS_FULL[month - 1]} {year}</p>
-          <div className="flex gap-2">
-            <select value={familyFilter} onChange={e => setFamilyFilter(e.target.value)} className="text-xs px-2 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+          <p className="text-sm font-semibold text-[var(--text)]">Journal — {MONTHS_FULL[month - 1]} {year}</p>
+          <div className="flex gap-2 attendance-filters">
+            <AttendanceSelect value={familyFilter} onChange={e => setFamilyFilter(e.target.value)} className="text-xs px-2 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
               <option value="">Toutes catégories</option>
               {families.map(f => <option key={f} value={f}>{f}</option>)}
-            </select>
-            <select value={paidFilter} onChange={e => setPaidFilter(e.target.value)} className="text-xs px-2 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+            </AttendanceSelect>
+            <AttendanceSelect value={paidFilter} onChange={e => setPaidFilter(e.target.value)} className="text-xs px-2 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
               <option value="">Payé et non payé</option>
               <option value="paid">Payé</option>
               <option value="unpaid">Non payé</option>
-            </select>
+            </AttendanceSelect>
           </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto attendance-table-scroll" tabIndex={0} role="region" aria-label="Tableau défilant horizontalement">
+          <table className="w-full text-sm attendance-table">
             <thead className="bg-[var(--surface-2)]">
-              <tr>{['Employé', 'Motif', 'Catégorie', 'Période', 'Durée', 'Paie', 'Détail'].map(h => <th key={h} className="px-3 py-2 text-left text-[10px] font-bold text-[var(--text-muted)] uppercase whitespace-nowrap">{h}</th>)}</tr>
+              <tr>{['Employé', 'Motif', 'Catégorie', 'Période', 'Durée', 'Paie', 'Détail'].map(h => <th key={h} className="px-3 py-2 text-left text-[10px] font-semibold text-[var(--text-muted)]  whitespace-nowrap">{h}</th>)}</tr>
             </thead>
             <tbody className="divide-y divide-[var(--border)]">
               {filtered.length === 0 ? (
@@ -603,11 +609,11 @@ function JournalTab({ year, month }: { year: number; month: number }) {
                   <td className="px-3 py-2.5 text-[var(--text-muted)] whitespace-nowrap text-xs">
                     {new Date(j.startDate).toLocaleDateString('fr-FR')} → {new Date(j.endDate).toLocaleDateString('fr-FR')}
                   </td>
-                  <td className="px-3 py-2.5 font-bold text-[var(--text)]">
+                  <td className="px-3 py-2.5 font-semibold text-[var(--text)]">
                     {j.days} j
                     {j.uncoveredDays > 0 && (
                       <span
-                        className="block text-[10px] font-semibold text-amber-600 dark:text-amber-400 whitespace-nowrap"
+                        className="block text-[10px] font-semibold text-[var(--warning-text)]  whitespace-nowrap"
                         title="Jours demandés au-delà du droit conventionnel : non payés, comptés absents seulement si l'employé ne pointe pas."
                       >
                         +{j.uncoveredDays} j hors droit
@@ -621,9 +627,9 @@ function JournalTab({ year, month }: { year: number; month: number }) {
                       // "congé payé travaillé" (CPT, visible dans la grille) a une info à donner.
                       <span className="text-[11px] text-[var(--text-muted)]">Droit acquis</span>
                     ) : j.paid ? (
-                      <span className="flex items-center gap-1 text-emerald-600 text-xs font-semibold"><FileCheck2 size={13} /> Payé</span>
+                      <span className="flex items-center gap-1 text-[var(--success-text)] text-xs font-semibold"><FileCheck2 size={13} /> Payé</span>
                     ) : (
-                      <span className="flex items-center gap-1 text-red-500 text-xs font-semibold"><FileX2 size={13} /> Non payé</span>
+                      <span className="flex items-center gap-1 text-[var(--danger-text)] text-xs font-semibold"><FileX2 size={13} /> Non payé</span>
                     )}
                   </td>
                   <td className="px-3 py-2.5 text-[var(--text-muted)] text-xs max-w-[220px] truncate" title={j.reason ?? ''}>{j.reason ?? '—'}</td>
@@ -641,6 +647,7 @@ function JournalTab({ year, month }: { year: number; month: number }) {
 // ONGLET 4 — COMPARATIF PLURIANNUEL
 // ============================================================================
 function ComparatifTab({ anchorYear }: { anchorYear: number }) {
+ const {refonte:uiRefonte,motion:uiMotion}=useModuleVisuals();
   const candidateYears = useMemo(() => [anchorYear, anchorYear - 1, anchorYear - 2, anchorYear - 3, anchorYear - 4], [anchorYear]);
   const [selectedYears, setSelectedYears] = useState<number[]>([anchorYear, anchorYear - 1, anchorYear - 2]);
   const [compareData, setCompareData] = useState<any>(null);
@@ -707,14 +714,14 @@ function ComparatifTab({ anchorYear }: { anchorYear: number }) {
   return (
     <div className="space-y-6">
       <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-4">
-        <p className="text-sm font-bold text-[var(--text)] mb-3">Comparer plusieurs années</p>
+        <p className="text-sm font-semibold text-[var(--text)] mb-3">Comparer plusieurs années</p>
         <div className="flex flex-wrap gap-2">
           {candidateYears.map(y => {
             const active = selectedYears.includes(y);
             return (
-              <button key={y} onClick={() => toggleYear(y)} className={`px-4 py-1.5 rounded-lg text-xs font-bold border transition-all ${active ? 'text-white border-transparent' : 'text-[var(--text-muted)] border-[var(--border)]'}`} style={active ? { background: yearColor(y) } : {}}>
+              <Button variant="ghost" key={y} onClick={() => toggleYear(y)} className={`px-4 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${active ? 'bg-[var(--brand)] text-[var(--on-brand)] border-transparent' : 'text-[var(--text-muted)] border-[var(--border)]'}`} style={active ? { background: yearColor(y) } : {}}>
                 {y}
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -730,37 +737,44 @@ function ComparatifTab({ anchorYear }: { anchorYear: number }) {
               return (
                 <div key={y.year} className="bg-[var(--surface)] rounded-2xl border p-4" style={{ borderColor: `${yearColor(y.year)}55` }}>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-[11px] font-bold uppercase tracking-wide" style={{ color: yearColor(y.year) }}>{y.year}</span>
+                    <span className="text-[11px] font-semibold  tracking-wide" style={{ color: yearColor(y.year) }}>{y.year}</span>
                     {t?.deltaPercent != null && (
-                      <span className={`text-[10px] font-bold ${t.deltaDays > 0 ? 'text-red-500' : t.deltaDays < 0 ? 'text-emerald-500' : 'text-[var(--text-muted)]'}`}>
+                      <span className={`text-[10px] font-semibold ${t.deltaDays > 0 ? 'text-[var(--danger-text)]' : t.deltaDays < 0 ? 'text-[var(--success-text)]' : 'text-[var(--text-muted)]'}`}>
                         {t.deltaDays === 0 ? '=' : `${t.deltaDays > 0 ? '▲' : '▼'} ${Math.abs(t.deltaPercent)}%`}
                       </span>
                     )}
                   </div>
-                  <p className="text-2xl font-bold text-[var(--text)]">{y.totalDays} <span className="text-sm font-medium text-[var(--text-muted)]">jours</span></p>
+                  <p className="text-2xl font-semibold text-[var(--text)]">{y.totalDays} <span className="text-sm font-medium text-[var(--text-muted)]">jours</span></p>
                   <p className="text-xs text-[var(--text-muted)] mt-1">{y.employeeCount} employés · {y.avgDaysPerEmployee} j/employé</p>
-                  <p className="text-xs text-amber-500 mt-1">{y.trackableDays} j à surveiller</p>
+                  <p className="text-xs text-[var(--warning-text)] mt-1">{y.trackableDays} j à surveiller</p>
                 </div>
               );
             })}
           </div>
 
           <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
-            <p className="text-sm font-bold text-[var(--text)] mb-4">Évolution mensuelle — comparaison</p>
+            <p className="text-sm font-semibold text-[var(--text)] mb-4">Évolution mensuelle — comparaison</p>
             <ResponsiveContainer width="100%" height={260}>
-              <LineChart data={monthlyComparison}>
+              {uiRefonte ? (<AreaChart data={monthlyComparison}>
+                <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
+                <XAxis dataKey="mois" fontSize={12} />
+                <YAxis fontSize={12} allowDecimals={false} />
+                <Tooltip />
+                <RLegend />
+                {sortedAsc.map(y => <Area key={y} type="monotone" dataKey={String(y)} name={String(y)} stroke={yearColor(y)} strokeWidth={2.5} dot={false}  fill="var(--loan-gradient-1)" fillOpacity={1} isAnimationActive={uiMotion} animationDuration={700}/>)}
+              </AreaChart>) : (<LineChart data={monthlyComparison}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
                 <XAxis dataKey="mois" fontSize={12} />
                 <YAxis fontSize={12} allowDecimals={false} />
                 <Tooltip />
                 <RLegend />
                 {sortedAsc.map(y => <Line key={y} type="monotone" dataKey={String(y)} name={String(y)} stroke={yearColor(y)} strokeWidth={2.5} dot={{ r: 2.5 }} />)}
-              </LineChart>
+              </LineChart>)}
             </ResponsiveContainer>
           </div>
 
           <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
-            <p className="text-sm font-bold text-[var(--text)] mb-4">Par département — comparaison</p>
+            <p className="text-sm font-semibold text-[var(--text)] mb-4">Par département — comparaison</p>
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={deptRows.map(r => ({ department: r.label, ...Object.fromEntries(sortedAsc.map(y => [String(y), r.values[y] ?? 0])) }))} barGap={4}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.15} vertical={false} />
@@ -768,7 +782,7 @@ function ComparatifTab({ anchorYear }: { anchorYear: number }) {
                 <YAxis fontSize={11} allowDecimals={false} />
                 <Tooltip />
                 <RLegend />
-                {sortedAsc.map(y => <Bar key={y} dataKey={String(y)} name={String(y)} fill={yearColor(y)} radius={[4, 4, 0, 0]} />)}
+                {sortedAsc.map(y => <Bar key={y} dataKey={String(y)} name={String(y)} fill={yearColor(y)} radius={uiRefonte ? [10,10,10,10] : [4, 4, 0, 0]} maxBarSize={uiRefonte ? 16 : undefined} background={uiRefonte ? {fill:"var(--surface-2)",radius:10} : undefined} isAnimationActive={uiRefonte ? uiMotion : undefined} animationDuration={uiRefonte ? 700 : undefined} />)}
               </BarChart>
             </ResponsiveContainer>
             <div className="mt-4 pt-3 border-t border-[var(--border)]">
@@ -777,7 +791,7 @@ function ComparatifTab({ anchorYear }: { anchorYear: number }) {
           </div>
 
           <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
-            <p className="text-sm font-bold text-[var(--text)] mb-4">Par catégorie de motif — comparaison précise</p>
+            <p className="text-sm font-semibold text-[var(--text)] mb-4">Par catégorie de motif — comparaison précise</p>
             <CompareTable rows={familyRows} years={sortedDesc} label="Catégorie" />
           </div>
         </>
@@ -789,13 +803,13 @@ function ComparatifTab({ anchorYear }: { anchorYear: number }) {
 function CompareTable({ rows, years, label }: { rows: { label: string; values: Record<number, number> }[]; years: number[]; label: string }) {
   const newest = years[0], oldest = years[years.length - 1];
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
+    <div className="overflow-x-auto attendance-table-scroll" tabIndex={0} role="region" aria-label="Tableau défilant horizontalement">
+      <table className="w-full text-sm attendance-table">
         <thead>
           <tr className="border-b border-[var(--border)]">
-            <th className="text-left px-2 py-2 text-[10px] font-bold text-[var(--text-muted)] uppercase">{label}</th>
-            {years.map(y => <th key={y} className="text-right px-2 py-2 text-[10px] font-bold text-[var(--text-muted)] uppercase">{y}</th>)}
-            {years.length > 1 && <th className="text-right px-2 py-2 text-[10px] font-bold text-[var(--text-muted)] uppercase">Var. {oldest}→{newest}</th>}
+            <th className="text-left px-2 py-2 text-[10px] font-semibold text-[var(--text-muted)] ">{label}</th>
+            {years.map(y => <th key={y} className="text-right px-2 py-2 text-[10px] font-semibold text-[var(--text-muted)] ">{y}</th>)}
+            {years.length > 1 && <th className="text-right px-2 py-2 text-[10px] font-semibold text-[var(--text-muted)] ">Var. {oldest}→{newest}</th>}
           </tr>
         </thead>
         <tbody>
@@ -808,7 +822,7 @@ function CompareTable({ rows, years, label }: { rows: { label: string; values: R
                 <td className="px-2 py-2 font-medium text-[var(--text)] whitespace-nowrap">{r.label}</td>
                 {years.map(y => <td key={y} className="text-right px-2 py-2 text-[var(--text-muted)]">{r.values[y] ?? 0} j</td>)}
                 {years.length > 1 && (
-                  <td className={`text-right px-2 py-2 font-bold ${delta > 0 ? 'text-red-500' : delta < 0 ? 'text-emerald-500' : 'text-[var(--text-muted)]'}`}>
+                  <td className={`text-right px-2 py-2 font-semibold ${delta > 0 ? 'text-[var(--danger-text)]' : delta < 0 ? 'text-[var(--success-text)]' : 'text-[var(--text-muted)]'}`}>
                     {delta === 0 ? '=' : `${delta > 0 ? '+' : ''}${pct}%`}
                   </td>
                 )}
@@ -825,6 +839,7 @@ function CompareTable({ rows, years, label }: { rows: { label: string; values: R
 // PANNEAU DÉTAIL EMPLOYÉ
 // ============================================================================
 function EmployeeDetailSlideOver({ employeeId, year, month, onClose }: { employeeId: string | null; year: number; month: number; onClose: () => void }) {
+ const {refonte:uiRefonte,motion:uiMotion}=useModuleVisuals();
   const [data, setData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -842,15 +857,15 @@ function EmployeeDetailSlideOver({ employeeId, year, month, onClose }: { employe
       {isLoading || !data ? <LoadingBlock /> : (
         <div className="space-y-5">
           {(data.recurrence.alertSickRecurrence || data.recurrence.alertSickDays || data.recurrence.alertTrackableDays) && (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-3 space-y-1">
-              {data.recurrence.alertSickRecurrence && <p className="text-xs text-red-700 dark:text-red-300 flex items-center gap-1.5"><Stethoscope size={13} /> {data.recurrence.sickEpisodesRolling90d} épisodes de maladie distincts sur 90 jours</p>}
-              {data.recurrence.alertSickDays && <p className="text-xs text-red-700 dark:text-red-300">{data.recurrence.sickDaysYear} jours de maladie sur l&apos;année</p>}
-              {data.recurrence.alertTrackableDays && <p className="text-xs text-red-700 dark:text-red-300">{data.recurrence.trackableDaysYear} jours d&apos;absence à surveiller sur l&apos;année</p>}
+            <div className="bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  border border-[var(--border)]  rounded-xl p-3 space-y-1">
+              {data.recurrence.alertSickRecurrence && <p className="text-xs text-[var(--danger-text)]  flex items-center gap-1.5"><Stethoscope size={13} /> {data.recurrence.sickEpisodesRolling90d} épisodes de maladie distincts sur 90 jours</p>}
+              {data.recurrence.alertSickDays && <p className="text-xs text-[var(--danger-text)] ">{data.recurrence.sickDaysYear} jours de maladie sur l&apos;année</p>}
+              {data.recurrence.alertTrackableDays && <p className="text-xs text-[var(--danger-text)] ">{data.recurrence.trackableDaysYear} jours d&apos;absence à surveiller sur l&apos;année</p>}
             </div>
           )}
 
           <div>
-            <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wide mb-2">Répartition — {MONTHS_FULL[month - 1]}</p>
+            <p className="text-xs font-semibold text-[var(--text-muted)]  tracking-wide mb-2">Répartition — {MONTHS_FULL[month - 1]}</p>
             {data.pieByType.length === 0 ? <EmptyLine /> : (
               <div className="space-y-2">
                 {data.pieByType.map((t: any) => {
@@ -859,7 +874,7 @@ function EmployeeDetailSlideOver({ employeeId, year, month, onClose }: { employe
                     <div key={t.code} className="flex items-center gap-2 text-sm">
                       <span className="w-2 h-2 rounded-sm shrink-0" style={{ background: c.hex }} />
                       <span className="flex-1 text-[var(--text)]">{t.label}</span>
-                      <span className="font-bold text-[var(--text)]">{t.days} j</span>
+                      <span className="font-semibold text-[var(--text)]">{t.days} j</span>
                     </div>
                   );
                 })}
@@ -868,13 +883,13 @@ function EmployeeDetailSlideOver({ employeeId, year, month, onClose }: { employe
           </div>
 
           <div>
-            <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wide mb-2">Vue annuelle {year}</p>
+            <p className="text-xs font-semibold text-[var(--text-muted)]  tracking-wide mb-2">Vue annuelle {year}</p>
             <ResponsiveContainer width="100%" height={140}>
               <BarChart data={data.yearOverview.map((m: any) => ({ mois: MONTHS_FR[m.month - 1], jours: m.totalDays }))}>
                 <XAxis dataKey="mois" fontSize={10} />
                 <YAxis fontSize={10} allowDecimals={false} />
                 <Tooltip />
-                <Bar dataKey="jours" fill="#8b5cf6" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="jours" fill="var(--loan-chart-2)" radius={uiRefonte ? [10,10,10,10] : [3, 3, 0, 0]} maxBarSize={uiRefonte ? 16 : undefined} background={uiRefonte ? {fill:"var(--surface-2)",radius:10} : undefined} isAnimationActive={uiRefonte ? uiMotion : undefined} animationDuration={uiRefonte ? 700 : undefined} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -888,22 +903,23 @@ function EmployeeDetailSlideOver({ employeeId, year, month, onClose }: { employe
 // PETITS UTILITAIRES D'AFFICHAGE
 // ============================================================================
 function DonutCard({ title, data, centerLabel, centerValue }: { title: string; data: { name: string; value: number; color: string; pct: number }[]; centerLabel: string; centerValue: number }) {
+ const {refonte:uiRefonte,motion:uiMotion}=useModuleVisuals();
   return (
     <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
-      <p className="text-sm font-bold text-[var(--text)] mb-4">{title}</p>
+      <p className="text-sm font-semibold text-[var(--text)] mb-4">{title}</p>
       {data.length === 0 ? <EmptyLine /> : (
         <div className="flex items-center gap-5">
           <div className="w-[150px] h-[150px] relative shrink-0">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={data} dataKey="value" nameKey="name" innerRadius={45} outerRadius={70} paddingAngle={2} stroke="none">
+                <Pie data={data} dataKey="value" nameKey="name" innerRadius={45} outerRadius={70} paddingAngle={uiRefonte ? 5 : 2} stroke="none" cornerRadius={uiRefonte ? 8 : 0} isAnimationActive={uiRefonte ? uiMotion : undefined} animationDuration={uiRefonte ? 700 : undefined}>
                   {data.map((d, i) => <Cell key={i} fill={d.color} />)}
                 </Pie>
                 <Tooltip formatter={(v: any, n: any) => [`${v} j`, n]} />
               </PieChart>
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span className="text-lg font-bold text-[var(--text)]">{centerValue}</span>
+              <span className="text-lg font-semibold text-[var(--text)]">{centerValue}</span>
               <span className="text-[9px] text-[var(--text-muted)] text-center max-w-[60px]">{centerLabel}</span>
             </div>
           </div>
@@ -912,7 +928,7 @@ function DonutCard({ title, data, centerLabel, centerValue }: { title: string; d
               <div key={i} className="flex items-center gap-2 text-xs">
                 <span className="w-2 h-2 rounded-sm shrink-0" style={{ background: d.color }} />
                 <span className="text-[var(--text-muted)] flex-1 truncate">{d.name}</span>
-                <span className="font-bold text-[var(--text)]">{d.pct}%</span>
+                <span className="font-semibold text-[var(--text)]">{d.pct}%</span>
               </div>
             ))}
           </div>
@@ -924,7 +940,7 @@ function DonutCard({ title, data, centerLabel, centerValue }: { title: string; d
 
 function RankBadge({ i }: { i: number }) {
   return (
-    <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-bold shrink-0 ${i === 0 ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-300' : 'bg-[var(--surface-2)] text-[var(--text-muted)]'}`}>
+    <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-semibold shrink-0 ${i === 0 ? 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  text-[var(--warning-text)] ' : 'bg-[var(--surface-2)] text-[var(--text-muted)]'}`}>
       {i + 1}
     </span>
   );
@@ -932,23 +948,23 @@ function RankBadge({ i }: { i: number }) {
 
 function KpiCard({ icon: Icon, label, value, sub, tone, small }: { icon: any; label: string; value: string; sub?: string; tone: 'sky' | 'rose' | 'amber' | 'violet'; small?: boolean }) {
   const cls: Record<string, string> = {
-    sky: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-300',
-    rose: 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-300',
-    amber: 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-300',
-    violet: 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-300',
+    sky: 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)]  ',
+    rose: 'bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] text-[var(--danger-text)]  ',
+    amber: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)]  ',
+    violet: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)]  ',
   };
   return (
     <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-4">
       <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${cls[tone]}`}><Icon size={18} /></div>
       <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-1">{label}</p>
-      <p className={`${small ? 'text-base' : 'text-lg'} font-bold text-[var(--text)] truncate`}>{value}</p>
+      <p className={`${small ? 'text-base' : 'text-lg'} font-semibold text-[var(--text)] truncate`}>{value}</p>
       {sub && <p className="text-[11px] text-[var(--text-muted)] mt-0.5">{sub}</p>}
     </div>
   );
 }
 
 function LoadingBlock() {
-  return <KonzaLoader variant="page" />;
+  return <ModulePageSkeleton label="Chargement des absences" />;
 }
 function ErrorBlock() {
   return <div className="text-center py-20 text-[var(--text-muted)] text-sm">Impossible de charger ces données pour le moment.</div>;
@@ -981,5 +997,5 @@ export default function AbsencesEmployePage() {
   if (allowed !== true) {
     return <div className="p-10 text-center text-sm text-[var(--text-muted)]">Chargement…</div>;
   }
-  return <AbsencesEmployeContent />;
+  return <ModulePageFrame kind="dashboard"><AbsencesEmployeContent /></ModulePageFrame>;
 }

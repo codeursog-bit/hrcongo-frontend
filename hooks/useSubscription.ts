@@ -38,6 +38,7 @@ function isUserAuthenticated(): boolean {
 // ============================================================================
 
 export interface PlanLimits {
+  [key:string]: number | boolean | undefined;
   maxEmployees: number;
   maxUsers: number;
   maxDepartments: number;
@@ -80,7 +81,7 @@ export interface Plan {
 export interface Subscription {
   id: string;
   companyId: string;
-  plan: 'FREE' | 'BASIC' | 'PRO' | 'ENTERPRISE';
+  plan: 'FREE' | 'STARTER' | 'BASIC' | 'PRO' | 'ENTERPRISE';
   status: 'ACTIVE' | 'TRIALING' | 'PAST_DUE' | 'CANCELED' | 'PAUSED';
   startDate: string;
   currentPeriodStart: string;
@@ -97,6 +98,7 @@ export interface Subscription {
   willRevertToFree?: boolean;
   /** Renseigné si l'entreprise vient d'être rétrogradée faute de renouvellement (null si jamais payé) */
   downgradedAt?: string | null;
+  accessRestricted?: boolean;
 }
 
 export interface UsageStats {
@@ -127,7 +129,8 @@ export function useSubscription() {
       const response = await api.get<Subscription>('/subscriptions/current');
       return response as Subscription; // ✅ Cast explicite
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
+    refetchInterval: 30000,
     enabled: authenticated, // ⬅️ ne tire plus la requête si pas connecté
   });
 
@@ -146,7 +149,7 @@ export function useSubscription() {
   // ✅ Vérifier si une feature est disponible
   const hasFeature = (feature: keyof PlanLimits): boolean => {
     if (!subscription?.planDetails?.limits) return false;
-    return !!subscription.planDetails.limits[feature];
+    return subscription.planDetails.limits[feature] === true;
   };
 
   // ✅ Vérifier si on est dans la limite

@@ -1,4 +1,6 @@
 'use client';
+import { ModuleSelect } from '@/components/ui/ModuleSelect';
+
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Loader2, Calendar, Users, ChevronDown, ChevronUp, Briefcase, Globe } from 'lucide-react';
@@ -109,53 +111,53 @@ export default function EffectifMonthlyList({
   const hasMore = employees.length < total;
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
+    <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm overflow-hidden reports-card">
       <button
         onClick={() => setOpen((o) => !o)}
         className="w-full flex items-center justify-between px-5 py-4"
       >
-        <div className="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white">
-          <Users size={16} className="text-sky-500" />
+        <div className="flex items-center gap-2 text-sm font-semibold text-[var(--text)]">
+          <Users strokeWidth={1.5} size={16} className="text-[var(--action)]" />
           Liste des employés par mois / année
-          {total > 0 && <span className="text-xs font-normal text-gray-400">— {total} trouvé{total > 1 ? 's' : ''}</span>}
+          {total > 0 && <span className="text-xs font-normal text-[var(--text-secondary)]">— {total} trouvé{total > 1 ? 's' : ''}</span>}
         </div>
-        {open ? <ChevronUp size={18} className="text-gray-400" /> : <ChevronDown size={18} className="text-gray-400" />}
+        {open ? <ChevronUp strokeWidth={1.5} size={18} className="text-[var(--text-secondary)]" /> : <ChevronDown strokeWidth={1.5} size={18} className="text-[var(--text-secondary)]" />}
       </button>
 
       {open && (
-        <div className="px-5 pb-5 border-t border-gray-100 dark:border-gray-700 pt-4">
+        <div className="px-5 pb-5 border-t border-[var(--border)] pt-4">
           {/* Barre de contrôle : mois, année, recherche */}
           <div className="flex flex-wrap items-center gap-3 mb-4">
             <div className="flex items-center gap-2">
-              <Calendar size={15} className="text-gray-400" />
-              <select
+              <Calendar strokeWidth={1.5} size={15} className="text-[var(--text-secondary)]" />
+              <ModuleSelect
                 value={month}
                 onChange={(e) => setMonth(parseInt(e.target.value, 10))}
-                className="text-sm font-medium bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-gray-900 dark:text-white"
+                className="text-sm font-medium bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-3 py-2 text-[var(--text)]"
               >
                 {MONTHS.map((m) => (
                   <option key={m.value} value={m.value}>{m.label}</option>
                 ))}
-              </select>
-              <select
+              </ModuleSelect>
+              <ModuleSelect
                 value={year}
                 onChange={(e) => setYear(parseInt(e.target.value, 10))}
-                className="text-sm font-medium bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-gray-900 dark:text-white"
+                className="text-sm font-medium bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-3 py-2 text-[var(--text)]"
               >
                 {years.map((y) => (
                   <option key={y} value={y}>{y}</option>
                 ))}
-              </select>
+              </ModuleSelect>
             </div>
 
             <div className="relative flex-1 min-w-[220px]">
-              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Search strokeWidth={1.5} size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" />
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Rechercher un employé par nom..."
-                className="w-full text-sm bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl pl-9 pr-3 py-2 text-gray-900 dark:text-white placeholder:text-gray-400"
+                className="w-full text-sm bg-[var(--surface-2)] border border-[var(--border)] rounded-xl pl-9 pr-3 py-2 text-[var(--text)] placeholder:text-[var(--text-secondary)]"
               />
             </div>
           </div>
@@ -164,7 +166,7 @@ export default function EffectifMonthlyList({
           {loading && employees.length === 0 ? (
             <KonzaLoader variant="section" />
           ) : employees.length === 0 ? (
-            <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-10">
+            <p className="text-sm text-[var(--text-secondary)] text-center py-10">
               {debouncedSearch
                 ? `Aucun employé nommé "${debouncedSearch}" présent à cette période.`
                 : "Aucun employé présent à cette période."}
@@ -172,9 +174,9 @@ export default function EffectifMonthlyList({
           ) : (
             <>
               <div className="overflow-x-auto -mx-5 px-5">
-                <table className="w-full text-sm">
+                <div className="reports-table-region" role="region" aria-label="Données du rapport" tabIndex={0}><table data-report-table className="w-full text-sm reports-table">
                   <thead>
-                    <tr className="text-left text-xs uppercase text-gray-400 border-b border-gray-100 dark:border-gray-700">
+                    <tr className="text-left text-xs  text-[var(--text-secondary)] border-b border-[var(--border)]">
                       <th className="py-2 pr-3 font-semibold">Employé</th>
                       <th className="py-2 pr-3 font-semibold">Poste</th>
                       <th className="py-2 pr-3 font-semibold">Département</th>
@@ -185,26 +187,26 @@ export default function EffectifMonthlyList({
                   </thead>
                   <tbody>
                     {employees.map((e) => (
-                      <tr key={e.id} className="border-b border-gray-50 dark:border-gray-800 last:border-0">
+                      <tr key={e.id} className="border-b border-[var(--border)] last:border-0">
                         <td className="py-2.5 pr-3">
-                          <p className="font-bold text-gray-900 dark:text-white">{e.name}</p>
-                          <p className="text-xs text-gray-400">{e.employeeNumber}</p>
+                          <p className="font-semibold text-[var(--text)]">{e.name}</p>
+                          <p className="text-xs text-[var(--text-secondary)]">{e.employeeNumber}</p>
                         </td>
-                        <td className="py-2.5 pr-3 text-gray-600 dark:text-gray-300">{e.position || '—'}</td>
-                        <td className="py-2.5 pr-3 text-gray-600 dark:text-gray-300">{e.department || '—'}</td>
+                        <td className="py-2.5 pr-3 text-[var(--text-secondary)]">{e.position || '—'}</td>
+                        <td className="py-2.5 pr-3 text-[var(--text-secondary)]">{e.department || '—'}</td>
                         <td className="py-2.5 pr-3">
-                          <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-sky-50 dark:bg-sky-900/30 text-sky-600 dark:text-sky-300">
+                          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[var(--brand-soft)] text-[var(--action)]">
                             {e.contractType || '—'}
                           </span>
                         </td>
-                        <td className="py-2.5 pr-3 text-gray-600 dark:text-gray-300">{e.nationality || 'Non renseigné'}</td>
-                        <td className="py-2.5 pr-3 text-gray-500 dark:text-gray-400">
+                        <td className="py-2.5 pr-3 text-[var(--text-secondary)]">{e.nationality || 'Non renseigné'}</td>
+                        <td className="py-2.5 pr-3 text-[var(--text-secondary)]">
                           {e.hireDate ? new Date(e.hireDate).toLocaleDateString('fr-FR') : '—'}
                         </td>
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                </table></div>
               </div>
 
               {hasMore && (
@@ -212,9 +214,9 @@ export default function EffectifMonthlyList({
                   <button
                     onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
                     disabled={loading}
-                    className="text-sm font-bold text-sky-600 dark:text-sky-400 hover:text-sky-700 px-4 py-2 rounded-xl border border-sky-200 dark:border-sky-800 hover:bg-sky-50 dark:hover:bg-sky-900/20 flex items-center gap-2 disabled:opacity-50"
+                    className="text-sm font-semibold text-[var(--action)] hover:text-[var(--action)] px-4 py-2 rounded-xl border border-[var(--border)] hover:bg-[var(--brand-soft)] flex items-center gap-2 disabled:opacity-50"
                   >
-                    {loading ? <Loader2 size={14} className="animate-spin" /> : null}
+                    {loading ? <Loader2 strokeWidth={1.5} size={14} className="animate-spin" /> : null}
                     Voir plus ({employees.length} / {total})
                   </button>
                 </div>

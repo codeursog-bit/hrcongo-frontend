@@ -32,7 +32,7 @@ function InfoTile({ icon: Icon, label, value }: { icon: any; label: string; valu
       <div className="flex items-center gap-1.5 text-[11px] text-[var(--text-muted)] mb-1">
         <Icon size={12} /> {label}
       </div>
-      <div className="text-sm font-bold text-[var(--text)]">{value}</div>
+      <div className="text-sm font-semibold text-[var(--text)]">{value}</div>
     </div>
   );
 }
@@ -64,14 +64,14 @@ export default function EmployeeDepartureDrawer({ employeeId, onClose }: Props) 
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="absolute inset-0 bg-[rgb(0_0_0_/.48)]" onClick={onClose} />
       <motion.aside
         initial={{ x: 40, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         className="relative w-full max-w-md h-full bg-[var(--surface)] border-l border-[var(--border)] shadow-2xl overflow-y-auto"
       >
         <div className="sticky top-0 z-10 flex items-center justify-between px-5 py-4 bg-[var(--surface)] border-b border-[var(--border)]">
-          <h2 className="font-bold text-[var(--text)]">Fiche de l&apos;employé</h2>
+          <h2 className="font-semibold text-[var(--text)]">Fiche de l&apos;employé</h2>
           <button onClick={onClose} className="p-2 rounded-lg hover:bg-[var(--surface-2)]" aria-label="Fermer">
             <X size={18} />
           </button>
@@ -80,7 +80,7 @@ export default function EmployeeDepartureDrawer({ employeeId, onClose }: Props) 
         {loading ? (
           <KonzaLoader variant="section" />
         ) : error || !emp ? (
-          <p className="p-6 text-sm text-red-500">{error || 'Fiche introuvable.'}</p>
+          <p className="p-6 text-sm text-[var(--danger-text)]">{error || 'Fiche introuvable.'}</p>
         ) : (
           <div className="p-5 space-y-6">
             {/* Identité */}
@@ -89,12 +89,12 @@ export default function EmployeeDepartureDrawer({ employeeId, onClose }: Props) 
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={emp.photoUrl} alt="" className="w-16 h-16 rounded-2xl object-cover" />
               ) : (
-                <div className="w-16 h-16 rounded-2xl bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 flex items-center justify-center text-xl font-bold">
+                <div className="w-16 h-16 rounded-2xl bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  text-[var(--success-text)] flex items-center justify-center text-xl font-semibold">
                   {initials(emp.firstName, emp.lastName)}
                 </div>
               )}
               <div className="min-w-0">
-                <p className="text-lg font-bold text-[var(--text)] truncate">{emp.firstName} {emp.lastName}</p>
+                <p className="text-lg font-semibold text-[var(--text)] truncate">{emp.firstName} {emp.lastName}</p>
                 <p className="text-sm text-[var(--text-muted)] truncate">{emp.position}</p>
                 <p className="text-xs text-[var(--text-muted)] truncate">
                   {emp.department?.name || 'Sans département'} · Matricule {emp.employeeNumber}
@@ -115,15 +115,15 @@ export default function EmployeeDepartureDrawer({ employeeId, onClose }: Props) 
             {/* Totaux */}
             <div className="grid grid-cols-3 gap-3 text-center">
               <div className="rounded-xl border border-[var(--border)] p-3">
-                <p className="text-xl font-bold text-[var(--text)]">{data.totals.departures}</p>
+                <p className="text-xl font-semibold text-[var(--text)]">{data.totals.departures}</p>
                 <p className="text-[11px] text-[var(--text-muted)]">départs</p>
               </div>
               <div className="rounded-xl border border-[var(--border)] p-3">
-                <p className="text-xl font-bold text-[var(--text)]">{fmtDays(data.totals.totalDaysTaken)}</p>
+                <p className="text-xl font-semibold text-[var(--text)]">{fmtDays(data.totals.totalDaysTaken)}</p>
                 <p className="text-[11px] text-[var(--text-muted)]">jours posés</p>
               </div>
               <div className="rounded-xl border border-[var(--border)] p-3">
-                <p className="text-xl font-bold text-[var(--text)]">{fmtDays(data.totals.totalForfeited)}</p>
+                <p className="text-xl font-semibold text-[var(--text)]">{fmtDays(data.totals.totalForfeited)}</p>
                 <p className="text-[11px] text-[var(--text-muted)]">non pris (retour anticipé)</p>
               </div>
             </div>
@@ -131,12 +131,12 @@ export default function EmployeeDepartureDrawer({ employeeId, onClose }: Props) 
             {/* Prochains départs */}
             {data.upcoming.length > 0 && (
               <section>
-                <h3 className="text-xs font-bold uppercase tracking-wide text-[var(--text-muted)] mb-2">Départs planifiés</h3>
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)] mb-2">Départs planifiés</h3>
                 <ul className="space-y-2">
                   {data.upcoming.map((u: any) => (
-                    <li key={u.id} className="flex items-center justify-between rounded-xl bg-emerald-50 dark:bg-emerald-900/10 px-3 py-2 text-sm">
+                    <li key={u.id} className="flex items-center justify-between rounded-xl bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  px-3 py-2 text-sm">
                       <span className="text-[var(--text)]">{fmtDate(u.startDate)} → {fmtDate(u.endDate)}</span>
-                      <span className="text-xs font-semibold text-emerald-600">{fmtDays(u.daysCount)}</span>
+                      <span className="text-xs font-semibold text-[var(--success-text)]">{fmtDays(u.daysCount)}</span>
                     </li>
                   ))}
                 </ul>
@@ -145,7 +145,7 @@ export default function EmployeeDepartureDrawer({ employeeId, onClose }: Props) 
 
             {/* Historique */}
             <section>
-              <h3 className="text-xs font-bold uppercase tracking-wide text-[var(--text-muted)] mb-2">Départs effectués</h3>
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)] mb-2">Départs effectués</h3>
               {data.departures.length === 0 ? (
                 <p className="text-sm text-[var(--text-muted)]">Aucun départ enregistré.</p>
               ) : (
@@ -165,7 +165,7 @@ export default function EmployeeDepartureDrawer({ employeeId, onClose }: Props) 
                       <p className="text-[11px] text-[var(--text-muted)]">
                         Ancienneté au départ : {d.seniorityAtDeparture?.label}
                         {d.forfeitedDays > 0 && (
-                          <span className="text-amber-600"> · retour anticipé le {fmtDate(d.actualReturnDate)} ({fmtDays(d.forfeitedDays)} non pris)</span>
+                          <span className="text-[var(--warning-text)]"> · retour anticipé le {fmtDate(d.actualReturnDate)} ({fmtDays(d.forfeitedDays)} non pris)</span>
                         )}
                         {d.isCarryover && ' · rattrapage de reliquat'}
                       </p>

@@ -19,18 +19,18 @@ export default function PermissionReturnSummary({ ticket, audience }: { ticket: 
 
   if (state === 'CONFIRMED') {
     return (
-      <div className="rounded-xl border border-emerald-100 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-900/20 p-3.5 space-y-1.5">
-        <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300 text-sm font-bold">
+      <div className="rounded-xl border border-[var(--border)]  bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  p-3.5 space-y-1.5">
+        <div className="flex items-center gap-2 text-[var(--success-text)]  text-sm font-semibold">
           <ShieldCheck size={16} />
           Sorti de {fmtTime(dep)} à {fmtTime(ticket.actualReturnTime)}
           <span className="font-medium opacity-70">· {fmtDuration(dep, ticket.actualReturnTime)}</span>
         </div>
-        <p className="text-[11px] text-emerald-700/80 dark:text-emerald-300/80">
+        <p className="text-[11px] text-[var(--success-text)] ">
           Retour validé{ticket.returnConfirmedAt ? ` le ${fmtDateTime(ticket.returnConfirmedAt)}` : ''}
           {ticket.returnConfirmedByUser ? ` par ${personName(ticket.returnConfirmedByUser)}` : ''}
         </p>
         {ticket.timesAdjusted && (
-          <p className="text-[11px] flex items-center gap-1 text-violet-600 dark:text-violet-300"><PencilLine size={11} /> Heures ajustées par l’administration (voir l’historique)</p>
+          <p className="text-[11px] flex items-center gap-1 text-[var(--action)] "><PencilLine size={11} /> Heures ajustées par l’administration (voir l’historique)</p>
         )}
       </div>
     );
@@ -38,14 +38,14 @@ export default function PermissionReturnSummary({ ticket, audience }: { ticket: 
 
   if (state === 'PENDING_VALIDATION') {
     return (
-      <div className="rounded-xl border border-amber-100 dark:border-amber-900 bg-amber-50 dark:bg-amber-900/20 p-3.5">
-        <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300 text-sm font-bold">
+      <div className="rounded-xl border border-[var(--border)]  bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  p-3.5">
+        <div className="flex items-center gap-2 text-[var(--warning-text)]  text-sm font-semibold">
           <Hourglass size={16} />
           {audience === 'employee'
             ? `Retour déclaré à ${fmtTime(ticket.returnDeclaredAt)} — en attente de validation`
             : `Retour déclaré à ${fmtTime(ticket.returnDeclaredAt)} — à valider`}
         </div>
-        <p className="text-[11px] text-amber-700/80 dark:text-amber-300/80 mt-1">
+        <p className="text-[11px] text-[var(--warning-text)]  mt-1">
           {audience === 'employee'
             ? 'Votre retour sera enregistré dès qu’un administrateur ou le RH l’aura confirmé.'
             : `Sortie ${fmtTime(dep)} · retour prévu ${fmtTime(ticket.expectedReturnTime)}`}

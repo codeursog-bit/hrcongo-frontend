@@ -641,7 +641,7 @@ export default function PricingPage() {
               textTransform: 'uppercase',
               marginBottom: 12,
             }}>
-              Enterprise & grandes structures
+              Besoin spécifique
             </div>
             <h3 style={{
               fontSize: 26,
@@ -650,12 +650,11 @@ export default function PricingPage() {
               letterSpacing: '-0.03em',
               marginBottom: 12,
             }}>
-              Plus de 100 employés ?<br />Parlons-en directement.
+              Sur devis<br />Parlons de vos besoins.
             </h3>
             <p style={{ color: '#64748B', fontSize: 14, lineHeight: 1.7, marginBottom: 0 }}>
-              Groupes, hôtels, banques, ONG, sociétés minières — nous adaptons la plateforme à votre structure,
-              vos conventions collectives, vos sites GPS et votre volume de bulletins.
-              Tarif négocié, contrat annuel, gestionnaire dédié.
+              Une étude personnalisée selon vos besoins et votre effectif.
+              Le devis est établi par notre équipe ; aucun tarif personnalisé n’est appliqué sans validation.
             </p>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, flexShrink: 0 }}>

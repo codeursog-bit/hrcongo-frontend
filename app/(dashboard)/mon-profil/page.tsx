@@ -1,8 +1,15 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import { AppearanceLink } from '@/components/appearance/AppearanceLink';
+import React, { useEffect, useState, useId } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
+import Link from 'next/link';
+import { SettingsPage } from '@/components/templates';
+import { Card, Button, Skeleton } from '@/components/design-system/primitives';
+import { Modal, SuccessMark, useToast } from '@/components/design-system/feedback';
+import { ThemeControl } from '@/components/layout/ThemeControl';
+import './account.css';
 import {
   ArrowLeft, Loader2, Mail, Phone, MapPin, Calendar, Briefcase, Building2,
   Users, Heart, Flag, CreditCard, BadgeCheck, Hash,
@@ -14,9 +21,7 @@ import { api } from '@/services/api';
 import { PushToggleButton } from '@/components/PushNotificationBanner';
 import { useImageUpload } from '@/hooks/useImageUpload';
 import { NATIONALITY_OPTIONS } from '@/lib/nationalities';
-import { FancySelect } from '@/components/ui/FancySelect';
 import { invalidateMyEmployeePhotoCache } from '@/hooks/useMyEmployeePhoto';
-import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 // ============================================================================
 // Types
@@ -111,11 +116,11 @@ function formStateFromEmployee(e: EmployeeProfile): EditableFields {
 // ============================================================================
 
 const ROLE_META: Record<string, { label: string; color: string }> = {
-  SUPER_ADMIN: { label: 'Super Admin',    color: 'bg-amber-500' },
-  ADMIN:       { label: 'Administrateur', color: 'bg-amber-500' },
-  HR_MANAGER:  { label: 'Responsable RH', color: 'bg-emerald-500' },
-  MANAGER:     { label: 'Manager',        color: 'bg-amber-500' },
-  EMPLOYEE:    { label: 'Employé',        color: 'bg-emerald-500' },
+  SUPER_ADMIN: { label: 'Super Admin',    color: 'bg-[var(--mustard)]' },
+  ADMIN:       { label: 'Administrateur', color: 'bg-[var(--mustard)]' },
+  HR_MANAGER:  { label: 'Responsable RH', color: 'bg-[var(--green)]' },
+  MANAGER:     { label: 'Manager',        color: 'bg-[var(--mustard)]' },
+  EMPLOYEE:    { label: 'Employé',        color: 'bg-[var(--green)]' },
 };
 const CONTRACT_LABELS: Record<string, string> = {
   CDI: 'CDI', CDD: 'CDD', STAGE: 'Stagiaire', INTERIM: 'Intérimaire', CONSULTANT: 'Consultant', PRESTATAIRE: 'Prestataire',
@@ -157,45 +162,20 @@ const itemVariants = { hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 
 // Petits composants de champ
 // ============================================================================
 
-function Field({
-  icon: Icon, label, value, editing, children,
-}: { icon: React.ElementType; label: string; value?: React.ReactNode; editing?: boolean; children?: React.ReactNode }) {
-  return (
-    <div className="flex items-start gap-3 py-3">
-      <div className="w-8 h-8 rounded-lg bg-[var(--surface-2)] flex items-center justify-center shrink-0 mt-0.5">
-        <Icon size={15} className="text-[var(--text-muted)]" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-[11px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-1">{label}</p>
-        {editing ? children : <p className="text-sm font-semibold text-[var(--text)] truncate">{value ?? '—'}</p>}
-      </div>
-    </div>
-  );
+function Field({ icon: Icon, label, value, editing, children }: { icon: React.ElementType; label: string; value?: React.ReactNode; editing?: boolean; children?: React.ReactNode }) {
+  const id = useId();
+  return <div className="account-field"><Icon strokeWidth={1.5} size={18} aria-hidden="true" /><div>{editing ? <><label htmlFor={id}>{label}</label>{React.isValidElement(children) ? React.cloneElement(children as React.ReactElement<any>, { id }) : children}</> : <><span className="account-label">{label}</span><p>{value ?? '—'}</p></>}</div></div>;
 }
-
-const inputCls = "w-full px-3 py-2 text-sm rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500";
-
-// 🆕 Champ compact sans icône, pour les sections denses en grille
-function MiniField({
-  label, value, editing, children,
-}: { label: string; value?: React.ReactNode; editing?: boolean; children?: React.ReactNode }) {
-  return (
-    <div className="py-2">
-      <p className="text-[11px] font-bold uppercase tracking-wide text-[var(--text-muted)] mb-1">{label}</p>
-      {editing ? children : <p className="text-sm font-semibold text-[var(--text)] truncate">{value ?? '—'}</p>}
-    </div>
-  );
+const inputCls = 'k-input';
+function MiniField({ label, value, editing, children }: { label: string; value?: React.ReactNode; editing?: boolean; children?: React.ReactNode }) {
+  const id = useId(); const native = React.isValidElement(children) && ['input', 'select'].includes(String(children.type));
+  return <div className="account-mini" role={editing && !native ? 'group' : undefined} aria-label={editing && !native ? label : undefined}>{editing && native ? <label htmlFor={id}>{label}</label> : <span className="account-label">{label}</span>}{editing ? native ? React.cloneElement(children as React.ReactElement<any>, { id }) : children : <p>{value ?? '—'}</p>}</div>;
 }
-
 function Section({ title, children, dense }: { title: string; children: React.ReactNode; dense?: boolean }) {
-  return (
-    <motion.div variants={itemVariants} className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
-      <div className="px-5 py-3 border-b border-[var(--border)] bg-[var(--surface-2)]">
-        <h3 className="text-[11px] font-black uppercase tracking-widest text-[var(--text-muted)]">{title}</h3>
-      </div>
-      <div className={dense ? "px-5 py-4 grid grid-cols-1 sm:grid-cols-3 gap-x-6" : "px-5 py-1 divide-y divide-[var(--border)]"}>{children}</div>
-    </motion.div>
-  );
+  return <Card title={title} className="account-section"><div className={dense ? 'account-fields-grid' : 'account-fields'}>{children}</div></Card>;
+}
+function AccountSkeleton() {
+  return <div className="account template-page" role="status" aria-label="Chargement de votre compte"><Skeleton className="account-title-skeleton" /><Card><Skeleton className="account-profile-skeleton" /></Card><div className="account-columns">{[0,1].map(i => <Card key={i}><div className="k-stack">{[0,1,2,3].map(j => <Skeleton key={j} />)}</div></Card>)}</div></div>;
 }
 
 // ============================================================================
@@ -204,6 +184,8 @@ function Section({ title, children, dense }: { title: string; children: React.Re
 
 export default function MonProfilPage() {
   const router = useRouter();
+  const toast = useToast();
+  const reduceMotion = useReducedMotion();
   const [authUser, setAuthUser] = useState<AuthUser | null>(null);
   const [employee, setEmployee] = useState<EmployeeProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -295,6 +277,7 @@ export default function MonProfilPage() {
       invalidateMyEmployeePhotoCache(); // 🆕 sidebar/topnav récupèrent la nouvelle photo au prochain montage
       setIsEditing(false);
       setSaveSuccess(true);
+      toast('success', 'Profil enregistré', 'Vos informations ont été mises à jour.');
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (err: any) {
       setSaveError(err?.message || 'Erreur lors de l\'enregistrement. Réessayez.');
@@ -315,6 +298,7 @@ export default function MonProfilPage() {
     try {
       await api.post('/auth/change-password', { currentPassword: pwdForm.current, newPassword: pwdForm.next });
       setPwdSuccess(true);
+      toast('success', 'Mot de passe modifié');
     } catch (err: any) {
       setPwdError(err?.response?.data?.message || err?.message || 'Erreur lors du changement de mot de passe.');
     } finally {
@@ -331,7 +315,7 @@ export default function MonProfilPage() {
 
   if (isLoading) {
     return (
-      <KonzaLoader variant="page" />
+      <AccountSkeleton />
     );
   }
   if (!authUser) return null;
@@ -340,83 +324,103 @@ export default function MonProfilPage() {
   const fullName = employee ? `${employee.firstName} ${employee.lastName}` : `${authUser.firstName} ${authUser.lastName}`;
   const canEdit = !!employee?.selfServiceEnabled;
   const avatarSrc = imageUpload.preview || form.photoUrl || employee?.photoUrl
-    || `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=10B981&color=fff&size=256`;
+    || `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=F7874B&color=fff&size=256`;
 
   const pwdChecks = [/[A-Z]/.test(pwdForm.next), /[a-z]/.test(pwdForm.next), /[0-9]/.test(pwdForm.next), pwdForm.next.length >= 8];
   const pwdStrength = pwdChecks.filter(Boolean).length;
-  const pwdStrengthColor = pwdStrength === 4 ? 'bg-emerald-500 w-full' : pwdStrength >= 2 ? 'bg-yellow-500 w-2/3' : 'bg-red-500 w-1/3';
+  const pwdStrengthColor = pwdStrength === 4 ? 'bg-[var(--green)] w-full' : pwdStrength >= 2 ? 'bg-[var(--mustard)] w-2/3' : 'bg-[var(--danger)] w-1/3';
   const pwdStrengthLabel = pwdStrength === 4 ? '✓ Excellent' : pwdStrength >= 2 ? 'Moyen' : 'Faible';
 
   const set = <K extends keyof EditableFields>(key: K, value: EditableFields[K]) => setForm(f => ({ ...f, [key]: value }));
 
+  const profileActions = (<div className="account-save-actions">
+                {!isEditing ? (
+                  <Button
+                    onClick={canEdit ? startEditing : undefined}
+                    disabled={!canEdit}
+                    title={canEdit ? undefined : "Votre RH doit d'abord vous autoriser à modifier votre profil"}
+                    className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors ${
+                      canEdit
+                        ? 'bg-[var(--surface-2)] text-[var(--text)] border border-[var(--border)] hover:border-[var(--green)]/40'
+                        : 'bg-[var(--surface-2)] text-[var(--text-secondary)] opacity-50 cursor-not-allowed'
+                    }`}
+                  >
+                    <Pencil strokeWidth={1.5} size={13} /> Modifier mes informations
+                  </Button>
+                ) : (
+                  <div>
+                    <Button onClick={cancelEditing} disabled={isSaving} variant="secondary">
+                      <X strokeWidth={1.5} size={13} /> Annuler
+                    </Button>
+                    <Button onClick={handleSaveProfile} disabled={isSaving || imageUpload.uploading} className="k-button-primary">
+                      {isSaving ? <Loader2 strokeWidth={1.5} size={13} className="animate-spin" /> : <Save strokeWidth={1.5} size={13} />} Enregistrer
+                    </Button>
+                  </div>
+                )}
+                {!canEdit && (
+                  <p className="text-[11px] text-[var(--text-secondary)] text-center mt-2">Autorisation RH requise pour modifier votre profil.</p>
+                )}
+              </div>);
+
   return (
-    <div className="min-h-screen pb-20">
-      <PushToggleButton />
+    <div className="account">
 
-      <motion.div initial="hidden" animate="visible" variants={containerVariants} className="max-w-6xl mx-auto px-4 py-8 space-y-5">
-
-        <button onClick={() => router.back()} className="flex items-center gap-2 text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors">
-          <ArrowLeft size={16} /> Retour
-        </button>
-
-        <div>
-          <h1 className="text-2xl font-black text-[var(--text)]">Mon Profil</h1>
-          <p className="text-sm text-[var(--text-muted)]">Toutes vos informations personnelles et professionnelles.</p>
-        </div>
-
+      <SettingsPage title="Mon compte" description="Votre profil, vos accès et vos préférences." onSubmit={e => e.preventDefault()} saveAction={profileActions}
+        navigation={<nav className="account-nav" aria-label="Sections du compte"><a href="#profil">Profil</a><a href="#preferences">Préférences</a><a href="#acces">Mes accès</a><a href="#securite">Sécurité</a></nav>}>
+        <Button variant="ghost" onClick={() => router.back()}><ArrowLeft strokeWidth={1.5} size={16} /> Retour</Button>
+        <motion.div initial={reduceMotion ? false : 'hidden'} animate="visible" variants={containerVariants} className="account-stack">
         {/* ══ EN-TÊTE ══ */}
-        <motion.div variants={itemVariants} className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-6">
+        <motion.div variants={itemVariants} className="account-identity k-card" id="profil">
           <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4">
             <div className="relative shrink-0">
               <img src={avatarSrc} alt={fullName} className="w-20 h-20 rounded-2xl object-cover ring-4 ring-[var(--border)]" />
               {isEditing && (
-                <label className="absolute -bottom-1 -right-1 w-7 h-7 bg-emerald-500 rounded-full flex items-center justify-center cursor-pointer shadow-lg hover:bg-emerald-600 transition-colors">
-                  {imageUpload.uploading ? <Loader size={13} className="text-white animate-spin" /> : <Camera size={13} className="text-white" />}
-                  <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && imageUpload.handleFileSelect(e.target.files[0])} />
+                <label className="account-photo-picker absolute -bottom-1 -right-1 w-7 h-7 bg-[var(--green)] rounded-full flex items-center justify-center cursor-pointer shadow-lg hover:bg-[var(--green)] transition-colors">
+                  {imageUpload.uploading ? <Loader strokeWidth={1.5} size={13} className="text-white animate-spin" /> : <Camera strokeWidth={1.5} size={13} className="text-white" />}
+                  <input aria-label="Choisir une photo de profil" type="file" accept="image/*" className="sr-only" onChange={(e) => e.target.files?.[0] && imageUpload.handleFileSelect(e.target.files[0])} />
                 </label>
               )}
             </div>
 
             <div className="flex-1 min-w-0">
-              <h1 className="text-xl font-black text-[var(--text)]">{fullName}</h1>
-              <p className="text-sm text-[var(--text-muted)]">
+              <h2 className="text-xl font-semibold text-[var(--text)]">{fullName}</h2>
+              <p className="text-sm text-[var(--text-secondary)]">
                 {employee?.position ?? roleInfo.label}
-                {employee?.department && <span className="text-emerald-500"> · {employee.department.name}</span>}
+                {employee?.department && <span className="text-[var(--success-text)]"> · {employee.department.name}</span>}
               </p>
               {employee && (
-                <p className="text-[11px] font-bold uppercase tracking-widest text-[var(--text-muted)] flex items-center justify-center sm:justify-start gap-1 mt-2">
-                  <Hash size={10} /> ID Employé : {employee.employeeNumber}
+                <p className="text-xs font-medium text-[var(--text-secondary)] flex items-center justify-center sm:justify-start gap-1 mt-2">
+                  <Hash strokeWidth={1.5} size={10} /> ID Employé : {employee.employeeNumber}
                   {employee.hireDate && <span className="normal-case font-semibold">· Ancienneté : {seniority(employee.hireDate)}</span>}
                 </p>
               )}
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 mt-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Employé actif
-              </span>
+              <span className="account-role">{roleInfo.label}{employee?.status ? ' · ' + (employee.status === 'ACTIVE' ? 'Actif' : employee.status === 'INACTIVE' ? 'Inactif' : employee.status) : ''}</span>
             </div>
           </div>
         </motion.div>
 
         {saveError && (
-          <motion.div variants={itemVariants} className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-sm text-red-500">
-            <AlertCircle size={14} /> {saveError}
+          <motion.div variants={itemVariants} role="alert" className="k-error account-feedback">
+            <AlertCircle strokeWidth={1.5} size={14} /> {saveError}
           </motion.div>
         )}
         {saveSuccess && (
-          <motion.div variants={itemVariants} className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-sm text-emerald-500">
-            <CheckCircle2 size={14} /> Profil mis à jour avec succès.
+          <motion.div variants={itemVariants} role="status" className="account-success account-feedback">
+            <CheckCircle2 strokeWidth={1.5} size={14} /> Profil mis à jour avec succès.
           </motion.div>
         )}
 
         {/* ══ DEUX COLONNES DE SECTIONS ══ */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+        <div className="account-columns">
 
           {/* Colonne gauche */}
-          <div className="space-y-5">
+          <div className="account-stack">
             <Section title="Coordonnées">
+              {!hasEmployee && <p className="k-help">Aucune fiche employé associée. Contactez votre RH pour la compléter.</p>}
               <Field icon={Phone} label="Téléphone" value={employee?.phone} editing={isEditing}>
                 <input className={inputCls} value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="+242 06 000 00 00" />
               </Field>
-              <Field icon={Mail} label="Email" value={employee?.email} editing={isEditing}>
+              <Field icon={Mail} label="Email" value={employee?.email || authUser.email} editing={isEditing}>
                 <input className={inputCls} type="email" value={form.email} onChange={e => set('email', e.target.value)} />
               </Field>
               <Field icon={MapPin} label="Adresse" value={employee?.address} editing={isEditing}>
@@ -432,7 +436,7 @@ export default function MonProfilPage() {
               <MiniField label="Âge" value={employee?.dateOfBirth ? `${calculateAge(employee.dateOfBirth)} ans` : undefined} />
               <MiniField label="Lieu de naissance" value={employee?.placeOfBirth} />
               <MiniField label="Genre" value={employee?.gender ? GENDER_LABELS[employee.gender] : undefined} editing={isEditing}>
-                <FancySelect label="" value={form.gender} onChange={(v) => set('gender', v)} icon={Users} options={GENDER_OPTIONS} />
+                <select className={inputCls} value={form.gender} onChange={e => set('gender', e.target.value)}><option value="">Sélectionner…</option>{GENDER_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select>
               </MiniField>
               {/*
                 🔒 Situation familiale / Nombre d'enfants : jamais éditables par
@@ -445,7 +449,7 @@ export default function MonProfilPage() {
               <MiniField label="Situation familiale" value={employee?.maritalStatus ? MARITAL_OPTIONS.find(o => o.value === employee.maritalStatus)?.label : undefined} editing={false} />
               <MiniField label="Nombre d'enfants" value={employee?.numberOfChildren} editing={false} />
               <MiniField label="Nationalité" value={employee?.nationality} editing={isEditing}>
-                <FancySelect label="" value={form.nationality} onChange={(v) => set('nationality', v)} icon={Flag} placeholder="Sélectionner…" options={NATIONALITY_OPTIONS} />
+                <select className={inputCls} value={form.nationality} onChange={e => set('nationality', e.target.value)}><option value="">Sélectionner…</option>{NATIONALITY_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select>
               </MiniField>
               <MiniField label="Nom du père" value={employee?.fatherName} editing={isEditing}>
                 <input className={inputCls} value={form.fatherName} onChange={e => set('fatherName', e.target.value)} />
@@ -471,14 +475,14 @@ export default function MonProfilPage() {
               <MiniField label="Permis de conduire" value={employee?.hasDrivingLicense ? `Oui${employee?.drivingLicenseNumber ? ` — ${employee.drivingLicenseNumber}` : ''}` : (employee ? 'Non' : undefined)} editing={isEditing}>
                 <div className="space-y-2">
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={form.hasDrivingLicense} onChange={e => set('hasDrivingLicense', e.target.checked)} className="w-4 h-4 rounded border-[var(--border)] text-emerald-500 accent-emerald-500" />
+                    <input type="checkbox" checked={form.hasDrivingLicense} onChange={e => set('hasDrivingLicense', e.target.checked)} className="w-4 h-4 rounded border-[var(--border)] text-[var(--success-text)] accent-[var(--green)]" />
                     <span className="text-sm text-[var(--text)]">J'ai le permis</span>
                   </label>
                   {form.hasDrivingLicense && <input className={inputCls} value={form.drivingLicenseNumber} onChange={e => set('drivingLicenseNumber', e.target.value)} placeholder="N° du permis" />}
                 </div>
               </MiniField>
               <MiniField label="Taille de la tenue" value={employee?.uniformSize} editing={isEditing}>
-                <FancySelect label="" value={form.uniformSize} onChange={(v) => set('uniformSize', v)} icon={Shirt} placeholder="—" options={UNIFORM_OPTIONS} />
+                <select className={inputCls} value={form.uniformSize} onChange={e => set('uniformSize', e.target.value)}><option value="">—</option>{UNIFORM_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select>
               </MiniField>
               <MiniField label="Pointure" value={employee?.shoeSize} editing={isEditing}>
                 <input className={inputCls} value={form.shoeSize} onChange={e => set('shoeSize', e.target.value)} placeholder="42" />
@@ -487,7 +491,7 @@ export default function MonProfilPage() {
           </div>
 
           {/* Colonne droite */}
-          <div className="space-y-5">
+          <div className="account-stack">
             {hasEmployee && (
               <Section title="Informations professionnelles (gérées par les RH)">
                 <Field icon={Briefcase} label="Poste" value={employee?.position} />
@@ -512,127 +516,91 @@ export default function MonProfilPage() {
             </Section>
 
             {/* ══ SÉCURITÉ (mot de passe + déclencheur d'édition) ══ */}
-            <Section title="Sécurité du compte">
+            <div id="securite"><Section title="Sécurité du compte">
               <div className="flex items-center justify-between py-3 gap-3">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-8 h-8 rounded-lg bg-[var(--surface-2)] flex items-center justify-center shrink-0">
-                    <KeyRound size={15} className="text-[var(--text-muted)]" />
+                    <KeyRound strokeWidth={1.5} size={15} className="text-[var(--text-secondary)]" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[11px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-1">Mot de passe</p>
+                    <p className="text-xs font-medium text-[var(--text-secondary)] mb-1">Mot de passe</p>
                     <p className="text-sm font-semibold text-[var(--text)] tracking-widest">••••••••••••••</p>
                   </div>
                 </div>
-                <button onClick={() => setShowPwdModal(true)} className="shrink-0 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold transition-colors flex items-center gap-1.5">
-                  <Lock size={13} /> Modifier le mot de passe
-                </button>
+                <Button onClick={() => setShowPwdModal(true)} className="k-button-primary">
+                  <Lock strokeWidth={1.5} size={13} /> Modifier le mot de passe
+                </Button>
               </div>
 
-              <div className="py-3">
-                {!isEditing ? (
-                  <button
-                    onClick={canEdit ? startEditing : undefined}
-                    disabled={!canEdit}
-                    title={canEdit ? undefined : "Votre RH doit d'abord vous autoriser à modifier votre profil"}
-                    className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors ${
-                      canEdit
-                        ? 'bg-[var(--surface-2)] text-[var(--text)] border border-[var(--border)] hover:border-emerald-500/40'
-                        : 'bg-[var(--surface-2)] text-[var(--text-muted)] opacity-50 cursor-not-allowed'
-                    }`}
-                  >
-                    <Pencil size={13} /> Modifier mes informations
-                  </button>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <button onClick={cancelEditing} disabled={isSaving} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-[var(--border)] text-xs font-bold text-[var(--text-muted)] hover:bg-[var(--surface-2)] transition-colors disabled:opacity-50">
-                      <X size={13} /> Annuler
-                    </button>
-                    <button onClick={handleSaveProfile} disabled={isSaving || imageUpload.uploading} className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl transition-colors disabled:opacity-50">
-                      {isSaving ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />} Enregistrer
-                    </button>
-                  </div>
-                )}
-                {!canEdit && (
-                  <p className="text-[11px] text-[var(--text-muted)] text-center mt-2">Autorisation RH requise pour modifier votre profil.</p>
-                )}
-              </div>
-            </Section>
+              <div className="account-access"><Link href="/parametres/securite">Authentification à deux facteurs <span aria-hidden="true">↗</span></Link><p>Configurer la protection de connexion dans les réglages de sécurité.</p></div>
+            </Section></div>
           </div>
         </div>
       </motion.div>
+        <AppearanceLink />
+        <div id="preferences"><Section title="Préférences"><ThemeControl /><div className="account-preference"><span>Langue de l’interface</span><strong>Français</strong><p className="k-help">Le choix d’autres langues sera disponible prochainement.</p></div><div className="account-preference"><span>Afficher mon anniversaire à mes collègues</span><p className="k-help">Réglage bientôt disponible. Aucun changement de visibilité n’est appliqué ici.</p></div></Section></div>
+        <div id="acces"><Section title="Mes accès"><div className="account-access"><Link href="/ma-paie">Ma paie et mes bulletins <span aria-hidden="true">↗</span></Link><p>Consulter les bulletins disponibles dans votre espace paie.</p></div><div className="account-access"><Link href="/ma-signature">Ma signature personnelle <span aria-hidden="true">↗</span></Link><p>L’enregistrement reste soumis au droit de signature accordé par votre administration.</p></div></Section></div>
+        <Section title="Notifications"><div className="account-access"><Link href="/notifications">Voir mes notifications <span aria-hidden="true">↗</span></Link><p>Retrouver les informations et les demandes qui vous concernent.</p></div><div className="account-push"><p>Notifications sur cet appareil</p><PushToggleButton /></div></Section>
+      </SettingsPage>
 
       {/* ── MODALE MOT DE PASSE ── */}
-      {showPwdModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 w-full max-w-md shadow-2xl">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
-                <KeyRound size={18} className="text-emerald-500" />
-              </div>
-              <div>
-                <h3 className="font-bold text-[var(--text)]">Changer le mot de passe</h3>
-                <p className="text-xs text-[var(--text-muted)]">Votre session reste active après le changement</p>
-              </div>
-            </div>
-
+      {showPwdModal && <Modal open={showPwdModal} onClose={closePwdModal} title="Changer le mot de passe"><div className="account-password"><p className="k-help">Votre session reste active après le changement.</p>
             {pwdSuccess ? (
               <div className="text-center py-4">
-                <CheckCircle2 size={40} className="text-emerald-500 mx-auto mb-3" />
+                <SuccessMark />
                 <p className="font-bold text-[var(--text)] mb-1">Mot de passe modifié !</p>
-                <p className="text-xs text-[var(--text-muted)] mb-5">Votre mot de passe a été mis à jour avec succès.</p>
-                <button onClick={closePwdModal} className="px-6 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 font-bold text-sm hover:bg-emerald-500/20 transition-colors">
+                <p className="text-xs text-[var(--text-secondary)] mb-5">Votre mot de passe a été mis à jour avec succès.</p>
+                <Button onClick={closePwdModal} variant="secondary">
                   Fermer
-                </button>
+                </Button>
               </div>
             ) : (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-[11px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-1.5">Mot de passe actuel</label>
-                  <div className="flex items-center gap-2 px-3.5 py-3 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] focus-within:border-emerald-500 transition-colors">
-                    <Lock size={14} className="text-[var(--text-muted)]" />
-                    <input type={showCurrent ? 'text' : 'password'} value={pwdForm.current} onChange={e => setPwdForm(f => ({ ...f, current: e.target.value }))} placeholder="Votre mot de passe actuel" className="flex-1 bg-transparent text-[var(--text)] text-sm outline-none" />
-                    <button type="button" onClick={() => setShowCurrent(v => !v)} className="text-[var(--text-muted)] hover:text-[var(--text)]"> {showCurrent ? <EyeOff size={14} /> : <Eye size={14} />}</button>
+                  <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">Mot de passe actuel</label>
+                  <div className="flex items-center gap-2 px-3.5 py-3 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] focus-within:border-[var(--brand)] transition-colors">
+                    <Lock strokeWidth={1.5} size={14} className="text-[var(--text-secondary)]" />
+                    <input type={showCurrent ? 'text' : 'password'} aria-label="Mot de passe actuel" autoComplete="current-password" value={pwdForm.current} onChange={e => setPwdForm(f => ({ ...f, current: e.target.value }))} placeholder="Votre mot de passe actuel" className="flex-1 bg-transparent text-[var(--text)] text-sm outline-none" />
+                    <Button variant="ghost" aria-label={showCurrent ? 'Masquer le mot de passe' : 'Afficher le mot de passe'} type="button" onClick={() => setShowCurrent(v => !v)}> {showCurrent ? <EyeOff strokeWidth={1.5} size={14} /> : <Eye strokeWidth={1.5} size={14} />}</Button>
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-1.5">Nouveau mot de passe</label>
-                  <div className="flex items-center gap-2 px-3.5 py-3 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] focus-within:border-emerald-500 transition-colors">
-                    <Lock size={14} className="text-[var(--text-muted)]" />
-                    <input type={showNext ? 'text' : 'password'} value={pwdForm.next} onChange={e => setPwdForm(f => ({ ...f, next: e.target.value }))} placeholder="Min. 8 car., 1 majuscule, 1 chiffre" className="flex-1 bg-transparent text-[var(--text)] text-sm outline-none" />
-                    <button type="button" onClick={() => setShowNext(v => !v)} className="text-[var(--text-muted)] hover:text-[var(--text)]">{showNext ? <EyeOff size={14} /> : <Eye size={14} />}</button>
+                  <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">Nouveau mot de passe</label>
+                  <div className="flex items-center gap-2 px-3.5 py-3 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] focus-within:border-[var(--brand)] transition-colors">
+                    <Lock strokeWidth={1.5} size={14} className="text-[var(--text-secondary)]" />
+                    <input type={showNext ? 'text' : 'password'} aria-label="Nouveau mot de passe" autoComplete="new-password" value={pwdForm.next} onChange={e => setPwdForm(f => ({ ...f, next: e.target.value }))} placeholder="Min. 8 car., 1 majuscule, 1 chiffre" className="flex-1 bg-transparent text-[var(--text)] text-sm outline-none" />
+                    <Button variant="ghost" aria-label={showNext ? 'Masquer le mot de passe' : 'Afficher le mot de passe'} type="button" onClick={() => setShowNext(v => !v)}>{showNext ? <EyeOff strokeWidth={1.5} size={14} /> : <Eye strokeWidth={1.5} size={14} />}</Button>
                   </div>
                   {pwdForm.next && (
                     <div className="mt-2 flex items-center gap-2">
                       <div className="flex-1 h-1 bg-[var(--surface-2)] rounded-full overflow-hidden"><div className={`h-full rounded-full transition-all ${pwdStrengthColor}`} /></div>
-                      <span className="text-[11px] text-[var(--text-muted)]">{pwdStrengthLabel}</span>
+                      <span className="text-[11px] text-[var(--text-secondary)]">{pwdStrengthLabel}</span>
                     </div>
                   )}
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-1.5">Confirmer le nouveau mot de passe</label>
-                  <div className={`flex items-center gap-2 px-3.5 py-3 rounded-xl border bg-[var(--surface-2)] focus-within:border-emerald-500 transition-colors ${pwdForm.confirm && pwdForm.confirm !== pwdForm.next ? 'border-red-500' : 'border-[var(--border)]'}`}>
-                    <Lock size={14} className="text-[var(--text-muted)]" />
-                    <input type={showConfirmPwd ? 'text' : 'password'} value={pwdForm.confirm} onChange={e => setPwdForm(f => ({ ...f, confirm: e.target.value }))} placeholder="Répétez le nouveau mot de passe" className="flex-1 bg-transparent text-[var(--text)] text-sm outline-none" />
-                    <button type="button" onClick={() => setShowConfirmPwd(v => !v)} className="text-[var(--text-muted)] hover:text-[var(--text)]">{showConfirmPwd ? <EyeOff size={14} /> : <Eye size={14} />}</button>
+                  <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">Confirmer le nouveau mot de passe</label>
+                  <div className={`flex items-center gap-2 px-3.5 py-3 rounded-xl border bg-[var(--surface-2)] focus-within:border-[var(--brand)] transition-colors ${pwdForm.confirm && pwdForm.confirm !== pwdForm.next ? 'border-[var(--danger)]' : 'border-[var(--border)]'}`}>
+                    <Lock strokeWidth={1.5} size={14} className="text-[var(--text-secondary)]" />
+                    <input type={showConfirmPwd ? 'text' : 'password'} aria-label="Confirmer le nouveau mot de passe" autoComplete="new-password" value={pwdForm.confirm} onChange={e => setPwdForm(f => ({ ...f, confirm: e.target.value }))} placeholder="Répétez le nouveau mot de passe" className="flex-1 bg-transparent text-[var(--text)] text-sm outline-none" />
+                    <Button variant="ghost" aria-label={showConfirmPwd ? 'Masquer le mot de passe' : 'Afficher le mot de passe'} type="button" onClick={() => setShowConfirmPwd(v => !v)}>{showConfirmPwd ? <EyeOff strokeWidth={1.5} size={14} /> : <Eye strokeWidth={1.5} size={14} />}</Button>
                   </div>
                 </div>
                 {pwdError && (
-                  <div className="flex items-start gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/30">
-                    <AlertCircle size={14} className="text-red-500 mt-0.5 shrink-0" />
-                    <p className="text-xs text-red-500">{pwdError}</p>
+                  <div role="alert" className="k-error account-feedback">
+                    <AlertCircle strokeWidth={1.5} size={14} className="text-[var(--danger-text)] mt-0.5 shrink-0" />
+                    <p className="text-xs text-[var(--danger-text)]">{pwdError}</p>
                   </div>
                 )}
                 <div className="flex gap-3 pt-2">
-                  <button onClick={closePwdModal} className="flex-1 py-2.5 rounded-xl border border-[var(--border)] text-sm text-[var(--text-muted)] hover:bg-[var(--surface-2)] transition-colors font-medium">Annuler</button>
-                  <button onClick={handlePasswordChange} disabled={pwdLoading || !pwdForm.current || !pwdForm.next || !pwdForm.confirm} className="flex-1 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-bold transition-colors flex items-center justify-center gap-2">
-                    {pwdLoading ? <><Loader2 size={14} className="animate-spin" /> Modification…</> : 'Modifier'}
-                  </button>
+                  <Button onClick={closePwdModal} variant="secondary">Annuler</Button>
+                  <Button onClick={handlePasswordChange} disabled={pwdLoading || !pwdForm.current || !pwdForm.next || !pwdForm.confirm} className="k-button-primary">
+                    {pwdLoading ? <><Loader2 strokeWidth={1.5} size={14} className="animate-spin" /> Modification…</> : 'Modifier'}
+                  </Button>
                 </div>
               </div>
             )}
-          </div>
-        </div>
-      )}
+      </div></Modal>}
     </div>
   );
 }

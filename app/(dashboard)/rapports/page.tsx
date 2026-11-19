@@ -1,4 +1,8 @@
 'use client';
+import { chartTheme } from '@/lib/chart-theme';
+import '@/components/reports/reports.css';
+import { ReportLaunchpad } from '@/components/reports/ReportLaunchpad';
+
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -9,49 +13,66 @@ import {
   Receipt, Landmark, FileX, FilePlus, AlertTriangle,
   LayoutDashboard, ClipboardList, DollarSign,
   UsersRound, UmbrellaOff, BookOpen, Building2, UserCircle, BarChart3,
+  type LucideIcon,
 } from 'lucide-react';
 import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
 } from 'recharts';
+import { useReducedMotion } from 'framer-motion';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import RapportsSubNav from '@/components/RapportsSubNav';
 import YearlyEvolutionPanel from '@/components/YearlyEvolutionPanel';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import { Badge, Button, Card, EmptyState, Select } from '@/components/design-system/primitives';
+import { DashboardPage } from '@/components/templates';
 
-const C = { sky:'#0EA5E9', emerald:'#10B981', amber:'#F59E0B', rose:'#EF4444', violet:'#8B5CF6' };
+const C = {
+  sky: 'var(--brand)',
+  emerald: 'var(--green)',
+  amber: 'var(--mustard)',
+  rose: 'var(--danger)',
+  violet: 'var(--text-secondary)',
+};
 const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 const fcfa = (v:number) => v>=1_000_000 ? `${(v/1_000_000).toFixed(2)} M FCFA` : `${Math.round(v).toLocaleString('fr-FR')} FCFA`;
 
-function KpiCard({ icon:Icon, label, value, sub, color=C.sky, trend, trendUp }:any) {
+function KpiCard({ icon:Icon, label, value, sub, color=C.sky, trend, trendUp }: {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+  sub?: string;
+  color?: string;
+  trend?: string;
+  trendUp?: boolean;
+}) {
   return (
-    <div className="bg-[var(--surface)] rounded-2xl p-5 border border-[var(--border)] shadow-sm flex flex-col gap-3">
+    <Card className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{background:color+'20'}}>
-          <Icon size={20} style={{color}} />
-        </div>
+        <Icon size={19} strokeWidth={1.5} style={{color}} aria-hidden="true" />
         {trend && (
-          <span className={`text-xs font-bold flex items-center gap-1 ${trendUp?'text-emerald-500':'text-red-500'}`}>
-            {trendUp?<TrendingUp size={12}/>:<TrendingDown size={12}/>} {trend}
+          <span className={`text-xs font-semibold flex items-center gap-1 ${trendUp?'text-[var(--green)]':'text-[var(--danger)]'}`}>
+            {trendUp?<TrendingUp size={12} strokeWidth={1.5}/>:<TrendingDown size={12} strokeWidth={1.5}/>} {trend}
           </span>
         )}
       </div>
       <div>
-        <p className="text-2xl font-black text-[var(--text)] tracking-tight">{value}</p>
-        <p className="text-xs font-bold text-[var(--text-muted)] mt-0.5">{label}</p>
-        {sub && <p className="text-[11px] text-[var(--text-muted)] mt-0.5">{sub}</p>}
+        <p className="text-2xl font-semibold text-[var(--text)] tracking-tight tabular-nums">{value}</p>
+        <p className="text-xs font-semibold text-[var(--text-secondary)] mt-1">{label}</p>
+        {sub && <p className="text-[11px] text-[var(--text-secondary)] mt-1">{sub}</p>}
       </div>
-    </div>
+    </Card>
   );
 }
 
-function SectionTitle({children}:any) {
-  return <h2 className="text-sm font-black uppercase tracking-widest text-[var(--text-muted)] mb-3">{children}</h2>;
+function SectionTitle({children}: {children: React.ReactNode}) {
+  return <h2 className="text-base font-semibold text-[var(--text)] mb-4">{children}</h2>;
 }
 
 export default function RapportsPage() {
   const { bp } = useBasePath();
   const router = useRouter();
+  const prefersReducedMotion = useReducedMotion();
   const now = new Date();
   const [month,setMonth] = useState(now.getMonth()+1);
   const [year,setYear]   = useState(now.getFullYear());
@@ -113,78 +134,58 @@ export default function RapportsPage() {
   const otByEmp      = overtime?.byEmployee||[];
   const monthLabel   = MONTHS[month-1]+' '+year;
 
+  const periodFilter = (
+    <div className="flex flex-wrap items-end gap-3" aria-label="Période du rapport">
+      <Select label="Mois" id="reports-month" value={month} onChange={e=>setMonth(+e.target.value)}>
+        {MONTHS.map((m,i)=><option key={i} value={i+1}>{m}</option>)}
+      </Select>
+      <Select label="Année" id="reports-year" value={year} onChange={e=>setYear(+e.target.value)}>
+        {[year-1,year,year+1].map(y=><option key={y} value={y}>{y}</option>)}
+      </Select>
+    </div>
+  );
+
   return (
-    <div className="max-w-[1600px] mx-auto pb-20 space-y-8 px-4">
-
-      {/* EN-TÊTE */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-black text-[var(--text)] tracking-tight">Tableau de bord RH</h1>
-          <p className="text-[var(--text-muted)] text-sm mt-1">Vue d'ensemble · Norme OHADA · Droit du travail Congo</p>
-        </div>
-        <div className="flex items-center gap-2 bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-2.5 shadow-sm">
-          <span className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wide">Période :</span>
-          <select value={month} onChange={e=>setMonth(+e.target.value)} className="bg-transparent font-bold text-[var(--text)] text-sm outline-none cursor-pointer">
-            {MONTHS.map((m,i)=><option key={i} value={i+1}>{m}</option>)}
-          </select>
-          <select value={year} onChange={e=>setYear(+e.target.value)} className="bg-transparent font-bold text-[var(--text)] text-sm outline-none cursor-pointer">
-            {[year-1,year,year+1].map(y=><option key={y} value={y}>{y}</option>)}
-          </select>
-        </div>
-      </div>
-
-      {/* NAV */}
-      <RapportsSubNav active="/rapports" />
+    <div className="reports-workspace reports-overview max-w-[1600px] mx-auto w-full pb-20">
+      <DashboardPage
+        title="Rapports RH"
+        description="L’essentiel des effectifs, de la paie et des échéances de votre entreprise."
+        action={periodFilter}
+        navigation={<RapportsSubNav active="/rapports" />}
+      >
+      <ReportLaunchpad />
 
       {/* ═══ KPI GLOBAUX ═══════════════════════════════════════════════════ */}
-      <div>
+      <section className="col-span-full">
         <SectionTitle>Indicateurs globaux</SectionTitle>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <KpiCard icon={Users}   label="Effectif actif"        value={effectif.toString()}      color={C.sky}     sub="Salariés en activité"/>
-          <KpiCard icon={Wallet}  label="Masse salariale brute" value={fcfa(masseBrute)}          color={C.emerald} sub={`Cpte 661100 · ${monthLabel}`}/>
-          <KpiCard icon={Calendar}label="Congés en cours"       value={congesActifs.toString()}  color={C.amber}   sub="Approuvés actifs"/>
+          <KpiCard icon={Users}   label="Effectif actif"        value={overview ? effectif.toString() : '—'}      color={C.sky}     sub={overview ? 'Salariés en activité' : 'Données indisponibles'}/>
+          <KpiCard icon={Wallet}  label="Masse salariale brute" value={overview ? fcfa(masseBrute) : '—'}          color={C.emerald} sub={overview ? monthLabel : 'Données indisponibles'}/>
+          <KpiCard icon={Calendar}label="Congés en cours"       value={overview ? congesActifs.toString() : '—'}  color={C.amber}   sub="Approuvés actifs"/>
           <KpiCard icon={Clock}   label="H. Sup ce mois"        value={otSummary?.totalHours?`${Number(otSummary.totalHours).toFixed(0)}h`:'—'} color={C.violet} sub={otSummary?.totalAmount||'—'}/>
         </div>
-      </div>
+      </section>
 
       {/* ═══ CNSS MENSUELLE ════════════════════════════════════════════════ */}
-      <div>
+      <section className="col-span-full">
         <SectionTitle>Déclaration CNSS — {monthLabel} · Taux officiels cnss.cg</SectionTitle>
         {cnssLoad ? (
           <KonzaLoader variant="section" />
         ) : !cnssTotal ? (
-          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-8 text-center text-[var(--text-muted)]">
-            <Landmark size={36} className="mx-auto mb-3 opacity-30"/>
-            <p className="font-medium">Aucun bulletin généré pour {monthLabel}</p>
-            <p className="text-sm mt-1">Générez d'abord les bulletins de paie pour ce mois.</p>
-          </div>
+          <Card><EmptyState title={`Aucun bulletin généré pour ${monthLabel}`} icon={Landmark}>Générez d'abord les bulletins de paie pour ce mois.</EmptyState></Card>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
             {/* Part salariale — Cpte 431100 */}
-            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5 shadow-sm">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 rounded-xl bg-[var(--brand-soft)] flex items-center justify-center"><Users size={16} className="text-[var(--brand)]"/></div>
-                <div>
-                  <p className="text-sm font-bold text-[var(--text)]">Part Salariale</p>
-                  <p className="text-[11px] text-[var(--text-muted)]">Compte 431100 · 4% plafonné</p>
-                </div>
-              </div>
+            <Card title="Part salariale" action={<Badge tone="neutral">Cpte 431100 · 4% plafonné</Badge>}>
               <div className="space-y-2">
-                <div className="flex justify-between text-sm"><span className="text-[var(--text-muted)]">Retraite salarié (4%)</span><span className="font-bold">{Math.round(cnssTotal.cnssSalarial).toLocaleString('fr-FR')} FCFA</span></div>
-                <div className="flex justify-between text-sm border-t border-[var(--border)] pt-2"><span className="font-bold text-[var(--text)]">Total salarié</span><span className="font-black text-[var(--brand)]">{Math.round(cnssTotal.cnssSalarial).toLocaleString('fr-FR')} FCFA</span></div>
+                <div className="flex justify-between text-sm"><span className="text-[var(--text-secondary)]">Retraite salarié (4%)</span><span className="font-medium tabular-nums">{Math.round(cnssTotal.cnssSalarial).toLocaleString('fr-FR')} FCFA</span></div>
+                <div className="flex justify-between text-sm border-t border-[var(--border)] pt-2"><span className="font-semibold text-[var(--text)]">Total salarié</span><span className="font-semibold text-[var(--brand-strong)] tabular-nums">{Math.round(cnssTotal.cnssSalarial).toLocaleString('fr-FR')} FCFA</span></div>
               </div>
-            </div>
+            </Card>
 
             {/* Part patronale — Cpte 664100 / 431300 */}
-            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5 shadow-sm">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 rounded-xl bg-[var(--accent-2-soft)] flex items-center justify-center"><Shield size={16} className="text-[var(--accent-2)]"/></div>
-                <div>
-                  <p className="text-sm font-bold text-[var(--text)]">Part Patronale</p>
-                  <p className="text-[11px] text-[var(--text-muted)]">Cptes 664100 / 431300 · 20,28% max</p>
-                </div>
-              </div>
+            <Card title="Part patronale" action={<Badge tone="neutral">Cptes 664100 / 431300 · 20,28% max</Badge>}>
               <div className="space-y-1.5">
                 {[
                   {label:'Retraite employeur (8%)',     val:cnssTotal.cnssEmployerPension},
@@ -195,58 +196,50 @@ export default function RapportsPage() {
                     <span>{r.label}</span><span className="font-semibold text-[var(--text)]">{Math.round(r.val).toLocaleString('fr-FR')}</span>
                   </div>
                 ))}
-                <div className="flex justify-between text-sm border-t border-[var(--border)] pt-2"><span className="font-bold text-[var(--text)]">Total patronal</span><span className="font-black text-[var(--accent-2)]">{Math.round(cnssTotal.cnssEmployeurTotal).toLocaleString('fr-FR')} FCFA</span></div>
+                <div className="flex justify-between text-sm border-t border-[var(--border)] pt-2"><span className="font-semibold text-[var(--text)]">Total patronal</span><span className="font-semibold text-[var(--mustard)] tabular-nums">{Math.round(cnssTotal.cnssEmployeurTotal).toLocaleString('fr-FR')} FCFA</span></div>
               </div>
-            </div>
+            </Card>
 
             {/* TUS + Totaux — Cpte 641300 */}
-            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5 shadow-sm">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-900/20 flex items-center justify-center"><Receipt size={16} className="text-amber-600"/></div>
-                <div>
-                  <p className="text-sm font-bold text-[var(--text)]">TUS + Récapitulatif</p>
-                  <p className="text-[11px] text-[var(--text-muted)]">Compte 641300 · 7,5% brut</p>
-                </div>
-              </div>
+            <Card title="TUS + récapitulatif" action={<Badge tone="neutral">Cpte 641300 · 7,5% brut</Badge>}>
               <div className="space-y-1.5">
                 <div className="flex justify-between text-xs text-[var(--text-muted)]"><span>TUS-DGI (2,025%)</span><span className="font-semibold">{Math.round(cnssTotal.tusDgi).toLocaleString('fr-FR')}</span></div>
                 <div className="flex justify-between text-xs text-[var(--text-muted)]"><span>TUS-CNSS (5,475%)</span><span className="font-semibold">{Math.round(cnssTotal.tusCnss).toLocaleString('fr-FR')}</span></div>
                 <div className="border-t border-[var(--border)] pt-2 space-y-1">
-                  <div className="flex justify-between text-sm"><span className="text-[var(--text-muted)]">Total CNSS global</span><span className="font-bold">{Math.round(cnssTotal.totalCotisations).toLocaleString('fr-FR')} FCFA</span></div>
-                  <div className="flex justify-between text-sm"><span className="font-bold text-[var(--text)]">À verser CNSS</span><span className="font-black text-emerald-600">{Math.round(cnssTotal.totalAVerserCnss).toLocaleString('fr-FR')} FCFA</span></div>
-                  <div className="flex justify-between text-sm"><span className="font-bold text-[var(--text)]">À verser DGI (TUS)</span><span className="font-black text-amber-600">{Math.round(cnssTotal.totalAVerserDgi).toLocaleString('fr-FR')} FCFA</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-[var(--text-muted)]">Total CNSS global</span><span className="font-semibold">{Math.round(cnssTotal.totalCotisations).toLocaleString('fr-FR')} FCFA</span></div>
+                  <div className="flex justify-between text-sm"><span className="font-semibold text-[var(--text)]">À verser CNSS</span><span className="font-semibold text-[var(--green)] tabular-nums">{Math.round(cnssTotal.totalAVerserCnss).toLocaleString('fr-FR')} FCFA</span></div>
+                  <div className="flex justify-between text-sm"><span className="font-semibold text-[var(--text)]">À verser DGI (TUS)</span><span className="font-semibold text-[var(--mustard)] tabular-nums">{Math.round(cnssTotal.totalAVerserDgi).toLocaleString('fr-FR')} FCFA</span></div>
                 </div>
               </div>
-            </div>
+            </Card>
 
             {/* Alerte NIU */}
             {cnss?.totals?.missingCnss>0 && (
-              <div className="lg:col-span-3 flex items-start gap-3 p-4 rounded-xl bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-700">
-                <AlertTriangle size={18} className="text-amber-500 mt-0.5 shrink-0"/>
+              <div className="lg:col-span-3 flex items-start gap-3 p-4 rounded-[var(--radius-control)]" style={{background:'color-mix(in srgb, var(--mustard) 12%, transparent)'}}>
+                <AlertTriangle strokeWidth={1.5} size={18} className="text-[var(--mustard)] mt-0.5 shrink-0"/>
                 <div className="flex-1">
-                  <p className="text-sm font-bold text-amber-800 dark:text-amber-300">{cnss.totals.missingCnss} salarié(s) sans numéro CNSS</p>
-                  <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">La déclaration nominative DNMS sera incomplète. Complétez les fiches employés avant dépôt.</p>
+                  <p className="text-sm font-semibold text-[var(--text)]">{cnss.totals.missingCnss} salarié(s) sans numéro CNSS</p>
+                  <p className="text-xs text-[var(--text-secondary)] mt-1">La déclaration nominative DNMS sera incomplète. Complétez les fiches employés avant dépôt.</p>
                 </div>
-                <button onClick={()=>router.push(bp('/cnss-declaration'))} className="shrink-0 px-3 py-1.5 rounded-lg bg-amber-500 text-white text-xs font-bold hover:bg-amber-400 transition-colors">Voir</button>
+                <Button variant="secondary" className="shrink-0" onClick={()=>router.push(bp('/cnss-declaration'))}>Voir</Button>
               </div>
             )}
 
             <div className="lg:col-span-3 flex justify-end">
-              <button onClick={()=>router.push(bp('/cnss-declaration'))} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--brand)] text-white text-sm font-bold hover:opacity-90 transition-colors shadow-sm">
-                <FileText size={15}/> Déclaration CNSS complète <ChevronRight size={14}/>
-              </button>
+              <Button onClick={()=>router.push(bp('/cnss-declaration'))}>
+                <FileText size={16} strokeWidth={1.5}/> Déclaration CNSS complète <ChevronRight size={16} strokeWidth={1.5}/>
+              </Button>
             </div>
           </div>
         )}
-      </div>
+      </section>
 
       {/* ═══ HEURES SUPPLÉMENTAIRES ════════════════════════════════════════ */}
-      <div>
+      <section className="col-span-full">
         <SectionTitle>Heures supplémentaires — {monthLabel} · Décret 78-360</SectionTitle>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
-          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5 shadow-sm space-y-4">
-            <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wide">Récapitulatif</p>
+          <Card title="Récapitulatif" className="space-y-4">
             {[
               {label:'Total heures',       val:otSummary?`${Number(otSummary.totalHours).toFixed(1)} h`:'—',                          color:C.violet},
               {label:'Coût total H.Sup',   val:otSummary?.totalAmount||'—',                                                            color:C.amber},
@@ -254,105 +247,103 @@ export default function RapportsPage() {
             ].map(row=>(
               <div key={row.label} className="flex justify-between items-center py-2 border-b border-[var(--border)] last:border-0">
                 <span className="text-sm text-[var(--text-muted)]">{row.label}</span>
-                <span className="font-bold" style={{color:row.color}}>{row.val}</span>
+                <span className="font-semibold" style={{color:row.color}}>{row.val}</span>
               </div>
             ))}
-            <div className="p-3 rounded-xl bg-[var(--accent-2-soft)] border border-[var(--accent-2)]/30">
-              <p className="text-[11px] font-bold text-[var(--accent-2)] mb-1">Barème légal Congo</p>
-              <div className="grid grid-cols-2 gap-x-3 text-[10px] text-[var(--text-muted)]">
+            <div className="p-3 rounded-[var(--radius-control)] bg-[var(--accent-2-soft)]">
+              <p className="text-[11px] font-semibold text-[var(--mustard)] mb-1">Barème légal Congo</p>
+              <div className="grid grid-cols-2 gap-x-3 text-[11px] text-[var(--text-secondary)]">
                 <span>41–48h → +10%</span><span>49–54h → +25%</span>
                 <span>55–60h → +50%</span><span>&gt;60h → +100%</span>
               </div>
             </div>
-          </div>
+          </Card>
 
-          <div className="lg:col-span-2 bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm overflow-hidden">
-            <div className="px-5 py-3.5 border-b border-[var(--border)] bg-[var(--surface-2)]/50">
-              <p className="text-sm font-bold text-[var(--text)]">Détail par salarié</p>
-            </div>
+          <Card title="Détail par salarié" className="lg:col-span-2">
             {otByEmp.length===0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-[var(--text-muted)]">
-                <Clock size={32} className="mb-2 opacity-30"/>
-                <p className="text-sm">Aucune heure supplémentaire ce mois</p>
-              </div>
+              <EmptyState title="Aucune heure supplémentaire ce mois" icon={Clock}>Les heures supplémentaires apparaîtront ici pour la période choisie.</EmptyState>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-[var(--surface-2)]/50 text-xs font-bold text-[var(--text-muted)] uppercase">
+              <>
+                <div className="k-table-desktop overflow-x-auto">
+                  <div className="reports-table-region" role="region" aria-label="Données du rapport" tabIndex={0}><table data-report-table className="k-table reports-table">
+                    <thead>
                     <tr>
-                      <th className="px-4 py-3 text-left">Salarié</th>
-                      <th className="px-3 py-3 text-center">+10%</th>
-                      <th className="px-3 py-3 text-center">+25%</th>
-                      <th className="px-3 py-3 text-center">+50%</th>
-                      <th className="px-3 py-3 text-center">+100%</th>
-                      <th className="px-4 py-3 text-right">Montant</th>
+                      <th scope="col">Salarié</th>
+                      <th scope="col" className="text-center">+10%</th>
+                      <th scope="col" className="text-center">+25%</th>
+                      <th scope="col" className="text-center">+50%</th>
+                      <th scope="col" className="text-center">+100%</th>
+                      <th scope="col" className="text-right">Montant</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[var(--border)]">
+                  <tbody>
                     {otByEmp.slice(0,12).map((emp:any,i:number)=>(
-                      <tr key={i} className="hover:bg-[var(--surface-2)]/30 transition-colors">
-                        <td className="px-4 py-2.5 font-semibold text-[var(--text)] text-sm">{emp.name||emp.employeeName||'—'}</td>
-                        <td className="px-3 py-2.5 text-center text-xs text-[var(--text-muted)]">{emp.overtime10?`${emp.overtime10}h`:'—'}</td>
-                        <td className="px-3 py-2.5 text-center text-xs text-[var(--text-muted)]">{emp.overtime25?`${emp.overtime25}h`:'—'}</td>
-                        <td className="px-3 py-2.5 text-center text-xs text-[var(--text-muted)]">{emp.overtime50?`${emp.overtime50}h`:'—'}</td>
-                        <td className="px-3 py-2.5 text-center text-xs text-[var(--text-muted)]">{emp.overtime100?`${emp.overtime100}h`:'—'}</td>
-                        <td className="px-4 py-2.5 text-right font-bold text-[var(--accent-2)]">{emp.amount?Math.round(emp.amount).toLocaleString('fr-FR')+' F':'—'}</td>
+                      <tr key={i}>
+                        <td className="font-medium text-[var(--text)]">{emp.name||emp.employeeName||'—'}</td>
+                        <td className="text-center text-[var(--text-secondary)]">{emp.overtime10?`${emp.overtime10}h`:'—'}</td>
+                        <td className="text-center text-[var(--text-secondary)]">{emp.overtime25?`${emp.overtime25}h`:'—'}</td>
+                        <td className="text-center text-[var(--text-secondary)]">{emp.overtime50?`${emp.overtime50}h`:'—'}</td>
+                        <td className="text-center text-[var(--text-secondary)]">{emp.overtime100?`${emp.overtime100}h`:'—'}</td>
+                        <td className="text-right font-semibold text-[var(--mustard)]">{emp.amount?Math.round(emp.amount).toLocaleString('fr-FR')+' F':'—'}</td>
                       </tr>
                     ))}
                   </tbody>
-                </table>
-              </div>
+                  </table></div>
+                </div>
+                <ul className="k-table-mobile" aria-label="Heures supplémentaires par salarié">
+                  {otByEmp.slice(0,12).map((emp:any,i:number)=>(
+                    <li key={i}>
+                      <dl>
+                        <div><dt>Salarié</dt><dd className="font-medium">{emp.name||emp.employeeName||'—'}</dd></div>
+                        <div><dt>Majoration +10%</dt><dd>{emp.overtime10?`${emp.overtime10}h`:'—'}</dd></div>
+                        <div><dt>Majoration +25%</dt><dd>{emp.overtime25?`${emp.overtime25}h`:'—'}</dd></div>
+                        <div><dt>Majoration +50%</dt><dd>{emp.overtime50?`${emp.overtime50}h`:'—'}</dd></div>
+                        <div><dt>Majoration +100%</dt><dd>{emp.overtime100?`${emp.overtime100}h`:'—'}</dd></div>
+                        <div><dt>Montant</dt><dd className="font-semibold text-[var(--mustard)]">{emp.amount?Math.round(emp.amount).toLocaleString('fr-FR')+' F':'—'}</dd></div>
+                      </dl>
+                    </li>
+                  ))}
+                </ul>
+              </>
             )}
-          </div>
+          </Card>
         </div>
-      </div>
+      </section>
 
       {/* ═══ CONGÉS ══════════════════════════════════════════════════════ */}
-      <div>
+      <section className="col-span-full">
         <SectionTitle>Congés — Code du travail Congo (art. 113) · Cpte 4281</SectionTitle>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-3">
           {(leaves?.kpi||[{label:'Total demandes',value:'—'},{label:'Solde moyen',value:'—'}]).map((kpi:any,i:number)=>(
-            <div key={i} className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5 shadow-sm">
-              <p className="text-2xl font-black text-[var(--text)]">{kpi.value}</p>
-              <p className="text-xs font-bold text-[var(--text-muted)] mt-1">{kpi.label}</p>
-            </div>
+            <Card key={i}>
+              <p className="text-2xl font-semibold text-[var(--text)] tabular-nums">{kpi.value}</p>
+              <p className="text-xs font-semibold text-[var(--text-secondary)] mt-2">{kpi.label}</p>
+            </Card>
           ))}
         </div>
         {leaves?.distribution?.length>0 && (
           <div className="flex flex-wrap gap-3 mb-3">
             {leaves.distribution.map((d:any,i:number)=>(
-              <div key={i} className="bg-[var(--surface)] rounded-xl border border-[var(--border)] px-4 py-2 flex items-center gap-3">
-                <span className="text-xs font-bold text-[var(--text-muted)]">{d.name}</span>
-                <span className="text-sm font-black text-[var(--text)]">{d.value}</span>
-              </div>
+              <Badge key={i} tone="neutral">{d.name} · {d.value}</Badge>
             ))}
           </div>
         )}
         <div className="flex justify-end">
-          <button onClick={()=>router.push(bp('/rapports/analyse-conges'))} className="flex items-center gap-2 px-4 py-2 rounded-xl border border-[var(--border)] text-sm font-bold text-[var(--text-muted)] hover:bg-[var(--surface-2)] transition-colors">
-            Analyse détaillée <ChevronRight size={14}/>
-          </button>
+          <Button variant="secondary" onClick={()=>router.push(bp('/rapports/analyse-conges'))}>
+            Analyse détaillée <ChevronRight size={16} strokeWidth={1.5}/>
+          </Button>
         </div>
-      </div>
+      </section>
 
       {/* ═══ CONTRATS & RUPTURES ════════════════════════════════════════ */}
-      <div>
+      <section className="col-span-full">
         <SectionTitle>Contrats &amp; Ruptures · Code du travail Congo</SectionTitle>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
           {/* Périodes d'essai */}
-          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm overflow-hidden">
-            <div className="px-5 py-3.5 border-b border-[var(--border)] bg-[var(--surface-2)]/50 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <BadgeCheck size={16} className="text-[var(--brand)]"/>
-                <p className="text-sm font-bold text-[var(--text)]">Périodes d'essai actives</p>
-              </div>
-              <span className="text-xs font-bold text-[var(--brand)] bg-[var(--brand-soft)] px-2 py-1 rounded-full">{trials.length}</span>
-            </div>
+          <Card title="Périodes d'essai actives" action={<Badge tone="info">{trials.length}</Badge>}>
             {trials.length===0 ? (
-              <div className="flex flex-col items-center justify-center py-10 text-[var(--text-muted)]">
-                <BadgeCheck size={28} className="mb-2 opacity-30"/><p className="text-sm">Aucune période d'essai en cours</p>
-              </div>
+              <EmptyState title="Aucune période d'essai en cours" icon={BadgeCheck}>Les échéances actives apparaîtront ici.</EmptyState>
             ) : (
               <div className="divide-y divide-[var(--border)]">
                 {trials.slice(0,7).map((t:any,i:number)=>{
@@ -366,30 +357,21 @@ export default function RapportsPage() {
                         <p className="text-xs text-[var(--text-muted)]">{t.position} · {t.contractType}</p>
                       </div>
                       {days!==null && (
-                        <span className={`text-xs font-bold px-2 py-1 rounded-full ${urgent?'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400':'bg-amber-100 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400'}`}>
+                        <Badge tone={urgent ? 'danger' : 'warning'}>
                           {days<=0?'Expirée':`${days}j restants`}
-                        </span>
+                        </Badge>
                       )}
                     </div>
                   );
                 })}
               </div>
             )}
-          </div>
+          </Card>
 
           {/* CDD expirant */}
-          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm overflow-hidden">
-            <div className="px-5 py-3.5 border-b border-[var(--border)] bg-[var(--surface-2)]/50 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <AlertCircle size={16} className="text-amber-500"/>
-                <p className="text-sm font-bold text-[var(--text)]">CDD arrivant à terme</p>
-              </div>
-              <span className="text-xs font-bold text-amber-500 bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded-full">{expiring.length}</span>
-            </div>
+          <Card title="CDD arrivant à terme" action={<Badge tone="warning">{expiring.length}</Badge>}>
             {expiring.length===0 ? (
-              <div className="flex flex-col items-center justify-center py-10 text-[var(--text-muted)]">
-                <CheckCircle size={28} className="mb-2 opacity-30"/><p className="text-sm">Aucun CDD en fin de contrat imminent</p>
-              </div>
+              <EmptyState title="Aucun CDD en fin de contrat imminent" icon={CheckCircle}>Les contrats à échéance apparaîtront ici.</EmptyState>
             ) : (
               <div className="divide-y divide-[var(--border)]">
                 {expiring.slice(0,7).map((c:any,i:number)=>{
@@ -403,39 +385,39 @@ export default function RapportsPage() {
                       </div>
                       <div className="text-right">
                         <p className="text-xs text-[var(--text-muted)]">{end?end.toLocaleDateString('fr-FR'):'—'}</p>
-                        {days!==null&&<span className={`text-[11px] font-bold ${days<=30?'text-red-500':'text-amber-500'}`}>{days<=0?'Expiré':`${days}j`}</span>}
+                        {days!==null&&<Badge tone={days<=30 ? 'danger' : 'warning'}>{days<=0?'Expiré':`${days}j`}</Badge>}
                       </div>
                     </div>
                   );
                 })}
               </div>
             )}
-            <div className="px-5 py-3 border-t border-[var(--border)] flex gap-2">
-              <button onClick={()=>router.push(bp('/contrats'))} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border border-[var(--border)] text-xs font-bold text-[var(--text-muted)] hover:bg-[var(--surface-2)] transition-colors">
-                <FilePlus size={13}/> Tous les contrats
-              </button>
-              <button onClick={()=>router.push(bp('/contrats/rupture'))} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border border-red-200 dark:border-red-800 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors">
-                <FileX size={13}/> Ruptures de contrat
-              </button>
+            <div className="flex flex-wrap gap-2 mt-4">
+              <Button variant="secondary" onClick={()=>router.push(bp('/contrats'))}>
+                <FilePlus size={16} strokeWidth={1.5}/> Tous les contrats
+              </Button>
+              <Button variant="secondary" onClick={()=>router.push(bp('/contrats/rupture'))}>
+                <FileX size={16} strokeWidth={1.5}/> Ruptures de contrat
+              </Button>
             </div>
-          </div>
+          </Card>
         </div>
-      </div>
+      </section>
 
       {/* ═══ GRAPHIQUE MASSE SALARIALE ══════════════════════════════════ */}
       {salaryTrend.length>0 && (
-        <div>
+        <section className="col-span-full">
           <SectionTitle>Évolution masse salariale — Compte 661100 · {year}</SectionTitle>
-          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5 shadow-sm">
+          <Card>
             <div className="flex items-center justify-between mb-4">
               <div>
-                <p className="text-sm font-bold text-[var(--text)]">Brut · Net · Charges (M FCFA)</p>
-                <p className="text-xs text-[var(--text-muted)]">OHADA classe 6 — 6 derniers mois</p>
+                <p className="text-sm font-semibold text-[var(--text)]">Brut · Net · Charges (M FCFA)</p>
+                <p className="text-xs text-[var(--text-secondary)] mt-1">OHADA classe 6 — 6 derniers mois</p>
               </div>
-              <div className="flex items-center gap-4 text-xs text-[var(--text-muted)]">
-                <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full inline-block" style={{background:C.sky}}/> Brut</span>
-                <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full inline-block" style={{background:C.emerald}}/> Net</span>
-                <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full inline-block" style={{background:C.rose}}/> Charges</span>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[var(--text-secondary)]" aria-label="Légende du graphique">
+                <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full inline-block" style={{background:C.sky}}/> Brut</span>
+                <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full inline-block" style={{background:C.emerald}}/> Net</span>
+                <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full inline-block" style={{background:C.amber}}/> Charges</span>
               </div>
             </div>
             <ResponsiveContainer width="100%" height={200}>
@@ -443,28 +425,24 @@ export default function RapportsPage() {
                 <defs>
                   <linearGradient id="gBrut" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={C.sky} stopOpacity={0.3}/><stop offset="95%" stopColor={C.sky} stopOpacity={0.02}/></linearGradient>
                   <linearGradient id="gNet" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={C.emerald} stopOpacity={0.3}/><stop offset="95%" stopColor={C.emerald} stopOpacity={0.02}/></linearGradient>
-                  <linearGradient id="gCharges" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={C.rose} stopOpacity={0.2}/><stop offset="95%" stopColor={C.rose} stopOpacity={0.02}/></linearGradient>
+                  <linearGradient id="gCharges" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={C.amber} stopOpacity={0.2}/><stop offset="95%" stopColor={C.amber} stopOpacity={0.02}/></linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" opacity={0.4}/>
-                <XAxis dataKey="month" tick={{fontSize:11,fill:'#64748b'}} axisLine={false} tickLine={false}/>
-                <YAxis tick={{fontSize:11,fill:'#64748b'}} axisLine={false} tickLine={false}/>
-                <Tooltip contentStyle={{background:'#1e293b',border:'1px solid rgba(255,255,255,0.1)',borderRadius:10,fontSize:12}} labelStyle={{color:'#e2e8f0',fontWeight:700}} formatter={(v:any)=>[`${Number(v).toFixed(2)} M FCFA`]}/>
-                <Area type="monotone" dataKey="brut"    stroke={C.sky}     fill="url(#gBrut)"    strokeWidth={2} dot={false}/>
-                <Area type="monotone" dataKey="net"     stroke={C.emerald} fill="url(#gNet)"     strokeWidth={2} dot={false}/>
-                <Area type="monotone" dataKey="charges" stroke={C.rose}    fill="url(#gCharges)" strokeWidth={2} dot={false}/>
+                <XAxis dataKey="month" tick={{fontSize:11,fill:'var(--text-secondary)'}} axisLine={false} tickLine={false}/>
+                <YAxis tick={{fontSize:11,fill:'var(--text-secondary)'}} axisLine={false} tickLine={false}/>
+                <Tooltip contentStyle={chartTheme.tooltip} labelStyle={{color:'var(--text)',fontWeight:600}} formatter={(v:any)=>[`${Number(v).toFixed(2)} M FCFA`]}/>
+                <Area activeDot={{r:5,stroke:chartTheme.surface,strokeWidth:3}} type="monotone" dataKey="brut"    stroke={C.sky}     fill="url(#gBrut)"    strokeWidth={2} dot={false} isAnimationActive={prefersReducedMotion !== true} animationDuration={700}/>
+                <Area activeDot={{r:5,stroke:chartTheme.surface,strokeWidth:3}} type="monotone" dataKey="net"     stroke={C.emerald} fill="url(#gNet)"     strokeWidth={2} dot={false} isAnimationActive={prefersReducedMotion !== true} animationDuration={700}/>
+                <Area activeDot={{r:5,stroke:chartTheme.surface,strokeWidth:3}} type="monotone" dataKey="charges" stroke={C.amber}   fill="url(#gCharges)" strokeWidth={2} dot={false} isAnimationActive={prefersReducedMotion !== true} animationDuration={700}/>
               </AreaChart>
             </ResponsiveContainer>
-          </div>
-        </div>
+          </Card>
+        </section>
       )}
 
       {/* ═══ RÉFÉRENCE OHADA ══════════════════════════════════════════════ */}
-      <div className="bg-[var(--brand-soft)] border border-[var(--brand)]/30 rounded-2xl p-5">
-        <div className="flex items-start gap-3">
-          <Shield size={18} className="text-[var(--brand)] mt-0.5 shrink-0"/>
-          <div>
-            <p className="text-sm font-bold text-[var(--text)] mb-2">Plan comptable OHADA — Comptes paie utilisés dans les exports</p>
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
+      <section className="col-span-full">
+        <Card title="Plan comptable OHADA — Comptes paie utilisés dans les exports">
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
               {[
                 {compte:'661100',lib:'Salaires bruts'},
                 {compte:'431100',lib:'CNSS salarié'},
@@ -475,19 +453,21 @@ export default function RapportsPage() {
                 {compte:'664100',lib:'Charges pat.'},
                 {compte:'4281',  lib:'Congés à payer'},
               ].map(c=>(
-                <div key={c.compte} className="bg-[var(--surface)] rounded-xl px-3 py-2 border border-[var(--brand)]/30">
-                  <p className="text-xs font-mono font-black text-[var(--brand)]">{c.compte}</p>
-                  <p className="text-[10px] text-[var(--text-muted)] mt-0.5">{c.lib}</p>
+                <div key={c.compte} className="bg-[var(--surface-2)] rounded-[var(--radius-control)] px-3 py-3">
+                  <p className="text-xs font-mono font-semibold text-[var(--brand-strong)]">{c.compte}</p>
+                  <p className="text-[11px] text-[var(--text-secondary)] mt-1">{c.lib}</p>
                 </div>
               ))}
             </div>
-          </div>
-        </div>
-      </div>
+        </Card>
+      </section>
 
       {/* ═══ ÉVOLUTION PLURIANNUELLE (en bas de page) ══════════════════════ */}
-      <YearlyEvolutionPanel />
+      <section className="col-span-full">
+        <YearlyEvolutionPanel />
+      </section>
 
+      </DashboardPage>
     </div>
   );
 }

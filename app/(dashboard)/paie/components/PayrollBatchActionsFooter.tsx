@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2, DollarSign, Ban, X, Printer, Loader2 } from 'lucide-react';
+import { CheckCircle2, DollarSign, Ban, X, Printer } from 'lucide-react';
+import { Button } from '@/components/design-system/primitives';
 
 interface PayrollBatchActionsFooterProps {
   selectedCount: number;
@@ -40,7 +41,7 @@ export function PayrollBatchActionsFooter({
           {/* Gauche : Info sélection */}
           <div className="flex items-center gap-3">
             <div className="text-sm">
-              <span className="font-bold text-[var(--text)] text-lg">
+              <span className="font-semibold text-[var(--text)] text-lg">
                 {selectedCount} bulletin{selectedCount > 1 ? 's' : ''} sélectionné{selectedCount > 1 ? 's' : ''}
               </span>
               <p className="text-[var(--text-muted)] text-xs">
@@ -52,59 +53,68 @@ export function PayrollBatchActionsFooter({
           {/* Droite : Boutons */}
           <div className="flex items-center gap-4 w-full md:w-auto">
             {isLoading ? (
-              <div className="flex-1 md:flex-none px-6 py-3 bg-[var(--surface-2)] text-[var(--text-muted)] font-bold rounded-xl flex items-center justify-center gap-2">
-                <div className="w-4 h-4 border-2 border-[var(--border)] border-t-transparent rounded-full animate-spin" />
+              <Button variant="secondary" loading className="flex-1 md:flex-none">
                 Traitement...
-              </div>
+              </Button>
             ) : (
               <>
-                {/* ✅ Bouton Imprimer tout (gris/neutre — action de lecture, pas de changement de statut) */}
                 {onPrintAll && (
-                  <button
+                  <Button
+                    type="button"
+                    variant="secondary"
                     onClick={onPrintAll}
-                    disabled={isPrinting}
-                    className="flex-1 md:flex-none px-6 py-3 bg-[var(--surface-2)] hover:opacity-80 text-[var(--text)] font-bold rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                    loading={isPrinting}
+                    aria-label={isPrinting ? 'Préparation de l’impression' : 'Imprimer les bulletins sélectionnés'}
+                    className="flex-1 md:flex-none"
                   >
-                    {isPrinting ? <Loader2 size={18} className="animate-spin" /> : <Printer size={18} />}
+                    {!isPrinting && <Printer size={18} aria-hidden="true" />}
                     <span className="hidden sm:inline">{isPrinting ? 'Préparation…' : 'Imprimer'}</span>
-                  </button>
+                  </Button>
                 )}
 
-                {/* ✅ Bouton Valider (vert) */}
-                <button 
+                <Button
+                  type="button"
+                  variant="primary"
                   onClick={onValidate}
-                  className="flex-1 md:flex-none px-6 py-3 bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-400 font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+                  aria-label="Valider les bulletins sélectionnés"
+                  className="flex-1 md:flex-none"
                 >
-                  <CheckCircle2 size={18} />
+                  <CheckCircle2 size={18} aria-hidden="true" />
                   <span className="hidden sm:inline">Valider</span>
-                </button>
+                </Button>
 
-                {/* ✅ Bouton À payer (ambre) */}
-                <button 
+                <Button
+                  type="button"
+                  variant="primary"
                   onClick={onPay}
-                  className="flex-1 md:flex-none px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl transition-colors shadow-lg flex items-center justify-center gap-2"
+                  aria-label="Passer les bulletins sélectionnés à payer"
+                  className="flex-1 md:flex-none"
                 >
-                  <DollarSign size={18} />
+                  <DollarSign size={18} aria-hidden="true" />
                   <span className="hidden sm:inline">À payer</span>
-                </button>
+                </Button>
 
-                {/* ✅ Bouton Annuler (rouge) */}
-                <button 
+                <Button
+                  type="button"
+                  variant="ghost"
                   onClick={onCancel}
-                  className="flex-1 md:flex-none px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl transition-colors shadow-lg flex items-center justify-center gap-2"
+                  aria-label="Annuler les bulletins sélectionnés"
+                  className="flex-1 md:flex-none text-[var(--danger-text)]"
                 >
-                  <Ban size={18} />
+                  <Ban size={18} aria-hidden="true" />
                   <span className="hidden sm:inline">Annuler</span>
-                </button>
+                </Button>
 
-                {/* Bouton Fermer */}
-                <button 
+                <Button
+                  type="button"
+                  variant="ghost"
                   onClick={onClear}
-                  className="p-3 bg-[var(--surface-2)] hover:opacity-80 text-[var(--text-muted)] rounded-xl transition-colors"
                   title="Désélectionner tout"
+                  aria-label="Désélectionner tous les bulletins"
+                  className="shrink-0"
                 >
-                  <X size={18} />
-                </button>
+                  <X size={18} aria-hidden="true" />
+                </Button>
               </>
             )}
           </div>

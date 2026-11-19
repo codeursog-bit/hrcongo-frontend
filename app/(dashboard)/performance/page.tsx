@@ -1,4 +1,6 @@
 'use client';
+import { ModuleSelect } from '@/components/ui/ModuleSelect';
+
 
 // ============================================================================
 // 📄 app/(dashboard)/performance/page.tsx — VERSION AMÉLIORÉE
@@ -21,6 +23,7 @@ import { useBasePath } from '@/hooks/useBasePath';
 import { CreateReviewModal } from '@/components/performance/CreateReviewModal';
 import { ReviewDetailModal } from '@/components/performance/ReviewDetailModal';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import { PerformanceFrame as ModulePageFrame } from '@/components/performance/PerformanceFrame';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -68,18 +71,18 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 const STATUS_CFG = {
-  DRAFT:        { label: 'Brouillon',    bg: 'bg-gray-100 dark:bg-gray-700',          text: 'text-gray-500 dark:text-gray-300',         dot: 'bg-gray-400' },
-  SUBMITTED:     { label: 'Soumise',      bg: 'bg-amber-100 dark:bg-amber-900/30',      text: 'text-amber-700 dark:text-amber-400',        dot: 'bg-amber-500' },
-  ACKNOWLEDGED: { label: 'Réceptionnée', bg: 'bg-emerald-100 dark:bg-emerald-900/30',  text: 'text-emerald-700 dark:text-emerald-400',    dot: 'bg-emerald-500' },
+  DRAFT:        { label: 'Brouillon',    bg: 'bg-[var(--surface-2)]',          text: 'text-[var(--text-secondary)]',         dot: 'bg-[var(--surface-2)]' },
+  SUBMITTED:     { label: 'Soumise',      bg: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]',      text: 'text-[var(--warning-text)]',        dot: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]' },
+  ACKNOWLEDGED: { label: 'Réceptionnée', bg: 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]',  text: 'text-[var(--success-text)]',    dot: 'bg-[var(--green)]' },
 };
 
 const getScore = (r: Review) => Number(r.overallScore ?? r.rating ?? 0);
 
 const scoreBg = (s: number) => {
-  if (s >= 4) return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
-  if (s >= 3) return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
-  if (s >= 2) return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400';
-  return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+  if (s >= 4) return 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)]';
+  if (s >= 3) return 'bg-[var(--brand-soft)] text-[var(--action)]';
+  if (s >= 2) return 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)]';
+  return 'bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] text-[var(--danger-text)]';
 };
 
 const scoreLabel = (s: number) => {
@@ -96,7 +99,7 @@ const fmt = (d?: string) =>
 function Avatar({ emp }: { emp: Review['employee'] }) {
   const initials = `${emp?.firstName?.[0] ?? ''}${emp?.lastName?.[0] ?? ''}`.toUpperCase();
   return (
-    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-purple-700 flex items-center justify-center font-bold text-white text-sm flex-shrink-0 shadow-sm">
+    <div className="w-10 h-10 rounded-full flex items-center justify-center font-semibold text-[var(--text)] text-sm flex-shrink-0 shadow-sm performance-icon-wrap bg-[var(--surface)] text-[var(--text)] performance-card">
       {emp?.photoUrl
         ? <img src={emp.photoUrl} className="w-full h-full rounded-full object-cover" alt="" />
         : initials}
@@ -122,34 +125,38 @@ function ReviewCard({
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors group cursor-pointer"
+      className="bg-[var(--surface)] rounded-3xl shadow-sm border border-[var(--border)] p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-[var(--surface-2)] transition-colors group cursor-pointer performance-card performance-review"
       onClick={() => onView(review)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={event => {
+        event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ') && (event.preventDefault(), onView(review));
+      }}
     >
       {/* Gauche : score + identité */}
       <div className="flex items-center gap-5">
-        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center font-bold text-xl shadow-inner flex-shrink-0
-          ${score > 0 ? scoreBg(score) : 'bg-gray-100 dark:bg-gray-700 text-gray-400'}`}>
+        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center font-semibold text-xl shadow-inner flex-shrink-0 ${score > 0 ? scoreBg(score) : 'bg-[var(--surface-2)] text-[var(--text-secondary)]'}`}>
           {score > 0
             ? <><span>{Number(score).toFixed(1)}</span><span className="text-xs opacity-60">/5</span></>
-            : <Star size={22} className="opacity-30" />
+            : <Star strokeWidth={1.5} size={22} className="opacity-30" />
           }
         </div>
         <div>
-          <p className="font-bold text-gray-900 dark:text-white text-lg">
+          <p className="font-semibold text-[var(--text)] text-lg">
             {review.employee?.firstName} {review.employee?.lastName}
           </p>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-sm text-[var(--text-secondary)]">
             {review.employee?.position}
             {review.employee?.department?.name && ` · ${review.employee.department.name}`}
           </p>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
-            <span className="text-xs text-gray-400">{review.period}</span>
+            <span className="text-xs text-[var(--text-secondary)]">{review.period}</span>
             {review.reviewType && (
-              <span className="text-xs bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 px-2 py-0.5 rounded-full font-medium">
+              <span className="text-xs bg-[var(--brand-soft)] text-[var(--action)] px-2 py-0.5 rounded-full font-medium">
                 {TYPE_LABELS[review.reviewType] ?? review.reviewType}
               </span>
             )}
-            {lbl && <span className="text-xs font-medium text-gray-500">{lbl}</span>}
+            {lbl && <span className="text-xs font-medium text-[var(--text-secondary)]">{lbl}</span>}
           </div>
         </div>
       </div>
@@ -166,20 +173,20 @@ function ReviewCard({
           {/* Vue */}
           <button
             onClick={() => onView(review)}
-            className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-gray-600 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-[var(--surface-2)] text-[var(--text-secondary)] hover:text-[var(--text-secondary)] transition-colors"
             title="Voir le détail"
           >
-            <Eye size={15} />
+            <Eye strokeWidth={1.5} size={15} />
           </button>
 
           {/* Soumettre */}
           {review.status === 'DRAFT' && (isReviewer || isHR) && (
             <button
               onClick={() => onSubmit(review)}
-              className="p-1.5 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-900/20 text-gray-400 hover:text-amber-600 transition-colors"
+              className="p-1.5 rounded-lg hover:bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--text-secondary)] hover:text-[var(--warning-text)] transition-colors"
               title="Soumettre à l'employé"
             >
-              <Send size={15} />
+              <Send strokeWidth={1.5} size={15} />
             </button>
           )}
 
@@ -187,10 +194,10 @@ function ReviewCard({
           {(isHR || (isReviewer && review.status === 'DRAFT')) && (
             <button
               onClick={() => onDelete(review)}
-              className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-600 transition-colors"
+              className="p-1.5 rounded-lg hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] text-[var(--text-secondary)] hover:text-[var(--danger-text)] transition-colors"
               title="Supprimer l'évaluation"
             >
-              <Trash2 size={15} />
+              <Trash2 strokeWidth={1.5} size={15} />
             </button>
           )}
 
@@ -198,21 +205,21 @@ function ReviewCard({
           {review.status === 'SUBMITTED' && (isHR || !isReviewer) && (
             <button
               onClick={() => onAcknowledge(review)}
-              className="p-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/20 text-gray-400 hover:text-emerald-600 transition-colors"
+              className="p-1.5 rounded-lg hover:bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--text-secondary)] hover:text-[var(--success-text)] transition-colors"
               title={isHR ? 'Marquer reçu' : 'Accuser réception'}
             >
-              {isHR ? <Check size={15} /> : <ThumbsUp size={15} />}
+              {isHR ? <Check strokeWidth={1.5} size={15} /> : <ThumbsUp strokeWidth={1.5} size={15} />}
             </button>
           )}
         </div>
 
-        <div className="flex items-center gap-1 text-sm text-gray-400 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-lg w-fit">
-          <Calendar size={13} />
+        <div className="flex items-center gap-1 text-sm text-[var(--text-secondary)] bg-[var(--surface-2)] px-3 py-1 rounded-lg w-fit">
+          <Calendar strokeWidth={1.5} size={13} />
           <span>{fmt(review.date)}</span>
         </div>
 
         {(review.feedback ?? review.comments) && (
-          <p className="text-sm text-gray-400 italic max-w-xs text-right truncate hidden md:block">
+          <p className="text-sm text-[var(--text-secondary)] italic max-w-xs text-right truncate hidden md:block">
             "{review.feedback ?? review.comments}"
           </p>
         )}
@@ -223,7 +230,7 @@ function ReviewCard({
 
 // ─── Page principale ──────────────────────────────────────────────────────────
 
-export default function PerformancePage() {
+function PerformancePage() {
   const router = useRouter();
   const { bp } = useBasePath();
   const [reviews, setReviews]     = useState<Review[]>([]);
@@ -311,68 +318,69 @@ export default function PerformancePage() {
     <div className="max-w-[1600px] mx-auto pb-20 space-y-8">
       <PerformanceNav />
 
-      <PerformanceStart reviews={reviews} />
+
 
       {/* ── Header ──────────────────────────────────────────────────────── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 performance-header">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Évaluations</h1>
-          <p className="text-gray-500 dark:text-gray-400">
+          <h1 className="text-3xl font-semibold text-[var(--text)] tracking-tight">Évaluations</h1>
+          <p className="text-[var(--text-secondary)]">
             À noter, à envoyer, déjà lues
             {sharedCount > 0 && (
-              <span className="ml-2 text-amber-600 font-medium">· {sharedCount} à lire par l'employé</span>
+              <span className="ml-2 text-[var(--warning-text)] font-medium">· {sharedCount} à lire par l'employé</span>
             )}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <button
             onClick={load}
-            className="p-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-500 hover:text-gray-700 transition-colors"
+            className="p-2.5 rounded-xl border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors"
           >
-            <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
+            <RefreshCw strokeWidth={1.5} size={16} className={isLoading ? 'animate-spin' : ''} />
           </button>
           {canCreate && (
             <button
               onClick={() => setCreateOpen(true)}
-              className="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold shadow-lg shadow-purple-500/20 transition-all flex items-center gap-2"
+              className="px-5 py-2.5 rounded-xl bg-[var(--brand)] hover:bg-[var(--brand)] text-[var(--on-brand)] font-semibold shadow-lg transition-colors flex items-center gap-2"
             >
-              <Plus size={20} /> Nouvelle Évaluation
+              <Plus strokeWidth={1.5} size={20} /> Nouvelle Évaluation
             </button>
           )}
         </div>
       </div>
 
       {/* ── KPI ─────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 performance-metrics">
         {[
-          { label: 'Total',          value: reviews.length, color: 'bg-purple-100 dark:bg-purple-900/30 text-purple-600' },
-          { label: 'Brouillons',     value: draftCount,     color: 'bg-gray-100 dark:bg-gray-700 text-gray-500' },
-          { label: 'En attente',     value: sharedCount,    color: 'bg-amber-100 dark:bg-amber-900/30 text-amber-600', pulse: sharedCount > 0 },
-          { label: 'Réceptionnées',  value: ackCount,       color: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600' },
+          { label: 'Total',          value: reviews.length, color: 'bg-[var(--brand-soft)] text-[var(--action)]' },
+          { label: 'Brouillons',     value: draftCount,     color: 'bg-[var(--surface-2)] text-[var(--text-secondary)]' },
+          { label: 'En attente',     value: sharedCount,    color: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)]', pulse: sharedCount > 0 },
+          { label: 'Réceptionnées',  value: ackCount,       color: 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)]' },
         ].map(k => (
-          <div key={k.label} className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5 shadow-sm">
+          <div key={k.label} className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5 shadow-sm performance-card">
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${k.color}`}>
-              <Star size={18} className={(k as any).pulse ? 'animate-pulse' : ''} />
+              <Star strokeWidth={1.5} size={18} className={(k as any).pulse ? '' : ''} />
             </div>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">{k.value}</p>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{k.label}</p>
+            <p className="text-2xl font-semibold text-[var(--text)]">{k.value}</p>
+            <p className="text-sm text-[var(--text-secondary)] mt-0.5">{k.label}</p>
           </div>
         ))}
       </div>
 
+
       {/* ── Score moyen banner ───────────────────────────────────────────── */}
       {stats?.avgScore && (
-        <div className="bg-gradient-to-r from-purple-600 to-purple-800 rounded-2xl p-6 flex items-center justify-between text-white">
+        <div className="rounded-2xl p-6 flex items-center justify-between text-[var(--text)] bg-[var(--surface)] text-[var(--text)] performance-card">
           <div>
-            <p className="text-purple-200 text-sm font-medium mb-1">Score moyen de l'équipe</p>
-            <p className="text-4xl font-bold">{stats.avgScore}<span className="text-xl text-purple-300">/5</span></p>
-            <p className="text-purple-300 text-sm mt-1">{stats.avgScoreLabel}</p>
+            <p className="text-[var(--action)] text-sm font-medium mb-1">Score moyen de l'équipe</p>
+            <p className="text-4xl font-semibold">{stats.avgScore}<span className="text-xl text-[var(--action)]">/5</span></p>
+            <p className="text-[var(--action)] text-sm mt-1">{stats.avgScoreLabel}</p>
           </div>
           <div className="text-right">
-            <p className="text-purple-200 text-sm">{stats.thisYearCount} évaluation{stats.thisYearCount !== 1 ? 's' : ''} cette année</p>
+            <p className="text-[var(--action)] text-sm">{stats.thisYearCount} évaluation{stats.thisYearCount !== 1 ? 's' : ''} cette année</p>
             {stats.topEmployees?.[0] && (
-              <p className="text-white font-semibold mt-1 text-sm">
-                🏆 {stats.topEmployees[0].employee?.firstName} {stats.topEmployees[0].employee?.lastName}
+              <p className="text-[var(--text)] font-semibold mt-1 text-sm">
+                 {stats.topEmployees[0].employee?.firstName} {stats.topEmployees[0].employee?.lastName}
               </p>
             )}
           </div>
@@ -380,13 +388,12 @@ export default function PerformancePage() {
       )}
 
       {/* ── Tabs ────────────────────────────────────────────────────────── */}
-      <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl w-fit">
+      <div className="flex gap-1 bg-[var(--surface-2)] p-1 rounded-xl w-fit">
         {[{ key: 'list', label: 'Évaluations' }, { key: 'stats', label: 'Statistiques' }].map(t => (
-          <button
+          <button aria-pressed={tab === t.key}
             key={t.key}
             onClick={() => setTab(t.key as any)}
-            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all
-              ${tab === t.key ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
+            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${tab === t.key ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-secondary)] hover:text-[var(--text)]'}`}
           >
             {t.label}
           </button>
@@ -399,53 +406,53 @@ export default function PerformancePage() {
           {/* Filtres */}
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1 max-w-sm">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Search strokeWidth={1.5} size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" />
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Rechercher un employé, une période..."
-                className="w-full pl-9 pr-4 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/30"
+                className="w-full pl-9 pr-4 py-2 text-sm bg-[var(--surface)] border border-[var(--border)] rounded-xl text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
               />
             </div>
             <div className="relative">
-              <select
+              <ModuleSelect
                 value={statusFilter}
                 onChange={e => setStatus(e.target.value)}
-                className="appearance-none pl-3 pr-8 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500/30 cursor-pointer"
+                className="appearance-none pl-3 pr-8 py-2 text-sm bg-[var(--surface)] border border-[var(--border)] rounded-xl text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)] cursor-pointer"
               >
                 <option value="ALL">Tous les statuts</option>
                 <option value="DRAFT">Brouillons</option>
                 <option value="SUBMITTED">En attente</option>
                 <option value="ACKNOWLEDGED">Réceptionnées</option>
-              </select>
-              <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              </ModuleSelect>
+              <ChevronDown strokeWidth={1.5} size={14} className="absolute right-2.5 top-1/2 text-[var(--text-secondary)] pointer-events-none" />
             </div>
           </div>
 
           {/* Contenu */}
-          <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden min-h-[300px]">
-            <div className="p-6 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white">Historique des évaluations</h3>
-              <span className="text-sm text-gray-400">{filtered.length} résultat{filtered.length !== 1 ? 's' : ''}</span>
+          <div className="bg-[var(--surface)] rounded-3xl shadow-sm border border-[var(--border)] overflow-hidden min-h-[300px] performance-card">
+            <div className="p-6 border-b border-[var(--border)] bg-[var(--surface-2)] flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-[var(--text)]">Historique des évaluations</h3>
+              <span className="text-sm text-[var(--text-secondary)]">{filtered.length} résultat{filtered.length !== 1 ? 's' : ''}</span>
             </div>
 
             {isLoading ? (
               <KonzaLoader variant="section" />
             ) : filtered.length === 0 ? (
-              <div className="p-20 text-center flex flex-col items-center text-gray-400">
-                <Star size={48} className="opacity-20 mb-4" />
+              <div className="p-20 text-center flex flex-col items-center text-[var(--text-secondary)]">
+                <Star strokeWidth={1.5} size={48} className="opacity-20 mb-4" />
                 <p className="font-medium">Aucune évaluation trouvée</p>
                 {canCreate && reviews.length === 0 && (
                   <button
                     onClick={() => setCreateOpen(true)}
-                    className="mt-4 px-4 py-2 bg-purple-600 text-white text-sm font-bold rounded-xl hover:bg-purple-700 transition-colors"
+                    className="mt-4 px-4 py-2 bg-[var(--brand)] text-[var(--on-brand)] text-sm font-semibold rounded-xl hover:bg-[var(--brand)] transition-colors"
                   >
                     Créer la première évaluation
                   </button>
                 )}
               </div>
             ) : (
-              <div className="divide-y divide-gray-100 dark:divide-gray-700">
+              <div className="divide-y divide-[var(--border)]">
                 <AnimatePresence>
                   {filtered.map(r => (
                     <ReviewCard
@@ -470,27 +477,26 @@ export default function PerformancePage() {
       {tab === 'stats' && stats && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Top collaborateurs */}
-          <div className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 p-6">
-            <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-5">
-              <Award size={18} className="text-amber-500" /> Top collaborateurs
+          <div className="bg-[var(--surface)] rounded-3xl border border-[var(--border)] p-6 performance-card">
+            <h3 className="font-semibold text-[var(--text)] flex items-center gap-2 mb-5">
+              <Award strokeWidth={1.5} size={18} className="text-[var(--warning-text)]" /> Top collaborateurs
             </h3>
             {stats.topEmployees.length === 0 ? (
-              <p className="text-gray-400 text-sm">Aucune donnée disponible</p>
+              <p className="text-[var(--text-secondary)] text-sm">Aucune donnée disponible</p>
             ) : (
               <div className="space-y-3">
                 {stats.topEmployees.map((t, i) => (
                   <div key={t.employeeId} className="flex items-center gap-3">
-                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold
-                      ${i === 0 ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' : i === 1 ? 'bg-gray-100 dark:bg-gray-700 text-gray-500' : 'bg-orange-50 text-orange-600'}`}>
+                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-semibold ${i === 0 ? 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)]' : i === 1 ? 'bg-[var(--surface-2)] text-[var(--text-secondary)]' : 'bg-[var(--brand-soft)] text-[var(--action)]'}`}>
                       {i + 1}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-gray-900 dark:text-white truncate">
+                      <p className="text-sm font-semibold text-[var(--text)] truncate">
                         {t.employee?.firstName} {t.employee?.lastName}
                       </p>
-                      <p className="text-xs text-gray-400">{t.employee?.position}</p>
+                      <p className="text-xs text-[var(--text-secondary)]">{t.employee?.position}</p>
                     </div>
-                    <div className={`px-2.5 py-1 rounded-xl text-sm font-bold ${scoreBg(t.avgScore)}`}>
+                    <div className={`px-2.5 py-1 rounded-xl text-sm font-semibold ${scoreBg(t.avgScore)}`}>
                       {Number(t.avgScore).toFixed(1)}/5
                     </div>
                   </div>
@@ -500,44 +506,44 @@ export default function PerformancePage() {
           </div>
 
           {/* Répartition + score global */}
-          <div className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 p-6">
-            <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-5">
-              <BarChart3 size={18} className="text-purple-500" /> Vue d'ensemble
+          <div className="bg-[var(--surface)] rounded-3xl border border-[var(--border)] p-6 performance-card">
+            <h3 className="font-semibold text-[var(--text)] flex items-center gap-2 mb-5">
+              <BarChart3 strokeWidth={1.5} size={18} className="text-[var(--action)]" /> Vue d'ensemble
             </h3>
             <div className="space-y-3 mb-6">
               {[
-                { label: 'Brouillons',     value: stats.drafts,      color: 'bg-gray-300 dark:bg-gray-600' },
-                { label: 'En attente',     value: stats.submitted,   color: 'bg-amber-400' },
-                { label: 'Réceptionnées',  value: stats.acknowledged, color: 'bg-emerald-500' },
+                { label: 'Brouillons',     value: stats.drafts,      color: 'bg-[var(--surface-2)]' },
+                { label: 'En attente',     value: stats.submitted,   color: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]' },
+                { label: 'Réceptionnées',  value: stats.acknowledged, color: 'bg-[var(--green)]' },
               ].map(item => {
                 const pct = stats.total > 0 ? Math.round((item.value / stats.total) * 100) : 0;
                 return (
                   <div key={item.label}>
                     <div className="flex justify-between text-sm mb-1">
-                      <span className="text-gray-700 dark:text-gray-300 font-medium">{item.label}</span>
-                      <span className="text-gray-400">{item.value} ({pct}%)</span>
+                      <span className="text-[var(--text)] font-medium">{item.label}</span>
+                      <span className="text-[var(--text-secondary)]">{item.value} ({pct}%)</span>
                     </div>
-                    <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                    <div className="h-2 bg-[var(--surface-2)] rounded-full overflow-hidden">
                       <div className={`h-full rounded-full transition-all duration-700 ${item.color}`} style={{ width: `${pct}%` }} />
                     </div>
                   </div>
                 );
               })}
             </div>
-            <div className="grid grid-cols-3 gap-4 pt-5 border-t border-gray-100 dark:border-gray-700 text-center">
+            <div className="grid grid-cols-3 gap-4 pt-5 border-t border-[var(--border)] text-center">
               <div>
-                <p className="text-2xl font-bold text-purple-600">{stats.avgScore ?? '—'}<span className="text-base">/5</span></p>
-                <p className="text-xs text-gray-400 mt-1">Score moyen</p>
+                <p className="text-2xl font-semibold text-[var(--action)]">{stats.avgScore ?? '—'}<span className="text-base">/5</span></p>
+                <p className="text-xs text-[var(--text-secondary)] mt-1">Score moyen</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-sky-600">{stats.thisYearCount}</p>
-                <p className="text-xs text-gray-400 mt-1">Cette année</p>
+                <p className="text-2xl font-semibold text-[var(--action)]">{stats.thisYearCount}</p>
+                <p className="text-xs text-[var(--text-secondary)] mt-1">Cette année</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-emerald-600">
+                <p className="text-2xl font-semibold text-[var(--success-text)]">
                   {stats.total > 0 ? Math.round((stats.acknowledged / stats.total) * 100) : 0}%
                 </p>
-                <p className="text-xs text-gray-400 mt-1">Taux réception</p>
+                <p className="text-xs text-[var(--text-secondary)] mt-1">Taux réception</p>
               </div>
             </div>
           </div>
@@ -562,6 +568,17 @@ export default function PerformancePage() {
           onUpdate={load}
         />
       )}
-    </div>
+
+      <PerformanceStart reviews={reviews} />
+</div>
+  );
+}
+
+
+export default function PerformancePageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <PerformancePage />
+    </ModulePageFrame>
   );
 }

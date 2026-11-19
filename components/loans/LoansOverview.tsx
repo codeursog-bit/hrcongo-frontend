@@ -1,4 +1,5 @@
 'use client';
+import { useLoanVisuals } from '@/components/loans/LoanModuleFrame';
 
 // ============================================================================
 // 📁 components/loans/LoansOverview.tsx
@@ -18,13 +19,13 @@ import {
   TrendingUp, Wallet, Banknote, PiggyBank, Filter, ChevronRight, Users2, Search,
 } from 'lucide-react';
 import {
-  ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
-  Legend, PieChart, Pie, Cell, BarChart, Bar,
+  ResponsiveContainer, AreaChart, Area, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
+  Legend, PieChart, Pie, Cell, Label, BarChart, Bar,
 } from 'recharts';
 
 const MONTHS_FR = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
 const TYPE_LABEL: Record<string, string> = { ARGENT: 'Prêt argent', MARCHANDISE: 'Marchandise', AUTRE: 'Autre prêt', AVANCE: 'Avance sur salaire' };
-const CHART_COLORS = ['#10B981', '#F59E0B', '#34D399', '#FBBF24', '#059669'];
+const CHART_COLORS = ['var(--loan-chart-2, #10B981)', 'var(--loan-chart-3, #F59E0B)', 'var(--loan-chart-2, #34D399)', 'var(--loan-chart-3, #FBBF24)', 'var(--loan-chart-2, #059669)'];
 
 const fmt = (n: number) => Math.round(n).toLocaleString('fr-FR') + ' FCFA';
 
@@ -36,6 +37,7 @@ type Props = {
 };
 
 export default function LoansOverview({ loans, advances, onSelectEmployee, onGoToRequest }: Props) {
+  const {refonte,motion}=useLoanVisuals();
   const { bp } = useBasePath();
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
@@ -311,15 +313,15 @@ export default function LoansOverview({ loans, advances, onSelectEmployee, onGoT
             </select>
           </div>
           <ResponsiveContainer width="100%" height={260}>
-            <LineChart data={monthlySeries}>
+            <AreaChart data={monthlySeries}>
               <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
               <XAxis dataKey="mois" fontSize={12} />
               <YAxis fontSize={12} tickFormatter={(v) => `${Math.round(v / 1000)}k`} />
               <Tooltip formatter={(v: number) => fmt(v)} />
               <Legend />
-              <Line type="monotone" dataKey="Emprunté" stroke="#F59E0B" strokeWidth={2.5} dot={false} />
-              <Line type="monotone" dataKey="Remboursé" stroke="#10B981" strokeWidth={2.5} dot={false} />
-            </LineChart>
+              <Area type="monotone" dataKey="Emprunté" stroke="var(--loan-chart-1, #F59E0B)" strokeWidth={2.25} dot={false}  fill="var(--loan-gradient-1)" fillOpacity={1} animationDuration={700} isAnimationActive={motion} />
+              <Area type="monotone" dataKey="Remboursé" stroke="var(--loan-chart-2, #10B981)" strokeWidth={2.25} dot={false}  fill="var(--loan-gradient-2)" fillOpacity={1} animationDuration={700} isAnimationActive={motion} />
+            </AreaChart>
           </ResponsiveContainer>
         </div>
 
@@ -327,8 +329,10 @@ export default function LoansOverview({ loans, advances, onSelectEmployee, onGoT
           <p className="text-sm font-bold text-[var(--text-muted)] mb-4">Répartition par type de dette</p>
           <ResponsiveContainer width="100%" height={240}>
             <PieChart>
-              <Pie data={byType} dataKey="value" nameKey="name" innerRadius={55} outerRadius={90} paddingAngle={2}>
+              <Pie data={byType} dataKey="value" nameKey="name" innerRadius={55} outerRadius={90} paddingAngle={refonte ? 5 : 2} cornerRadius={refonte ? 8 : 0} animationDuration={refonte ? 700 : undefined} isAnimationActive={refonte ? motion : undefined}>
                 {byType.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                <Label value={kpis.totalAllTime.toLocaleString('fr-FR')} position="center" fill="var(--text)" fontSize={18} fontWeight={600} dy={-8} />
+                <Label value="FCFA" position="center" fill="var(--text-secondary)" fontSize={11} dy={15} />
               </Pie>
               <Tooltip formatter={(v: number) => fmt(v)} />
               <Legend />
@@ -344,7 +348,7 @@ export default function LoansOverview({ loans, advances, onSelectEmployee, onGoT
               <XAxis type="number" fontSize={12} tickFormatter={(v) => `${Math.round(v / 1000)}k`} />
               <YAxis type="category" dataKey="departement" fontSize={12} width={110} />
               <Tooltip formatter={(v: number) => fmt(v)} />
-              <Bar dataKey="montant" fill="#10B981" radius={[0, 6, 6, 0]} />
+              <Bar dataKey="montant" fill="var(--loan-chart-2, #10B981)" radius={refonte ? [10,10,10,10] : [0, 6, 6, 0]} maxBarSize={refonte ? 16 : undefined} background={refonte ? {fill:"var(--surface-2)",radius:10} : undefined} animationDuration={refonte ? 700 : undefined} isAnimationActive={refonte ? motion : undefined} />
             </BarChart>
           </ResponsiveContainer>
         </div>

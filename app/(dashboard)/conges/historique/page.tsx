@@ -1,4 +1,9 @@
 'use client';
+import '@/components/leave-history/leave-workspace.css';
+import { ModuleSelect } from '@/components/ui/ModuleSelect';
+import { LeaveModuleFrame as ModulePageFrame } from '@/components/leave-history/LeaveModuleFrame';
+import { ModulePageSkeleton } from '@/components/requests/ModulePageFrame';
+import { Button } from '@/components/design-system/primitives';
 
 // ============================================================================
 // 📁 app/(dashboard)/conges/historique/page.tsx
@@ -38,7 +43,7 @@ function StatCard({ icon: Icon, tone, value, label }: { icon: any; tone: string;
     <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-4 flex items-center gap-3">
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${tone}`}><Icon size={18} /></div>
       <div className="min-w-0">
-        <p className="text-xl font-bold text-[var(--text)] truncate">{value}</p>
+        <p className="text-xl font-semibold text-[var(--text)] truncate">{value}</p>
         <p className="text-[11px] text-[var(--text-muted)]">{label}</p>
       </div>
     </div>
@@ -50,7 +55,7 @@ function Avatar({ emp }: { emp: any }) {
     // eslint-disable-next-line @next/next/no-img-element
     <img src={emp.photoUrl} alt="" className="w-9 h-9 rounded-xl object-cover shrink-0" />
   ) : (
-    <div className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 flex items-center justify-center text-xs font-bold shrink-0">
+    <div className="w-9 h-9 rounded-xl bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))]  text-[var(--action)] flex items-center justify-center text-xs font-semibold shrink-0">
       {initials(emp.firstName, emp.lastName)}
     </div>
   );
@@ -186,16 +191,16 @@ export default function LeaveHistoryPage() {
   };
 
   const inputCls =
-    'px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-emerald-500/40';
+    'px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]';
 
   return (
-    <div className="max-w-[1400px] mx-auto pb-24 space-y-6">
+    <ModulePageFrame kind="list"><div className="max-w-[1400px] mx-auto pb-24 space-y-6">
       <CongeSubNav userRole={userRole} />
 
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 leave-header">
         <div>
-          <p className="text-xs font-bold tracking-[0.2em] text-[var(--text-muted)] uppercase mb-1">Congés</p>
-          <h1 className="text-3xl font-bold text-[var(--text)]">Historique</h1>
+          <p className="text-xs font-semibold tracking-[0.2em] text-[var(--text-muted)] uppercase mb-1">Congés</p>
+          <h1 className="text-3xl font-semibold text-[var(--text)]">Historique</h1>
           <p className="text-sm text-[var(--text-muted)] mt-1">
             {tab === 'departures'
               ? 'Les congés dont la date de départ est arrivée. Un congé planifié n’apparaît ici qu’à partir de son premier jour.'
@@ -204,7 +209,7 @@ export default function LeaveHistoryPage() {
         </div>
         <Link
           href={bp('/conges/diagrammes')}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-sm font-bold hover:bg-emerald-100 dark:hover:bg-emerald-900/40 w-fit"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))]  border border-[var(--border)]  text-[var(--action)]  text-sm font-semibold hover:bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))]  w-fit"
         >
           <BarChart3 size={16} /> Voir en diagrammes <ArrowRight size={14} />
         </Link>
@@ -216,7 +221,7 @@ export default function LeaveHistoryPage() {
           ['departures', 'Départs en congé', Plane],
           ['requests', 'Historique des demandes', CalendarCheck],
         ] as const).map(([k, label, Icon]) => (
-          <button
+          <Button variant="ghost"
             key={k}
             onClick={() => { setTab(k); setStatus(''); }}
             className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all ${
@@ -224,7 +229,7 @@ export default function LeaveHistoryPage() {
             }`}
           >
             <Icon size={14} /> {label}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -233,21 +238,21 @@ export default function LeaveHistoryPage() {
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex gap-1 bg-[var(--surface-2)] p-1 rounded-xl">
             {([['month', 'Mois'], ['year', 'Année'], ['custom', 'Période'], ['all', 'Tout']] as const).map(([k, l]) => (
-              <button
+              <Button variant="ghost"
                 key={k}
                 onClick={() => setPeriodMode(k)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${periodMode === k ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}
               >
                 {l}
-              </button>
+              </Button>
             ))}
           </div>
 
           {(periodMode === 'month' || periodMode === 'year') && (
             <div className="flex items-center gap-1.5">
-              <button onClick={() => shiftPeriod(-1)} className="p-2 rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)]"><ChevronLeft size={16} /></button>
+              <Button variant="ghost" onClick={() => shiftPeriod(-1)} className="p-2 rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)]"><ChevronLeft size={16} /></Button>
               <span className="px-4 py-2 rounded-xl bg-[var(--surface-2)] text-sm font-semibold min-w-[150px] text-center">{periodLabel}</span>
-              <button onClick={() => shiftPeriod(1)} className="p-2 rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)]"><ChevronRight size={16} /></button>
+              <Button variant="ghost" onClick={() => shiftPeriod(1)} className="p-2 rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)]"><ChevronRight size={16} /></Button>
             </div>
           )}
           {periodMode === 'custom' && (
@@ -258,16 +263,16 @@ export default function LeaveHistoryPage() {
             </div>
           )}
 
-          <button
+          <Button variant="ghost"
             onClick={exportCsv}
             disabled={rows.length === 0}
             className="ml-auto px-4 py-2 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center gap-2 hover:bg-[var(--surface-2)] disabled:opacity-40"
           >
             <Download size={15} /> Export CSV
-          </button>
+          </Button>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 leave-period-bar">
           <div className="relative flex-1 min-w-[200px]">
             <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
             <input
@@ -277,21 +282,21 @@ export default function LeaveHistoryPage() {
               className={`${inputCls} w-full pl-9`}
             />
           </div>
-          <select value={type} onChange={e => setType(e.target.value)} className={inputCls}>
+          <ModuleSelect value={type} onChange={e => setType(e.target.value)} className={inputCls}>
             <option value="">Tous les types</option>
             {Object.entries(LEAVE_TYPE_LABELS).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
-          </select>
+          </ModuleSelect>
           {departments.length > 1 && (
-            <select value={departmentId} onChange={e => setDepartmentId(e.target.value)} className={inputCls}>
+            <ModuleSelect value={departmentId} onChange={e => setDepartmentId(e.target.value)} className={inputCls}>
               <option value="">Tous les départements</option>
               {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-            </select>
+            </ModuleSelect>
           )}
           {tab === 'requests' && (
-            <select value={status} onChange={e => setStatus(e.target.value)} className={inputCls}>
+            <ModuleSelect value={status} onChange={e => setStatus(e.target.value)} className={inputCls}>
               <option value="">Tous les statuts</option>
               {Object.entries(STATUS_LABELS).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
-            </select>
+            </ModuleSelect>
           )}
         </div>
         {tab === 'requests' && (
@@ -303,30 +308,30 @@ export default function LeaveHistoryPage() {
       </div>
 
       {loading ? (
-        <KonzaLoader variant="section" />
+        <ModulePageSkeleton />
       ) : error ? (
-        <div className="bg-red-50 dark:bg-red-900/10 text-red-600 rounded-2xl p-5 text-sm">{error}</div>
+        <div className="bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  text-[var(--danger-text)] rounded-2xl p-5 text-sm">{error}</div>
       ) : (
         <>
           {/* KPI */}
           {tab === 'departures' && view?.stats?.byType && (
             <>
-              <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-                <StatCard icon={Plane} tone="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600" value={view.stats.count} label="Départs sur la période" />
-                <StatCard icon={Users} tone="bg-blue-100 dark:bg-blue-900/30 text-blue-600" value={view.stats.uniqueEmployees} label="Employés concernés" />
-                <StatCard icon={CalendarCheck} tone="bg-amber-100 dark:bg-amber-900/30 text-amber-600" value={fmtDays(view.stats.totalDays)} label="Jours de congé cumulés" />
-                <StatCard icon={Clock} tone="bg-violet-100 dark:bg-violet-900/30 text-violet-600" value={fmtDays(view.stats.averageDays)} label="Durée moyenne" />
-                <StatCard icon={Plane} tone="bg-sky-100 dark:bg-sky-900/30 text-sky-600" value={view.stats.inProgress} label="Actuellement en congé" />
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 leave-metrics">
+                <StatCard icon={Plane} tone="bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))]  text-[var(--action)]" value={view.stats.count} label="Départs sur la période" />
+                <StatCard icon={Users} tone="bg-[var(--brand-soft)]  text-[var(--action)]" value={view.stats.uniqueEmployees} label="Employés concernés" />
+                <StatCard icon={CalendarCheck} tone="bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  text-[var(--warning-text)]" value={fmtDays(view.stats.totalDays)} label="Jours de congé cumulés" />
+                <StatCard icon={Clock} tone="bg-[var(--brand-soft)]  text-[var(--action)]" value={fmtDays(view.stats.averageDays)} label="Durée moyenne" />
+                <StatCard icon={Plane} tone="bg-[var(--brand-soft)]  text-[var(--action)]" value={view.stats.inProgress} label="Actuellement en congé" />
               </div>
 
               {view.stats.count > 0 && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
-                    <p className="text-sm font-bold text-[var(--text)] mb-4">Par type de congé</p>
+                    <p className="text-sm font-semibold text-[var(--text)] mb-4">Par type de congé</p>
                     <TypeDonut data={view.stats.byType.map((t: any) => ({ type: t.type, value: t.totalDays }))} />
                   </div>
                   <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
-                    <p className="text-sm font-bold text-[var(--text)] mb-4">Jours de congé par département</p>
+                    <p className="text-sm font-semibold text-[var(--text)] mb-4">Jours de congé par département</p>
                     <HorizontalBars data={view.stats.byDepartment.slice(0, 6).map((d: any) => ({ name: d.name, value: d.totalDays }))} />
                   </div>
                 </div>
@@ -335,13 +340,13 @@ export default function LeaveHistoryPage() {
           )}
 
           {tab === 'requests' && view?.stats?.byStatus && (
-            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-              <StatCard icon={CalendarCheck} tone="bg-blue-100 dark:bg-blue-900/30 text-blue-600" value={view.stats.total} label="Demandes" />
-              <StatCard icon={CheckCircle2} tone="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600" value={view.stats.byStatus.APPROVED} label="Approuvées" />
-              <StatCard icon={XCircle} tone="bg-red-100 dark:bg-red-900/30 text-red-600" value={view.stats.byStatus.REJECTED} label="Refusées" />
-              <StatCard icon={Hourglass} tone="bg-amber-100 dark:bg-amber-900/30 text-amber-600" value={view.stats.byStatus.PENDING} label="En attente" />
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 leave-metrics">
+              <StatCard icon={CalendarCheck} tone="bg-[var(--brand-soft)]  text-[var(--action)]" value={view.stats.total} label="Demandes" />
+              <StatCard icon={CheckCircle2} tone="bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))]  text-[var(--action)]" value={view.stats.byStatus.APPROVED} label="Approuvées" />
+              <StatCard icon={XCircle} tone="bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  text-[var(--danger-text)]" value={view.stats.byStatus.REJECTED} label="Refusées" />
+              <StatCard icon={Hourglass} tone="bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  text-[var(--warning-text)]" value={view.stats.byStatus.PENDING} label="En attente" />
               <StatCard
-                icon={Clock} tone="bg-violet-100 dark:bg-violet-900/30 text-violet-600"
+                icon={Clock} tone="bg-[var(--brand-soft)]  text-[var(--action)]"
                 value={view.stats.averageProcessingDays !== null ? fmtDays(view.stats.averageProcessingDays) : '—'}
                 label={view.stats.approvalRate !== null ? `Délai moyen · ${view.stats.approvalRate} % d’acceptation` : 'Délai moyen de réponse'}
               />
@@ -349,7 +354,7 @@ export default function LeaveHistoryPage() {
           )}
 
           {view?.truncated && (
-            <p className="text-xs text-amber-600">Résultats limités aux 2 000 plus récents — affinez la période pour tout voir.</p>
+            <p className="text-xs text-[var(--warning-text)]">Résultats limités aux 2 000 plus récents — affinez la période pour tout voir.</p>
           )}
 
           {/* Tableau */}
@@ -357,27 +362,27 @@ export default function LeaveHistoryPage() {
             {rows.length === 0 ? (
               <p className="text-sm text-[var(--text-muted)] py-16 text-center">Aucun résultat pour ces filtres.</p>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+              <div className="overflow-x-auto leave-table-scroll" tabIndex={0} role="region" aria-label="Tableau des congés défilant horizontalement">
+                <table data-leave-table="true" className="w-full text-sm">
                   <thead>
                     <tr className="text-left text-[11px] uppercase tracking-wide text-[var(--text-muted)] bg-[var(--surface-2)]">
-                      <th className="px-4 py-3 font-bold">Employé</th>
+                      <th className="px-4 py-3 font-semibold">Employé</th>
                       {tab === 'departures' ? (
                         <>
-                          <th className="px-4 py-3 font-bold">Embauche · Ancienneté</th>
-                          <th className="px-4 py-3 font-bold">Type</th>
-                          <th className="px-4 py-3 font-bold">Départ → Retour</th>
-                          <th className="px-4 py-3 font-bold text-right">Jours</th>
-                          <th className="px-4 py-3 font-bold">Situation</th>
+                          <th className="px-4 py-3 font-semibold">Embauche · Ancienneté</th>
+                          <th className="px-4 py-3 font-semibold">Type</th>
+                          <th className="px-4 py-3 font-semibold">Départ → Retour</th>
+                          <th className="px-4 py-3 font-semibold text-right">Jours</th>
+                          <th className="px-4 py-3 font-semibold">Situation</th>
                         </>
                       ) : (
                         <>
-                          <th className="px-4 py-3 font-bold">Demandé le</th>
-                          <th className="px-4 py-3 font-bold">Type</th>
-                          <th className="px-4 py-3 font-bold">Période demandée</th>
-                          <th className="px-4 py-3 font-bold text-right">Jours</th>
-                          <th className="px-4 py-3 font-bold">Statut</th>
-                          <th className="px-4 py-3 font-bold">Traitement</th>
+                          <th className="px-4 py-3 font-semibold">Demandé le</th>
+                          <th className="px-4 py-3 font-semibold">Type</th>
+                          <th className="px-4 py-3 font-semibold">Période demandée</th>
+                          <th className="px-4 py-3 font-semibold text-right">Jours</th>
+                          <th className="px-4 py-3 font-semibold">Statut</th>
+                          <th className="px-4 py-3 font-semibold">Traitement</th>
                         </>
                       )}
                     </tr>
@@ -414,7 +419,7 @@ export default function LeaveHistoryPage() {
                             <td className="px-4 py-3 text-xs whitespace-nowrap">
                               <div>{fmtDate(r.startDate)} → {fmtDate(r.endDate)}</div>
                               {r.forfeitedDays > 0 && (
-                                <div className="text-[10px] text-amber-600">Retour anticipé le {fmtDate(r.actualReturnDate)}</div>
+                                <div className="text-[10px] text-[var(--warning-text)]">Retour anticipé le {fmtDate(r.actualReturnDate)}</div>
                               )}
                             </td>
                             <td className="px-4 py-3 text-right font-semibold">{fmtDays(r.daysCount)}</td>
@@ -460,9 +465,9 @@ export default function LeaveHistoryPage() {
               <div className="flex items-center justify-between px-4 py-3 border-t border-[var(--border)] text-xs text-[var(--text-muted)]">
                 <span>{rows.length} résultat{rows.length > 1 ? 's' : ''}</span>
                 <div className="flex items-center gap-2">
-                  <button disabled={page === 1} onClick={() => setPage(p => p - 1)} className="p-1.5 rounded-lg border border-[var(--border)] disabled:opacity-40"><ChevronLeft size={14} /></button>
+                  <Button variant="ghost" disabled={page === 1} onClick={() => setPage(p => p - 1)} className="p-1.5 rounded-lg border border-[var(--border)] disabled:opacity-40"><ChevronLeft size={14} /></Button>
                   <span>Page {page} / {pageCount}</span>
-                  <button disabled={page === pageCount} onClick={() => setPage(p => p + 1)} className="p-1.5 rounded-lg border border-[var(--border)] disabled:opacity-40"><ChevronRight size={14} /></button>
+                  <Button variant="ghost" disabled={page === pageCount} onClick={() => setPage(p => p + 1)} className="p-1.5 rounded-lg border border-[var(--border)] disabled:opacity-40"><ChevronRight size={14} /></Button>
                 </div>
               </div>
             )}
@@ -473,6 +478,6 @@ export default function LeaveHistoryPage() {
       {selectedEmployeeId && (
         <EmployeeDepartureDrawer employeeId={selectedEmployeeId} onClose={() => setSelectedEmployeeId(null)} />
       )}
-    </div>
+    </div></ModulePageFrame>
   );
 }

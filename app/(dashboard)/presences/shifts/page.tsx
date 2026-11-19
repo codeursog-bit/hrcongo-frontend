@@ -1,16 +1,20 @@
 'use client';
+import PresenceSubNav from '@/components/PresenceSubNav';
+import { AttendanceSelect } from '@/components/attendance/AttendanceSelect';
 
 // ============================================================================
 // 📁 app/(dashboard)/presences/shifts/page.tsx
 // ============================================================================
 
+import { AttendanceModuleFrame } from '@/components/attendance/AttendanceModuleFrame';
+import { AttendanceDialog } from '@/components/attendance/AttendanceDialog';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Moon, Sun, Clock, Plus, Edit2, Trash2, Users,
   ArrowLeft, Loader2, Check, X, AlertCircle, Calendar,
   Search, RefreshCw, AlertTriangle, Eye,
-  Download, Building2, Sunset, Info, UserCheck, UserX, Repeat,
+  Download, Building2, Sunset, Info, UserCheck, UserX, Repeat, Stethoscope, Factory, ShieldCheck,
 } from 'lucide-react';
 import { api } from '@/services/api';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
@@ -87,8 +91,8 @@ function ShiftBadge({ shift, small }: { shift: WorkShift; small?: boolean }) {
   const size = small ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-1 text-xs';
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-lg font-bold ${size}`}
-      style={{ backgroundColor: shift.color + '22', color: shift.color, border: `1px solid ${shift.color}44` }}
+      className={`inline-flex items-center gap-1 rounded-lg font-semibold ${size}`}
+      style={{ backgroundColor: 'var(--brand-soft)', color: 'var(--action)' }}
     >
       <ShiftIcon shift={shift} />
       {shift.name}
@@ -118,36 +122,36 @@ function ShiftModal({ initial, onSave, onCancel, saving }: {
   const crosses = (eh * 60 + em) <= (sh * 60 + sm);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onCancel} />
+    <AttendanceDialog title="Shift" onClose={onCancel} busy={saving}>
+
       <div className="relative w-full sm:max-w-lg bg-[var(--surface)] rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden">
         <div className="flex justify-center pt-3 pb-1 sm:hidden">
           <div className="w-10 h-1 bg-[var(--border)] rounded-full" />
         </div>
         <div className="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-bold text-[var(--text)]">
+            <h3 className="text-lg font-semibold text-[var(--text)]">
               {initial?.id ? 'Modifier' : 'Nouveau shift'}
             </h3>
             <p className="text-xs text-[var(--text-muted)] mt-0.5">
-              Durée : <strong className="text-emerald-500">{duration}h</strong>
-              {crosses && <span className="ml-1 text-amber-500">(traverse minuit)</span>}
+              Durée : <strong className="text-[var(--success-text)]">{duration}h</strong>
+              {crosses && <span className="ml-1 text-[var(--warning-text)]">(traverse minuit)</span>}
             </p>
           </div>
-          <button onClick={onCancel} className="p-2 rounded-xl hover:bg-[var(--surface-2)]">
+          <button onClick={onCancel} className="p-2 rounded-xl hover:bg-[var(--surface-2)]" aria-label="Fermer">
             <X size={18} className="text-[var(--text-muted)]" />
           </button>
         </div>
         <div className="p-6 max-h-[72vh] overflow-y-auto space-y-5">
           {!initial?.id && (
             <div>
-              <p className="text-xs font-bold text-[var(--text-muted)] uppercase mb-2">Démarrage rapide</p>
+              <p className="text-xs font-semibold text-[var(--text-muted)]  mb-2">Démarrage rapide</p>
               <div className="grid grid-cols-4 gap-2">
                 {PRESETS.map(p => (
                   <button key={p.name} onClick={() => { setName(p.name); setSh(p.sh); setSm(0); setEh(p.eh); setEm(0); setNight(p.night); setColor(p.color); }}
-                    className="flex flex-col items-center gap-1 p-2.5 rounded-xl border-2 border-[var(--border)] hover:border-emerald-400 text-xs font-bold text-[var(--text-muted)] transition-all"
+                    className="flex flex-col items-center gap-1 p-2.5 rounded-xl border-2 border-[var(--border)] hover:border-[var(--border)] text-xs font-semibold text-[var(--text-muted)] transition-colors"
                     style={{ borderColor: name === p.name ? p.color : undefined }}>
-                    <span>{p.night ? '🌙' : p.sh < 12 ? '☀️' : '🌆'}</span>
+                    <span>{p.night ? <Moon size={16} /> : p.sh < 12 ? <Sun size={16} /> : <Sunset size={16} />}</span>
                     {p.name}
                   </button>
                 ))}
@@ -155,10 +159,10 @@ function ShiftModal({ initial, onSave, onCancel, saving }: {
             </div>
           )}
           <div>
-            <label className="block text-sm font-bold text-[var(--text-muted)] mb-1.5">Nom <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-semibold text-[var(--text-muted)] mb-1.5">Nom <span className="text-[var(--danger-text)]">*</span></label>
             <input type="text" value={name} onChange={e => setName(e.target.value)}
               placeholder="Ex : Matin, Nuit, Garde pharmacie..."
-              className="w-full px-4 py-2.5 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20" />
+              className="w-full px-4 py-2.5 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm focus:border-[var(--border)] focus:ring-2 focus:ring-[var(--focus)]" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             {[
@@ -166,41 +170,41 @@ function ShiftModal({ initial, onSave, onCancel, saving }: {
               { label: 'Fin', h: eh, m: em, setH: setEh, setM: setEm },
             ].map(({ label, h, m, setH, setM }) => (
               <div key={label}>
-                <label className="block text-sm font-bold text-[var(--text-muted)] mb-1.5">{label}</label>
-                <div className="flex gap-2">
-                  <select value={h} onChange={e => setH(+e.target.value)}
-                    className="flex-1 px-3 py-2.5 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm focus:border-emerald-500">
+                <label className="block text-sm font-semibold text-[var(--text-muted)] mb-1.5">{label}</label>
+                <div className="flex gap-2 attendance-filters">
+                  <AttendanceSelect value={h} onChange={e => setH(+e.target.value)}
+                    className="flex-1 px-3 py-2.5 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm focus:border-[var(--border)]">
                     {Array.from({ length: 24 }, (_, i) => <option key={i} value={i}>{String(i).padStart(2, '0')}h</option>)}
-                  </select>
-                  <select value={m} onChange={e => setM(+e.target.value)}
-                    className="w-20 px-2 py-2.5 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm focus:border-emerald-500">
+                  </AttendanceSelect>
+                  <AttendanceSelect value={m} onChange={e => setM(+e.target.value)}
+                    className="w-20 px-2 py-2.5 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm focus:border-[var(--border)]">
                     {[0, 15, 30, 45].map(v => <option key={v} value={v}>{String(v).padStart(2, '0')}</option>)}
-                  </select>
+                  </AttendanceSelect>
                 </div>
               </div>
             ))}
           </div>
           <label className="flex items-center gap-3 cursor-pointer">
             <button type="button" onClick={() => setNight(!night)}
-              className={`w-11 h-6 rounded-full transition-colors ${night ? 'bg-emerald-500' : 'bg-[var(--border)]'}`}>
-              <div className={`w-5 h-5 bg-white rounded-full shadow transition-transform mt-0.5 ${night ? 'translate-x-5 ml-0.5' : 'translate-x-0.5'}`} />
+              className={`w-11 h-6 rounded-full transition-colors ${night ? 'bg-[var(--brand)]' : 'bg-[var(--border)]'}`}>
+              <div className={`w-5 h-5 bg-[var(--surface)] rounded-full shadow transition-transform mt-0.5 ${night ? 'translate-x-5 ml-0.5' : 'translate-x-0.5'}`} />
             </button>
             <div>
-              <p className="text-sm font-semibold text-[var(--text)] flex items-center gap-1.5"><Moon size={14} className="text-emerald-500" /> Shift de nuit</p>
+              <p className="text-sm font-semibold text-[var(--text)] flex items-center gap-1.5"><Moon size={14} className="text-[var(--success-text)]" /> Shift de nuit</p>
               <p className="text-xs text-[var(--text-muted)]">Ouvre droit à la prime de nuit</p>
             </div>
           </label>
           {night && (
             <div>
-              <label className="block text-xs font-bold text-[var(--text-muted)] mb-1">Prime de nuit (%)</label>
+              <label className="block text-xs font-semibold text-[var(--text-muted)] mb-1">Prime de nuit (%)</label>
               <input type="number" min={0} max={100} step={5} value={premium} onChange={e => setPremium(+e.target.value)}
-                className="w-full px-4 py-2 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm focus:border-emerald-500" />
+                className="w-full px-4 py-2 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm focus:border-[var(--border)]" />
             </div>
           )}
           <label className="flex items-center gap-3 cursor-pointer">
             <button type="button" onClick={() => setDefault(!isDefault)}
-              className={`w-11 h-6 rounded-full transition-colors ${isDefault ? 'bg-emerald-500' : 'bg-[var(--border)]'}`}>
-              <div className={`w-5 h-5 bg-white rounded-full shadow transition-transform mt-0.5 ${isDefault ? 'translate-x-5 ml-0.5' : 'translate-x-0.5'}`} />
+              className={`w-11 h-6 rounded-full transition-colors ${isDefault ? 'bg-[var(--brand)]' : 'bg-[var(--border)]'}`}>
+              <div className={`w-5 h-5 bg-[var(--surface)] rounded-full shadow transition-transform mt-0.5 ${isDefault ? 'translate-x-5 ml-0.5' : 'translate-x-0.5'}`} />
             </button>
             <div>
               <p className="text-sm font-semibold text-[var(--text)]">Shift par défaut</p>
@@ -208,28 +212,28 @@ function ShiftModal({ initial, onSave, onCancel, saving }: {
             </div>
           </label>
           <div>
-            <p className="text-xs font-bold text-[var(--text-muted)] uppercase mb-2">Couleur</p>
+            <p className="text-xs font-semibold text-[var(--text-muted)]  mb-2">Couleur</p>
             <div className="flex gap-2 flex-wrap">
               {SHIFT_COLORS.map(c => (
                 <button key={c} onClick={() => setColor(c)}
-                  className={`w-8 h-8 rounded-xl transition-all ${color === c ? 'ring-2 ring-offset-2 ring-current scale-110' : 'opacity-60 hover:opacity-100'}`}
+                  className={`w-8 h-8 rounded-xl transition-colors ${color === c ? 'ring-2 ring-offset-2 ring-current scale-110' : 'opacity-60 hover:opacity-100'}`}
                   style={{ backgroundColor: c, color: c }} />
               ))}
             </div>
           </div>
         </div>
         <div className="px-6 py-4 border-t border-[var(--border)] flex gap-3">
-          <button onClick={onCancel} className="flex-1 px-4 py-3 bg-[var(--surface-2)] text-[var(--text-muted)] rounded-xl text-sm font-bold">Annuler</button>
+          <button onClick={onCancel} className="flex-1 px-4 py-3 bg-[var(--surface-2)] text-[var(--text-muted)] rounded-xl text-sm font-semibold">Annuler</button>
           <button
             onClick={() => onSave({ name: name.trim(), startHour: sh, startMinute: sm, endHour: eh, endMinute: em, isNightShift: night || crosses, nightPremiumRate: premium, color, isDefault, durationHours: duration, crossesMidnight: crosses })}
             disabled={!name.trim() || saving}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 disabled:opacity-50 text-white rounded-xl text-sm font-bold shadow-lg shadow-emerald-500/20">
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-3    disabled:opacity-50 bg-[var(--brand)] text-[var(--on-brand)] rounded-xl text-sm font-semibold shadow-lg ">
             {saving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
             {initial?.id ? 'Mettre à jour' : 'Créer'}
           </button>
         </div>
       </div>
-    </div>
+    </AttendanceDialog>
   );
 }
 
@@ -281,15 +285,15 @@ function AssignModal({ shifts, employees, onAssign, onClose, saving }: {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+    <AttendanceDialog title="Planning" onClose={onClose} busy={saving}>
+
       <div className="relative w-full sm:max-w-lg bg-[var(--surface)] rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden">
         <div className="flex justify-center pt-3 pb-1 sm:hidden">
           <div className="w-10 h-1 bg-[var(--border)] rounded-full" />
         </div>
         <div className="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between">
-          <h3 className="text-lg font-bold text-[var(--text)]">Assigner un planning</h3>
-          <button onClick={onClose} className="p-2 rounded-xl hover:bg-[var(--surface-2)]">
+          <h3 className="text-lg font-semibold text-[var(--text)]">Assigner un planning</h3>
+          <button onClick={onClose} className="p-2 rounded-xl hover:bg-[var(--surface-2)]" aria-label="Fermer">
             <X size={18} className="text-[var(--text-muted)]" />
           </button>
         </div>
@@ -298,23 +302,23 @@ function AssignModal({ shifts, employees, onAssign, onClose, saving }: {
 
           {/* Shift */}
           <div>
-            <label className="block text-sm font-bold text-[var(--text-muted)] mb-2">
-              Shift <span className="text-red-500">*</span>
+            <label className="block text-sm font-semibold text-[var(--text-muted)] mb-2">
+              Shift <span className="text-[var(--danger-text)]">*</span>
             </label>
             <div className="space-y-1.5">
               {shifts.map(s => (
                 <button key={s.id} onClick={() => setShiftId(s.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl border-2 text-left transition-all ${shiftId === s.id ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-[var(--border)] hover:border-[var(--text-muted)]'}`}>
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl border-2 text-left transition-colors ${shiftId === s.id ? 'border-[var(--border)] bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] ' : 'border-[var(--border)] hover:border-[var(--text-muted)]'}`}>
                   <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: s.color }} />
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-sm text-[var(--text)] flex items-center gap-1.5">
+                    <p className="font-semibold text-sm text-[var(--text)] flex items-center gap-1.5">
                       <ShiftIcon shift={s} />
                       {s.name}
-                      {s.isDefault && <span className="ml-1 px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded text-[10px] font-bold">Défaut</span>}
+                      {s.isDefault && <span className="ml-1 px-1.5 py-0.5 bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  text-[var(--success-text)]  rounded text-[10px] font-semibold">Défaut</span>}
                     </p>
                     <p className="text-xs text-[var(--text-muted)]">{fmtHHMM(s.startHour, s.startMinute)} → {fmtHHMM(s.endHour, s.endMinute)} · {s.durationHours}h{s.nightPremiumRate > 0 ? ` · +${s.nightPremiumRate}%` : ''}</p>
                   </div>
-                  {shiftId === s.id && <Check size={14} className="text-emerald-500 flex-shrink-0" />}
+                  {shiftId === s.id && <Check size={14} className="text-[var(--success-text)] flex-shrink-0" />}
                 </button>
               ))}
             </div>
@@ -322,12 +326,12 @@ function AssignModal({ shifts, employees, onAssign, onClose, saving }: {
 
           {/* Type */}
           <div>
-            <label className="block text-sm font-bold text-[var(--text-muted)] mb-2">Type</label>
+            <label className="block text-sm font-semibold text-[var(--text-muted)] mb-2">Type</label>
             <div className="flex bg-[var(--surface-2)] rounded-xl p-1 gap-1">
               {(['date', 'recurring'] as const).map(t => (
                 <button key={t} onClick={() => setType(t)}
-                  className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${type === t ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
-                  {t === 'date' ? '📅 Date précise' : '🔄 Récurrent'}
+                  className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${type === t ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
+                  {t === 'date' ? <><Calendar size={16} /> Date précise</> : <><Repeat size={16} /> Récurrent</>}
                 </button>
               ))}
             </div>
@@ -336,20 +340,20 @@ function AssignModal({ shifts, employees, onAssign, onClose, saving }: {
           {/* Contenu selon type */}
           {type === 'date' ? (
             <div>
-              <label className="block text-xs font-bold text-[var(--text-muted)] mb-1.5">Date</label>
+              <label className="block text-xs font-semibold text-[var(--text-muted)] mb-1.5">Date</label>
               <input type="date" value={date} onChange={e => setDate(e.target.value)}
-                className="w-full px-4 py-2.5 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm focus:border-emerald-500" />
+                className="w-full px-4 py-2.5 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm focus:border-[var(--border)]" />
             </div>
           ) : (
             <div className="space-y-4">
               {/* Jours multi-sélection */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-bold text-[var(--text-muted)]">
-                    Jours <span className="text-red-500">*</span>
+                  <label className="text-xs font-semibold text-[var(--text-muted)]">
+                    Jours <span className="text-[var(--danger-text)]">*</span>
                   </label>
                   {selectedDays.length > 0 && (
-                    <span className="text-[10px] font-bold text-emerald-500">
+                    <span className="text-[10px] font-semibold text-[var(--success-text)]">
                       {selectedDays.length} jour{selectedDays.length > 1 ? 's' : ''} sélectionné{selectedDays.length > 1 ? 's' : ''}
                     </span>
                   )}
@@ -361,14 +365,14 @@ function AssignModal({ shifts, employees, onAssign, onClose, saving }: {
                       <button
                         key={i}
                         onClick={() => toggleDay(i)}
-                        className={`flex flex-col items-center py-2.5 rounded-xl text-xs font-bold transition-all ${
+                        className={`flex flex-col items-center py-2.5 rounded-xl text-xs font-semibold transition-colors ${
                           isSelected
-                            ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/30 scale-105'
+                            ? 'bg-[var(--brand)] text-[var(--on-brand)] shadow-md  scale-105'
                             : 'bg-[var(--surface-2)] text-[var(--text-muted)] hover:bg-[var(--border)]'
                         }`}
                       >
                         {d}
-                        <span className={`w-1 h-1 rounded-full mt-1 ${isSelected ? 'bg-white' : 'bg-transparent'}`} />
+                        <span className={`w-1 h-1 rounded-full mt-1 ${isSelected ? 'bg-[var(--surface)]' : 'bg-transparent'}`} />
                       </button>
                     );
                   })}
@@ -382,13 +386,13 @@ function AssignModal({ shifts, employees, onAssign, onClose, saving }: {
                     { label: 'Week-end', days: [6, 0] },
                   ].map(({ label, days }) => (
                     <button key={label} onClick={() => setSelectedDays(days)}
-                      className="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-[var(--surface-2)] text-[var(--text-muted)] hover:bg-[var(--border)] transition-colors">
+                      className="text-[10px] font-semibold px-2.5 py-1 rounded-lg bg-[var(--surface-2)] text-[var(--text-muted)] hover:bg-[var(--border)] transition-colors">
                       {label}
                     </button>
                   ))}
                   {selectedDays.length > 0 && (
                     <button onClick={() => setSelectedDays([])}
-                      className="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-400 hover:bg-red-100 transition-colors ml-auto">
+                      className="text-[10px] font-semibold px-2.5 py-1 rounded-lg bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  text-[var(--danger-text)] hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] transition-colors ml-auto">
                       Effacer
                     </button>
                   )}
@@ -398,18 +402,18 @@ function AssignModal({ shifts, employees, onAssign, onClose, saving }: {
               {/* Période */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-[var(--text-muted)] mb-1">
+                  <label className="block text-xs font-semibold text-[var(--text-muted)] mb-1">
                     Du <span className="text-[var(--text-muted)] font-normal">(optionnel)</span>
                   </label>
                   <input type="date" value={validFrom} onChange={e => setValidFrom(e.target.value)}
-                    className="w-full px-3 py-2 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm focus:border-emerald-500" />
+                    className="w-full px-3 py-2 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm focus:border-[var(--border)]" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-[var(--text-muted)] mb-1">
+                  <label className="block text-xs font-semibold text-[var(--text-muted)] mb-1">
                     Au <span className="text-[var(--text-muted)] font-normal">(optionnel)</span>
                   </label>
                   <input type="date" value={validUntil} onChange={e => setValidUntil(e.target.value)}
-                    className="w-full px-3 py-2 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm focus:border-emerald-500" />
+                    className="w-full px-3 py-2 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm focus:border-[var(--border)]" />
                 </div>
               </div>
             </div>
@@ -417,29 +421,29 @@ function AssignModal({ shifts, employees, onAssign, onClose, saving }: {
 
           {/* Employé */}
           <div>
-            <label className="block text-sm font-bold text-[var(--text-muted)] mb-2">
-              Employé <span className="text-red-500">*</span>
+            <label className="block text-sm font-semibold text-[var(--text-muted)] mb-2">
+              Employé <span className="text-[var(--danger-text)]">*</span>
             </label>
             <div className="relative mb-2">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
               <input type="text" placeholder="Rechercher..." value={search} onChange={e => setSearch(e.target.value)}
-                className="w-full pl-8 pr-4 py-2 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm focus:border-emerald-500" />
+                className="w-full pl-8 pr-4 py-2 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm focus:border-[var(--border)]" />
             </div>
             <div className="max-h-40 overflow-y-auto space-y-1.5">
               {filtered.length === 0 ? (
                 <p className="text-center text-sm text-[var(--text-muted)] py-4">Aucun employé trouvé</p>
               ) : filtered.map(emp => (
                 <button key={emp.id} onClick={() => setEmpId(emp.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border-2 text-left transition-all ${empId === emp.id ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-[var(--border)] hover:border-[var(--text-muted)]'}`}>
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border-2 text-left transition-colors ${empId === emp.id ? 'border-[var(--border)] bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] ' : 'border-[var(--border)] hover:border-[var(--text-muted)]'}`}>
                   {emp.photoUrl
                     ? <img src={emp.photoUrl} className="w-8 h-8 rounded-lg object-cover" alt="" />
-                    : <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-xs font-bold text-white">{emp.firstName[0]}{emp.lastName[0]}</div>
+                    : <div className="w-8 h-8 rounded-lg    flex items-center justify-center text-xs font-semibold bg-[var(--brand)] text-[var(--on-brand)]">{emp.firstName[0]}{emp.lastName[0]}</div>
                   }
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm text-[var(--text)] truncate">{emp.firstName} {emp.lastName}</p>
                     <p className="text-xs text-[var(--text-muted)] truncate">{emp.department?.name}</p>
                   </div>
-                  {empId === emp.id && <Check size={14} className="text-emerald-500 flex-shrink-0" />}
+                  {empId === emp.id && <Check size={14} className="text-[var(--success-text)] flex-shrink-0" />}
                 </button>
               ))}
             </div>
@@ -447,27 +451,27 @@ function AssignModal({ shifts, employees, onAssign, onClose, saving }: {
 
           {/* Notes */}
           <div>
-            <label className="block text-xs font-bold text-[var(--text-muted)] mb-1.5">
+            <label className="block text-xs font-semibold text-[var(--text-muted)] mb-1.5">
               Notes <span className="text-[var(--text-muted)] font-normal">(optionnel)</span>
             </label>
             <input type="text" value={notes} onChange={e => setNotes(e.target.value)}
               placeholder="Ex : Remplacement congé..."
-              className="w-full px-4 py-2 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm focus:border-emerald-500" />
+              className="w-full px-4 py-2 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm focus:border-[var(--border)]" />
           </div>
         </div>
 
         <div className="px-6 py-4 border-t border-[var(--border)] flex gap-3">
-          <button onClick={onClose} className="flex-1 px-4 py-3 bg-[var(--surface-2)] text-[var(--text-muted)] rounded-xl text-sm font-bold">Annuler</button>
+          <button onClick={onClose} className="flex-1 px-4 py-3 bg-[var(--surface-2)] text-[var(--text-muted)] rounded-xl text-sm font-semibold">Annuler</button>
           <button
             onClick={handleAssign}
             disabled={!canSubmit || saving}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 disabled:opacity-50 text-white rounded-xl text-sm font-bold shadow-lg shadow-emerald-500/20">
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-3    disabled:opacity-50 bg-[var(--brand)] text-[var(--on-brand)] rounded-xl text-sm font-semibold shadow-lg ">
             {saving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
             {type === 'recurring' && selectedDays.length > 1 ? `Assigner (${selectedDays.length} jours)` : 'Assigner'}
           </button>
         </div>
       </div>
-    </div>
+    </AttendanceDialog>
   );
 }
 
@@ -529,43 +533,43 @@ function EmployeeShiftView({ assignments, employees, shifts, loading }: {
   return (
     <div className="space-y-4">
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-3 attendance-metrics">
         <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-4 text-center">
-          <p className="text-2xl font-black text-[var(--text)]">{employees.length}</p>
+          <p className="text-2xl font-semibold text-[var(--text)]">{employees.length}</p>
           <p className="text-xs text-[var(--text-muted)] mt-0.5 flex items-center justify-center gap-1"><Users size={11} />Total</p>
         </div>
-        <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-4 text-center">
-          <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{assignedCount}</p>
-          <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5 flex items-center justify-center gap-1"><UserCheck size={11} />Avec planning</p>
+        <div className="bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  border border-[var(--border)]  rounded-2xl p-4 text-center">
+          <p className="text-2xl font-semibold text-[var(--success-text)] ">{assignedCount}</p>
+          <p className="text-xs text-[var(--success-text)]  mt-0.5 flex items-center justify-center gap-1"><UserCheck size={11} />Avec planning</p>
         </div>
         <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-2xl p-4 text-center">
-          <p className="text-2xl font-black text-[var(--text-muted)]">{withoutShiftCount}</p>
+          <p className="text-2xl font-semibold text-[var(--text-muted)]">{withoutShiftCount}</p>
           <p className="text-xs text-[var(--text-muted)] mt-0.5 flex items-center justify-center gap-1"><UserX size={11} />Horaires globaux</p>
         </div>
       </div>
 
       {/* Filtres */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2 attendance-filters">
         <div className="relative flex-1 min-w-[180px]">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
           <input type="text" placeholder="Rechercher un employé..." value={search} onChange={e => setSearch(e.target.value)}
-            className="w-full pl-8 pr-4 py-2.5 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm focus:border-emerald-500" />
+            className="w-full pl-8 pr-4 py-2.5 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm focus:border-[var(--border)]" />
         </div>
-        <select value={filterShift} onChange={e => setFilterShift(e.target.value)}
-          className="px-3 py-2.5 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm text-[var(--text-muted)] focus:border-emerald-500">
+        <AttendanceSelect value={filterShift} onChange={e => setFilterShift(e.target.value)}
+          className="px-3 py-2.5 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm text-[var(--text-muted)] focus:border-[var(--border)]">
           <option value="">Tous les shifts</option>
           {shifts.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-        </select>
+        </AttendanceSelect>
         <div className="flex bg-[var(--surface-2)] rounded-xl p-1 gap-1">
-          {([['all', 'Tous'], ['date', '📅'], ['recurring', '🔄']] as const).map(([val, label]) => (
+          {([['all', 'Tous'], ['date', 'Date précise'], ['recurring', 'Récurrent']] as const).map(([val, label]) => (
             <button key={val} onClick={() => setFilterType(val as any)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${filterType === val ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${filterType === val ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
               {label}
             </button>
           ))}
         </div>
         <button onClick={() => setShowAll(v => !v)}
-          className={`flex items-center gap-2 px-3 py-2 rounded-xl border-2 text-xs font-bold transition-all ${showAll ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : 'border-[var(--border)] text-[var(--text-muted)]'}`}>
+          className={`flex items-center gap-2 px-3 py-2 rounded-xl border-2 text-xs font-semibold transition-colors ${showAll ? 'border-[var(--border)] bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  text-[var(--success-text)] ' : 'border-[var(--border)] text-[var(--text-muted)]'}`}>
           <Eye size={13} />
           {showAll ? 'Shiftés + Globaux' : 'Shiftés seulement'}
         </button>
@@ -583,9 +587,9 @@ function EmployeeShiftView({ assignments, employees, shifts, loading }: {
       ) : (
         <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl overflow-hidden">
           <div className="grid grid-cols-[1fr_auto] sm:grid-cols-[2fr_3fr_auto] gap-4 px-5 py-3 bg-[var(--surface-2)]/50 border-b border-[var(--border)]">
-            <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Employé</p>
-            <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider hidden sm:block">Planning assigné</p>
-            <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Statut</p>
+            <p className="text-xs font-semibold text-[var(--text-muted)]  ">Employé</p>
+            <p className="text-xs font-semibold text-[var(--text-muted)]   hidden sm:block">Planning assigné</p>
+            <p className="text-xs font-semibold text-[var(--text-muted)]  ">Statut</p>
           </div>
           <div className="divide-y divide-[var(--border)]">
             {filtered.map(({ employee, assignments: empAssignments, hasShift }) => (
@@ -593,7 +597,7 @@ function EmployeeShiftView({ assignments, employees, shifts, loading }: {
                 <div className="flex items-center gap-3 min-w-0">
                   {employee.photoUrl
                     ? <img src={employee.photoUrl} className="w-9 h-9 rounded-xl object-cover flex-shrink-0" alt="" />
-                    : <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">{employee.firstName[0]}{employee.lastName[0]}</div>
+                    : <div className="w-9 h-9 rounded-xl    flex items-center justify-center text-xs font-semibold bg-[var(--brand)] text-[var(--on-brand)] flex-shrink-0">{employee.firstName[0]}{employee.lastName[0]}</div>
                   }
                   <div className="min-w-0">
                     <p className="font-semibold text-sm text-[var(--text)] truncate">{employee.firstName} {employee.lastName}</p>
@@ -624,16 +628,16 @@ function EmployeeShiftView({ assignments, employees, shifts, loading }: {
                             </>
                           ) : null}
                         </span>
-                        {a.notes && <span className="text-[10px] text-[var(--text-muted)] italic truncate max-w-[120px]" title={a.notes}>💬 {a.notes}</span>}
+                        {a.notes && <span className="text-[10px] text-[var(--text-muted)] italic truncate max-w-[120px]" title={a.notes}> {a.notes}</span>}
                       </div>
                     ))
                   )}
                 </div>
                 <div className="flex-shrink-0">
                   {hasShift ? (
-                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-lg text-[10px] font-bold"><UserCheck size={10} />Shifté</span>
+                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  text-[var(--success-text)]  rounded-lg text-[10px] font-semibold"><UserCheck size={10} />Shifté</span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-[var(--surface-2)] text-[var(--text-muted)] rounded-lg text-[10px] font-bold"><Clock size={10} />Global</span>
+                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-[var(--surface-2)] text-[var(--text-muted)] rounded-lg text-[10px] font-semibold"><Clock size={10} />Global</span>
                   )}
                 </div>
               </div>
@@ -661,7 +665,7 @@ function EmployeeShiftView({ assignments, employees, shifts, loading }: {
                 a.href = url; a.download = `plannings-${new Date().toISOString().split('T')[0]}.csv`; a.click();
                 URL.revokeObjectURL(url);
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--surface)] border border-[var(--border)] rounded-lg text-xs font-bold text-[var(--text-muted)] hover:bg-[var(--surface-2)] transition-colors">
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--surface)] border border-[var(--border)] rounded-lg text-xs font-semibold text-[var(--text-muted)] hover:bg-[var(--surface-2)] transition-colors">
               <Download size={12} />Export CSV
             </button>
           </div>
@@ -672,7 +676,7 @@ function EmployeeShiftView({ assignments, employees, shifts, loading }: {
 }
 
 // ─── Page principale ──────────────────────────────────────────────────────────
-export default function ShiftsPage() {
+function ShiftsPageContent() {
   const router = useRouter();
 
   const [shifts, setShifts] = useState<WorkShift[]>([]);
@@ -710,7 +714,7 @@ export default function ShiftsPage() {
         shiftsData = Array.isArray(sr) ? sr : [];
       } catch (e: any) {
         if (e?.response?.status === 404 || e?.message?.includes('WorkShift')) {
-          showToast('ℹ️ Tables shifts non créées. Lancez npx prisma migrate dev.', false);
+          showToast(' Tables shifts non créées. Lancez npx prisma migrate dev.', false);
         }
       }
       setShifts(shiftsData);
@@ -751,10 +755,10 @@ export default function ShiftsPage() {
     try {
       if (editingShift) {
         await api.put(`/attendance/shifts/${editingShift.id}`, data);
-        showToast('Shift mis à jour ✅');
+        showToast('Shift mis à jour ');
       } else {
         await api.post('/attendance/shifts', data);
-        showToast('Shift créé ✅');
+        showToast('Shift créé ');
       }
       setShiftModal(false);
       setEditingShift(null);
@@ -803,7 +807,7 @@ export default function ShiftsPage() {
           notes:        data.notes,
         });
       }
-      showToast('Planning assigné ✅');
+      showToast('Planning assigné ');
       setAssignModal(false);
       await fetchAssignments();
       setActiveTab('employees');
@@ -815,11 +819,12 @@ export default function ShiftsPage() {
   };
 
   return (
-    <div className="p-4 sm:p-6 space-y-6 max-w-5xl mx-auto">
+    <div className="attendance-shifts-workspace space-y-6">
+<PresenceSubNav userRole={userRole} />
 
       {/* Toast */}
       {toast && (
-        <div className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-2xl text-white shadow-2xl ${toast.ok ? 'bg-emerald-500' : 'bg-red-500'}`}>
+        <div className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-[var(--brand)] text-[var(--on-brand)] shadow-2xl ${toast.ok ? 'bg-[var(--brand)]' : 'bg-[var(--danger)]'}`}>
           {toast.ok ? <Check size={16} /> : <X size={16} />}
           <span className="font-semibold text-sm">{toast.msg}</span>
         </div>
@@ -845,48 +850,48 @@ export default function ShiftsPage() {
       )}
 
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <button onClick={() => router.back()} className="p-2 rounded-xl bg-[var(--surface-2)] hover:bg-[var(--border)] transition-colors">
+      <div className="flex items-center gap-4 attendance-page-header">
+        <button onClick={() => router.back()} className="p-2 rounded-xl bg-[var(--surface-2)] hover:bg-[var(--border)] transition-colors" aria-label="Retour">
           <ArrowLeft size={20} className="text-[var(--text-muted)]" />
         </button>
         <div className="flex-1">
-          <h1 className="text-2xl font-black text-[var(--text)]">Plannings & Shifts</h1>
+          <h1 className="text-2xl font-semibold text-[var(--text)]">Plannings & Shifts</h1>
           <p className="text-sm text-[var(--text-muted)] mt-0.5">Gérez les horaires flexibles — Matin, Soir, Nuit, Garde</p>
         </div>
         <div className="flex items-center gap-2">
           {canAssign && shifts.length > 0 && (
             <button onClick={() => setAssignModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl text-sm font-bold shadow-md hover:-translate-y-0.5 transition-all">
+              className="k-button k-button-secondary">
               <Plus size={15} />Assigner
             </button>
           )}
           {isAdmin && (
             <button onClick={() => setShiftModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl text-sm font-bold shadow-md hover:-translate-y-0.5 transition-all">
+              className="k-button k-button-primary">
               <Plus size={15} />Nouveau shift
             </button>
           )}
-          <button onClick={fetchData} className="p-2 rounded-xl bg-[var(--surface-2)] hover:bg-[var(--border)] transition-colors">
+          <button onClick={fetchData} className="p-2 rounded-xl bg-[var(--surface-2)] hover:bg-[var(--border)] transition-colors" aria-label="Actualiser">
             <RefreshCw size={18} className={`text-[var(--text-muted)] ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
       </div>
 
       {/* Banner info */}
-      <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-4 flex items-start gap-3">
-        <AlertCircle size={18} className="text-emerald-500 flex-shrink-0 mt-0.5" />
-        <p className="text-sm text-emerald-700 dark:text-emerald-400">
+      <div className="bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  border border-[var(--border)]  rounded-2xl p-4 flex items-start gap-3">
+        <AlertCircle size={18} className="text-[var(--success-text)] flex-shrink-0 mt-0.5" />
+        <p className="text-sm text-[var(--success-text)] ">
           Un shift assigné remplace l'heure officielle globale pour le calcul des retards et heures sup.
           Un employé à <strong>18h</strong> n'est pas en retard à 8h — son planning prime.
         </p>
       </div>
 
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-4 flex items-start gap-3">
-          <AlertTriangle size={18} className="text-red-500 flex-shrink-0 mt-0.5" />
+        <div className="bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  border border-[var(--border)]  rounded-2xl p-4 flex items-start gap-3">
+          <AlertTriangle size={18} className="text-[var(--danger-text)] flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-bold text-red-700 dark:text-red-400">Erreur de chargement</p>
-            <p className="text-xs text-red-600 dark:text-red-500 mt-0.5">{error}</p>
+            <p className="text-sm font-semibold text-[var(--danger-text)] ">Erreur de chargement</p>
+            <p className="text-xs text-[var(--danger-text)]  mt-0.5">{error}</p>
           </div>
         </div>
       )}
@@ -894,14 +899,14 @@ export default function ShiftsPage() {
       {/* Tabs */}
       <div className="flex bg-[var(--surface-2)] rounded-2xl p-1.5 gap-1">
         <button onClick={() => setActiveTab('shifts')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === 'shifts' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text)]'}`}>
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-colors ${activeTab === 'shifts' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text)]'}`}>
           <Clock size={15} />Shifts ({shifts.length})
         </button>
         <button onClick={() => setActiveTab('employees')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === 'employees' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text)]'}`}>
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-colors ${activeTab === 'employees' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text)]'}`}>
           <Users size={15} />Employés & Plannings
           {assignments.length > 0 && (
-            <span className="px-1.5 py-0.5 bg-emerald-500 text-white text-[10px] font-bold rounded-full">
+            <span className="px-1.5 py-0.5 bg-[var(--brand)] text-[var(--on-brand)] text-[10px] font-semibold rounded-full">
               {new Set(assignments.map(a => a.employeeId)).size}
             </span>
           )}
@@ -914,16 +919,16 @@ export default function ShiftsPage() {
         <div className="space-y-6">
           {shifts.length === 0 ? (
             <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-12 text-center">
-              <div className="w-16 h-16 bg-emerald-50 dark:bg-emerald-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Clock size={28} className="text-emerald-400" />
+              <div className="w-16 h-16 bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  rounded-full flex items-center justify-center mx-auto mb-4">
+                <Clock size={28} className="text-[var(--success-text)]" />
               </div>
-              <p className="font-bold text-[var(--text)] mb-1">Aucun shift configuré</p>
+              <p className="font-semibold text-[var(--text)] mb-1">Aucun shift configuré</p>
               <p className="text-sm text-[var(--text-muted)] mb-5">
                 {isAdmin ? 'Créez des shifts pour gérer les horaires flexibles.' : "Aucun planning n'a encore été créé."}
               </p>
               {isAdmin && (
                 <button onClick={() => setShiftModal(true)}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-500 text-white rounded-xl text-sm font-bold">
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-[var(--brand)] text-[var(--on-brand)] rounded-xl text-sm font-semibold">
                   <Plus size={15} />Créer le premier shift
                 </button>
               )}
@@ -931,26 +936,26 @@ export default function ShiftsPage() {
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {shifts.map(shift => (
-                <div key={shift.id} className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-4 hover:shadow-md transition-all group">
+                <div key={shift.id} className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-4 hover:shadow-md transition-colors group">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: shift.color }} />
                       <div>
-                        <p className="font-bold text-[var(--text)] flex items-center gap-1.5 text-sm">
+                        <p className="font-semibold text-[var(--text)] flex items-center gap-1.5 text-sm">
                           <ShiftIcon shift={shift} />{shift.name}
                         </p>
                         {shift.isDefault && (
-                          <span className="text-[10px] px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded font-bold">Défaut</span>
+                          <span className="text-[10px] px-1.5 py-0.5 bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  text-[var(--success-text)]  rounded font-semibold">Défaut</span>
                         )}
                       </div>
                     </div>
                     {isAdmin && (
                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => setEditingShift(shift)} className="p-1.5 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 rounded-lg transition-colors">
-                          <Edit2 size={13} className="text-emerald-500" />
+                        <button onClick={() => setEditingShift(shift)} className="p-1.5 hover:bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] dark:hover:bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] rounded-lg transition-colors" aria-label="Modifier">
+                          <Edit2 size={13} className="text-[var(--success-text)]" />
                         </button>
-                        <button onClick={() => handleDelete(shift.id)} className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors">
-                          <Trash2 size={13} className="text-red-400" />
+                        <button onClick={() => handleDelete(shift.id)} className="p-1.5 hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] dark:hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] rounded-lg transition-colors" aria-label="Supprimer">
+                          <Trash2 size={13} className="text-[var(--danger-text)]" />
                         </button>
                       </div>
                     )}
@@ -958,23 +963,23 @@ export default function ShiftsPage() {
                   <div className="space-y-1.5 text-xs text-[var(--text-muted)]">
                     <div className="flex items-center justify-between">
                       <span>Horaires</span>
-                      <span className="font-mono font-bold text-[var(--text)]">
+                      <span className="font-mono font-semibold text-[var(--text)]">
                         {fmtHHMM(shift.startHour, shift.startMinute)} → {fmtHHMM(shift.endHour, shift.endMinute)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span>Durée</span>
-                      <span className="font-bold text-emerald-600 dark:text-emerald-400">{shift.durationHours}h</span>
+                      <span className="font-semibold text-[var(--success-text)] ">{shift.durationHours}h</span>
                     </div>
                     {shift.crossesMidnight && (
-                      <div className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
+                      <div className="flex items-center gap-1 text-[var(--warning-text)] ">
                         <Moon size={11} /><span>Traverse minuit</span>
                       </div>
                     )}
                     {shift.isNightShift && shift.nightPremiumRate > 0 && (
                       <div className="flex items-center justify-between">
                         <span>Prime nuit</span>
-                        <span className="font-bold text-amber-600 dark:text-amber-400">+{shift.nightPremiumRate}%</span>
+                        <span className="font-semibold text-[var(--warning-text)] ">+{shift.nightPremiumRate}%</span>
                       </div>
                     )}
                   </div>
@@ -993,18 +998,18 @@ export default function ShiftsPage() {
 
           {canAssign && shifts.length > 0 && (
             <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6">
-              <h3 className="text-sm font-bold text-[var(--text-muted)] mb-4 flex items-center gap-2">
-                <Info size={15} className="text-emerald-500" />Cas d'usage
+              <h3 className="text-sm font-semibold text-[var(--text-muted)] mb-4 flex items-center gap-2">
+                <Info size={15} className="text-[var(--success-text)]" />Cas d'usage
               </h3>
               <div className="grid sm:grid-cols-3 gap-3">
                 {[
-                  { emoji: '💊', title: 'Pharmacie / Hôpital', desc: 'Garde de nuit contractuelle — heures normales avec prime' },
-                  { emoji: '🏭', title: 'Usine 3×8', desc: 'Matin / Soir / Nuit en rotation hebdomadaire' },
-                  { emoji: '🔐', title: 'Sécurité / Gardiennage', desc: 'Shifts 12h avec prime nuit calculée automatiquement' },
+                  { Icon: Stethoscope, title: 'Pharmacie / Hôpital', desc: 'Garde de nuit contractuelle — heures normales avec prime' },
+                  { Icon: Factory, title: 'Usine 3×8', desc: 'Matin / Soir / Nuit en rotation hebdomadaire' },
+                  { Icon: ShieldCheck, title: 'Sécurité / Gardiennage', desc: 'Shifts 12h avec prime nuit calculée automatiquement' },
                 ].map(uc => (
                   <div key={uc.title} className="p-4 bg-[var(--surface-2)] rounded-xl">
-                    <p className="text-2xl mb-2">{uc.emoji}</p>
-                    <p className="text-sm font-bold text-[var(--text)] mb-1">{uc.title}</p>
+                    <uc.Icon size={20} strokeWidth={1.5} className="mb-3 text-[var(--text-secondary)]" />
+                    <p className="text-sm font-semibold text-[var(--text)] mb-1">{uc.title}</p>
                     <p className="text-xs text-[var(--text-muted)]">{uc.desc}</p>
                   </div>
                 ))}
@@ -1022,4 +1027,8 @@ export default function ShiftsPage() {
       )}
     </div>
   );
+}
+
+export default function ShiftsPage() {
+  return <AttendanceModuleFrame kind="list"><ShiftsPageContent /></AttendanceModuleFrame>;
 }

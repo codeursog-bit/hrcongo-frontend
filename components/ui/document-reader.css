@@ -1,0 +1,32 @@
+@media screen {
+  .document-reader { min-width:0; overflow:hidden; border:1px solid var(--border); border-radius:var(--radius-card); background:var(--surface); }
+  .document-reader-toolbar { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; padding:14px 16px; border-bottom:1px solid var(--border); }
+  .document-reader-toolbar strong { display:block; font-size:13px; font-weight:600; color:var(--text); }
+  .document-reader-toolbar span { display:block; font-size:11px; color:var(--text-secondary); margin-top:3px; }
+  .document-reader-tools { display:flex; align-items:center; gap:4px; }
+  .document-reader-tools button { display:flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:8px; color:var(--text-secondary); }
+  .document-reader-tools button:hover { background:var(--surface-2); color:var(--action); }
+  .document-reader-tools button:disabled { opacity:.35; cursor:default; }
+  .document-reader-tools output { min-width:48px; text-align:center; font-size:12px; font-variant-numeric:tabular-nums; color:var(--text); }
+  .document-reader-scroll { padding:16px; overflow:auto; max-height:72dvh; background:var(--surface-2); scrollbar-width:thin; overscroll-behavior:contain; }
+  .document-reader-size { position:relative; margin-inline:auto; flex-shrink:0; }
+  .document-reader-paper { transform-origin:top left; background:#fff; color:#111; box-shadow:0 2px 12px #00000014; display:flow-root; }
+  .document-reader-paper > .loan-document-protected,.document-reader-paper > [style*="-99999"] { position:static!important; inset:auto!important; width:100%!important; transform:none!important; margin:0!important; box-shadow:none!important; }
+  .document-preview-panel { margin-top:20px; min-width:0; }
+  .document-preview-panel > summary { cursor:pointer; padding:14px 16px; border-radius:var(--radius-control); background:var(--surface); color:var(--action); font-size:13px; font-weight:600; }
+  .document-preview-panel[open] > summary { margin-bottom:12px; }
+  .document-preview-dialog { width:min(1100px,calc(100vw - 24px)); max-width:none; max-height:calc(100dvh - 24px); margin:auto; padding:0; border:0; border-radius:var(--radius-card); background:var(--surface); color:var(--text); box-shadow:var(--shadow-pop); }
+  .document-preview-dialog::backdrop { background:rgb(0 0 0 /.5); }
+  .document-preview-dialog > header { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--border); font-size:14px; font-weight:600; }
+  .document-preview-dialog > header button { display:flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:8px; }
+  .document-preview-dialog .document-reader { border:0; border-radius:0; }
+  .document-reader:fullscreen { width:100%; height:100%; border:0; border-radius:0; display:flex; flex-direction:column; }
+  .document-reader:fullscreen .document-reader-scroll { flex:1; max-height:none; }
+  .document-reader :is(button,[role=region]):focus-visible { outline:2px solid var(--focus); outline-offset:-2px; }
+}
+@media print {
+  .document-reader,.document-reader-scroll,.document-reader-size,.document-reader-paper { display:contents!important; width:auto!important; height:auto!important; max-height:none!important; overflow:visible!important; transform:none!important; }
+  .document-reader-toolbar { display:none!important; }
+  .document-preview-panel { display:contents!important; }
+  .document-preview-panel > summary,.document-preview-dialog > header { display:none!important; }
+}

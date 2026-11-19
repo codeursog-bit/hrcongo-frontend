@@ -63,9 +63,9 @@ export default function EmployeeView({ myAttendances, date, employeeId }: Employ
     switch(status) {
       case 'LATE':
         return {
-          bg: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
+          bg: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)]  ',
           label: 'Arrivée tardive',
-          textColor: 'text-amber-600 dark:text-amber-400'
+          textColor: 'text-[var(--warning-text)] '
         };
       case 'LEAVE':
         return {
@@ -75,18 +75,18 @@ export default function EmployeeView({ myAttendances, date, employeeId }: Employ
         };
       default:
         return {
-          bg: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
+          bg: 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)]  ',
           label: 'Présence validée',
-          textColor: 'text-emerald-600 dark:text-emerald-400'
+          textColor: 'text-[var(--success-text)] '
         };
     }
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 attendance-metrics">
       <div className="lg:col-span-2 space-y-4">
-        <h2 className="text-xl font-bold text-[var(--text)] flex items-center gap-2">
-          <Clock size={20} className="text-emerald-500" /> 
+        <h2 className="text-xl font-semibold text-[var(--text)] flex items-center gap-2">
+          <Clock size={20} className="text-[var(--success-text)]" />
           Mon Historique ({date.toLocaleString('fr-FR', { month: 'long' })})
         </h2>
         
@@ -105,14 +105,14 @@ export default function EmployeeView({ myAttendances, date, employeeId }: Employ
                     {getStatusIcon(att.status)}
                   </div>
                   <div>
-                    <p className="font-bold text-[var(--text)] capitalize text-lg">
+                    <p className="font-semibold text-[var(--text)] capitalize text-lg">
                       {new Date(att.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric' })}
                     </p>
-                    <p className={`text-sm font-bold ${styles.textColor}`}>
+                    <p className={`text-sm font-semibold ${styles.textColor}`}>
                       {styles.label}
                     </p>
                     {detailByDate.get(att.date)?.note && (
-                      <p className="text-[11px] font-semibold text-amber-600">{detailByDate.get(att.date).note}</p>
+                      <p className="text-[11px] font-semibold text-[var(--warning-text)]">{detailByDate.get(att.date).note}</p>
                     )}
                   </div>
                 </div>
@@ -122,13 +122,13 @@ export default function EmployeeView({ myAttendances, date, employeeId }: Employ
                   <div className="text-right text-sm bg-[var(--surface-2)] p-3 rounded-lg">
                     <div className="flex justify-between gap-4 mb-1">
                       <span className="text-[var(--text-muted)]">Arrivée:</span>
-                      <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                      <span className="font-mono font-semibold text-[var(--success-text)] ">
                         {att.checkIn ? new Date(att.checkIn).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}) : '--:--'}
                       </span>
                     </div>
                     <div className="flex justify-between gap-4">
                       <span className="text-[var(--text-muted)]">Départ:</span>
-                      <span className="font-mono font-bold text-amber-600 dark:text-amber-400">
+                      <span className="font-mono font-semibold text-[var(--warning-text)] ">
                         {att.checkOut ? new Date(att.checkOut).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}) : '--:--'}
                       </span>
                     </div>
@@ -144,9 +144,9 @@ export default function EmployeeView({ myAttendances, date, employeeId }: Employ
                       </div>
                     )}
                     {Number((att as any).extraHoursInfo) > 0 && (
-                      <div className="flex justify-between gap-4 text-sky-600">
+                      <div className="flex justify-between gap-4 text-[var(--action)]">
                         <span>Au-delà de l&apos;horaire:</span>
-                        <span className="font-mono font-bold" title="Information : ces heures ne sont pas comptées dans la paie">
+                        <span className="font-mono font-semibold" title="Information : ces heures ne sont pas comptées dans la paie">
                           +{parseFloat(Number((att as any).extraHoursInfo).toFixed(2))}h (info)
                         </span>
                       </div>
@@ -154,7 +154,7 @@ export default function EmployeeView({ myAttendances, date, employeeId }: Employ
                     {att.totalHours && (
                       <div className="flex justify-between gap-4 mt-1 pt-1 border-t border-[var(--border)]">
                         <span className="text-[var(--text-muted)]">Durée:</span>
-                        <span className="font-mono font-bold text-[var(--text)]">
+                        <span className="font-mono font-semibold text-[var(--text)]">
                           {parseFloat(Number(att.totalHours).toFixed(2))}h
                         </span>
                       </div>
@@ -162,7 +162,7 @@ export default function EmployeeView({ myAttendances, date, employeeId }: Employ
                   </div>
                 ) : (
                   <div className="text-right text-sm bg-[var(--surface-2)] p-3 rounded-lg">
-                    <div className="flex items-center gap-2 text-[var(--text-muted)] font-bold">
+                    <div className="flex items-center gap-2 text-[var(--text-muted)] font-semibold">
                       <Umbrella size={16} />
                       <span>Jour de congé</span>
                     </div>
@@ -175,52 +175,52 @@ export default function EmployeeView({ myAttendances, date, employeeId }: Employ
       </div>
       
       <div className="lg:col-span-1">
-        <div className="bg-emerald-500 rounded-3xl p-6 text-white shadow-xl sticky top-24">
-          <h3 className="font-bold text-lg mb-4 opacity-90">Résumé Mensuel</h3>
+        <div className="bg-[var(--brand)] rounded-3xl p-6 text-[var(--on-brand)] shadow-xl sticky top-24">
+          <h3 className="font-semibold text-lg mb-4 opacity-90">Résumé Mensuel</h3>
           <div className="space-y-4">
-            <div className="flex justify-between items-center p-3 bg-white/10 rounded-xl backdrop-blur-sm">
+            <div className="flex justify-between items-center p-3 bg-[var(--surface)] rounded-xl ">
               <span>
                 Jours travaillés
                 {(report?.daysWorkedOnRest ?? 0) > 0 && (
-                  <span className="block text-[11px] text-white/70 font-normal">dont {report.daysWorkedOnRest} jour(s) de repos / férié</span>
+                  <span className="block text-[11px] bg-[var(--brand)] text-[var(--on-brand)] font-normal">dont {report.daysWorkedOnRest} jour(s) de repos / férié</span>
                 )}
               </span>
-              <span className="font-bold text-2xl">{daysWorked}</span>
+              <span className="font-semibold text-2xl">{daysWorked}</span>
             </div>
-            <div className="flex justify-between items-center p-3 bg-white/10 rounded-xl border border-amber-300/30 backdrop-blur-sm">
+            <div className="flex justify-between items-center p-3 bg-[var(--surface)] rounded-xl border border-[var(--border)] ">
               <span className="flex items-center gap-2">
-                <AlertTriangle size={16} className="text-amber-200"/> Retards
+                <AlertTriangle size={16} className="text-[var(--warning-text)]"/> Retards
               </span>
-              <span className="font-bold text-2xl text-amber-100">{daysLate}</span>
+              <span className="font-semibold text-2xl text-[var(--warning-text)]">{daysLate}</span>
             </div>
-            <div className="flex justify-between items-center p-3 bg-white/10 rounded-xl backdrop-blur-sm">
+            <div className="flex justify-between items-center p-3 bg-[var(--surface)] rounded-xl ">
               <span>Heures travaillées</span>
-              <span className="font-bold text-2xl">{parseFloat(Number(hoursTotal).toFixed(2))}h</span>
+              <span className="font-semibold text-2xl">{parseFloat(Number(hoursTotal).toFixed(2))}h</span>
             </div>
-            <div className="flex justify-between items-center p-3 bg-white/10 rounded-xl border border-white/20 backdrop-blur-sm">
+            <div className="flex justify-between items-center p-3 bg-[var(--surface)] rounded-xl border border-[var(--border)] ">
               <span className="flex items-center gap-2">
-                <Umbrella size={16} className="text-white/70"/>
+                <Umbrella size={16} className="bg-[var(--brand)] text-[var(--on-brand)]"/>
                 <span>
                   Congés pris
                   {(report?.daysWorkedDuringLeave ?? 0) > 0 && (
-                    <span className="block text-[11px] text-white/70 font-normal">+ {report.daysWorkedDuringLeave} jour(s) travaillé(s) pendant le congé</span>
+                    <span className="block text-[11px] bg-[var(--brand)] text-[var(--on-brand)] font-normal">+ {report.daysWorkedDuringLeave} jour(s) travaillé(s) pendant le congé</span>
                   )}
                 </span>
               </span>
-              <span className="font-bold text-2xl text-white">{daysLeave}</span>
+              <span className="font-semibold text-2xl bg-[var(--brand)] text-[var(--on-brand)]">{daysLeave}</span>
             </div>
             {((report?.daysAbsentUnpaid ?? 0) + (report?.daysAbsentPaid ?? 0)) > 0 && (
-              <div className="flex justify-between items-center p-3 bg-white/10 rounded-xl border border-white/20 backdrop-blur-sm">
+              <div className="flex justify-between items-center p-3 bg-[var(--surface)] rounded-xl border border-[var(--border)] ">
                 <span>
                   Absences
                   {(report?.daysAbsentUnpaid ?? 0) > 0 && (
-                    <span className="block text-[11px] text-white/70 font-normal">dont {report.daysAbsentUnpaid} non justifiée(s)</span>
+                    <span className="block text-[11px] bg-[var(--brand)] text-[var(--on-brand)] font-normal">dont {report.daysAbsentUnpaid} non justifiée(s)</span>
                   )}
                 </span>
-                <span className="font-bold text-2xl text-white">{(report?.daysAbsentUnpaid ?? 0) + (report?.daysAbsentPaid ?? 0)}</span>
+                <span className="font-semibold text-2xl bg-[var(--brand)] text-[var(--on-brand)]">{(report?.daysAbsentUnpaid ?? 0) + (report?.daysAbsentPaid ?? 0)}</span>
               </div>
             )}
-            <p className="text-[11px] text-white/70 leading-relaxed pt-1">
+            <p className="text-[11px] bg-[var(--brand)] text-[var(--on-brand)] leading-relaxed pt-1">
               « Jours travaillés » = les jours où vous avez pointé, y compris un jour de repos, un jour férié ou un jour de congé.
               Les congés pris sont les jours de congé sans pointage.
             </p>

@@ -1,4 +1,5 @@
 'use client';
+import { AttendanceDialog } from '@/components/attendance/AttendanceDialog';
 
 // ============================================================================
 // 📁 components/permissions/EditTimesModal.tsx
@@ -56,14 +57,14 @@ export default function EditTimesModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
+    <AttendanceDialog title="Modifier les heures" onClose={onClose} busy={busy}>
       <div onClick={e => e.stopPropagation()} className="bg-[var(--surface)] rounded-2xl shadow-2xl max-w-md w-full p-5 space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <p className="font-bold text-[var(--text)]">Modifier les heures</p>
+            <p className="font-semibold text-[var(--text)]">Modifier les heures</p>
             <p className="text-xs text-[var(--text-muted)]">Autorisé : {fmtTime(ticket.departureTime)} → {fmtTime(ticket.expectedReturnTime)}</p>
           </div>
-          <button onClick={onClose} className="text-[var(--text-muted)] hover:text-[var(--text)]"><X size={20} /></button>
+          <button onClick={onClose} className="text-[var(--text-muted)] hover:text-[var(--text)]" aria-label="Fermer"><X size={20} /></button>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
@@ -80,15 +81,15 @@ export default function EditTimesModal({
         </label>
 
         <p className="text-[11px] text-[var(--text-muted)]">L’employé sera prévenu et l’ancienne valeur restera visible dans l’historique du ticket.</p>
-        {error && <p className="text-xs text-red-600">{error}</p>}
+        {error && <p className="text-xs text-[var(--danger-text)]">{error}</p>}
 
         <div className="flex gap-2">
-          <button onClick={submit} disabled={busy} className="flex-1 py-2.5 bg-[var(--text)] text-[var(--bg)] text-sm font-bold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50">
+          <button onClick={submit} disabled={busy} className="flex-1 py-2.5 bg-[var(--text)] text-[var(--bg)] text-sm font-semibold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50">
             {busy && <Loader2 size={15} className="animate-spin" />} Enregistrer
           </button>
           <button onClick={onClose} className="px-4 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)]">Annuler</button>
         </div>
       </div>
-    </div>
+    </AttendanceDialog>
   );
 }

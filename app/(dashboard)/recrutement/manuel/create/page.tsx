@@ -1,16 +1,18 @@
 'use client';
+import { RecruitmentFormOutline } from '@/components/recruitment/RecruitmentFrame';
+import { RecruitmentNav } from '@/components/recruitment/recruitment-ui';
+import '@/components/recruitment/recruitment.css';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Briefcase, Send, ArrowLeft, CheckCircle2, Copy, Check,
-  Globe, MapPin, Building2, Loader2, FileText, Upload, X, Image as ImageIcon,
-  Calendar, DollarSign, Eye, Share2, Zap
+  Briefcase, Send, ArrowLeft, Copy, Check, Upload, X
 } from 'lucide-react';
 import { api } from '@/services/api';
 import { Department } from '@/types/recruitment';
 import Image from 'next/image';
+import { Badge, Button, Card, Input, Select, Textarea } from '@/components/design-system/primitives';
 
 interface CreatedJob {
   id: string;
@@ -45,6 +47,24 @@ export default function CreateManualJobPage() {
 
   useEffect(() => {
     api.get<Department[]>('/departments').then(setDepartments).catch(console.error);
+  }, []);
+
+  // Offre créée depuis une demande de recrutement validée : on préremplit ce qui est connu
+  const [requisitionId, setRequisitionId] = useState<string | null>(null);
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get('requisition');
+    if (!id) return;
+    setRequisitionId(id);
+    api.get<any>(`/recruitment/requisitions/${id}`).then((r) => {
+      setFormData((p) => ({
+        ...p,
+        title: r.title ?? p.title,
+        departmentId: r.departmentId ?? '',
+        contractType: r.contractType ?? p.contractType,
+        salaryMin: r.salaryMin ? String(Math.round(Number(r.salaryMin))) : p.salaryMin,
+        salaryMax: r.salaryMax ? String(Math.round(Number(r.salaryMax))) : p.salaryMax,
+      }));
+    }).catch(() => { /* la page reste utilisable sans préremplissage */ });
   }, []);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -107,6 +127,10 @@ export default function CreateManualJobPage() {
       // ✅ CORRECTION : Utiliser api.postFormData
       const jobResponse = await api.postFormData<CreatedJob>('/recruitment/jobs', formDataToSend);
       setCreatedJob(jobResponse);
+      if (requisitionId) {
+        // Lie l'offre à la demande : suivi « postes à pourvoir / pourvus »
+        try { await api.post(`/recruitment/requisitions/${requisitionId}/link-job`, { jobOfferId: jobResponse.id }); } catch { /* modifiable depuis « Demandes » */ }
+      }
     } catch (error) {
       const err = error as Error;
       alert(`Erreur: ${err.message || 'Impossible de créer l\'offre'}`);
@@ -124,7 +148,7 @@ export default function CreateManualJobPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto pb-20 pt-6 px-4 relative">
+    <div className="recruitment-workspace max-w-6xl mx-auto space-y-6 px-4 pb-20 pt-6">
       
       {/* SUCCESS MODAL */}
       <AnimatePresence>
@@ -132,309 +156,223 @@ export default function CreateManualJobPage() {
           <motion.div 
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[rgb(0_0_0_/.5)]  p-4"
           >
             <motion.div 
               initial={{ scale: 0.9, y: 20 }} 
               animate={{ scale: 1, y: 0 }}
-              className="glass-panel rounded-2xl p-8 max-w-lg w-full shadow-2xl relative overflow-hidden"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Confirmation de publication"
+              className="w-full max-w-lg"
             >
-              <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/20 rounded-full blur-[80px] -mr-16 -mt-16 pointer-events-none"></div>
-
-              <div className="text-center mb-8 relative z-10">
-                <div className="w-20 h-20 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/30 shadow-[0_0_30px_rgba(59,130,246,0.3)]">
-                  <CheckCircle2 size={40} />
+              <Card title="Offre publiée" action={<Badge tone="success">Succès</Badge>}>
+                <div className="space-y-6">
+                  <p className="text-sm text-[var(--text-muted)]">Votre offre est en ligne et visible par les candidats.</p>
+                  <div className="space-y-3 rounded-[var(--radius-control)] bg-[var(--surface-2)] p-4">
+                    <p className="text-sm font-semibold text-[var(--text)]">Lien public de candidature</p>
+                    <p className="break-all text-sm text-[var(--text-muted)]">{`${window.location.origin}/jobs/${createdJob.id}`}</p>
+                    <Button type="button" variant="secondary" onClick={handleCopyLink}>
+                      {isCopied ? <Check size={16} strokeWidth={1.5} /> : <Copy size={16} strokeWidth={1.5} />}
+                      {isCopied ? 'Lien copié' : 'Copier le lien'}
+                    </Button>
+                  </div>
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <Button type="button" onClick={() => router.push(`/recrutement/pipeline?job=${createdJob.id}`)}>
+                      Voir les candidatures
+                    </Button>
+                    <Button type="button" variant="secondary" onClick={() => router.push('/recrutement')}>
+                      Retour au recrutement
+                    </Button>
+                  </div>
                 </div>
-                <h2 className="text-3xl font-bold text-[var(--text)] mb-2">Offre Publiée !</h2>
-                <p className="text-[var(--text-muted)]">Votre offre est en ligne et visible par les candidats.</p>
-              </div>
-
-              <div className="bg-black/30 p-4 rounded-2xl border border-white/10 mb-8 relative z-10">
-                <p className="text-xs font-bold text-[var(--text-muted)] uppercase mb-2">Lien public de candidature</p>
-                <div className="flex items-center gap-2 bg-black/40 p-3 rounded-xl border border-white/5">
-                  <Globe className="text-emerald-500 shrink-0" size={18} />
-                  <p className="text-emerald-400 font-mono text-sm truncate flex-1">
-                    {`${window.location.origin}/jobs/${createdJob.id}`}
-                  </p>
-                </div>
-                <button 
-                  onClick={handleCopyLink}
-                  className="w-full mt-3 py-3 bg-white/10 hover:bg-white/20 text-[var(--text)] rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2"
-                >
-                  {isCopied ? <Check size={16} className="text-emerald-400"/> : <Copy size={16}/>}
-                  {isCopied ? 'Lien Copié !' : 'Copier le lien'}
-                </button>
-              </div>
-
-              <div className="flex gap-3">
-                <button 
-                  onClick={() => router.push('/recrutement/manuel/candidats')} 
-                  className="flex-1 py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-lg transition-all"
-                >
-                  Voir les Candidatures
-                </button>
-                <button 
-                  onClick={() => router.push('/recrutement')} 
-                  className="px-4 py-4 bg-white/10 hover:bg-white/20 text-[var(--text)] rounded-xl font-bold"
-                >
-                  <Eye size={20} />
-                </button>
-              </div>
+              </Card>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* HEADER */}
-      <div className="flex items-center gap-4 mb-8">
-        <button onClick={() => router.back()} className="p-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 transition-colors">
-          <ArrowLeft size={20} className="text-gray-500" />
-        </button>
+      <div className="flex items-center gap-4">
+        <Button type="button" variant="secondary" onClick={() => router.back()} aria-label="Retour">
+          <ArrowLeft size={18} strokeWidth={1.5} />
+          <span className="sr-only">Retour</span>
+        </Button>
         <div>
           <div className="flex items-center gap-3 mb-1">
-            <Briefcase className="text-emerald-500" size={28}/>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-[var(--text)]">Créer une Offre Manuelle</h1>
+            <Briefcase className="text-[var(--brand)]" size={24} strokeWidth={1.5}/>
+            <h1 className="text-2xl font-semibold text-[var(--text)]">Créer une offre manuelle</h1>
           </div>
           <p className="text-sm text-[var(--text-muted)]">Recrutement traditionnel avec examen manuel des CV</p>
         </div>
       </div>
 
       {/* FORM */}
-      <form onSubmit={handleSubmit} className="glass-panel rounded-2xl p-8 md:p-12 space-y-8 shadow-2xl">
+      <RecruitmentNav /><div className="recruitment-form-layout"><RecruitmentFormOutline sections={[{"id":"recruit-section-1","label":"Informations sur le poste"},{"id":"recruit-section-2","label":"Image de l'offre (optionnel)"},{"id":"recruit-section-3","label":"Publication et visibilité"},{"id":"recruit-section-4","label":"Mode de traitement"},{"id":"recruit-section-5","label":"Document supplémentaire (optionnel)"}]} /><form data-guide="recrutement-manual-form" onSubmit={handleSubmit} className="space-y-6">
         
         {/* IMAGE UPLOAD */}
-        <div className="space-y-3">
-          <label className="text-sm font-semibold text-[var(--text-muted)] flex items-center gap-2">
-            <ImageIcon size={16}/> Image de l'offre (Optionnel)
-          </label>
-          
-          {imagePreview ? (
-            <div className="relative group">
-              <Image 
-                src={imagePreview} 
-                alt="Preview" 
-                width={400}
-                height={200}
-                className="w-full h-48 object-cover rounded-xl border border-white/10"
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  setImagePreview(null);
-                  setImageFile(null);
-                }}
-                className="absolute top-2 right-2 p-2 bg-red-500/80 hover:bg-red-600 rounded-lg text-[var(--text)] opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <X size={18} />
-              </button>
-            </div>
-          ) : (
-            <label className="block w-full h-48 border-2 border-dashed border-white/20 hover:border-emerald-500/50 rounded-xl cursor-pointer transition-colors">
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={handleImageChange}
-                className="hidden"
-              />
-              <div className="flex flex-col items-center justify-center h-full text-[var(--text-muted)] hover:text-emerald-400 transition-colors">
-                <Upload size={40} className="mb-3" />
-                <p className="font-medium">Cliquez pour uploader une image</p>
-                <p className="text-xs mt-1">JPG, PNG, WEBP (max 2MB)</p>
-              </div>
-            </label>
-          )}
-        </div>
 
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-[var(--text-muted)]">Intitulé du Poste *</label>
-            <input 
-              type="text" 
-              required 
-              placeholder="ex: Chef de Projet Marketing" 
-              className="w-full bg-[var(--bg)]/40 border border-white/10 rounded-xl px-5 py-4 outline-none text-[var(--text)] focus:ring-2 focus:ring-emerald-500/50" 
-              value={formData.title} 
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })} 
-            />
+
+        {requisitionId && (
+          <div role="status" className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-4 text-sm text-[var(--text)]">
+            Offre créée à partir d’une demande de recrutement : les informations connues sont préremplies, vous pouvez les modifier.
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-[var(--text-muted)] flex items-center gap-2"><Building2 size={16}/> Département *</label>
-              <select 
+        )}
+
+        <Card id="recruit-section-1" title="Informations sur le poste">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+            <div className="md:col-span-2">
+              <Input
+                label="Intitulé du poste"
                 required
-                className="w-full bg-[var(--bg)]/40 border border-white/10 rounded-xl px-4 py-4 outline-none text-[var(--text)]" 
-                value={formData.departmentId} 
-                onChange={(e) => setFormData({ ...formData, departmentId: e.target.value })}
-              >
-                <option value="">Choisir...</option>
-                {departments.map(d => <option key={d.id} value={d.id} className="bg-[var(--surface)]">{d.name}</option>)}
-              </select>
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-[var(--text-muted)] flex items-center gap-2"><MapPin size={16}/> Lieu</label>
-              <input 
-                type="text" 
-                className="w-full bg-[var(--bg)]/40 border border-white/10 rounded-xl px-4 py-4 outline-none text-[var(--text)]" 
-                value={formData.location} 
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })} 
+                placeholder="Ex : Chef de projet marketing"
+                value={formData.title}
+                onChange={e => setFormData({ ...formData, title: e.target.value })}
               />
             </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-[var(--text-muted)]">Type de Contrat</label>
-              <select 
-                className="w-full bg-[var(--bg)]/40 border border-white/10 rounded-xl px-4 py-4 outline-none text-[var(--text)]" 
-                value={formData.contractType} 
-                onChange={(e) => setFormData({ ...formData, contractType: e.target.value })}
-              >
-                <option value="CDI" className="bg-[var(--surface)]">CDI</option>
-                <option value="CDD" className="bg-[var(--surface)]">CDD</option>
-                <option value="STAGE" className="bg-[var(--surface)]">Stage</option>
-              </select>
-            </div>
+            <Select
+              label="Département (optionnel)"
+              hint="Vous pourrez le définir plus tard. Il ne sera exigé qu’à l’embauche."
+              value={formData.departmentId}
+              onChange={e => setFormData({ ...formData, departmentId: e.target.value })}
+            >
+              <option value="">Aucun département pour l’instant</option>
+              {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+            </Select>
+            <Input
+              label="Lieu"
+              value={formData.location}
+              onChange={e => setFormData({ ...formData, location: e.target.value })}
+            />
+            <Select
+              label="Type de contrat"
+              value={formData.contractType}
+              onChange={e => setFormData({ ...formData, contractType: e.target.value })}
+            >
+              <option value="CDI">CDI</option>
+              <option value="CDD">CDD</option>
+              <option value="STAGE">Stage</option>
+            </Select>
           </div>
 
           {/* SALARY */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-[var(--text-muted)] flex items-center gap-2">
-                <DollarSign size={16}/> Salaire Min
-              </label>
-              <input 
-                type="number" 
-                placeholder="Ex: 500000"
-                className="w-full bg-[var(--bg)]/40 border border-white/10 rounded-xl px-4 py-4 outline-none text-[var(--text)]" 
-                value={formData.salaryMin} 
-                onChange={(e) => setFormData({ ...formData, salaryMin: e.target.value })} 
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-[var(--text-muted)] flex items-center gap-2">
-                <DollarSign size={16}/> Salaire Max
-              </label>
-              <input 
-                type="number" 
-                placeholder="Ex: 800000"
-                className="w-full bg-[var(--bg)]/40 border border-white/10 rounded-xl px-4 py-4 outline-none text-[var(--text)]" 
-                value={formData.salaryMax} 
-                onChange={(e) => setFormData({ ...formData, salaryMax: e.target.value })} 
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-[var(--text-muted)]">Devise</label>
-              <select 
-                className="w-full bg-[var(--bg)]/40 border border-white/10 rounded-xl px-4 py-4 outline-none text-[var(--text)]" 
-                value={formData.salaryCurrency} 
-                onChange={(e) => setFormData({ ...formData, salaryCurrency: e.target.value })}
-              >
-                <option value="XAF" className="bg-[var(--surface)]">XAF</option>
-                <option value="EUR" className="bg-[var(--surface)]">EUR</option>
-                <option value="USD" className="bg-[var(--surface)]">USD</option>
-              </select>
-            </div>
+          <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-3">
+            <Input label="Salaire minimum" type="number" placeholder="Ex : 500000" value={formData.salaryMin} onChange={e => setFormData({ ...formData, salaryMin: e.target.value })} />
+            <Input label="Salaire maximum" type="number" placeholder="Ex : 800000" value={formData.salaryMax} onChange={e => setFormData({ ...formData, salaryMax: e.target.value })} />
+            <Select label="Devise" value={formData.salaryCurrency} onChange={e => setFormData({ ...formData, salaryCurrency: e.target.value })}>
+              <option value="XAF">XAF</option>
+              <option value="EUR">EUR</option>
+              <option value="USD">USD</option>
+            </Select>
           </div>
 
           {/* EXPIRATION */}
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-[var(--text-muted)] flex items-center gap-2">
-              <Calendar size={16}/> Date d'expiration (Optionnel)
-            </label>
-            <input 
-              type="date" 
-              className="w-full bg-[var(--bg)]/40 border border-white/10 rounded-xl px-4 py-4 outline-none text-[var(--text)]" 
-              value={formData.expirationDate} 
-              onChange={(e) => setFormData({ ...formData, expirationDate: e.target.value })} 
-            />
+          <div className="mt-5 max-w-sm">
+            <Input label="Date d'expiration (optionnel)" type="date" value={formData.expirationDate} onChange={e => setFormData({ ...formData, expirationDate: e.target.value })} />
           </div>
           
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-[var(--text-muted)]">Description du Poste *</label>
-            <textarea 
-              required
-              className="w-full bg-[var(--bg)]/40 border border-white/10 rounded-xl px-5 py-4 min-h-[120px] outline-none text-[var(--text)] focus:ring-2 focus:ring-emerald-500/50 resize-none" 
+          <div className="mt-5 space-y-5">
+            <Textarea
+              label="Description du poste (optionnel)"
+              rows={6}
               value={formData.description} 
               onChange={(e) => setFormData({ ...formData, description: e.target.value })} 
               placeholder="Décrivez les missions et responsabilités..."
             />
-          </div>
           
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-[var(--text-muted)]">Compétences et Qualifications</label>
-            <textarea 
-              className="w-full bg-[var(--bg)]/40 border border-white/10 rounded-xl px-5 py-4 min-h-[100px] outline-none text-[var(--text)] focus:ring-2 focus:ring-emerald-500/50 resize-none" 
+            <Textarea
+              label="Compétences et qualifications"
+              rows={4}
               value={formData.requirements} 
               onChange={(e) => setFormData({ ...formData, requirements: e.target.value })} 
               placeholder="Expérience, diplômes, compétences techniques..."
             />
           </div>
-
-          {/* PORTAL TOGGLE */}
-          <div className="flex items-center justify-between p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
-            <div className="flex items-center gap-3">
-              <Globe className="text-emerald-400" size={20} />
-              <div>
-                <p className="font-bold text-emerald-400 text-sm">Publier sur le Portail</p>
-                <p className="text-xs text-[var(--text-muted)]">Visible par tous les visiteurs</p>
-              </div>
+        </Card>
+<Card className="recruitment-form-image" id="recruit-section-2" title="Image de l'offre (optionnel)">
+          {imagePreview ? (
+            <div className="relative group">
+              <Image
+                src={imagePreview}
+                alt="Aperçu de l’image de l’offre"
+                width={400}
+                height={200}
+                className="w-full max-h-72 rounded-xl object-cover"
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  setImagePreview(null);
+                  setImageFile(null);
+                }}
+                aria-label="Retirer l’image de l’offre"
+                className="absolute right-3 top-3"
+              >
+                <X size={18} strokeWidth={1.5} />
+              </Button>
             </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input 
-                type="checkbox" 
-                className="sr-only peer" 
+          ) : (
+            <label className="flex min-h-48 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl bg-[var(--surface-2)] p-6 text-center text-[var(--text-muted)] focus-within:outline focus-within:outline-2 focus-within:outline-[var(--focus)] focus-within:outline-offset-2">
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handleImageChange}
+                className="sr-only"
+              />
+              <Upload size={32} strokeWidth={1.5} aria-hidden="true" />
+              <span className="font-medium text-[var(--text)]">Choisir une image</span>
+              <span className="text-sm">JPG, PNG ou WEBP · 2 Mo maximum</span>
+            </label>
+          )}
+        </Card>
+
+        <Card id="recruit-section-3" title="Publication et visibilité">
+          <div className="space-y-3">
+            <label className="flex min-h-16 items-center justify-between gap-4 rounded-[var(--radius-control)] bg-[var(--surface-2)] p-4 cursor-pointer">
+              <span>
+                <span className="block font-semibold text-[var(--text)]">Publier sur le portail</span>
+                <span className="block text-sm text-[var(--text-muted)]">Visible par tous les visiteurs</span>
+              </span>
+              <input
+                type="checkbox"
+                className="size-5 shrink-0 accent-[var(--brand)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--focus)]"
+                aria-label="Publier sur le portail"
                 checked={formData.showOnPortal}
-                onChange={(e) => setFormData({ ...formData, showOnPortal: e.target.checked })}
+                onChange={e => setFormData({ ...formData, showOnPortal: e.target.checked })}
               />
-              <div className="w-11 h-6 bg-[var(--border)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
             </label>
-          </div>
-
-          {/* ✨ BOUTON BOOSTER */}
-          <div className="flex items-center justify-between p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl">
-            <div className="flex items-center gap-3">
-              <Zap className="text-amber-400" size={20} />
-              <div>
-                <p className="font-bold text-amber-400 text-sm">Booster l'Offre (Premium)</p>
-                <p className="text-xs text-[var(--text-muted)]">Met l'offre en tête du portail (30 jours)</p>
-              </div>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input 
-                type="checkbox" 
-                className="sr-only peer" 
+            <label className="flex min-h-16 items-center justify-between gap-4 rounded-[var(--radius-control)] bg-[var(--surface-2)] p-4 cursor-pointer">
+              <span>
+                <span className="block font-semibold text-[var(--text)]">Offre premium</span>
+                <span className="block text-sm text-[var(--text-muted)]">Met l'offre en tête du portail pendant 30 jours</span>
+              </span>
+              <input
+                type="checkbox"
+                className="size-5 shrink-0 accent-[var(--brand)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--focus)]"
+                aria-label="Activer l'offre premium"
                 checked={formData.isPremium}
-                onChange={(e) => setFormData({ ...formData, isPremium: e.target.checked })}
+                onChange={e => setFormData({ ...formData, isPremium: e.target.checked })}
               />
-              <div className="w-11 h-6 bg-[var(--border)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
             </label>
           </div>
+        </Card>
 
-          <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-6">
-            <div className="flex items-start gap-3">
-              <FileText size={24} className="text-emerald-400 mt-1 shrink-0"/>
-              <div>
-                <h4 className="text-sm font-bold text-emerald-400 mb-2">Mode Manuel Activé</h4>
-                <p className="text-xs text-[var(--text-muted)] leading-relaxed">
-                  Les candidatures seront reçues dans votre espace et vous pourrez examiner chaque CV manuellement. 
-                  Vous gérerez le processus de sélection étape par étape.
-                </p>
-              </div>
-            </div>
+        <Card id="recruit-section-4" title="Mode de traitement">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <p className="max-w-2xl text-sm text-[var(--text-muted)]">
+              Les candidatures seront reçues dans votre espace pour examiner chaque CV et gérer le processus de sélection.
+            </p>
+            <Badge tone="info">Examen manuel</Badge>
           </div>
+        </Card>
 
           {/* 📄 DOCUMENT SUPPLÉMENTAIRE */}
-          <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-6 space-y-4">
+          <Card id="recruit-section-5" title="Document supplémentaire (optionnel)">
             <div className="flex items-center gap-3">
-              <FileText size={20} className="text-amber-400 shrink-0"/>
-              <div>
-                <p className="font-bold text-amber-300 text-sm">Document supplémentaire (Optionnel)</p>
-                <p className="text-xs text-[var(--text-muted)]">En plus du CV, exiger un autre document au candidat lors de sa candidature</p>
-              </div>
+              <p className="text-sm text-[var(--text-muted)]">En plus du CV, demandez un document additionnel au candidat.</p>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
               {([
                 { value: '' as const, label: 'Aucun' },
                 { value: 'CNI' as const, label: "Pièce d'identité (CNI)" },
@@ -444,49 +382,40 @@ export default function CreateManualJobPage() {
                 { value: 'CASIER' as const, label: 'Casier judiciaire' },
                 { value: 'AUTRE' as const, label: 'Autre document' },
               ]).map(opt => (
-                <button
+                <Button
                   key={opt.value}
                   type="button"
+                  variant={formData.additionalDocumentType === opt.value ? 'primary' : 'secondary'}
+                  aria-pressed={formData.additionalDocumentType === opt.value}
                   onClick={() => setFormData({ ...formData, additionalDocumentType: opt.value, additionalDocumentLabel: '' })}
-                  className={`py-2.5 px-3 rounded-xl text-xs font-bold border transition-all ${
-                    formData.additionalDocumentType === opt.value
-                      ? 'bg-amber-500/30 border-amber-400 text-amber-300'
-                      : 'bg-white/5 border-white/10 text-[var(--text-muted)] hover:border-amber-500/40 hover:text-amber-300'
-                  }`}
                 >
                   {opt.label}
-                </button>
+                </Button>
               ))}
             </div>
             {formData.additionalDocumentType === 'AUTRE' && (
-              <input
-                type="text"
+              <Input
+                label="Nom du document"
                 placeholder="Ex : Lettre de référence, Casier judiciaire..."
                 value={formData.additionalDocumentLabel}
                 onChange={e => setFormData({ ...formData, additionalDocumentLabel: e.target.value })}
-                className="w-full bg-black/30 border border-amber-500/30 rounded-xl px-4 py-3 text-[var(--text)] text-sm placeholder:text-[var(--text-muted)] focus:ring-2 focus:ring-amber-500/40 outline-none"
               />
             )}
             {formData.additionalDocumentType && (
-              <div className="flex items-center gap-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
-                <FileText size={14} className="text-amber-400 shrink-0"/>
-                <p className="text-xs text-amber-300">
-                  Les candidats devront fournir : <strong>{formData.additionalDocumentLabel || formData.additionalDocumentType}</strong> en plus de leur CV
-                </p>
-              </div>
+              <p className="mt-4 text-sm text-[var(--text-muted)]">
+                Document demandé : <strong className="text-[var(--text)]">{formData.additionalDocumentLabel || formData.additionalDocumentType}</strong>, en plus du CV.
+              </p>
             )}
-          </div>
-        </div>
+          </Card>
 
         {/* SUBMIT */}
-        <button 
-          type="submit" 
-          disabled={isSubmitting} 
-          className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-5 rounded-2xl flex items-center justify-center gap-3 active:scale-95 transition-all shadow-xl shadow-emerald-500/10 disabled:opacity-50"
-        >
-          {isSubmitting ? <Loader2 className="animate-spin"/> : <><Send size={18}/> Publier l'Offre</>}
-        </button>
-      </form>
+        <div className="recruitment-form-submit flex flex-col-reverse justify-end gap-3 sm:flex-row">
+          <Button type="button" variant="secondary" onClick={() => router.back()}>Annuler</Button>
+          <Button type="submit" disabled={isSubmitting} loading={isSubmitting}>
+            {isSubmitting ? 'Publication…' : <><Send size={18} strokeWidth={1.5} aria-hidden="true" /> Publier l'offre</>}
+          </Button>
+        </div>
+      </form></div>
     </div>
   );
 }

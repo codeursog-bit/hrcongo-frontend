@@ -1,4 +1,6 @@
 'use client';
+import { LegacyEndedBanner } from '@/components/providers/legacy-feedback';
+import { FeedbackVariants, FeedbackViewport, FeedbackToast } from '@/components/ui/Feedback';
 
 // ============================================================================
 // 💙 SubscriptionEndedBanner
@@ -17,8 +19,8 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { AnimatePresence, motion } from 'framer-motion';
-import { Heart, ArrowRight, X } from 'lucide-react';
+
+
 import { useSubscription } from '@/hooks/useSubscription';
 
 const ADMIN_ROLES = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'];
@@ -81,82 +83,5 @@ export const SubscriptionEndedBanner: React.FC = () => {
 
   const planName = subscription?.planDetails?.name;
 
-  return (
-    <AnimatePresence>
-      {visible && (
-        <motion.div
-          initial={{ opacity: 0, x: -40, y: 0 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -40 }}
-          transition={{ type: 'spring', stiffness: 280, damping: 26 }}
-          className="fixed bottom-4 left-4 z-[9996] w-[calc(100vw-2rem)] max-w-sm"
-        >
-          <div className="glass-panel rounded-2xl p-4 shadow-xl border border-white/20 dark:border-white/10 relative overflow-hidden bg-white dark:bg-slate-900">
-            <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-rose-400/10 via-pink-400/5 to-amber-300/10" />
-
-            <div className="relative z-10 flex gap-3">
-              <div className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br from-rose-400 to-amber-400">
-                <Heart size={18} className="text-white" fill="white" />
-              </div>
-
-              <div className="flex-1 min-w-0">
-                {isAdmin ? (
-                  <>
-                    <p className="text-sm font-bold text-slate-900 dark:text-white">
-                      Votre abonnement est terminé
-                    </p>
-                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
-                      Certaines fonctionnalités sont désormais limitées{planName ? ` (retour au plan ${planName})` : ''}.
-                      Réactivez votre abonnement quand vous voulez pour retrouver un accès complet, en toute tranquillité.
-                    </p>
-                    <div className="flex items-center gap-2 mt-3">
-                      <button
-                        onClick={goRenew}
-                        className="text-xs font-semibold px-3 py-1.5 rounded-lg text-white bg-gradient-to-r from-rose-400 to-amber-400 transition-transform hover:scale-[1.03] flex items-center gap-1"
-                      >
-                        Renouveler
-                        <ArrowRight size={12} />
-                      </button>
-                      <button
-                        onClick={close}
-                        className="text-xs font-medium px-3 py-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-white/40 dark:hover:bg-white/5 transition-colors"
-                      >
-                        Plus tard
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-sm font-bold text-slate-900 dark:text-white">
-                      Un petit mot de votre entreprise
-                    </p>
-                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
-                      L'abonnement de votre entreprise est arrivé à échéance et certaines actions sont
-                      temporairement limitées. N'hésitez pas à contacter votre RH ou administrateur pour
-                      en savoir plus.
-                    </p>
-                    <div className="flex items-center gap-2 mt-3">
-                      <button
-                        onClick={close}
-                        className="text-xs font-semibold px-3 py-1.5 rounded-lg text-white bg-gradient-to-r from-rose-400 to-amber-400 transition-transform hover:scale-[1.03]"
-                      >
-                        J'ai compris
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
-
-              <button
-                onClick={close}
-                className="shrink-0 p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-white/40 dark:hover:bg-white/5 transition-colors h-fit"
-              >
-                <X size={15} />
-              </button>
-            </div>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
+  return (<FeedbackVariants legacy={<LegacyEndedBanner visible={visible} isAdmin={isAdmin} planName={planName} close={close} goRenew={goRenew} />}><FeedbackViewport position="reminder" label="Abonnement">{visible && <FeedbackToast tone="warning" title="Votre abonnement est terminé" message={isAdmin ? `Certaines fonctionnalités sont limitées${planName ? ` (offre ${planName})` : ''}. Renouvelez quand vous le souhaitez.` : 'Certaines fonctionnalités sont limitées. Votre équipe RH peut vous renseigner.'} onClose={close}>{isAdmin && <button type="button" className="k-button k-button-primary" onClick={goRenew}>Renouveler</button>}<button type="button" className="k-button k-button-ghost" onClick={close}>Fermer</button></FeedbackToast>}</FeedbackViewport></FeedbackVariants>);
 };

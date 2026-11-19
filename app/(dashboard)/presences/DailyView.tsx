@@ -1,5 +1,8 @@
 'use client';
+import { DocumentPreviewPanel } from '@/components/ui/DocumentReader';
+import { AttendanceSelect } from '@/components/attendance/AttendanceSelect';
 
+import { AttendanceLoadError } from '@/components/attendance/AttendanceLoadError';
 import { localDateKey, attendanceCutoff } from '@/lib/attendance-calendar';
 
 // ============================================================================
@@ -9,6 +12,7 @@ import { localDateKey, attendanceCutoff } from '@/lib/attendance-calendar';
 //    lucide, bouton "Rapport imprimable" (impression + PDF, en-tête entreprise).
 // ============================================================================
 
+import { AttendanceDialog } from '@/components/attendance/AttendanceDialog';
 import React, { useState, useEffect } from 'react';
 import {
   Users, UserCheck, UserX, Timer, MapPin, Calendar, ChevronLeft,
@@ -45,7 +49,7 @@ function PunchMethodBadge({ att }: { att: any }) {
     <span
       title={`Entrée : ${PUNCH_METHOD_LABEL[att.checkInMethod] || '—'} · Sortie : ${PUNCH_METHOD_LABEL[att.checkOutMethod] || '—'}`}
       className={`inline-block px-2 py-0.5 rounded-full font-semibold ${
-        warn ? 'bg-amber-500/15 text-amber-600' : 'bg-[var(--surface-2)] text-[var(--text-muted)]'
+        warn ? 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)]' : 'bg-[var(--surface-2)] text-[var(--text-muted)]'
       }`}
     >
       {PUNCH_METHOD_LABEL[method] || method}
@@ -60,6 +64,7 @@ export default function DailyView({
   userDepartment,
   canRecordAttendanceForAll = false,
 }: DailyViewProps) {
+  const [uiLoadError,setUiLoadError]=useState('');
   const [data, setData] = useState<any>(null);
   const [company, setCompany] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -116,9 +121,11 @@ export default function DailyView({
       // Le backend filtre déjà par département si MANAGER — pas besoin de filtre ici
       const res: any = await api.get(`/attendance?month=${selectedDate.getMonth() + 1}&year=${selectedDate.getFullYear()}`);
       setData(res);
+      setUiLoadError('');
     } catch (e) {
       console.error(e);
       setData(null);
+      setUiLoadError('Impossible de charger les pr\u00e9sences. R\u00e9essayez.');
     } finally {
       setIsLoading(false);
     }
@@ -279,11 +286,11 @@ export default function DailyView({
 
   const getStatusColor = (status: string) => {
     const colors: any = {
-      PRESENT: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-      LATE: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-      ABSENT_UNPAID: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-      ABSENT_PAID: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-      REMOTE: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+      PRESENT: 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)]  ',
+      LATE: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)]  ',
+      ABSENT_UNPAID: 'bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] text-[var(--danger-text)]  ',
+      ABSENT_PAID: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)]  ',
+      REMOTE: 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)]  ',
       ON_LEAVE: 'bg-[var(--surface-2)] text-[var(--text-muted)]',
       LEAVE: 'bg-[var(--surface-2)] text-[var(--text-muted)]',
       HOLIDAY: 'bg-[var(--surface-2)] text-[var(--text-muted)]',
@@ -448,25 +455,26 @@ export default function DailyView({
 
   return (
     <div className="space-y-6">
+      <AttendanceLoadError message={uiLoadError} retry={fetchDailyData} />
       <div className="bg-[var(--surface)] rounded-2xl p-6 border border-[var(--border)]">
         <div className="flex items-center justify-between gap-4">
           <button
             onClick={() => setSelectedDate(new Date(selectedDate.getTime() - 86400000))}
             className="p-3 hover:bg-[var(--surface-2)] rounded-xl transition-colors"
-          >
+           aria-label="Période précédente">
             <ChevronLeft size={24} />
           </button>
 
           <div className="text-center flex-1">
-            <h2 className="text-2xl font-bold text-[var(--text)] capitalize">
+            <h2 className="text-2xl font-semibold text-[var(--text)] capitalize">
               {formatDate(selectedDate)}
             </h2>
             {userRole === 'MANAGER' && !canRecordAttendanceForAll && (
-              <span className="text-xs text-emerald-500 font-bold mt-1 block">Votre département</span>
+              <span className="text-xs text-[var(--success-text)] font-semibold mt-1 block">Votre département</span>
             )}
             <button
               onClick={() => setSelectedDate(new Date())}
-              className="text-sm text-emerald-500 hover:text-emerald-600 font-medium mt-1"
+              className="text-sm text-[var(--success-text)] hover:text-[var(--success-text)] font-medium mt-1"
             >
               Aujourd&apos;hui
             </button>
@@ -492,7 +500,7 @@ export default function DailyView({
               onClick={() => setSelectedDate(new Date(selectedDate.getTime() + 86400000))}
               className="p-3 hover:bg-[var(--surface-2)] rounded-xl transition-colors"
               disabled={selectedDate >= new Date()}
-            >
+             aria-label="Période suivante">
               <ChevronRight size={24} />
             </button>
           </div>
@@ -501,7 +509,7 @@ export default function DailyView({
 
       {!isWorkingDay && filteredAttendances.length === 0 && (
         <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl p-4 flex items-center gap-3">
-          <Calendar size={24} className="text-emerald-500" />
+          <Calendar size={24} className="text-[var(--success-text)]" />
           <p className="text-sm text-[var(--text-muted)]">
             <strong>Jour non ouvrable</strong> selon la configuration de l&apos;entreprise (jours configurés : {companySettings.workDays.map(d => ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'][d === 7 ? 0 : d]).join(', ')})
           </p>
@@ -509,13 +517,13 @@ export default function DailyView({
       )}
 
       {isBeforeWorkTime && isWorkingDay && (
-        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 flex items-center gap-3">
-          <Timer size={24} className="text-amber-600 dark:text-amber-400" />
+        <div className="bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  border border-[var(--border)]  rounded-xl p-4 flex items-center gap-3">
+          <Timer size={24} className="text-[var(--warning-text)] " />
           <div className="flex-1">
-            <p className="text-sm text-amber-700 dark:text-amber-300">
+            <p className="text-sm text-[var(--warning-text)] ">
               <strong>Avant l&apos;heure de travail</strong>
             </p>
-            <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+            <p className="text-xs text-[var(--warning-text)]  mt-1">
               Les absences seront comptabilisées à partir de {String(absenceThreshold.getHours()).padStart(2, '0')}h{String(absenceThreshold.getMinutes()).padStart(2, '0')}
             </p>
           </div>
@@ -523,7 +531,7 @@ export default function DailyView({
       )}
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 attendance-metrics">
         {[
           { label: 'Total', value: dailyStats.total, color: 'gray', Icon: Users },
           { label: 'Présents', value: dailyStats.present, color: 'emerald', Icon: UserCheck },
@@ -534,11 +542,11 @@ export default function DailyView({
         ].map(({ label, value, color, Icon }) => (
           <div key={label} className="bg-[var(--surface)] rounded-xl p-4 border border-[var(--border)]">
             <div className="flex items-center gap-3">
-              <div className={`p-2 bg-${color}-100 dark:bg-${color}-900/30 rounded-lg`}>
-                <Icon size={20} className={`text-${color}-600 dark:text-${color}-400`} />
+              <div className="p-2 bg-[var(--surface-2)]  rounded-lg">
+                <Icon size={20} className="text-[var(--text)] text-[var(--text)]" />
               </div>
               <div>
-                <p className={`text-2xl font-bold text-${color}-600 dark:text-${color}-400`}>{value}</p>
+                <p className="text-2xl font-semibold text-[var(--text)] text-[var(--text)]">{value}</p>
                 <p className="text-xs text-[var(--text-muted)]">{label}</p>
               </div>
             </div>
@@ -548,7 +556,7 @@ export default function DailyView({
 
       {/* Filtres */}
       <div className="bg-[var(--surface)] rounded-2xl p-4 border border-[var(--border)]">
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-3 attendance-filters">
           <div className="flex-1 min-w-[200px]">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--text-muted)]" size={20} />
@@ -557,12 +565,12 @@ export default function DailyView({
                 placeholder="Rechercher..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-[var(--border)] rounded-xl bg-[var(--surface)] text-[var(--text)] focus:ring-2 focus:ring-emerald-500"
+                className="w-full pl-10 pr-4 py-2 border border-[var(--border)] rounded-xl bg-[var(--surface)] text-[var(--text)] focus:ring-2 focus:ring-[var(--focus)]"
               />
             </div>
           </div>
 
-          <select
+          <AttendanceSelect
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
             className="px-4 py-2 border border-[var(--border)] rounded-xl bg-[var(--surface)] text-[var(--text)]"
@@ -572,37 +580,37 @@ export default function DailyView({
             <option value="LATE">Retards</option>
             <option value="ABSENT_UNPAID">Absents</option>
             <option value="REMOTE">Remote</option>
-          </select>
+          </AttendanceSelect>
 
           {(userRole !== 'MANAGER' || canRecordAttendanceForAll) && (
-            <select
+            <AttendanceSelect
               value={departmentFilter}
               onChange={(e) => setDepartmentFilter(e.target.value)}
               className="px-4 py-2 border border-[var(--border)] rounded-xl bg-[var(--surface)] text-[var(--text)]"
             >
               <option value="ALL">Tous dép.</option>
               {uniqueDepartments.map(dept => <option key={dept} value={dept}>{dept}</option>)}
-            </select>
+            </AttendanceSelect>
           )}
         </div>
       </div>
 
       {/* Tableau */}
       <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div className="overflow-x-auto attendance-table-scroll" tabIndex={0} role="region" aria-label="Tableau défilant horizontalement">
+          <table className="w-full attendance-table">
             <thead className="bg-[var(--surface-2)] border-b border-[var(--border)]">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-bold text-[var(--text-muted)] uppercase">Employé</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-[var(--text-muted)] uppercase">Département</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-[var(--text-muted)] uppercase">Statut</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-[var(--text-muted)] uppercase">Entrée</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-[var(--text-muted)] uppercase">Site</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-[var(--text-muted)] uppercase">Méthode</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-[var(--text-muted)] uppercase">Sortie</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-[var(--text-muted)] uppercase">Durée</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-[var(--text-muted)] ">Employé</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-[var(--text-muted)] ">Département</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-[var(--text-muted)] ">Statut</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-[var(--text-muted)] ">Entrée</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-[var(--text-muted)] ">Site</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-[var(--text-muted)] ">Méthode</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-[var(--text-muted)] ">Sortie</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-[var(--text-muted)] ">Durée</th>
                 {isAdmin && (
-                  <th className="px-6 py-4 text-right text-xs font-bold text-[var(--text-muted)] uppercase">Actions</th>
+                  <th className="px-6 py-4 text-right text-xs font-semibold text-[var(--text-muted)] ">Actions</th>
                 )}
               </tr>
             </thead>
@@ -614,19 +622,19 @@ export default function DailyView({
                       {!isWorkingDay ? (
                         <>
                           <CalendarOff size={36} className="text-[var(--text-muted)]" />
-                          <p className="text-lg font-bold text-[var(--text-muted)]">Jour non ouvrable</p>
+                          <p className="text-lg font-semibold text-[var(--text-muted)]">Jour non ouvrable</p>
                           <p className="text-sm text-[var(--text-muted)]">Ce jour n&apos;est pas configuré comme jour de travail</p>
                         </>
                       ) : isBeforeWorkTime ? (
                         <>
                           <Timer size={36} className="text-[var(--text-muted)]" />
-                          <p className="text-lg font-bold text-[var(--text-muted)]">Avant l&apos;heure de travail</p>
+                          <p className="text-lg font-semibold text-[var(--text-muted)]">Avant l&apos;heure de travail</p>
                           <p className="text-sm text-[var(--text-muted)]">Les absences seront comptabilisées à partir de {String(absenceThreshold.getHours()).padStart(2, '0')}h{String(absenceThreshold.getMinutes()).padStart(2, '0')}</p>
                         </>
                       ) : (
                         <>
                           <Inbox size={36} className="text-[var(--text-muted)]" />
-                          <p className="text-lg font-bold text-[var(--text-muted)]">Aucun pointage</p>
+                          <p className="text-lg font-semibold text-[var(--text-muted)]">Aucun pointage</p>
                           <p className="text-sm text-[var(--text-muted)]">Aucune activité enregistrée ce jour-là</p>
                         </>
                       )}
@@ -642,31 +650,31 @@ export default function DailyView({
                   >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-sm font-bold text-emerald-600 overflow-hidden shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  flex items-center justify-center text-sm font-semibold text-[var(--success-text)] overflow-hidden shrink-0">
                           {att.employee.photoUrl
                             ? <img src={att.employee.photoUrl} className="w-full h-full object-cover" alt="" />
                             : `${att.employee.firstName[0]}${att.employee.lastName[0]}`}
                         </div>
                         <div>
-                          <p className="font-bold text-[var(--text)]">{att.employee.firstName} {att.employee.lastName}</p>
+                          <p className="font-semibold text-[var(--text)]">{att.employee.firstName} {att.employee.lastName}</p>
                           <p className="text-xs text-[var(--text-muted)]">{att.employee.employeeNumber || '-'}</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-[var(--text-muted)]">{att.employee.department?.name || '-'}</td>
                     <td className="px-6 py-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(att.status)}`}>
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(att.status)}`}>
                         {getStatusLabel(att.status)}
                       </span>
                       {(att as any).restTag && (
-                        <span className="block mt-1 text-[10px] font-semibold text-amber-600">{(att as any).restTag}</span>
+                        <span className="block mt-1 text-[10px] font-semibold text-[var(--warning-text)]">{(att as any).restTag}</span>
                       )}
                     </td>
                     <td className="px-6 py-4 text-sm font-mono text-[var(--text)]">{formatTime(att.checkIn)}</td>
                     <td className="px-6 py-4 text-sm text-[var(--text-muted)]">
                       {(att as any).checkInSiteName
                         ? <span className="inline-flex items-center gap-1">
-                            <MapPin size={12} className="text-emerald-500" />
+                            <MapPin size={12} className="text-[var(--success-text)]" />
                             {(att as any).checkInSiteName}
                             {(att as any).checkInDistance != null && (
                               <span className="text-[var(--text-muted)]">({(att as any).checkInDistance}m)</span>
@@ -683,9 +691,9 @@ export default function DailyView({
                           <div className="mt-1 flex flex-wrap items-center gap-1 text-[11px] text-[var(--text-muted)]">
                             <Coffee size={11} />
                             <span>{hm(pz.startedAt)} → {pz.endedAt ? hm(pz.endedAt) : 'en cours'}{pz.minutes != null ? ` (${pz.minutes} min)` : ''}</span>
-                            {pz.resumedAuto && <span className="text-amber-600 font-semibold" title="L'employé n'a pas pointé sa reprise : pause clôturée à la durée prévue">· reprise non pointée</span>}
-                            {!pz.resumedAuto && pz.lateNotifiedAt && <span className="text-red-500 font-semibold">· retard {pz.lateMinutes} min</span>}
-                            {pz.editedAt && <span title={pz.editReason || ''} className="text-sky-600">· corrigée</span>}
+                            {pz.resumedAuto && <span className="text-[var(--warning-text)] font-semibold" title="L'employé n'a pas pointé sa reprise : pause clôturée à la durée prévue">· reprise non pointée</span>}
+                            {!pz.resumedAuto && pz.lateNotifiedAt && <span className="text-[var(--danger-text)] font-semibold">· retard {pz.lateMinutes} min</span>}
+                            {pz.editedAt && <span title={pz.editReason || ''} className="text-[var(--action)]">· corrigée</span>}
                             {isAdmin && (
                               <button type="button" title="Corriger la reprise" aria-label="Corriger la reprise de pause"
                                 onClick={(e) => { e.stopPropagation(); setBreakEditId(att.id); }}
@@ -708,13 +716,13 @@ export default function DailyView({
                       {Number((att as any).extraHoursInfo) > 0 && (
                         <span
                           title="Heures au-delà de l'horaire — à titre informatif, non comptées dans la paie"
-                          className="block text-[10px] font-sans font-semibold text-sky-600"
+                          className="block text-[10px] font-sans font-semibold text-[var(--action)]"
                         >
                           +{parseFloat(Number((att as any).extraHoursInfo).toFixed(2))} h (info)
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-sm font-bold text-[var(--text)]">{att.totalHours ? `${parseFloat(Number(att.totalHours).toFixed(2))}h` : '-'}</td>
+                    <td className="px-6 py-4 text-sm font-semibold text-[var(--text)]">{att.totalHours ? `${parseFloat(Number(att.totalHours).toFixed(2))}h` : '-'}</td>
                     {isAdmin && (
                       <td className="px-6 py-4 text-right">
                         {att.id ? (
@@ -723,7 +731,7 @@ export default function DailyView({
                             type="button"
                             onClick={(e) => { e.stopPropagation(); openTimesModal(att); }}
                             title="Modifier les heures d'entrée / sortie"
-                            className="p-2 rounded-lg text-[var(--text-muted)] hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
+                            className="p-2 rounded-lg text-[var(--text-muted)] hover:text-[var(--success-text)] hover:bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] dark:hover:bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] transition-colors"
                           >
                             <Pencil size={16} />
                           </button>
@@ -735,7 +743,7 @@ export default function DailyView({
                             }}
                             disabled={deletingId === att.id}
                             title="Supprimer ce pointage (définitif)"
-                            className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-40"
+                            className="p-2 rounded-lg text-[var(--danger-text)] hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] dark:hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] transition-colors disabled:opacity-40"
                           >
                             {deletingId === att.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
                           </button>
@@ -746,7 +754,7 @@ export default function DailyView({
                             onClick={(e) => { e.stopPropagation(); openTimesModal(att); }}
                             title="Modifier les heures d'entrée / sortie"
                             aria-label={`Modifier les heures de ${att.employee.firstName} ${att.employee.lastName}`}
-                            className="p-2 rounded-lg text-[var(--text-muted)] hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
+                            className="p-2 rounded-lg text-[var(--text-muted)] hover:text-[var(--success-text)] hover:bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] dark:hover:bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] transition-colors"
                           ><Pencil size={16} /></button>
                         ) : (
                           <span className="text-xs text-[var(--text-muted)]">—</span>
@@ -762,9 +770,9 @@ export default function DailyView({
       </div>
 
       {timesRow && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+        <AttendanceDialog title="Modifier les heures" onClose={()=>setTimesRow(null)} busy={timesSaving}>
           <div className="bg-[var(--surface)] rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-lg font-bold text-[var(--text)]">Modifier les heures</h2>
+            <h2 className="text-lg font-semibold text-[var(--text)]">Modifier les heures</h2>
             <p className="text-sm text-[var(--text-muted)]">{timesRow.employee.firstName} {timesRow.employee.lastName}</p>
             <div className="grid grid-cols-2 gap-3">
               <label className="text-xs font-semibold text-[var(--text-muted)] space-y-1">
@@ -783,11 +791,11 @@ export default function DailyView({
             {/* 🆕 Pause : ajouter / corriger / supprimer */}
             <div className="rounded-xl border border-[var(--border)] p-3 space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-[var(--text)] flex items-center gap-1"><Coffee size={12} /> Pause</span>
+                <span className="text-xs font-semibold text-[var(--text)] flex items-center gap-1"><Coffee size={12} /> Pause</span>
                 {timesRow.pause && (
                   <button type="button"
                     onClick={() => setTimesForm(f => ({ ...f, removeBreak: !f.removeBreak }))}
-                    className="text-[11px] font-semibold text-red-500 hover:underline">
+                    className="text-[11px] font-semibold text-[var(--danger-text)] hover:underline">
                     {timesForm.removeBreak ? 'Annuler la suppression' : 'Supprimer la pause'}
                   </button>
                 )}
@@ -821,7 +829,7 @@ export default function DailyView({
                 <div className="rounded-xl bg-[var(--surface-2)] p-3 text-xs space-y-1">
                   <div className="flex justify-between text-[var(--text-muted)]"><span>Présence (entrée → sortie)</span><span className="font-mono">{fmtDur(gross)}</span></div>
                   <div className="flex justify-between text-[var(--text-muted)]"><span>Pause</span><span className="font-mono">− {fmtDur(t.pauseMinutes)}</span></div>
-                  <div className="flex justify-between font-bold text-[var(--text)] border-t border-[var(--border)] pt-1"><span>Temps réellement travaillé</span><span className="font-mono">{fmtDur(net)}</span></div>
+                  <div className="flex justify-between font-semibold text-[var(--text)] border-t border-[var(--border)] pt-1"><span>Temps réellement travaillé</span><span className="font-mono">{fmtDur(net)}</span></div>
                 </div>
               );
             })()}
@@ -833,16 +841,16 @@ export default function DailyView({
                 placeholder="Ex : oubli de pointer la sortie"
                 className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-sm text-[var(--text)]" />
             </label>
-            {timesError && <p className="text-sm text-red-500">{timesError}</p>}
+            {timesError && <p className="text-sm text-[var(--danger-text)]">{timesError}</p>}
             <div className="flex justify-end gap-2">
               <button onClick={() => setTimesRow(null)} className="px-4 py-2 text-sm font-semibold rounded-lg text-[var(--text-muted)] hover:bg-[var(--surface-2)]">Annuler</button>
               <button onClick={saveTimes} disabled={timesSaving}
-                className="px-4 py-2 text-sm font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-2 disabled:opacity-40">
+                className="px-4 py-2 text-sm font-semibold rounded-lg bg-[var(--brand)] hover:bg-[var(--brand)] text-[var(--on-brand)] flex items-center gap-2 disabled:opacity-40">
                 {timesSaving && <Loader2 size={14} className="animate-spin" />} Enregistrer
               </button>
             </div>
           </div>
-        </div>
+        </AttendanceDialog>
       )}
 
       {/* Sidebar de détail employé */}
@@ -853,7 +861,7 @@ export default function DailyView({
       />
 
       {/* Rapport imprimable — hors écran, généré depuis les données déjà chargées */}
-      <div style={{ position: 'fixed', top: -99999, left: -99999 }}>
+      <DocumentPreviewPanel title="Rapport journalier" landscape><div className="loan-document-protected" style={{ position: 'fixed', top: -99999, left: -99999 }}>
         <DailyAttendanceReportPrintable
           id={REPORT_ID}
           company={company || {}}
@@ -861,7 +869,7 @@ export default function DailyView({
           rows={filteredAttendances}
           stats={dailyStats}
         />
-      </div>
+      </div></DocumentPreviewPanel>
     </div>
   );
 }

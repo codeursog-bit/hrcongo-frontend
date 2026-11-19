@@ -1,0 +1,33 @@
+.request-module-page { min-width:0; }
+@media screen {
+ .request-module-page .loan-module-content .k-button.w-full.text-left:not(.flex) {display:block;text-align:left;}
+ .request-module-page .loan-module-content input[class*="pl-9"]:not(.loan-document-protected *) {padding-left:38px;}
+ .request-module-page .loan-module-content .permission-beneficiary-switch {padding:0;min-height:44px;height:44px;width:48px;flex:none;}
+ .request-module-page .loan-module-content .permission-beneficiary-switch>span {top:50%;transform:translateY(-50%);}
+ .request-module-page {--leave-type-ANNUAL:var(--brand);--leave-type-ANNUAL_ANTICIPATED:var(--green);--leave-type-COMPENSATORY:var(--mustard);--leave-type-SICK:var(--mustard);--leave-type-MATERNITY:var(--green);--leave-type-PATERNITY:var(--mustard);--leave-type-UNPAID:var(--text-secondary);}
+ .request-module-page [data-leave-phase=COMPLETED] {background:var(--text-secondary)!important;}
+ .request-module-page [data-leave-phase=IN_PROGRESS] {background:var(--brand)!important;}
+ .request-module-page [data-leave-phase=UPCOMING] {background:var(--green)!important;}
+ .request-module-page [data-leave-phase=PENDING] {background:repeating-linear-gradient(45deg,color-mix(in srgb,var(--mustard) 55%,transparent),color-mix(in srgb,var(--mustard) 55%,transparent) 4px,color-mix(in srgb,var(--mustard) 20%,transparent) 4px,color-mix(in srgb,var(--mustard) 20%,transparent) 8px)!important;border-color:var(--mustard)!important;}
+ .request-module-page .loan-module-content>div {max-width:none;padding:0;}
+ .request-module-page .loan-module-content :where(input:not([type=checkbox]):not([type=radio]),select,textarea):not(.loan-document-protected *) {box-sizing:border-box;max-width:100%;min-width:0;padding:12px 14px;font-size:14px;line-height:1.5;}
+ .request-module-page .loan-module-content :where(input:not([type=checkbox]):not([type=radio]),select):not(.loan-document-protected *) {height:46px;}
+ .request-module-page .loan-module-content :where(textarea):not(.loan-document-protected *) {min-height:112px;resize:vertical;}
+ .request-module-page .loan-module-content :where([class*="fixed"]):not(.loan-document-protected *) {overflow-y:auto;overscroll-behavior:contain;}
+ .request-module-page .loan-module-content :where([class*="fixed"]>[class*="max-w"]):not(.loan-document-protected *) {max-height:calc(100dvh - 32px);overflow-y:auto;min-height:0;flex-shrink:0;}
+ .request-module-page .loan-module-content :where([class*="bg-white"],[class*="bg-gray-50"],[class*="bg-gray-100"],[class*="bg-gray-800"],[class*="bg-slate-50"]):not(.loan-document-protected *) {background-color:var(--surface-2);}
+ .request-module-page .loan-module-content :where([class*="text-gray-"],[class*="text-slate-"]):not(.loan-document-protected *) {color:var(--text-secondary);}
+ .request-module-page .loan-module-content :where([class*="bg-[#050607]"]):not(.loan-document-protected *) {background:var(--surface);color:var(--text);box-shadow:var(--shadow-card);}
+ .request-module-page .loan-module-content :where([class*="bg-[#050607]"] [class*="text-white"]):not(.loan-document-protected *) {color:var(--text-secondary);}
+ .request-module-page .leave-hero {background:var(--brand)!important;color:var(--on-hero)!important;box-shadow:var(--shadow-card);}
+ .request-module-page .leave-hero :where([class*="text-emerald"]){color:var(--on-hero)!important;}
+ .request-module-page .leave-request-content {display:grid;gap:20px;}
+ .request-module-page .leave-request-content>div {min-width:0;}
+ .request-module-page .leave-request-content [hidden] {display:none!important;}
+ .request-module-page .leave-request-review {display:grid;gap:16px;}
+ .request-module-page .leave-request-review p {color:var(--text-secondary);font-size:13px;}
+ .request-module-page .leave-request-review strong {color:var(--text);}
+ .request-module-page .leave-request-success {max-width:760px;margin:32px auto;}
+}
+@media print {.request-module-page {display:contents!important;}.request-module-page .loan-module {--loan-chart-1:initial!important;--loan-chart-2:initial!important;--loan-chart-3:initial!important;--loan-gradient-1:initial!important;--loan-gradient-2:initial!important;--loan-gradient-3:initial!important;}}
+@media screen and (max-width:600px) {.request-module-page .grid.grid-cols-2:has(input[type=datetime-local]) {grid-template-columns:minmax(0,1fr);}}

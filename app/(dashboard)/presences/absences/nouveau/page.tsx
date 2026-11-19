@@ -1,4 +1,10 @@
 'use client';
+import { DocumentReader } from '@/components/ui/DocumentReader';
+import { RequestForm, RequestSummaryCard, RequestSuccessScreen } from '@/components/requests';
+import { useToast } from '@/components/design-system/feedback';
+import { AttendanceModuleFrame as ModulePageFrame } from '@/components/attendance/AttendanceModuleFrame';
+import { ModulePageSkeleton } from '@/components/requests/ModulePageFrame';
+import { Button } from '@/components/design-system/primitives';
 
 // ============================================================================
 // 📁 app/(dashboard)/presences/absences/nouveau/page.tsx
@@ -50,6 +56,8 @@ const SUBTYPE_OPTIONS: Record<AbsenceType, Array<{ value: AbsenceSubType; label:
 };
 
 export default function NouvelleAbsencePage() {
+  const [uiStep,setUiStep]=useState(0);
+  const uiToast=useToast();
   const router = useRouter();
   const { bp } = useBasePath();
 
@@ -78,6 +86,7 @@ export default function NouvelleAbsencePage() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDone, setIsDone]             = useState(false);
+  useEffect(()=>{if(isDone)uiToast('success','Demande d’absence envoyée');},[isDone,uiToast]);
   const [error, setError]               = useState<string | null>(null);
   const [showPreview, setShowPreview]   = useState(false);
   const [returnCalc, setReturnCalc] = useState<any>(null);
@@ -338,12 +347,12 @@ export default function NouvelleAbsencePage() {
 
   // Bloc "nombre de jours → date de reprise" (valeur par défaut = droit conventionnel en Standard)
   const calcBox = (
-    <div className="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800 rounded-2xl p-4 space-y-3">
+    <div className="bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  border border-[var(--border)]  rounded-2xl p-4 space-y-3">
       <div>
-        <label className="text-xs font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider block">
+        <label className="text-xs font-semibold text-[var(--success-text)]    block">
           {isStandard ? 'Nombre de jours & date de reprise' : 'Vous ne connaissez pas votre date de reprise ?'}
         </label>
-        <p className="text-xs text-emerald-600/80 dark:text-emerald-400/80 mt-1">
+        <p className="text-xs text-[var(--success-text)]  mt-1">
           {isStandard
             ? "Par défaut, on prend les jours prévus par la convention pour ce motif. Vous pouvez changer le nombre de jours puis recalculer, ou saisir directement votre date de reprise plus bas. Les jours de repos de votre entreprise et les jours fériés ne sont pas comptés."
             : "Optionnel — indiquez le nombre de jours voulu, on calcule la date de reprise (jours de repos et jours fériés exclus). Sinon, saisissez directement la date de reprise plus bas."}
@@ -355,21 +364,21 @@ export default function NouvelleAbsencePage() {
           placeholder="Ex : 4 jours"
           value={desiredDays}
           onChange={e => setDesiredDays(e.target.value)}
-          className="flex-1 px-3 py-2.5 rounded-xl border border-emerald-200 dark:border-emerald-700 bg-[var(--surface)] text-sm"
+          className="flex-1 px-3 py-2.5 rounded-xl border border-[var(--border)]  bg-[var(--surface)] text-sm"
         />
-        <button
+        <Button variant="primary"
           type="button"
           onClick={() => handleCalculateReturn()}
           disabled={isCalculatingReturn || !selectedTargetEmployee?.id || !startDate || !desiredDays}
-          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold disabled:opacity-40 flex items-center gap-2 shrink-0"
+          className="px-4 py-2 bg-[var(--brand)] hover:bg-[var(--brand)] text-[var(--on-brand)] rounded-xl text-sm font-semibold disabled:opacity-40 flex items-center gap-2 shrink-0"
         >
           {isCalculatingReturn ? <Loader2 size={16} className="animate-spin" /> : null}
           Calculer ma date de reprise
-        </button>
+        </Button>
       </div>
-      {!startDate && <p className="text-xs text-emerald-600 dark:text-emerald-400">Renseignez d&apos;abord la date de départ.</p>}
+      {!startDate && <p className="text-xs text-[var(--success-text)] ">Renseignez d&apos;abord la date de départ.</p>}
       {returnCalc && (returnCalc.excludedHolidays?.length > 0 || returnCalc.sundaysSkipped > 0) && (
-        <details className="text-xs text-emerald-600 dark:text-emerald-400">
+        <details className="text-xs text-[var(--success-text)] ">
           <summary className="cursor-pointer font-semibold">Détail du calcul (transparence)</summary>
           <div className="mt-2 space-y-1 pl-2">
             <p>{returnCalc.sundaysSkipped} jour(s) de repos exclu(s) de la période</p>
@@ -390,7 +399,7 @@ export default function NouvelleAbsencePage() {
   // Saisie manuelle de la date de reprise (le jour où l'employé est attendu)
   const returnInput = (
     <div>
-      <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Date de reprise</label>
+      <label className="text-xs font-semibold text-[var(--text-muted)]   mb-1.5 block">Date de reprise</label>
       <div className="relative">
         <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
         <input type="date" min="2000-01-01" max="2100-12-31" value={returnDate} onChange={e => { setReturnDate(e.target.value); setReturnCalc(null); }} className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
@@ -400,7 +409,7 @@ export default function NouvelleAbsencePage() {
 
   // Ce que le système va faire : jours justifiés vs jours au-delà du droit
   const coverageBox = coverage && returnDate && isOther ? (
-    <div className="flex items-start gap-2 text-sm bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 px-3 py-2 rounded-lg">
+    <div className="flex items-start gap-2 text-sm bg-[var(--brand-soft)]  text-[var(--action)]  px-3 py-2 rounded-lg">
       <Info size={14} className="mt-0.5 shrink-0" />
       <span>
         Reprise le <strong>{fmt(returnDate)}</strong> — <strong>{coverage.workingDays} jour{coverage.workingDays > 1 ? 's' : ''} ouvrable{coverage.workingDays > 1 ? 's' : ''}</strong> demandé{coverage.workingDays > 1 ? 's' : ''}.
@@ -409,7 +418,7 @@ export default function NouvelleAbsencePage() {
     </div>
   ) : coverage && returnDate ? (
     <div className="space-y-2">
-      <div className="flex items-start gap-2 text-sm bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 px-3 py-2 rounded-lg">
+      <div className="flex items-start gap-2 text-sm bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  text-[var(--success-text)]  px-3 py-2 rounded-lg">
         <Info size={14} className="mt-0.5 shrink-0" />
         <span>
           Reprise le <strong>{fmt(returnDate)}</strong> — <strong>{coverage.coveredDays} jour{coverage.coveredDays > 1 ? 's' : ''} justifié{coverage.coveredDays > 1 ? 's' : ''}</strong>
@@ -418,7 +427,7 @@ export default function NouvelleAbsencePage() {
         </span>
       </div>
       {coverage.uncoveredDays > 0 && (
-        <div className="flex items-start gap-2 text-sm bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 px-3 py-2 rounded-lg">
+        <div className="flex items-start gap-2 text-sm bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  text-[var(--warning-text)]  px-3 py-2 rounded-lg">
           <Info size={14} className="mt-0.5 shrink-0" />
           <span>
             {coverage.uncoveredDays} jour{coverage.uncoveredDays > 1 ? 's' : ''} au-delà du droit : non payé{coverage.uncoveredDays > 1 ? 's' : ''}.
@@ -429,70 +438,59 @@ export default function NouvelleAbsencePage() {
     </div>
   ) : null;
 
-  if (isDone) {
-    return (
-      <div className="max-w-lg mx-auto py-24 text-center">
-        <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-20 h-20 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
-          <CheckCircle2 size={40} />
-        </motion.div>
-        <h1 className="text-2xl font-bold text-[var(--text)] mb-2">Demande envoyée</h1>
-        <p className="text-[var(--text-muted)] text-sm mb-8">
-          {onBehalf
-            ? "La demande d'autorisation d'absence a été enregistrée pour l'employé sélectionné."
-            : "Votre demande d'autorisation d'absence a été transmise. Vous serez notifié dès qu'elle sera traitée."}
-        </p>
-        <div className="flex gap-3 justify-center">
-          <button onClick={() => router.push(bp(onBehalf ? '/presences/absences' : '/presences/absences/mon-espace'))} className="px-5 py-2.5 bg-[var(--text)] text-[var(--bg)] rounded-xl font-semibold text-sm">
-            {onBehalf ? 'Voir les demandes' : 'Voir mes demandes'}
-          </button>
-          <button onClick={() => { setIsDone(false); setStartDate(''); setReturnDate(''); setCoverage(null); setReturnCalc(null); setReason(''); setPaidChoice(null); }} className="px-5 py-2.5 border border-[var(--border)] rounded-xl font-semibold text-sm text-[var(--text-muted)]">
-            Nouvelle demande
-          </button>
-        </div>
-      </div>
-    );
-  }
+  if(isDone) return <ModulePageFrame><RequestSuccessScreen handler="Votre administration" confirmation={onBehalf ? "La demande d'autorisation d'absence a été enregistrée pour l'employé sélectionné." : "Votre demande d'autorisation d'absence a été transmise. Vous serez notifié dès qu'elle sera traitée."} next="Retrouvez la décision dans le suivi de votre demande." onView={()=>router.push(bp(onBehalf ? '/presences/absences' : '/presences/absences/mon-espace'))} onAnother={()=>{setIsDone(false);setStartDate('');setReturnDate('');setCoverage(null);setReturnCalc(null);setReason('');setPaidChoice(null);setUiStep(0);}} /></ModulePageFrame>;
 
   return (
-    <div className="max-w-[1400px] mx-auto pb-24 space-y-6">
+    <ModulePageFrame kind="list"><div className="max-w-[1400px] mx-auto pb-24 space-y-6">
       <PresenceModuleSwitcher />
       <AbsenceSubNav userRole={userRole} />
 
       <div className="flex items-center gap-3">
-        <button onClick={() => router.push(bp('/presences/absences'))} className="p-2 rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)]">
+        <Button variant="ghost" onClick={() => router.push(bp('/presences/absences'))} className="p-2 rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)]" aria-label="Retour">
           <ArrowLeft size={18} />
-        </button>
+        </Button>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold text-[var(--text)]">Nouvelle demande d&apos;absence</h1>
+          <span className="text-sm text-[var(--text-secondary)]">Retour aux absences</span>
           <p className="text-[var(--text-muted)] text-sm">Remplissez le formulaire{showPreview ? ' — l\u2019aperçu à droite se met à jour en direct' : ''}</p>
         </div>
-        <button
+        <Button variant="ghost"
           onClick={() => setShowPreview(s => !s)}
           className={`px-4 py-2.5 rounded-xl font-semibold text-sm flex items-center gap-2 shrink-0 border transition-colors ${
             showPreview
-              ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300'
+              ? 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  border-[var(--border)]  text-[var(--success-text)] '
               : 'border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)]'
           }`}
         >
           {showPreview ? <EyeOff size={16} /> : <Eye size={16} />}
           {showPreview ? "Masquer l'aperçu" : "Voir l'aperçu"}
-        </button>
+        </Button>
       </div>
 
-      <div className={`grid grid-cols-1 ${showPreview ? 'xl:grid-cols-5' : ''} gap-6`}>
+      <div className="template-stack">
         {/* ── FORMULAIRE ── */}
-        <div className={`${showPreview ? 'xl:col-span-2' : 'max-w-2xl mx-auto w-full'} space-y-5`}>
-
-          {isApprover && (
+        <RequestForm title="Nouvelle demande d’absence" description="Choisissez le motif et les dates, ajoutez vos précisions, puis relisez avant envoi."
+ step={uiStep} onStepChange={setUiStep} onNext={()=>setUiStep(value=>Math.min(3,value+1))} onSubmit={handleSubmit}
+ onCancel={()=>router.push(bp('/presences/absences'))} submitting={isSubmitting} submitDisabled={!canSubmit} error={error || undefined} noValidate
+ nextDisabled={uiStep===0 ? (onBehalf && !selectedEmployeeId) || (isStandard ? !selectedMotifKey || ceilingBlocks : !type || !subType) : uiStep===1 ? !startDate || !returnDate || workingDays<=0 : false}
+ summary={<RequestSummaryCard entries={[
+ {label:'Bénéficiaire',value:selectedTargetEmployee ? [selectedTargetEmployee.firstName,selectedTargetEmployee.lastName].filter(Boolean).join(' ') : 'À sélectionner'},
+ {label:'Motif',value:isStandard ? (isOther ? reason || 'Autre' : selectedMotif?.label || 'À sélectionner') : SUBTYPE_OPTIONS[type].find(option=>option.value===subType)?.label},
+ {label:'Départ',value:startDate || 'À renseigner'},{label:'Reprise',value:returnDate || 'À renseigner'},
+ {label:'Jours ouvrables',value:coverage ? coverage.workingDays : 'En attente du calcul serveur'},
+ {label:'Justificatif',value:uploading ? 'Envoi en cours' : uploadedUrl ? 'Joint' : 'Aucun justificatif joint'}
+ ]}/>}>
+ <div className="leave-request-content">
+ <div hidden={uiStep!==0} className="template-stack">{isApprover && (
             <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
               <div className="flex items-center justify-between mb-3">
-                <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Pour qui ?</label>
-                <button
+                <label className="text-xs font-semibold text-[var(--text-muted)]  ">Pour qui ?</label>
+                <Button variant="ghost"
+                  role="switch" aria-label="Cr?er pour un employ?" aria-checked={onBehalf}
                   onClick={() => { setOnBehalf(!onBehalf); setSelectedEmployeeId(''); }}
-                  className={`w-11 h-6 rounded-full transition-colors relative shrink-0 ${onBehalf ? 'bg-emerald-500' : 'bg-[var(--border)]'}`}
+                  className={`permission-beneficiary-switch w-11 h-6 rounded-full transition-colors relative shrink-0 ${onBehalf ? 'bg-[var(--brand)]' : 'bg-[var(--border)]'}`}
                 >
-                  <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-all ${onBehalf ? 'left-5' : 'left-0.5'}`} />
-                </button>
+                  <span className={`absolute top-0.5 w-5 h-5 bg-[var(--surface)] rounded-full transition-colors ${onBehalf ? 'left-5' : 'left-0.5'}`} />
+                </Button>
               </div>
               {!onBehalf ? (
                 <p className="text-sm text-[var(--text-muted)]">Pour moi-même</p>
@@ -504,25 +502,21 @@ export default function NouvelleAbsencePage() {
                   </div>
                   <div className="max-h-40 overflow-y-auto space-y-1">
                     {filteredEmployees.map(e => (
-                      <button
+                      <Button variant="ghost"
                         key={e.id}
                         onClick={() => setSelectedEmployeeId(e.id)}
-                        className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between ${selectedEmployeeId === e.id ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 font-semibold' : 'hover:bg-[var(--surface-2)]'}`}
+                        className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between ${selectedEmployeeId === e.id ? 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  text-[var(--success-text)]  font-semibold' : 'hover:bg-[var(--surface-2)]'}`}
                       >
                         {e.firstName} {e.lastName}
                         {e.department?.name && <span className="text-xs text-[var(--text-muted)]">{e.department.name}</span>}
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 </div>
               )}
             </div>
-          )}
-
-          {isStandard ? (
-            <>
-              <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
-                <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-3 block">Motif de l&apos;absence</label>
+          )}{isStandard ? (<div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
+                <label className="text-xs font-semibold text-[var(--text-muted)]   mb-3 block">Motif de l&apos;absence</label>
                 <p className="text-xs text-[var(--text-muted)] mb-3">Le nombre de jours conventionnels est pris par défaut ; vous pouvez ensuite ajuster votre date de reprise.</p>
                 {(!onBehalf || selectedEmployeeId) && (
                   <AbsenceCeilingBalance
@@ -533,7 +527,7 @@ export default function NouvelleAbsencePage() {
                   />
                 )}
                 {ceilingBlocks && selectedMotif && ceilingRemaining != null && (
-                  <div className="flex items-start gap-2 text-sm bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 px-3 py-2 rounded-lg mb-3">
+                  <div className="flex items-start gap-2 text-sm bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  text-[var(--danger-text)]  px-3 py-2 rounded-lg mb-3">
                     <Info size={14} className="mt-0.5 shrink-0" />
                     <span>
                       Ce motif ({selectedMotif.days} j.) dépasse votre solde de <strong>{Math.max(0, ceilingRemaining)} j.</strong> pour {ceilingYear} :
@@ -542,7 +536,7 @@ export default function NouvelleAbsencePage() {
                   </div>
                 )}
                 {isApprover && selectedMotif && !isOther && ceilingRemaining != null && selectedMotif.days > ceilingRemaining && (
-                  <div className="flex items-start gap-2 text-sm bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 px-3 py-2 rounded-lg mb-3">
+                  <div className="flex items-start gap-2 text-sm bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  text-[var(--warning-text)]  px-3 py-2 rounded-lg mb-3">
                     <Info size={14} className="mt-0.5 shrink-0" />
                     <span>
                       Ce motif ({selectedMotif.days} j.) dépasse le solde de {Math.max(0, ceilingRemaining)} j. pour {ceilingYear}.
@@ -555,36 +549,109 @@ export default function NouvelleAbsencePage() {
                     <p className="text-sm text-[var(--text-muted)] italic">Aucun motif configuré pour votre entreprise — contactez les RH.</p>
                   )}
                   {motifCatalog.map(m => (
-                    <button
+                    <Button variant="ghost"
                       key={m.key}
                       onClick={() => setSelectedMotifKey(m.key)}
-                      className={`w-full text-left px-3.5 py-2.5 rounded-xl border-2 flex items-center justify-between transition-all ${
-                        selectedMotifKey === m.key ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-[var(--border)] hover:border-[var(--text-muted)]'
+                      className={`w-full text-left px-3.5 py-2.5 rounded-xl border-2 flex items-center justify-between transition-colors ${
+                        selectedMotifKey === m.key ? 'border-[var(--border)] bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] ' : 'border-[var(--border)] hover:border-[var(--text-muted)]'
                       }`}
                     >
                       <span className="text-sm font-medium text-[var(--text)]">{m.label}</span>
-                      <span className={`text-xs shrink-0 ml-2 ${motifExceeds(m.days) ? 'text-red-500 font-semibold' : 'text-[var(--text-muted)]'}`}>
+                      <span className={`text-xs shrink-0 ml-2 ${motifExceeds(m.days) ? 'text-[var(--danger-text)] font-semibold' : 'text-[var(--text-muted)]'}`}>
                         {m.days} j.{motifExceeds(m.days) ? ' · dépasse le solde' : ''}
                       </span>
-                    </button>
+                    </Button>
                   ))}
                   {/* 🆕 Autre — motif non prévu par la convention */}
-                  <button
+                  <Button variant="ghost"
                     onClick={() => setSelectedMotifKey(OTHER_KEY)}
-                    className={`w-full text-left px-3.5 py-2.5 rounded-xl border-2 border-dashed flex items-center justify-between transition-all ${
-                      isOther ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-[var(--border)] hover:border-[var(--text-muted)]'
+                    className={`w-full text-left px-3.5 py-2.5 rounded-xl border-2 border-dashed flex items-center justify-between transition-colors ${
+                      isOther ? 'border-[var(--border)] bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] ' : 'border-[var(--border)] hover:border-[var(--text-muted)]'
                     }`}
                   >
                     <span className="text-sm font-medium text-[var(--text)]">Autre (motif non listé)</span>
                     <span className="text-xs text-[var(--text-muted)] shrink-0 ml-2">à préciser</span>
-                  </button>
+                  </Button>
+                </div>
+              </div>) : (<div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
+            <label className="text-xs font-semibold text-[var(--text-muted)]   mb-3 block">Type d&apos;absence</label>
+            <div className="grid grid-cols-1 gap-2">
+              {TYPE_OPTIONS.map(opt => {
+                const Icon = opt.icon;
+                const active = type === opt.value;
+                return (
+                  <Button variant="ghost"
+                    key={opt.value}
+                    onClick={() => handleTypeChange(opt.value)}
+                    className={`flex items-center gap-3 p-3.5 rounded-xl border-2 text-left transition-colors ${
+                      active ? 'border-[var(--border)] bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] ' : 'border-[var(--border)] hover:border-[var(--text-muted)]'
+                    }`}
+                  >
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${active ? 'bg-[var(--brand)] text-[var(--on-brand)]' : 'bg-[var(--surface-2)] text-[var(--text-muted)]'}`}>
+                      <Icon size={18} />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm text-[var(--text)]">{opt.label}</p>
+                      <p className="text-xs text-[var(--text-muted)]">{opt.hint}</p>
+                    </div>
+                  </Button>
+                );
+              })}
+            </div>
+
+            <label className="text-xs font-semibold text-[var(--text-muted)]   mt-4 mb-2 block">Motif précis</label>
+            <div className="flex flex-wrap gap-2">
+              {SUBTYPE_OPTIONS[type].map(opt => (
+                <Button variant="ghost"
+                  key={opt.value}
+                  onClick={() => setSubType(opt.value)}
+                  className={`px-3.5 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                    subType === opt.value
+                      ? 'border-[var(--border)] bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  text-[var(--success-text)] '
+                      : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--text-muted)]'
+                  }`}
+                >
+                  {opt.label}
+                </Button>
+              ))}
+            </div>
+          </div>)}</div>
+ <div hidden={uiStep!==1} className="template-stack">{isStandard ? (<>{}<div>
+                  <label className="text-xs font-semibold text-[var(--text-muted)]   mb-1.5 block">Date de départ</label>
+                  <div className="relative">
+                    <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+                    <input type="date" min="2000-01-01" max="2100-12-31" value={startDate} onChange={e => { setStartShiftNote(''); setStartDate(e.target.value); }} className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
+                  </div>
+                  {startShiftNote && <p className="mt-1 text-xs text-[var(--warning-text)]">{startShiftNote}</p>}
+                </div>
+{(selectedMotif || isOther) && startDate && (
+                  <>
+                    {calcBox}
+                    {returnInput}
+                    {coverageBox}
+                  </>
+                )}</>) : (<>{calcBox}
+<div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-semibold text-[var(--text-muted)]   mb-1.5 block">Date de départ</label>
+                <div className="relative">
+                  <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+                  <input type="date" min="2000-01-01" max="2100-12-31" value={startDate} onChange={e => { setStartShiftNote(''); setStartDate(e.target.value); }} className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
+                </div>
+                {startShiftNote && <p className="mt-1 text-xs text-[var(--warning-text)]">{startShiftNote}</p>}
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-[var(--text-muted)]   mb-1.5 block">Date de reprise</label>
+                <div className="relative">
+                  <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+                  <input type="date" min="2000-01-01" max="2100-12-31" value={returnDate} onChange={e => { setReturnDate(e.target.value); setReturnCalc(null); }} className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
                 </div>
               </div>
-
-              <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5 space-y-4">
-                {isOther && (
+            </div>
+{coverageBox}</>)}</div>
+ <div hidden={uiStep!==2} className="template-stack">{isStandard ? (<>{isOther && (
                   <div>
-                    <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Votre motif</label>
+                    <label className="text-xs font-semibold text-[var(--text-muted)]   mb-1.5 block">Votre motif</label>
                     <textarea
                       value={reason}
                       onChange={e => setReason(e.target.value)}
@@ -594,22 +661,7 @@ export default function NouvelleAbsencePage() {
                     />
                   </div>
                 )}
-                <div>
-                  <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Date de départ</label>
-                  <div className="relative">
-                    <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
-                    <input type="date" min="2000-01-01" max="2100-12-31" value={startDate} onChange={e => { setStartShiftNote(''); setStartDate(e.target.value); }} className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
-                  </div>
-                  {startShiftNote && <p className="mt-1 text-xs text-amber-600">{startShiftNote}</p>}
-                </div>
-                {(selectedMotif || isOther) && startDate && (
-                  <>
-                    {calcBox}
-                    {returnInput}
-                    {coverageBox}
-                  </>
-                )}
-                {isOther ? (
+{isOther ? (
                   onBehalf ? (
                     <div className="p-3.5 rounded-xl border border-[var(--border)] space-y-2">
                       <div className="flex items-center gap-2">
@@ -618,14 +670,14 @@ export default function NouvelleAbsencePage() {
                       </div>
                       <div className="grid grid-cols-2 gap-2">
                         {([[true, 'Payée'], [false, 'Non payée']] as const).map(([v, l]) => (
-                          <button
+                          <Button variant="ghost"
                             key={String(v)}
                             type="button"
                             onClick={() => setPaidChoice(v)}
-                            className={`py-2 rounded-lg text-sm font-semibold border-2 ${paidChoice === v ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300' : 'border-[var(--border)] text-[var(--text-muted)]'}`}
+                            className={`py-2 rounded-lg text-sm font-semibold border-2 ${paidChoice === v ? 'border-[var(--border)] bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  text-[var(--success-text)] ' : 'border-[var(--border)] text-[var(--text-muted)]'}`}
                           >
                             {l}
-                          </button>
+                          </Button>
                         ))}
                       </div>
                     </div>
@@ -642,97 +694,26 @@ export default function NouvelleAbsencePage() {
                         <Wallet size={16} className="text-[var(--text-muted)]" />
                         <span className="text-sm font-medium text-[var(--text)]">Absence payée souhaitée</span>
                       </div>
-                      <button
+                      <Button variant="ghost"
+                        role="switch" aria-label="Absence pay?e souhait?e" aria-checked={isPaid}
                         onClick={() => setIsPaid(!isPaid)}
-                        className={`w-11 h-6 rounded-full transition-colors relative shrink-0 ${isPaid ? 'bg-emerald-500' : 'bg-[var(--border)]'}`}
+                        className={`permission-beneficiary-switch w-11 h-6 rounded-full transition-colors relative shrink-0 ${isPaid ? 'bg-[var(--brand)]' : 'bg-[var(--border)]'}`}
                       >
-                        <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-all ${isPaid ? 'left-5' : 'left-0.5'}`} />
-                      </button>
+                        <span className={`absolute top-0.5 w-5 h-5 bg-[var(--surface)] rounded-full transition-colors ${isPaid ? 'left-5' : 'left-0.5'}`} />
+                      </Button>
                     </div>
                     <p className="text-[11px] text-[var(--text-muted)] -mt-2">Le statut définitif (payé / non-payé) est tranché par les RH à la validation.</p>
                   </>
                 )}
-                <div>
-                  <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Justificatif (optionnel)</label>
-                  <label className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-dashed border-[var(--border)] text-sm text-[var(--text-muted)] cursor-pointer hover:border-emerald-400 hover:text-emerald-500 transition-colors">
+<div>
+                  <label className="text-xs font-semibold text-[var(--text-muted)]   mb-1.5 block">Justificatif (optionnel)</label>
+                  <label className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-dashed border-[var(--border)] text-sm text-[var(--text-muted)] cursor-pointer hover:border-[var(--border)] hover:text-[var(--success-text)] transition-colors">
                     <Paperclip size={16} />
-                    {uploading ? 'Envoi en cours…' : uploadedUrl ? 'Justificatif joint ✓' : 'Joindre un certificat / document'}
+                    {uploading ? 'Envoi en cours…' : uploadedUrl ? <><CheckCircle2 size={16} strokeWidth={1.5} /> Justificatif joint</> : 'Joindre un certificat / document'}
                     <input type="file" accept="image/*,.pdf" hidden onChange={e => e.target.files?.[0] && handleFileSelect(e.target.files[0])} />
                   </label>
-                </div>
-              </div>
-            </>
-          ) : (
-            <>
-          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
-            <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-3 block">Type d&apos;absence</label>
-            <div className="grid grid-cols-1 gap-2">
-              {TYPE_OPTIONS.map(opt => {
-                const Icon = opt.icon;
-                const active = type === opt.value;
-                return (
-                  <button
-                    key={opt.value}
-                    onClick={() => handleTypeChange(opt.value)}
-                    className={`flex items-center gap-3 p-3.5 rounded-xl border-2 text-left transition-all ${
-                      active ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-[var(--border)] hover:border-[var(--text-muted)]'
-                    }`}
-                  >
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${active ? 'bg-emerald-500 text-white' : 'bg-[var(--surface-2)] text-[var(--text-muted)]'}`}>
-                      <Icon size={18} />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-sm text-[var(--text)]">{opt.label}</p>
-                      <p className="text-xs text-[var(--text-muted)]">{opt.hint}</p>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-
-            <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mt-4 mb-2 block">Motif précis</label>
-            <div className="flex flex-wrap gap-2">
-              {SUBTYPE_OPTIONS[type].map(opt => (
-                <button
-                  key={opt.value}
-                  onClick={() => setSubType(opt.value)}
-                  className={`px-3.5 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                    subType === opt.value
-                      ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
-                      : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--text-muted)]'
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {calcBox}
-
-          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5 space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Date de départ</label>
-                <div className="relative">
-                  <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
-                  <input type="date" min="2000-01-01" max="2100-12-31" value={startDate} onChange={e => { setStartShiftNote(''); setStartDate(e.target.value); }} className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
-                </div>
-                {startShiftNote && <p className="mt-1 text-xs text-amber-600">{startShiftNote}</p>}
-              </div>
-              <div>
-                <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Date de reprise</label>
-                <div className="relative">
-                  <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
-                  <input type="date" min="2000-01-01" max="2100-12-31" value={returnDate} onChange={e => { setReturnDate(e.target.value); setReturnCalc(null); }} className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
-                </div>
-              </div>
-            </div>
-
-            {coverageBox}
-
-            <div>
-              <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Motif de l&apos;absence</label>
+                </div></>) : (<><div>
+              <label className="text-xs font-semibold text-[var(--text-muted)]   mb-1.5 block">Motif de l&apos;absence</label>
               <textarea
                 value={reason}
                 onChange={e => setReason(e.target.value)}
@@ -741,63 +722,49 @@ export default function NouvelleAbsencePage() {
                 className="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm resize-none"
               />
             </div>
-
-            <div className="flex items-center justify-between p-3.5 rounded-xl border border-[var(--border)]">
+<div className="flex items-center justify-between p-3.5 rounded-xl border border-[var(--border)]">
               <div className="flex items-center gap-2">
                 <Wallet size={16} className="text-[var(--text-muted)]" />
                 <span className="text-sm font-medium text-[var(--text)]">Absence payée souhaitée</span>
               </div>
-              <button
-                onClick={() => setIsPaid(!isPaid)}
-                className={`w-11 h-6 rounded-full transition-colors relative shrink-0 ${isPaid ? 'bg-emerald-500' : 'bg-[var(--border)]'}`}
+              <Button variant="ghost"
+                role="switch" aria-label="Absence pay?e souhait?e" aria-checked={isPaid}
+                        onClick={() => setIsPaid(!isPaid)}
+                className={`permission-beneficiary-switch w-11 h-6 rounded-full transition-colors relative shrink-0 ${isPaid ? 'bg-[var(--brand)]' : 'bg-[var(--border)]'}`}
               >
-                <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-all ${isPaid ? 'left-5' : 'left-0.5'}`} />
-              </button>
+                <span className={`absolute top-0.5 w-5 h-5 bg-[var(--surface)] rounded-full transition-colors ${isPaid ? 'left-5' : 'left-0.5'}`} />
+              </Button>
             </div>
-            <p className="text-[11px] text-[var(--text-muted)] -mt-2">Le statut définitif (payé / non-payé) est tranché par les RH à la validation.</p>
-
-            <div>
-              <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Justificatif (optionnel)</label>
-              <label className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-dashed border-[var(--border)] text-sm text-[var(--text-muted)] cursor-pointer hover:border-emerald-400 hover:text-emerald-500 transition-colors">
+<p className="text-[11px] text-[var(--text-muted)] -mt-2">Le statut définitif (payé / non-payé) est tranché par les RH à la validation.</p>
+<div>
+              <label className="text-xs font-semibold text-[var(--text-muted)]   mb-1.5 block">Justificatif (optionnel)</label>
+              <label className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-dashed border-[var(--border)] text-sm text-[var(--text-muted)] cursor-pointer hover:border-[var(--border)] hover:text-[var(--success-text)] transition-colors">
                 <Paperclip size={16} />
-                {uploading ? 'Envoi en cours…' : uploadedUrl ? 'Justificatif joint ✓' : 'Joindre un certificat / document'}
+                {uploading ? 'Envoi en cours…' : uploadedUrl ? <><CheckCircle2 size={16} strokeWidth={1.5} /> Justificatif joint</> : 'Joindre un certificat / document'}
                 <input type="file" accept="image/*,.pdf" hidden onChange={e => e.target.files?.[0] && handleFileSelect(e.target.files[0])} />
               </label>
-            </div>
-          </div>
-            </>
-          )}
-
-          {error && <div className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 px-4 py-3 rounded-xl">{error}</div>}
-
-          <button
-            onClick={handleSubmit}
-            disabled={!canSubmit}
-            className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/30 transition-all"
-          >
-            {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
-            {onBehalf ? 'Créer la demande' : 'Envoyer la demande'}
-          </button>
-        </div>
+            </div></>)}</div>
+ <div hidden={uiStep!==3} className="template-stack"><h2>Relire ma demande</h2><p className="text-sm text-[var(--text-secondary)]">Vérifiez le motif, la date de reprise et les informations de couverture avant l’envoi. Le statut payé ou non payé reste soumis aux règles et à la décision RH existantes.</p>{coverageBox}</div>
+ </div></RequestForm>
 
         {/* ── APERÇU IMPRIMABLE (masqué par défaut) ── */}
         {showPreview && (
         <div className="xl:col-span-3">
           <div className="sticky top-6">
-            <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-3">Aperçu du document</p>
-            <div className="bg-[var(--surface-2)] rounded-2xl p-4 overflow-auto max-h-[85vh] border border-[var(--border)]">
-              <div className="scale-[0.62] origin-top -mb-[38%] shadow-2xl">
+            <p className="text-xs font-semibold text-[var(--text-muted)]   mb-3">Aperçu du document</p>
+            <DocumentReader title="Demande d’absence">
+              <div className="loan-document-protected scale-[0.62] origin-top -mb-[38%] shadow-2xl">
                 {isStandard ? (
                   <AbsenceRequestDocument template={company?.documentTemplate} data={standardPreviewData as any} />
                 ) : (
                   <AbsenceRequestPrintable data={previewData as any} />
                 )}
               </div>
-            </div>
+            </DocumentReader>
           </div>
         </div>
         )}
       </div>
-    </div>
+    </div></ModulePageFrame>
   );
 }

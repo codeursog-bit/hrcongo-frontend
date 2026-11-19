@@ -1,0 +1,741 @@
+{
+  "date": "2026-11-18",
+  "files": {
+    "app/(dashboard)/conges/analyse/page.tsx": {
+      "api": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "effects": {
+        "before": "db99bdbee5a03268c399070fe2fa8f2e802979816f7725b4f5ab73e668b2e1da",
+        "after": "db99bdbee5a03268c399070fe2fa8f2e802979816f7725b4f5ab73e668b2e1da"
+      },
+      "states": {
+        "before": "d6f86b6f5950622a431a59ae4d76965ccfbacc33cf4bac427981ebd42301c9a7",
+        "after": "d6f86b6f5950622a431a59ae4d76965ccfbacc33cf4bac427981ebd42301c9a7"
+      },
+      "conditions": {
+        "before": "706f3e0a50648917bf3ed231a993bf827003933097a04c202489f7170f4dab0a",
+        "after": "706f3e0a50648917bf3ed231a993bf827003933097a04c202489f7170f4dab0a"
+      },
+      "constraints": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "9cfa9b2238ddbe49c8cf89a7e69817ff3ff0ed73735c060c43c870bbb5634bab",
+        "after": "9cfa9b2238ddbe49c8cf89a7e69817ff3ff0ed73735c060c43c870bbb5634bab"
+      },
+      "protectedDocuments": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "dataHooks": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "actionCallbacks": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/conges/calendrier/page.tsx": {
+      "api": {
+        "before": "e5421f663cec71acdd7a068adf0df5685bad8f1ee9efd608cd1479d4ddf610dc",
+        "after": "e5421f663cec71acdd7a068adf0df5685bad8f1ee9efd608cd1479d4ddf610dc"
+      },
+      "effects": {
+        "before": "a01cbf93a695092f6a6149c77e55f0b3830a53c36ddd47019ca0b7f4efc20c11",
+        "after": "a01cbf93a695092f6a6149c77e55f0b3830a53c36ddd47019ca0b7f4efc20c11"
+      },
+      "states": {
+        "before": "de908576d2289fd9285478f2aa2d067637df772ec860bbd66143930bdab8e422",
+        "after": "de908576d2289fd9285478f2aa2d067637df772ec860bbd66143930bdab8e422"
+      },
+      "conditions": {
+        "before": "87ce272b73075ecc0fa094c600ec9b46f3bc54f56036db75431176e5c387eb09",
+        "after": "87ce272b73075ecc0fa094c600ec9b46f3bc54f56036db75431176e5c387eb09"
+      },
+      "constraints": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "8d4079c453f803f77ecb703daa750abcea9b7ff03c68c8350af6f261bd3503f5",
+        "after": "8d4079c453f803f77ecb703daa750abcea9b7ff03c68c8350af6f261bd3503f5"
+      },
+      "protectedDocuments": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "dataHooks": {
+        "before": "ee4518b281a0675739d50cb4a5ab525597048ecfbec1bc7a366ea58674a1209c",
+        "after": "ee4518b281a0675739d50cb4a5ab525597048ecfbec1bc7a366ea58674a1209c"
+      },
+      "actionCallbacks": {
+        "before": "dae240779af89834145e68553453e0c2429ca49a19847f1f27e637d153b77224",
+        "after": "dae240779af89834145e68553453e0c2429ca49a19847f1f27e637d153b77224"
+      }
+    },
+    "app/(dashboard)/conges/diagrammes/page.tsx": {
+      "api": {
+        "before": "6e61220e11f2d252eb496dadd57ec0ff05cb31c9ae14db84ee16fdaa780c9a83",
+        "after": "6e61220e11f2d252eb496dadd57ec0ff05cb31c9ae14db84ee16fdaa780c9a83"
+      },
+      "effects": {
+        "before": "19327328d99265dd3f2dc742853b3834382d68387f519034c95b8f25f0574987",
+        "after": "19327328d99265dd3f2dc742853b3834382d68387f519034c95b8f25f0574987"
+      },
+      "states": {
+        "before": "ff1e93356a560177012a126a698ae803672c887074904e5c3db0e3b5caacd6aa",
+        "after": "ff1e93356a560177012a126a698ae803672c887074904e5c3db0e3b5caacd6aa"
+      },
+      "conditions": {
+        "before": "d0b40f4f6a5d4717ce53674d339062412db2249d9dd2b7917193550368dc409f",
+        "after": "d0b40f4f6a5d4717ce53674d339062412db2249d9dd2b7917193550368dc409f"
+      },
+      "constraints": {
+        "before": "16a0b8be7ee179fdc0db539d069b851824986d923ea8624729202c6bdc8a3c94",
+        "after": "16a0b8be7ee179fdc0db539d069b851824986d923ea8624729202c6bdc8a3c94"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "485167d5d4a11903d74601f1ba0fe87757f3b2877744c6b34151a04668eef16f",
+        "after": "485167d5d4a11903d74601f1ba0fe87757f3b2877744c6b34151a04668eef16f"
+      },
+      "protectedDocuments": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "dataHooks": {
+        "before": "582eecbb8111cf485219f414f61d37682e01e957955c205e8a38009d2ca2c916",
+        "after": "582eecbb8111cf485219f414f61d37682e01e957955c205e8a38009d2ca2c916"
+      },
+      "actionCallbacks": {
+        "before": "13134d9e4f55a43923d319669383f3bf6d1171e5066f70588608ff0efae5f356",
+        "after": "13134d9e4f55a43923d319669383f3bf6d1171e5066f70588608ff0efae5f356"
+      }
+    },
+    "app/(dashboard)/conges/gestion/page.tsx": {
+      "api": {
+        "before": "775a6488798a000023c6fb5b0d19a0c4077d0453e1d5ab56ed2c7ea0b520bffb",
+        "after": "775a6488798a000023c6fb5b0d19a0c4077d0453e1d5ab56ed2c7ea0b520bffb"
+      },
+      "effects": {
+        "before": "f6e2bfdfd0e688e75229bf6cdfd1eb8750835e8ade4c1186a752984128cbe006",
+        "after": "f6e2bfdfd0e688e75229bf6cdfd1eb8750835e8ade4c1186a752984128cbe006"
+      },
+      "states": {
+        "before": "8ba968619ed34a8917d2cfcea47623c00008e530214de268244a047bfcbbb164",
+        "after": "8ba968619ed34a8917d2cfcea47623c00008e530214de268244a047bfcbbb164"
+      },
+      "conditions": {
+        "before": "7377b686c865e94279614748834b010b06a968c56a9ad749bd2dd6d1a992c32d",
+        "after": "7377b686c865e94279614748834b010b06a968c56a9ad749bd2dd6d1a992c32d"
+      },
+      "constraints": {
+        "before": "591f28f05adfd39b93965949b45b19aa8ef2c2bde5e68a5319e464b7bb05a3a3",
+        "after": "591f28f05adfd39b93965949b45b19aa8ef2c2bde5e68a5319e464b7bb05a3a3"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "32e0c8cdcae57cd895a271b8c03dac3e6656fd677abd3d1da40c27d023b10b1e",
+        "after": "32e0c8cdcae57cd895a271b8c03dac3e6656fd677abd3d1da40c27d023b10b1e"
+      },
+      "protectedDocuments": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "dataHooks": {
+        "before": "582eecbb8111cf485219f414f61d37682e01e957955c205e8a38009d2ca2c916",
+        "after": "582eecbb8111cf485219f414f61d37682e01e957955c205e8a38009d2ca2c916"
+      },
+      "actionCallbacks": {
+        "before": "9f8c0d343551740ceec5ef370853ba7edadeb719975759249e76eb7e9827b120",
+        "after": "9f8c0d343551740ceec5ef370853ba7edadeb719975759249e76eb7e9827b120"
+      }
+    },
+    "app/(dashboard)/conges/historique/page.tsx": {
+      "api": {
+        "before": "0bf45344807a50c56cfe6312107ab745d1965d6c114742d81b2d7ca3e482baa9",
+        "after": "0bf45344807a50c56cfe6312107ab745d1965d6c114742d81b2d7ca3e482baa9"
+      },
+      "effects": {
+        "before": "4df4f3f982a2ac91a84b36f89e7a96b08115056fd73cdc886988b2f442bc0788",
+        "after": "4df4f3f982a2ac91a84b36f89e7a96b08115056fd73cdc886988b2f442bc0788"
+      },
+      "states": {
+        "before": "6f6c5ca0a765bd0dc3c15155768078c93aabed4765aaf9d9e58ab5aa83e33d5d",
+        "after": "6f6c5ca0a765bd0dc3c15155768078c93aabed4765aaf9d9e58ab5aa83e33d5d"
+      },
+      "conditions": {
+        "before": "68b1886f17290ac69ea3ed3ad058584fb056b749c90b7d1882d2c76387cb1ccb",
+        "after": "68b1886f17290ac69ea3ed3ad058584fb056b749c90b7d1882d2c76387cb1ccb"
+      },
+      "constraints": {
+        "before": "67707bd3867392de6febaed3e01d3abf9787488a4a69f6997896fdf7b8e34cdd",
+        "after": "67707bd3867392de6febaed3e01d3abf9787488a4a69f6997896fdf7b8e34cdd"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "89af053daf71b6c0535a3134f93f2ed54351243f00e1110b0162a5c62e9960af",
+        "after": "89af053daf71b6c0535a3134f93f2ed54351243f00e1110b0162a5c62e9960af"
+      },
+      "protectedDocuments": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "dataHooks": {
+        "before": "582eecbb8111cf485219f414f61d37682e01e957955c205e8a38009d2ca2c916",
+        "after": "582eecbb8111cf485219f414f61d37682e01e957955c205e8a38009d2ca2c916"
+      },
+      "actionCallbacks": {
+        "before": "35f668ae2668c156a0cf62b6be1d782307cae3e9af5aaba9be57ae4fb0a10829",
+        "after": "35f668ae2668c156a0cf62b6be1d782307cae3e9af5aaba9be57ae4fb0a10829"
+      }
+    },
+    "app/(dashboard)/conges/mon-espace/page.tsx": {
+      "api": {
+        "before": "0bec1ea62ed5be2e1d09c4e71818a10b3ab660fe9dab0d0dbbfd8cf376796e27",
+        "after": "0bec1ea62ed5be2e1d09c4e71818a10b3ab660fe9dab0d0dbbfd8cf376796e27"
+      },
+      "effects": {
+        "before": "40b9b9c0211a4b22b75aba3a983e5a0f880f7abae7e2095191df818b94bfda0c",
+        "after": "40b9b9c0211a4b22b75aba3a983e5a0f880f7abae7e2095191df818b94bfda0c"
+      },
+      "states": {
+        "before": "a5d8047dd4445c8f5624e56f09e8792dded9eac304c17e46b1bf7cec4ece77ce",
+        "after": "a5d8047dd4445c8f5624e56f09e8792dded9eac304c17e46b1bf7cec4ece77ce"
+      },
+      "conditions": {
+        "before": "cd28507e4ac038be5c403cd00c6f7292e3256c07a562f8d8c50c930a0eecf353",
+        "after": "cd28507e4ac038be5c403cd00c6f7292e3256c07a562f8d8c50c930a0eecf353"
+      },
+      "constraints": {
+        "before": "8c92fa288c5f2a82932d1a1f0773d44f09e17e085d1c76cb7d9bcd5997031913",
+        "after": "8c92fa288c5f2a82932d1a1f0773d44f09e17e085d1c76cb7d9bcd5997031913"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "ef10ec0b56584a69f8413ce1256cfad76467f8d8438abfad60f45dd02780d8e8",
+        "after": "ef10ec0b56584a69f8413ce1256cfad76467f8d8438abfad60f45dd02780d8e8"
+      },
+      "protectedDocuments": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "dataHooks": {
+        "before": "582eecbb8111cf485219f414f61d37682e01e957955c205e8a38009d2ca2c916",
+        "after": "582eecbb8111cf485219f414f61d37682e01e957955c205e8a38009d2ca2c916"
+      },
+      "actionCallbacks": {
+        "before": "3e93c0ac2ed05b002188a21a9fa41551f44a2a2eaac270be4b605841846afec1",
+        "after": "3e93c0ac2ed05b002188a21a9fa41551f44a2a2eaac270be4b605841846afec1"
+      }
+    },
+    "app/(dashboard)/conges/nouveau/page.tsx": {
+      "api": {
+        "before": "580ec287b9c3dbd894f2e0c136888e930365e11385e7b4e1e19e1bfd815de41a",
+        "after": "580ec287b9c3dbd894f2e0c136888e930365e11385e7b4e1e19e1bfd815de41a"
+      },
+      "effects": {
+        "before": "74516c3458ba6d3c47354e8056a0f82dbb9ffdfe376413183ab4eec789be3722",
+        "after": "74516c3458ba6d3c47354e8056a0f82dbb9ffdfe376413183ab4eec789be3722"
+      },
+      "states": {
+        "before": "12c609fe1dfa675603e5de3f7c953d9859f21e5ae584c3b1a261fce514a55b78",
+        "after": "12c609fe1dfa675603e5de3f7c953d9859f21e5ae584c3b1a261fce514a55b78"
+      },
+      "conditions": {
+        "before": "5d208d7a1590033fb54674ed21fcd08106e0aac1d646e6e146937c7235bac63b",
+        "after": "5d208d7a1590033fb54674ed21fcd08106e0aac1d646e6e146937c7235bac63b"
+      },
+      "constraints": {
+        "before": "8ac559ed95549741c2b95876b2f5d1cfc207b372ac7cd0758b5523fb3cd550cf",
+        "after": "8ac559ed95549741c2b95876b2f5d1cfc207b372ac7cd0758b5523fb3cd550cf"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "c5607b36d34a5b8c376df35162d30935016eeea125d94205351f659d6b01feca",
+        "after": "c5607b36d34a5b8c376df35162d30935016eeea125d94205351f659d6b01feca"
+      },
+      "protectedDocuments": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "dataHooks": {
+        "before": "ca4c76b90c8f7dda564077032b1b5a399add40b2ef802fb60e4f11a9c9483baf",
+        "after": "ca4c76b90c8f7dda564077032b1b5a399add40b2ef802fb60e4f11a9c9483baf"
+      },
+      "actionCallbacks": {
+        "before": "cabe34a960add2a5e01e6ba86e41b13d45a80b66cbf50ef516969f2d97d67c36",
+        "after": "cabe34a960add2a5e01e6ba86e41b13d45a80b66cbf50ef516969f2d97d67c36"
+      }
+    },
+    "app/(dashboard)/conges/page.tsx": {
+      "api": {
+        "before": "9e2ad534990b2ebb494cad0da3671fc4cbc6c79c17d20c80d547606bafc5c07b",
+        "after": "9e2ad534990b2ebb494cad0da3671fc4cbc6c79c17d20c80d547606bafc5c07b"
+      },
+      "effects": {
+        "before": "f1f2452f7e1899d7eba65837a3289c16aaa5e6b1c142b0d7bbf124cfdb6502b9",
+        "after": "f1f2452f7e1899d7eba65837a3289c16aaa5e6b1c142b0d7bbf124cfdb6502b9"
+      },
+      "states": {
+        "before": "04b18e38180a44c992d9b516fcc23fabcba6cf56bc41abfb0bccc2217292e4dc",
+        "after": "04b18e38180a44c992d9b516fcc23fabcba6cf56bc41abfb0bccc2217292e4dc"
+      },
+      "conditions": {
+        "before": "19d4394b1802c50ae30222d066e834e26812ede43c69e26ab31038b1a3d2bf73",
+        "after": "19d4394b1802c50ae30222d066e834e26812ede43c69e26ab31038b1a3d2bf73"
+      },
+      "constraints": {
+        "before": "e14d0eb4c4ace71c1163cd75eea9d6d0bae47706f8df51965020611e851e95d3",
+        "after": "e14d0eb4c4ace71c1163cd75eea9d6d0bae47706f8df51965020611e851e95d3"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "1a221dcc7ab6dbf9343de58db1de4af6cbc382bda8ea76d7f845b5ae6c981f73",
+        "after": "1a221dcc7ab6dbf9343de58db1de4af6cbc382bda8ea76d7f845b5ae6c981f73"
+      },
+      "protectedDocuments": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "dataHooks": {
+        "before": "70e2065e7a83029712c9d68d11cc03126c8c8d3df6f8828a9ef2f35dc4532dcc",
+        "after": "70e2065e7a83029712c9d68d11cc03126c8c8d3df6f8828a9ef2f35dc4532dcc"
+      },
+      "actionCallbacks": {
+        "before": "7c1d492d4dcc6d1232388ece51167d8346be87da3d2423264cb107159cdf6385",
+        "after": "7c1d492d4dcc6d1232388ece51167d8346be87da3d2423264cb107159cdf6385"
+      }
+    },
+    "app/(dashboard)/conges/planning/page.tsx": {
+      "api": {
+        "before": "70f9ce559dcf6a76cc05472085754e0474e366612a44b5de15165827809ae218",
+        "after": "70f9ce559dcf6a76cc05472085754e0474e366612a44b5de15165827809ae218"
+      },
+      "effects": {
+        "before": "82f1ed0a93b4f2636cc9112ae1f8b6ec7bae7b62a7290184cbbcddf00b794d55",
+        "after": "82f1ed0a93b4f2636cc9112ae1f8b6ec7bae7b62a7290184cbbcddf00b794d55"
+      },
+      "states": {
+        "before": "304ae7607fae264a6d8bb20c6860d8fda240637ac87cb1b5541c2486b34c3454",
+        "after": "304ae7607fae264a6d8bb20c6860d8fda240637ac87cb1b5541c2486b34c3454"
+      },
+      "conditions": {
+        "before": "87ce272b73075ecc0fa094c600ec9b46f3bc54f56036db75431176e5c387eb09",
+        "after": "87ce272b73075ecc0fa094c600ec9b46f3bc54f56036db75431176e5c387eb09"
+      },
+      "constraints": {
+        "before": "e2c45be1c60d096382d62c8541016e0ca13e634f95bb222b6db6abacef311961",
+        "after": "e2c45be1c60d096382d62c8541016e0ca13e634f95bb222b6db6abacef311961"
+      },
+      "documents": {
+        "before": "4a5fdc9b72c0af57ad48cf98c59d4b3ba6cd56e2fdd94cc1e9c74c034ac8e25e",
+        "after": "4a5fdc9b72c0af57ad48cf98c59d4b3ba6cd56e2fdd94cc1e9c74c034ac8e25e"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "7fc952701e316497563ecf1b811aeab9545c59e6a1da7971f44f243931a158a4",
+        "after": "7fc952701e316497563ecf1b811aeab9545c59e6a1da7971f44f243931a158a4"
+      },
+      "protectedDocuments": {
+        "before": "4a5fdc9b72c0af57ad48cf98c59d4b3ba6cd56e2fdd94cc1e9c74c034ac8e25e",
+        "after": "4a5fdc9b72c0af57ad48cf98c59d4b3ba6cd56e2fdd94cc1e9c74c034ac8e25e"
+      },
+      "dataHooks": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "actionCallbacks": {
+        "before": "fb3c06dc520f88a985be1986be106d68defd4cb5b554e737c81a9fc875e9e1bc",
+        "after": "fb3c06dc520f88a985be1986be106d68defd4cb5b554e737c81a9fc875e9e1bc"
+      }
+    },
+    "app/(dashboard)/conges/programme/page.tsx": {
+      "api": {
+        "before": "2c01bae516674dcb1697919119ffab718e3bdd47b56c222b867fe82d13adb874",
+        "after": "2c01bae516674dcb1697919119ffab718e3bdd47b56c222b867fe82d13adb874"
+      },
+      "effects": {
+        "before": "5740f0eab4a2f95dd607ad4653344948b2f4ff8d658dd38df81fa34d234e99ae",
+        "after": "5740f0eab4a2f95dd607ad4653344948b2f4ff8d658dd38df81fa34d234e99ae"
+      },
+      "states": {
+        "before": "c2b7f8e6b075277893022958f0217dd11fd196fcec5b34b4bb424caaf22edd49",
+        "after": "c2b7f8e6b075277893022958f0217dd11fd196fcec5b34b4bb424caaf22edd49"
+      },
+      "conditions": {
+        "before": "d22695a27a7fc4f9da40dc3785895da4bc3dd774427b557d7f4b98dfd17fb17b",
+        "after": "d22695a27a7fc4f9da40dc3785895da4bc3dd774427b557d7f4b98dfd17fb17b"
+      },
+      "constraints": {
+        "before": "a84d53f4679db4c2390a93facf8102637e5ce07f7b9c333ac5bc2e6f11dc9452",
+        "after": "a84d53f4679db4c2390a93facf8102637e5ce07f7b9c333ac5bc2e6f11dc9452"
+      },
+      "documents": {
+        "before": "e7ed34d8dbe4ec663b05210c848ac42a562ca434d09d5a7f37cce2050b9b8825",
+        "after": "e7ed34d8dbe4ec663b05210c848ac42a562ca434d09d5a7f37cce2050b9b8825"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "83699fd1e320c16c81ddaa67c8577eaad43b01ac911653048f5957a289070581",
+        "after": "83699fd1e320c16c81ddaa67c8577eaad43b01ac911653048f5957a289070581"
+      },
+      "protectedDocuments": {
+        "before": "e7ed34d8dbe4ec663b05210c848ac42a562ca434d09d5a7f37cce2050b9b8825",
+        "after": "e7ed34d8dbe4ec663b05210c848ac42a562ca434d09d5a7f37cce2050b9b8825"
+      },
+      "dataHooks": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "actionCallbacks": {
+        "before": "49fb20dc7899cf83ded2f8d6c1f5208f99cdd770bda04d54116a04a4f235c16c",
+        "after": "49fb20dc7899cf83ded2f8d6c1f5208f99cdd770bda04d54116a04a4f235c16c"
+      }
+    },
+    "app/(dashboard)/conges/provision/page.tsx": {
+      "api": {
+        "before": "e273493d9e24a7c58dc551861b98b083fb7f64a4335aec8d7ab5304081481dc9",
+        "after": "e273493d9e24a7c58dc551861b98b083fb7f64a4335aec8d7ab5304081481dc9"
+      },
+      "effects": {
+        "before": "a0e4a355519ae0589d357cfe3accf78589911fbe053c48f31ad1f33a9d9cef33",
+        "after": "a0e4a355519ae0589d357cfe3accf78589911fbe053c48f31ad1f33a9d9cef33"
+      },
+      "states": {
+        "before": "57a678e380a147d0f3f8aa73dbce1ca05b23cd5eed41ef8a2894e1c818149e2d",
+        "after": "57a678e380a147d0f3f8aa73dbce1ca05b23cd5eed41ef8a2894e1c818149e2d"
+      },
+      "conditions": {
+        "before": "a2f15b403850b4e99cfa1ddb5c29c0f12e8df7b4875c9d28f6c7372b028bc038",
+        "after": "a2f15b403850b4e99cfa1ddb5c29c0f12e8df7b4875c9d28f6c7372b028bc038"
+      },
+      "constraints": {
+        "before": "6a2e62cc54c8a6b469e67985ed90e1ab02039c889f2a91fda013cc623e90def3",
+        "after": "6a2e62cc54c8a6b469e67985ed90e1ab02039c889f2a91fda013cc623e90def3"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "51878c50cbec63b7cbcdb034e607d202ddf2a7b6d015eec918aad96b1c308203",
+        "after": "51878c50cbec63b7cbcdb034e607d202ddf2a7b6d015eec918aad96b1c308203"
+      },
+      "protectedDocuments": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "dataHooks": {
+        "before": "ca4c76b90c8f7dda564077032b1b5a399add40b2ef802fb60e4f11a9c9483baf",
+        "after": "ca4c76b90c8f7dda564077032b1b5a399add40b2ef802fb60e4f11a9c9483baf"
+      },
+      "actionCallbacks": {
+        "before": "2e47fc93f5491f2d9a36fd19bef9720baccea910aaf9cefce5af806d933563d3",
+        "after": "2e47fc93f5491f2d9a36fd19bef9720baccea910aaf9cefce5af806d933563d3"
+      }
+    },
+    "app/(dashboard)/conges/soldes/page.tsx": {
+      "api": {
+        "before": "b2d0583735df141489dcb1d165e6378f9690b3cc3a1223635f9428d6315314c7",
+        "after": "b2d0583735df141489dcb1d165e6378f9690b3cc3a1223635f9428d6315314c7"
+      },
+      "effects": {
+        "before": "a0e4a355519ae0589d357cfe3accf78589911fbe053c48f31ad1f33a9d9cef33",
+        "after": "a0e4a355519ae0589d357cfe3accf78589911fbe053c48f31ad1f33a9d9cef33"
+      },
+      "states": {
+        "before": "9b7bf5c087fe59c5e506ea68349da1eea8ee506fdc0c17b1b61ea9a88329d30b",
+        "after": "9b7bf5c087fe59c5e506ea68349da1eea8ee506fdc0c17b1b61ea9a88329d30b"
+      },
+      "conditions": {
+        "before": "040fc82511e5459c56796b19496f4d52295abd3a3e3d096edd2147232cff2e51",
+        "after": "040fc82511e5459c56796b19496f4d52295abd3a3e3d096edd2147232cff2e51"
+      },
+      "constraints": {
+        "before": "0adc039ba5c25ee3e986997ef5b7c3def133ce99dca1f85570d5c98172aeda31",
+        "after": "0adc039ba5c25ee3e986997ef5b7c3def133ce99dca1f85570d5c98172aeda31"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "ca6b2dfa0343b31136b30084e9f46fce079ae3d4997697b20d6baf5b293e0980",
+        "after": "ca6b2dfa0343b31136b30084e9f46fce079ae3d4997697b20d6baf5b293e0980"
+      },
+      "protectedDocuments": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "dataHooks": {
+        "before": "ca4c76b90c8f7dda564077032b1b5a399add40b2ef802fb60e4f11a9c9483baf",
+        "after": "ca4c76b90c8f7dda564077032b1b5a399add40b2ef802fb60e4f11a9c9483baf"
+      },
+      "actionCallbacks": {
+        "before": "bb23ddbd236ab096c0ff362291be0ace5f5369dd7de963b166d805881c4373f3",
+        "after": "bb23ddbd236ab096c0ff362291be0ace5f5369dd7de963b166d805881c4373f3"
+      }
+    },
+    "app/(dashboard)/conges/[id]/page.tsx": {
+      "api": {
+        "before": "fcb8a3226759956f51105702401fd9a85ab91de53949b50748ea50f1b6a16119",
+        "after": "fcb8a3226759956f51105702401fd9a85ab91de53949b50748ea50f1b6a16119"
+      },
+      "effects": {
+        "before": "59de49f74de076a0c2024c23bd5e09abfde30be4654818494998924b9f4b093f",
+        "after": "59de49f74de076a0c2024c23bd5e09abfde30be4654818494998924b9f4b093f"
+      },
+      "states": {
+        "before": "61bf5b48c3039e266922be13af9b1b8060cf2c310faf6035a0c25fb96f29837a",
+        "after": "61bf5b48c3039e266922be13af9b1b8060cf2c310faf6035a0c25fb96f29837a"
+      },
+      "conditions": {
+        "before": "cd3ba225678f5d6e70b715b2ba1a13abdae52661cfbce5fe21ec24228af8753d",
+        "after": "cd3ba225678f5d6e70b715b2ba1a13abdae52661cfbce5fe21ec24228af8753d"
+      },
+      "constraints": {
+        "before": "addbfe2b81e8f652e45504674b1e3f5edfde2124734594bcdbe9cb097c184ba9",
+        "after": "addbfe2b81e8f652e45504674b1e3f5edfde2124734594bcdbe9cb097c184ba9"
+      },
+      "documents": {
+        "before": "6706342a06bcfdc391b1dbeeb904915eba828925a44047fcd7f09b91e241cf31",
+        "after": "6706342a06bcfdc391b1dbeeb904915eba828925a44047fcd7f09b91e241cf31"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "21dd679105dc36440e0eaa600f6e679f6ea574a5f2afc7354e2e0a17fb4cb32b",
+        "after": "21dd679105dc36440e0eaa600f6e679f6ea574a5f2afc7354e2e0a17fb4cb32b"
+      },
+      "protectedDocuments": {
+        "before": "3894841ec3bd40828be206ac38ed19501e938cc6bb4a1c4f989162793948e19e",
+        "after": "3894841ec3bd40828be206ac38ed19501e938cc6bb4a1c4f989162793948e19e"
+      },
+      "dataHooks": {
+        "before": "101eb6b46f153c2391e4ee90bbe023651ef5fb8c9a93d3da796a78db29fb1676",
+        "after": "101eb6b46f153c2391e4ee90bbe023651ef5fb8c9a93d3da796a78db29fb1676"
+      },
+      "actionCallbacks": {
+        "before": "7b64a3aae0e76a97bcbc3ad4560818e0c97a69277bbe5886d1f111965faf0a33",
+        "after": "7b64a3aae0e76a97bcbc3ad4560818e0c97a69277bbe5886d1f111965faf0a33"
+      }
+    },
+    "components/leave-history/LeaveCharts.tsx": {
+      "api": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "effects": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "states": {
+        "before": "cc22d846a9acac394abb750e575f999369d933cc7f7bd3638731c94173855aeb",
+        "after": "cc22d846a9acac394abb750e575f999369d933cc7f7bd3638731c94173855aeb"
+      },
+      "conditions": {
+        "before": "2c0c544f50b2fcbb8a5849bd0f7f54488c3b6e9b450bfa5c2ba3b724d7e85c67",
+        "after": "2c0c544f50b2fcbb8a5849bd0f7f54488c3b6e9b450bfa5c2ba3b724d7e85c67"
+      },
+      "constraints": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "f6c0e057482e928f92c7a5db1ff17a27eec3568e89d93ad9c8ffdc0fc3c68891",
+        "after": "f6c0e057482e928f92c7a5db1ff17a27eec3568e89d93ad9c8ffdc0fc3c68891"
+      },
+      "protectedDocuments": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "dataHooks": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "actionCallbacks": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "components/leave-history/EmployeeDepartureDrawer.tsx": {
+      "api": {
+        "before": "79fa0b45c7be98f47239c081f384ee8c2fff1ef975ed1ba1e9b44e830ca27b88",
+        "after": "79fa0b45c7be98f47239c081f384ee8c2fff1ef975ed1ba1e9b44e830ca27b88"
+      },
+      "effects": {
+        "before": "62bbf9753ca22eac78dee369bd8956256d9d620e0def7bb0438dff3c2d9f6f3e",
+        "after": "62bbf9753ca22eac78dee369bd8956256d9d620e0def7bb0438dff3c2d9f6f3e"
+      },
+      "states": {
+        "before": "100c527730cd87e99d645aeee756623a90432eb52603244c4e0a9a9708c6b43a",
+        "after": "100c527730cd87e99d645aeee756623a90432eb52603244c4e0a9a9708c6b43a"
+      },
+      "conditions": {
+        "before": "a696eeda22c934065608e9911291bdf3432de45f8424d65edd442f301d377b99",
+        "after": "a696eeda22c934065608e9911291bdf3432de45f8424d65edd442f301d377b99"
+      },
+      "constraints": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "dfcbc5a06e8a88d33bb5154165705d175b6d08989a69dadd65b0e6f3fd2ec56f",
+        "after": "dfcbc5a06e8a88d33bb5154165705d175b6d08989a69dadd65b0e6f3fd2ec56f"
+      },
+      "protectedDocuments": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "dataHooks": {
+        "before": "582eecbb8111cf485219f414f61d37682e01e957955c205e8a38009d2ca2c916",
+        "after": "582eecbb8111cf485219f414f61d37682e01e957955c205e8a38009d2ca2c916"
+      },
+      "actionCallbacks": {
+        "before": "e8b034a5a2f736ed94f5636d5df4706f2a296ca902a07f2af7aa482bf91a5dc9",
+        "after": "e8b034a5a2f736ed94f5636d5df4706f2a296ca902a07f2af7aa482bf91a5dc9"
+      }
+    },
+    "components/absence-analytics/AbsenceAnalyticsBoard.tsx": {
+      "api": {
+        "before": "15f57dff54f7bc6632a25172036c0a9838b75cb21492f5ff155ffaa8637a0162",
+        "after": "15f57dff54f7bc6632a25172036c0a9838b75cb21492f5ff155ffaa8637a0162"
+      },
+      "effects": {
+        "before": "567105fe1a3a4900fad6fc10c284fff5a1b2cb1476fa739c1e5aa7c3d5cddbd5",
+        "after": "567105fe1a3a4900fad6fc10c284fff5a1b2cb1476fa739c1e5aa7c3d5cddbd5"
+      },
+      "states": {
+        "before": "b24904786de2621a11496b2d36cf818aef11c0dfd7a403cbbaf586672366643f",
+        "after": "b24904786de2621a11496b2d36cf818aef11c0dfd7a403cbbaf586672366643f"
+      },
+      "conditions": {
+        "before": "b790c147a8427552964a481968c3b27805fd9a443267e805fccc6971972fbf89",
+        "after": "b790c147a8427552964a481968c3b27805fd9a443267e805fccc6971972fbf89"
+      },
+      "constraints": {
+        "before": "7cdfb0509881077709256ea9ec0f1e1047fd215480c07a063acc959105d0f77d",
+        "after": "7cdfb0509881077709256ea9ec0f1e1047fd215480c07a063acc959105d0f77d"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "businessVariables": {
+        "before": "e4429172d9f2f676ea3d82da036c3ba28481c9fe7257583eca9b39f36f494441",
+        "after": "e4429172d9f2f676ea3d82da036c3ba28481c9fe7257583eca9b39f36f494441"
+      },
+      "protectedDocuments": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "dataHooks": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "actionCallbacks": {
+        "before": "410a882de1f05519450a714d4ec27e0a5807fd41ab665666ee2152612001e053",
+        "after": "410a882de1f05519450a714d4ec27e0a5807fd41ab665666ee2152612001e053"
+      }
+    }
+  }
+}

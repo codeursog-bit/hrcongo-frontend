@@ -254,7 +254,7 @@ function TwoFAModal({ isOpen, tempToken2fa, onSuccess, onCancel }: TwoFAModalPro
                 <button
                   type="submit"
                   disabled={isSubmitting || code.length < 6}
-                  className="flex-1 py-3 bg-[#FAFAFA] hover:bg-white rounded-xl font-bold text-sm text-black transition-all disabled:opacity-40 flex items-center justify-center gap-2"
+                  className="flex-1 py-3 bg-[var(--text)] hover:bg-white rounded-xl font-bold text-sm text-black transition-all disabled:opacity-40 flex items-center justify-center gap-2"
                 >
                   {isSubmitting
                     ? <Loader2 className="animate-spin" size={18} />
@@ -422,7 +422,7 @@ function ChangePasswordModal({ isOpen, tempToken, userInfo, onSuccess, onCancel 
 
               <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2 sm:pt-4">
                 <button type="button" onClick={onCancel} disabled={isSubmitting} className="flex-1 py-2.5 sm:py-3 border border-white/10 rounded-xl font-bold text-sm text-gray-300 hover:bg-white/5 transition-all disabled:opacity-50">Annuler</button>
-                <button type="submit" disabled={isSubmitting} className="flex-1 py-2.5 sm:py-3 bg-[#FAFAFA] hover:bg-white rounded-xl font-bold text-sm text-black transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+                <button type="submit" disabled={isSubmitting} className="flex-1 py-2.5 sm:py-3 bg-[var(--text)] hover:bg-white rounded-xl font-bold text-sm text-black transition-all disabled:opacity-50 flex items-center justify-center gap-2">
                   {isSubmitting ? <Loader2 className="animate-spin" size={18} /> : <><CheckCircle2 size={18} />Valider</>}
                 </button>
               </div>
@@ -529,7 +529,7 @@ function LoginContent() {
   };
 
   return (
-    <div className="flex min-h-screen min-h-[100dvh] w-full bg-[#050607] text-white font-sans overflow-x-hidden">
+    <div className="flex min-h-screen min-h-[100dvh] w-full bg-[var(--bg)] text-white font-sans overflow-x-hidden">
 
       {/* ── Fond : identique au Hero de la page d'accueil, avec l'ondulation ── */}
       <div className="pointer-events-none fixed inset-0 -z-10">
@@ -690,7 +690,7 @@ function LoginContent() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex justify-center items-center gap-2 py-3 sm:py-4 px-4 rounded-xl text-sm font-bold text-black bg-[#FAFAFA] hover:bg-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#050607] focus:ring-white/40 disabled:opacity-70 disabled:cursor-not-allowed transition-all transform active:scale-[0.98]"
+                className="w-full flex justify-center items-center gap-2 py-3 sm:py-4 px-4 rounded-xl text-sm font-bold text-black bg-[var(--text)] hover:bg-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[var(--bg)] focus:ring-white/40 disabled:opacity-70 disabled:cursor-not-allowed transition-all transform active:scale-[0.98]"
               >
                 {isLoading
                   ? <Loader2 className="animate-spin" size={18} />
@@ -742,7 +742,7 @@ function LoginContent() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="flex min-h-screen w-full bg-[#050607] items-center justify-center">
+      <div className="flex min-h-screen w-full bg-[var(--bg)] items-center justify-center">
         <Loader2 className="animate-spin text-emerald-400" size={32} />
       </div>
     }>

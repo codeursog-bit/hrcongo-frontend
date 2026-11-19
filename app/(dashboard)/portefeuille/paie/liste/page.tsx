@@ -1,4 +1,5 @@
 'use client';
+import { PortfolioDialog } from '@/components/portfolio/PortfolioDialog';
 
 // app/(dashboard)/portefeuille/paie/liste/page.tsx
 
@@ -11,6 +12,7 @@ import {
 } from 'lucide-react';
 import { GlobalLoader } from '@/components/ui/GlobalLoader';
 import { api } from '@/services/api';
+import { PortfolioPageFrame as ModulePageFrame } from '@/components/portfolio/PortfolioPageFrame';
 
 interface PortfolioCompany { id: string; name: string; }
 
@@ -33,10 +35,10 @@ const CURRENT_YEAR = new Date().getFullYear();
 const YEARS = [CURRENT_YEAR - 1, CURRENT_YEAR, CURRENT_YEAR + 1];
 
 const STATUS_META: Record<string, { label: string; cls: string }> = {
-  DRAFT: { label: 'Brouillon', cls: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300' },
-  VALIDATED: { label: 'Validé', cls: 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400' },
-  PAID: { label: 'Payé', cls: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' },
-  CANCELLED: { label: 'Annulé', cls: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
+  DRAFT: { label: 'Brouillon', cls: "bg-[var(--surface-2)] text-[var(--text-secondary)]  " },
+  VALIDATED: { label: 'Validé', cls: "bg-[var(--brand-soft)] text-[var(--action)]  " },
+  PAID: { label: 'Payé', cls: "bg-[var(--portfolio-positive-soft)] text-[var(--success-text)]  " },
+  CANCELLED: { label: 'Annulé', cls: "bg-[var(--portfolio-danger-soft)] text-[var(--danger-text)]  " },
 };
 
 const fmtFCFA = (n: number) => new Intl.NumberFormat('fr-FR').format(Math.round(n || 0)) + ' FCFA';
@@ -45,16 +47,16 @@ function ConfirmModal({ title, message, danger, onConfirm, onCancel, loading }: 
   title: string; message: string; danger?: boolean; onConfirm: () => void; onCancel: () => void; loading: boolean;
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => !loading && onCancel()} />
-      <div className="relative w-full max-w-sm rounded-2xl p-6 z-10" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-        <p className="text-sm font-bold mb-1" style={{ color: 'var(--text)' }}>{title}</p>
+    <PortfolioDialog onClose={() => !loading && onCancel()}>
+
+<div className="relative w-full max-w-sm rounded-2xl p-6 z-10" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+        <p className="text-sm font-semibold mb-1" style={{ color: 'var(--text)' }}>{title}</p>
         <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>{message}</p>
         <div className="flex gap-2">
           <button
             onClick={onConfirm}
             disabled={loading}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-white transition-colors disabled:opacity-60 ${danger ? 'bg-red-500 hover:bg-red-600' : 'bg-emerald-500 hover:bg-emerald-600'}`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-[var(--on-brand)] transition-colors disabled:opacity-60 ${danger ? "bg-[var(--portfolio-danger-soft)] hover:bg-[var(--portfolio-danger-soft)]" : "bg-[var(--action)] hover:bg-[var(--action)]"}`}
           >
             {loading && <Loader2 size={14} className="animate-spin" />}
             Confirmer
@@ -64,11 +66,11 @@ function ConfirmModal({ title, message, danger, onConfirm, onCancel, loading }: 
           </button>
         </div>
       </div>
-    </div>
+</PortfolioDialog>
   );
 }
 
-export default function PortfolioPayrollListPage() {
+function PortfolioPayrollListPage() {
   const router = useRouter();
   const [companies, setCompanies] = useState<PortfolioCompany[]>([]);
   const [entries, setEntries] = useState<PayrollEntry[]>([]);
@@ -162,15 +164,15 @@ export default function PortfolioPayrollListPage() {
 
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight" style={{ color: 'var(--text)' }}>Liste de paie</h1>
+          <h1 className="text-3xl font-semibold tracking-tight" style={{ color: 'var(--text)' }}>Liste de paie</h1>
           <p className="mt-1 flex items-center gap-2" style={{ color: 'var(--text-muted)' }}>
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-[var(--action)] " />
             {totals.count} bulletin{totals.count > 1 ? 's' : ''} · {fmtFCFA(totals.netTotal)} net au total
           </p>
         </div>
         <Link
           href="/portefeuille/paie"
-          className="px-4 py-2.5 rounded-xl text-sm font-bold transition-colors flex items-center gap-2 hover:bg-[var(--surface-2)] w-fit"
+          className="px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center gap-2 hover:bg-[var(--surface-2)] w-fit"
           style={{ border: '1px solid var(--border)', color: 'var(--text)' }}
         >
           <Wallet size={16} /> Générer une paie
@@ -178,7 +180,7 @@ export default function PortfolioPayrollListPage() {
       </div>
 
       {error && (
-        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm font-medium">
+        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-[var(--portfolio-danger-soft)]  text-[var(--danger-text)]  text-sm font-medium">
           <AlertCircle size={16} className="shrink-0" />{error}
         </div>
       )}
@@ -205,9 +207,9 @@ export default function PortfolioPayrollListPage() {
         </div>
       ) : (
         <div className="rounded-2xl overflow-x-auto" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-          <div className="grid px-4 py-3" style={{ minWidth: 780, gridTemplateColumns: '1fr 160px 130px 100px 190px', gap: 12, borderBottom: '1px solid var(--border)' }}>
+          <div className="grid px-4 py-3" style={{ minWidth: 896, gridTemplateColumns: 'minmax(220px, 1fr) 160px 130px 100px 190px', gap: 12, borderBottom: '1px solid var(--border)' }}>
             {['Employé', 'Entreprise', 'Net à payer', 'Statut', ''].map((h, i) => (
-              <p key={i} className="text-[11px] font-bold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>{h}</p>
+              <p key={i} className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>{h}</p>
             ))}
           </div>
           {entries.map(entry => {
@@ -215,27 +217,27 @@ export default function PortfolioPayrollListPage() {
             const isBusy = busyId === entry.id;
             return (
               <div key={entry.id} className="grid items-center px-4 py-3 transition-colors hover:bg-[var(--surface-2)]"
-                style={{ minWidth: 780, gridTemplateColumns: '1fr 160px 130px 100px 190px', gap: 12, borderBottom: '1px solid var(--border)' }}>
+                style={{ minWidth: 896, gridTemplateColumns: 'minmax(220px, 1fr) 160px 130px 100px 190px', gap: 12, borderBottom: '1px solid var(--border)' }}>
                 <div className="min-w-0">
                   <p className="text-sm font-semibold truncate" style={{ color: 'var(--text)' }}>{entry.employee.firstName} {entry.employee.lastName}</p>
                   <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{entry.employee.employeeNumber}</p>
                 </div>
                 <p className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>{entry.company.tradeName || entry.company.legalName}</p>
-                <p className="text-sm font-bold" style={{ color: 'var(--text)' }}>{fmtFCFA(entry.netSalary)}</p>
-                <span className={`inline-flex w-fit px-2.5 py-1 rounded-full text-[11px] font-bold ${meta.cls}`}>{meta.label}</span>
+                <p className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{fmtFCFA(entry.netSalary)}</p>
+                <span className={`inline-flex w-fit px-2.5 py-1 rounded-full text-[11px] font-semibold ${meta.cls}`}>{meta.label}</span>
                 <div className="flex items-center gap-1 justify-self-end">
                   <button onClick={() => handlePrint(entry)} disabled={switching} title="Ouvrir / imprimer dans l'entreprise" className="p-2 rounded-lg hover:bg-[var(--surface-2)] disabled:opacity-50" style={{ color: 'var(--text-muted)' }}>
                     {switching ? <Loader2 size={15} className="animate-spin" /> : <Printer size={15} />}
                   </button>
                   {entry.status !== 'PAID' && entry.status !== 'CANCELLED' && (
                     <>
-                      <button onClick={() => setConfirmAction({ id: entry.id, type: 'paid' })} disabled={isBusy} title="Marquer payé" className="p-2 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/20 text-emerald-500 disabled:opacity-50">
+                      <button onClick={() => setConfirmAction({ id: entry.id, type: 'paid' })} disabled={isBusy} title="Marquer payé" className="p-2 rounded-lg hover:bg-[var(--brand-soft)]  text-[var(--action)] disabled:opacity-50">
                         <CheckCircle2 size={15} />
                       </button>
-                      <button onClick={() => setConfirmAction({ id: entry.id, type: 'cancel' })} disabled={isBusy} title="Annuler" className="p-2 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-900/20 text-amber-500 disabled:opacity-50">
+                      <button onClick={() => setConfirmAction({ id: entry.id, type: 'cancel' })} disabled={isBusy} title="Annuler" className="p-2 rounded-lg hover:bg-[var(--portfolio-warning-soft)]  text-[var(--warning-text)] disabled:opacity-50">
                         <XCircle size={15} />
                       </button>
-                      <button onClick={() => setConfirmAction({ id: entry.id, type: 'delete' })} disabled={isBusy} title="Supprimer" className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500 disabled:opacity-50">
+                      <button onClick={() => setConfirmAction({ id: entry.id, type: 'delete' })} disabled={isBusy} title="Supprimer" className="p-2 rounded-lg hover:bg-[var(--portfolio-danger-soft)]  text-[var(--danger-text)] disabled:opacity-50">
                         <Trash2 size={15} />
                       </button>
                     </>
@@ -247,5 +249,14 @@ export default function PortfolioPayrollListPage() {
         </div>
       )}
     </div>
+  );
+}
+
+
+export default function PortfolioPayrollListPageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <PortfolioPayrollListPage />
+    </ModulePageFrame>
   );
 }

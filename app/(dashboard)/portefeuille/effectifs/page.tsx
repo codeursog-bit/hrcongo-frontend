@@ -9,17 +9,27 @@
 
 import React from 'react';
 import { WorkforceDashboard } from '@/components/workforce/WorkforceDashboard';
+import { PortfolioPageFrame as ModulePageFrame } from '@/components/portfolio/PortfolioPageFrame';
 
-export default function PortfolioWorkforcePage() {
+function PortfolioWorkforcePage() {
   return (
     <div className="space-y-6 min-h-screen pb-20">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight" style={{ color: 'var(--text)' }}>Tableau de bord effectifs</h1>
+        <h1 className="text-3xl font-semibold tracking-tight" style={{ color: 'var(--text)' }}>Tableau de bord effectifs</h1>
         <p className="mt-1" style={{ color: 'var(--text-muted)' }}>
           Effectifs, répartitions et indicateurs sociaux de votre portefeuille — exportables en Excel (modèle POWERMAN).
         </p>
       </div>
       <WorkforceDashboard model="POWERMAN" scope="PORTFOLIO" title="Gestion des effectifs" />
     </div>
+  );
+}
+
+
+export default function PortfolioWorkforcePageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <PortfolioWorkforcePage />
+    </ModulePageFrame>
   );
 }

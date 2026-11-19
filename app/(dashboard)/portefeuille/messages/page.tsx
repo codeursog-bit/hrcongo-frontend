@@ -5,12 +5,12 @@
 // portefeuille/layout.tsx). Suspense obligatoire : ChatPage lit useSearchParams().
 
 import { Suspense } from 'react';
-import ChatPage from '@/components/chat/ChatPage';
+import MessagesWorkspace from '@/components/support/MessagesWorkspace';
 
 export default function PortfolioMessagesPage() {
   return (
     <Suspense fallback={null}>
-      <ChatPage />
+      <MessagesWorkspace />
     </Suspense>
   );
 }

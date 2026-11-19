@@ -1,4 +1,6 @@
 'use client';
+import { AttendanceModuleFrame as ModulePageFrame } from '@/components/attendance/AttendanceModuleFrame';
+import { ModulePageSkeleton } from '@/components/requests/ModulePageFrame';
 
 // ============================================================================
 // 📁 app/(dashboard)/presences/absences/rapport/page.tsx
@@ -16,10 +18,10 @@ export default function AbsencesReportPage() {
     try { const s = localStorage.getItem('user'); if (s) setUserRole(JSON.parse(s).role || ''); } catch {}
   }, []);
   return (
-    <div className="max-w-[1500px] mx-auto pb-24 space-y-5">
+    <ModulePageFrame kind="dashboard"><div className="max-w-[1500px] mx-auto pb-24 space-y-5">
       <PresenceModuleSwitcher />
       <AbsenceSubNav userRole={userRole} />
       <RequestReportDashboard kind="absence" />
-    </div>
+    </div></ModulePageFrame>
   );
 }

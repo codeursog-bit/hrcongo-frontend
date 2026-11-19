@@ -1,10 +1,13 @@
 'use client';
+import { ProfileAvatar } from '@/components/ui/ProfileAvatar';
+import { UserCollection } from '@/components/settings/UserCollection';
+import { ModuleSelect } from '@/components/ui/ModuleSelect';
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  ArrowLeft, UserPlus, Search, Filter, MoreVertical, 
-  Shield, Key, Eye, Ban, Trash2, CheckCircle2, 
+import {
+  ArrowLeft, UserPlus, Search, Filter, MoreVertical,
+  Shield, Key, Eye, Ban, Trash2, CheckCircle2,
   Mail, Smartphone, Laptop, AlertTriangle, Lock,
   FileText, Check, X, RefreshCw, LogOut, Globe,
   ShieldAlert, Settings, ChevronDown, ChevronUp,
@@ -18,6 +21,7 @@ import { FancySelect } from '@/components/ui/FancySelect';
 import { approvalsApi, ApprovalFunctionDef, UserFunctionItem } from '@/services/approvals';
 import ExternalFunctionsSection from '@/components/approvals/ExternalFunctionsSection';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import { SettingsFrame as ModulePageFrame } from '@/components/settings/SettingsFrame';
 
 // --- Types ---
 
@@ -39,14 +43,14 @@ interface Department {
 }
 
 const ROLE_CONFIG: Record<string, { label: string, color: string, bg: string }> = {
-  SUPER_ADMIN: { label: 'Super Admin', color: 'text-red-600', bg: 'bg-red-100 dark:bg-red-900/30' },
-  ADMIN: { label: 'Admin', color: 'text-emerald-600', bg: 'bg-emerald-100 dark:bg-emerald-900/30' },
-  HR_MANAGER: { label: 'Manager RH', color: 'text-amber-600', bg: 'bg-amber-100 dark:bg-amber-900/30' },
-  MANAGER: { label: 'Manager', color: 'text-emerald-600', bg: 'bg-emerald-100 dark:bg-emerald-900/30' },
+  SUPER_ADMIN: { label: 'Super Admin', color: 'text-[var(--action)]', bg: 'bg-[var(--brand-soft)]' },
+  ADMIN: { label: 'Admin', color: 'text-[var(--action)]', bg: 'bg-[var(--brand-soft)]' },
+  HR_MANAGER: { label: 'Manager RH', color: 'text-[var(--text-secondary)]', bg: 'bg-[var(--surface-2)]' },
+  MANAGER: { label: 'Manager', color: 'text-[var(--action)]', bg: 'bg-[var(--brand-soft)]' },
   EMPLOYEE: { label: 'Employé', color: 'text-[var(--text-muted)]', bg: 'bg-[var(--surface-2)]' },
 };
 
-export default function UserManagementPage() {
+function UserManagementPage() {
   const router = useRouter();
   const alert = useAlert()
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -70,14 +74,14 @@ export default function UserManagementPage() {
   const [functionsAvailable, setFunctionsAvailable] = useState(false);
   const [editFunctions, setEditFunctions] = useState<Record<string, { enabled: boolean; canSign: boolean }>>({});
   const canManageFunctions = currentUserRole === 'ADMIN' || currentUserRole === 'SUPER_ADMIN';
-  
+
   // -- State --
   const [users, setUsers] = useState<User[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('All');
-  
+
   // Invite Modal State
   const [inviteModal, setInviteModal] = useState(false);
   const [isInviting, setIsInviting] = useState(false);
@@ -273,7 +277,7 @@ export default function UserManagementPage() {
   // -- Derived Data --
   const filteredUsers = useMemo(() => {
     return users.filter(u => {
-      const matchesSearch = u.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      const matchesSearch = u.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                             u.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                             u.email.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesRole = roleFilter === 'All' || u.role === roleFilter;
@@ -285,41 +289,41 @@ export default function UserManagementPage() {
 
   return (
     <div className="max-w-[1600px] mx-auto pb-20 space-y-8">
-      
+
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="settings-page-header flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
            <button onClick={() => router.back()} className="p-2 bg-[var(--surface)] rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)] transition-colors">
              <ArrowLeft size={20} className="text-[var(--text-muted)]" />
            </button>
            <div>
-              <h1 className="text-3xl font-bold text-[var(--text)] tracking-tight">Gestion des Utilisateurs</h1>
+              <h1 className="text-3xl font-semibold text-[var(--text)] tracking-tight">Gestion des Utilisateurs</h1>
               <p className="text-[var(--text-muted)]">Contrôle d'accès, rôles et sécurité.</p>
            </div>
         </div>
 
-        <button 
+        <button
            onClick={() => setInviteModal(true)}
-           className="px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-500/20 hover:scale-105 transition-all flex items-center gap-2"
+           className="px-5 py-3 rounded-xl bg-[var(--brand)] hover:bg-[var(--brand)] text-[var(--on-brand)] font-semibold shadow-lg   transition-colors flex items-center gap-2"
         >
            <UserPlus size={20} /> Inviter Utilisateur
         </button>
       </div>
 
       {/* STATS CARDS */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="settings-metrics grid grid-cols-2 md:grid-cols-4 gap-4">
          <div className="bg-[var(--surface)] p-4 rounded-2xl border border-[var(--border)] shadow-sm">
-            <p className="text-xs text-[var(--text-muted)] uppercase font-bold">Total Utilisateurs</p>
-            <p className="text-2xl font-bold text-[var(--text)] mt-1">{users.length}</p>
+            <p className="text-xs text-[var(--text-muted)] uppercase font-semibold">Total Utilisateurs</p>
+            <p className="text-2xl font-semibold text-[var(--text)] mt-1">{users.length}</p>
          </div>
          <div className="bg-[var(--surface)] p-4 rounded-2xl border border-[var(--border)] shadow-sm">
-            <p className="text-xs text-[var(--text-muted)] uppercase font-bold">Administrateurs</p>
-            <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">{users.filter(u => u.role === 'ADMIN').length}</p>
+            <p className="text-xs text-[var(--text-muted)] uppercase font-semibold">Administrateurs</p>
+            <p className="text-2xl font-semibold text-[var(--success-text)]  mt-1">{users.filter(u => u.role === 'ADMIN').length}</p>
          </div>
          <div className="bg-[var(--surface)] p-4 rounded-2xl border border-[var(--border)] shadow-sm">
-            <p className="text-xs text-[var(--text-muted)] uppercase font-bold">Actifs</p>
-            <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1 flex items-center gap-2">
-               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <p className="text-xs text-[var(--text-muted)] uppercase font-semibold">Actifs</p>
+            <p className="text-2xl font-semibold text-[var(--success-text)]  mt-1 flex items-center gap-2">
+               <span className="w-2 h-2 rounded-full bg-[var(--brand)] "></span>
                {users.filter(u => u.isActive).length}
             </p>
          </div>
@@ -327,53 +331,53 @@ export default function UserManagementPage() {
 
       {/* FILTERS & LIST */}
       <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] overflow-hidden">
-         
+
          {/* Toolbar */}
          <div className="p-4 border-b border-[var(--border)] flex flex-col md:flex-row justify-between items-center gap-4 bg-[var(--surface-2)]">
             <div className="flex items-center gap-3 w-full md:w-auto">
                <div className="relative flex-1 md:w-64">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" size={16} />
-                  <input 
-                     type="text" 
-                     placeholder="Rechercher..." 
+                  <input
+                     type="text"
+                     placeholder="Rechercher..."
                      value={searchQuery}
                      onChange={(e) => setSearchQuery(e.target.value)}
-                     className="w-full pl-9 pr-4 py-2 bg-[var(--surface)] border border-[var(--border)] rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none"
+                     className="w-full pl-9 pr-4 py-2 bg-[var(--surface)] border border-[var(--border)] rounded-xl text-sm focus:ring-2 focus:ring-[var(--focus)] outline-none"
                   />
                </div>
-               <select 
+               <ModuleSelect
                   value={roleFilter}
                   onChange={(e) => setRoleFilter(e.target.value)}
                   className="p-2 bg-[var(--surface)] border border-[var(--border)] rounded-xl text-sm font-medium"
                >
                   <option value="All">Tous les rôles</option>
                   {Object.keys(ROLE_CONFIG).filter(r => r !== 'SUPER_ADMIN').map(r => <option key={r} value={r}>{ROLE_CONFIG[r].label}</option>)}
-               </select>
+               </ModuleSelect>
             </div>
          </div>
 
          {/* User Grid */}
-         <div className="p-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+         <UserCollection filterKey={`${searchQuery}|${roleFilter}`}>
             {filteredUsers.map(user => {
                const config = ROLE_CONFIG[user.role] || ROLE_CONFIG.EMPLOYEE;
                return (
-               <div key={user.id} className="group bg-[var(--surface)] rounded-2xl p-5 border border-[var(--border)] hover:shadow-xl hover:border-emerald-200 dark:hover:border-emerald-800 transition-all relative overflow-hidden">
+               <div key={user.id} className="settings-user-row group bg-[var(--surface)] rounded-2xl p-5 border border-[var(--border)] hover:shadow-xl hover:border-[var(--border)]  transition-colors relative overflow-hidden">
                   <div className="flex justify-between items-start mb-4 relative z-10">
                      <div className="flex items-center gap-4">
                         <div className="relative">
-                           <img src={user.avatar || `https://ui-avatars.com/api/?name=${user.firstName}+${user.lastName}&background=random`} className={`w-14 h-14 rounded-full object-cover border-2 ${!user.isActive ? 'border-red-200 grayscale' : 'border-[var(--surface)]'}`} />
-                           <span className={`absolute bottom-0 right-0 w-4 h-4 border-2 border-[var(--surface)] rounded-full ${user.isActive ? 'bg-emerald-500' : 'bg-[var(--text-muted)]'}`}></span>
+                           <ProfileAvatar name={`${user.firstName || ''} ${user.lastName || ''}`} src={user.avatar || undefined} className={`w-14 h-14 rounded-full object-cover border-2 ${!user.isActive ? 'border-[var(--border)] grayscale' : 'border-[var(--surface)]'}`} />
+                           <span className={`absolute bottom-0 right-0 w-4 h-4 border-2 border-[var(--surface)] rounded-full ${user.isActive ? 'bg-[var(--brand)]' : 'bg-[var(--text-muted)]'}`}></span>
                         </div>
                         <div>
-                           <h3 className={`font-bold text-lg ${!user.isActive ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text)]'}`}>{user.firstName} {user.lastName}</h3>
+                           <h3 className={`font-semibold text-lg ${!user.isActive ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text)]'}`}>{user.firstName} {user.lastName}</h3>
                            <p className="text-sm text-[var(--text-muted)] truncate max-w-[150px]">{user.email}</p>
                         </div>
                      </div>
-                     
+
                      <div className="flex items-center gap-1">
-                       <button 
+                       <button
                           onClick={() => openEditModal(user)}
-                          className="p-2 hover:bg-[var(--surface-2)] rounded-lg text-[var(--text-muted)] hover:text-emerald-500 transition-colors"
+                          className="p-2 hover:bg-[var(--surface-2)] rounded-lg text-[var(--text-muted)] hover:text-[var(--success-text)] transition-colors"
                           title="Modifier le rôle/statut"
                        >
                           <Edit size={18} />
@@ -382,7 +386,7 @@ export default function UserManagementPage() {
                          <button
                             onClick={() => handleDelete(user)}
                             disabled={deletingId === user.id}
-                            className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-[var(--text-muted)] hover:text-red-500 transition-colors disabled:opacity-50"
+                            className="p-2 hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  rounded-lg text-[var(--text-muted)] hover:text-[var(--danger-text)] transition-colors disabled:opacity-50"
                             title="Supprimer définitivement"
                          >
                             {deletingId === user.id ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
@@ -393,86 +397,86 @@ export default function UserManagementPage() {
 
                   <div className="space-y-4">
                      <div className="flex items-center justify-between flex-wrap gap-2">
-                        <span className={`inline-block px-3 py-1 rounded-lg text-xs font-bold ${config.bg} ${config.color}`}>
+                        <span className={`inline-block px-3 py-1 rounded-lg text-xs font-semibold ${config.bg} ${config.color}`}>
                             {config.label}
                         </span>
                         {user.canRecordAttendanceForAll && (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30" title="Peut pointer pour tout le monde">
+                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold text-[var(--success-text)] bg-[var(--brand-soft)] " title="Peut pointer pour tout le monde">
                                 <Shield size={12} /> Secrétaire
                             </span>
                         )}
                         {(functionAssignments[user.id] || []).map(f => {
                             const def = functionsCatalog.find(c => c.code === f.code);
                             return (
-                              <span key={f.code} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30" title={f.canSign ? 'Peut donner un avis et signer' : 'Peut donner un avis'}>
+                              <span key={f.code} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold text-[var(--success-text)] bg-[var(--brand-soft)] " title={f.canSign ? 'Peut donner un avis et signer' : 'Peut donner un avis'}>
                                 <Shield size={12} /> {def?.label || f.code}{f.canSign ? ' · signe' : ''}
                               </span>
                             );
                         })}
-                        {!user.isActive && <span className="text-xs font-bold text-red-500 flex items-center gap-1"><Ban size={12}/> Désactivé</span>}
+                        {!user.isActive && <span className="text-xs font-semibold text-[var(--danger-text)] flex items-center gap-1"><Ban size={12}/> Désactivé</span>}
                      </div>
-                     
+
                      <div className="flex items-center gap-2 text-xs text-[var(--text-muted)] bg-[var(--surface-2)] p-2 rounded-lg border border-[var(--border)]">
                         <Clock size={14} /> Dernier accès: {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : 'Jamais'}
                      </div>
                   </div>
                </div>
             )})}
-         </div>
+         </UserCollection>
       </div>
 
       {/* EDIT USER MODAL */}
       <AnimatePresence>
         {editModal && editingUser && (
-            <motion.div 
+            <motion.div
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+                className="fixed inset-0 z-50 flex items-center justify-center bg-[rgb(0_0_0_/.5)]  p-4"
             >
-                <motion.div 
+                <motion.div
                     initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
                     className="bg-[var(--surface)] rounded-2xl p-8 max-w-md w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-[var(--border)]"
                 >
                     <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-xl font-bold text-[var(--text)]">Modifier Utilisateur</h2>
+                        <h2 className="text-xl font-semibold text-[var(--text)]">Modifier Utilisateur</h2>
                         <button onClick={() => setEditModal(false)} className="p-2 hover:bg-[var(--surface-2)] rounded-full"><X size={20} /></button>
                     </div>
 
                     <div className="flex items-center gap-4 mb-6 p-4 bg-[var(--surface-2)] rounded-2xl border border-[var(--border)]">
-                        <div className="w-12 h-12 rounded-full bg-[var(--surface-2)] flex items-center justify-center font-bold text-[var(--text-muted)]">
+                        <div className="w-12 h-12 rounded-full bg-[var(--surface-2)] flex items-center justify-center font-semibold text-[var(--text-muted)]">
                             {editingUser.firstName[0]}{editingUser.lastName[0]}
                         </div>
                         <div>
-                            <h3 className="font-bold text-[var(--text)]">{editingUser.firstName} {editingUser.lastName}</h3>
+                            <h3 className="font-semibold text-[var(--text)]">{editingUser.firstName} {editingUser.lastName}</h3>
                             <p className="text-xs text-[var(--text-muted)]">{editingUser.email}</p>
                         </div>
                     </div>
 
                     <div className="space-y-6">
                         <div>
-                            <label className="block text-sm font-bold mb-2 text-[var(--text)]">Rôle système</label>
+                            <label className="block text-sm font-semibold mb-2 text-[var(--text)]">Rôle système</label>
                             <div className="grid grid-cols-1 gap-2">
                                 {Object.entries(ROLE_CONFIG).filter(([key]) => key !== 'SUPER_ADMIN').map(([key, config]) => (
-                                    <label 
-                                        key={key} 
+                                    <label
+                                        key={key}
                                         className={`
-                                            flex items-center p-3 rounded-xl border cursor-pointer transition-all
-                                            ${editForm.role === key 
-                                                ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 ring-1 ring-emerald-500' 
+                                            flex items-center p-3 rounded-xl border cursor-pointer transition-colors
+                                            ${editForm.role === key
+                                                ? 'border-[var(--border)] bg-[var(--brand-soft)]  ring-1 ring-[var(--focus)]'
                                                 : 'border-[var(--border)] hover:bg-[var(--surface-2)]'}
                                         `}
                                     >
-                                        <input 
-                                            type="radio" 
-                                            name="role" 
-                                            value={key} 
-                                            checked={editForm.role === key} 
+                                        <input
+                                            type="radio"
+                                            name="role"
+                                            value={key}
+                                            checked={editForm.role === key}
                                             onChange={(e) => setEditForm({...editForm, role: e.target.value})}
                                             className="hidden"
                                         />
-                                        <div className={`w-4 h-4 rounded-full border mr-3 flex items-center justify-center ${editForm.role === key ? 'border-emerald-500' : 'border-[var(--text-muted)]'}`}>
-                                            {editForm.role === key && <div className="w-2 h-2 rounded-full bg-emerald-500"></div>}
+                                        <div className={`w-4 h-4 rounded-full border mr-3 flex items-center justify-center ${editForm.role === key ? 'border-[var(--border)]' : 'border-[var(--text-muted)]'}`}>
+                                            {editForm.role === key && <div className="w-2 h-2 rounded-full bg-[var(--brand)]"></div>}
                                         </div>
-                                        <span className={`text-sm font-bold ${editForm.role === key ? 'text-emerald-700 dark:text-emerald-400' : 'text-[var(--text-muted)]'}`}>
+                                        <span className={`text-sm font-semibold ${editForm.role === key ? 'text-[var(--success-text)] ' : 'text-[var(--text-muted)]'}`}>
                                             {config.label}
                                         </span>
                                     </label>
@@ -481,29 +485,29 @@ export default function UserManagementPage() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-bold mb-2 text-[var(--text)]">Permission supplémentaire</label>
+                            <label className="block text-sm font-semibold mb-2 text-[var(--text)]">Permission supplémentaire</label>
                             <button
                                 type="button"
                                 onClick={() => setEditForm({...editForm, canRecordAttendanceForAll: !editForm.canRecordAttendanceForAll})}
-                                className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all text-left ${editForm.canRecordAttendanceForAll ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 ring-1 ring-emerald-500' : 'border-[var(--border)] hover:bg-[var(--surface-2)]'}`}
+                                className={`w-full flex items-center justify-between p-3 rounded-xl border transition-colors text-left ${editForm.canRecordAttendanceForAll ? 'border-[var(--border)] bg-[var(--brand-soft)]  ring-1 ring-[var(--focus)]' : 'border-[var(--border)] hover:bg-[var(--surface-2)]'}`}
                             >
                                 <div className="pr-4">
-                                    <p className={`text-sm font-bold ${editForm.canRecordAttendanceForAll ? 'text-emerald-700 dark:text-emerald-400' : 'text-[var(--text)]'}`}>
+                                    <p className={`text-sm font-semibold ${editForm.canRecordAttendanceForAll ? 'text-[var(--success-text)] ' : 'text-[var(--text)]'}`}>
                                         Pointage pour tout le monde (Secrétaire)
                                     </p>
                                     <p className="text-xs text-[var(--text-muted)] mt-0.5">
                                         Peut faire le pointage manuel de n'importe quel employé de l'entreprise, quel que soit son rôle (indépendant du département pour un Manager).
                                     </p>
                                 </div>
-                                <div className={`shrink-0 w-11 h-6 rounded-full flex items-center px-0.5 transition-colors ${editForm.canRecordAttendanceForAll ? 'bg-emerald-500 justify-end' : 'bg-[var(--border)] justify-start'}`}>
-                                    <div className="w-5 h-5 rounded-full bg-white shadow" />
+                                <div className={`shrink-0 w-11 h-6 rounded-full flex items-center px-0.5 transition-colors ${editForm.canRecordAttendanceForAll ? 'bg-[var(--brand)] justify-end' : 'bg-[var(--border)] justify-start'}`}>
+                                    <div className="w-5 h-5 rounded-full bg-[var(--surface)] shadow" />
                                 </div>
                             </button>
                         </div>
 
                         {canManageFunctions && functionsAvailable && functionsCatalog.length > 0 && editingUser.role !== 'SUPER_ADMIN' && (
                         <div>
-                            <label className="block text-sm font-bold mb-1 text-[var(--text)]">Fonctions de validation (avis)</label>
+                            <label className="block text-sm font-semibold mb-1 text-[var(--text)]">Fonctions de validation (avis)</label>
                             <p className="text-xs text-[var(--text-muted)] mb-3">
                                 Donne le droit de donner un avis sur les demandes, sans pouvoir approuver ou refuser (réservé à l'Admin et au Manager RH). La case « Peut signer » autorise l'enregistrement d'une signature personnelle.
                             </p>
@@ -511,18 +515,18 @@ export default function UserManagementPage() {
                                 {functionsCatalog.map(fn => {
                                     const st = editFunctions[fn.code] || { enabled: false, canSign: false };
                                     return (
-                                        <div key={fn.code} className={`rounded-xl border transition-all ${st.enabled ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 ring-1 ring-emerald-500' : 'border-[var(--border)]'}`}>
+                                        <div key={fn.code} className={`rounded-xl border transition-colors ${st.enabled ? 'border-[var(--border)] bg-[var(--brand-soft)]  ring-1 ring-[var(--focus)]' : 'border-[var(--border)]'}`}>
                                             <button
                                                 type="button"
                                                 onClick={() => setEditFunctions(prev => ({ ...prev, [fn.code]: { enabled: !st.enabled, canSign: st.enabled ? false : st.canSign } }))}
                                                 className="w-full flex items-center justify-between p-3 text-left"
                                             >
                                                 <div className="pr-4">
-                                                    <p className={`text-sm font-bold ${st.enabled ? 'text-emerald-700 dark:text-emerald-400' : 'text-[var(--text)]'}`}>{fn.label}</p>
+                                                    <p className={`text-sm font-semibold ${st.enabled ? 'text-[var(--success-text)] ' : 'text-[var(--text)]'}`}>{fn.label}</p>
                                                     <p className="text-xs text-[var(--text-muted)] mt-0.5">{fn.description}</p>
                                                 </div>
-                                                <div className={`shrink-0 w-11 h-6 rounded-full flex items-center px-0.5 transition-colors ${st.enabled ? 'bg-emerald-500 justify-end' : 'bg-[var(--border)] justify-start'}`}>
-                                                    <div className="w-5 h-5 rounded-full bg-white shadow" />
+                                                <div className={`shrink-0 w-11 h-6 rounded-full flex items-center px-0.5 transition-colors ${st.enabled ? 'bg-[var(--brand)] justify-end' : 'bg-[var(--border)] justify-start'}`}>
+                                                    <div className="w-5 h-5 rounded-full bg-[var(--surface)] shadow" />
                                                 </div>
                                             </button>
                                             {st.enabled && (
@@ -548,19 +552,19 @@ export default function UserManagementPage() {
                         )}
 
                         <div>
-                            <label className="block text-sm font-bold mb-2 text-[var(--text)]">Statut du compte</label>
+                            <label className="block text-sm font-semibold mb-2 text-[var(--text)]">Statut du compte</label>
                             <div className="flex items-center gap-4">
-                                <button 
+                                <button
                                     type="button"
                                     onClick={() => setEditForm({...editForm, isActive: true})}
-                                    className={`flex-1 py-3 rounded-xl font-bold text-sm border transition-all ${editForm.isActive ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-[var(--surface)] text-[var(--text-muted)] border-[var(--border)]'}`}
+                                    className={`flex-1 py-3 rounded-xl font-semibold text-sm border transition-colors ${editForm.isActive ? 'bg-[var(--brand)] text-[var(--on-brand)] border-[var(--border)]' : 'bg-[var(--surface)] text-[var(--text-muted)] border-[var(--border)]'}`}
                                 >
                                     Actif
                                 </button>
-                                <button 
+                                <button
                                     type="button"
                                     onClick={() => setEditForm({...editForm, isActive: false})}
-                                    className={`flex-1 py-3 rounded-xl font-bold text-sm border transition-all ${!editForm.isActive ? 'bg-red-500 text-white border-red-500' : 'bg-[var(--surface)] text-[var(--text-muted)] border-[var(--border)]'}`}
+                                    className={`flex-1 py-3 rounded-xl font-semibold text-sm border transition-colors ${!editForm.isActive ? 'bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] text-[var(--text)] border-[var(--border)]' : 'bg-[var(--surface)] text-[var(--text-muted)] border-[var(--border)]'}`}
                                 >
                                     Désactivé
                                 </button>
@@ -568,8 +572,8 @@ export default function UserManagementPage() {
                         </div>
 
                         <div className="pt-4 flex gap-3">
-                            <button onClick={() => setEditModal(false)} className="flex-1 py-3 border border-[var(--border)] rounded-xl font-bold hover:bg-[var(--surface-2)]">Annuler</button>
-                            <button onClick={handleUpdate} disabled={isSaving} className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-lg flex justify-center items-center gap-2">
+                            <button onClick={() => setEditModal(false)} className="flex-1 py-3 border border-[var(--border)] rounded-xl font-semibold hover:bg-[var(--surface-2)]">Annuler</button>
+                            <button onClick={handleUpdate} disabled={isSaving} className="flex-1 py-3 bg-[var(--brand)] hover:bg-[var(--brand)] text-[var(--on-brand)] font-semibold rounded-xl shadow-lg flex justify-center items-center gap-2">
                                 {isSaving ? <Loader2 className="animate-spin" size={20}/> : <><Save size={18}/> Enregistrer</>}
                             </button>
                         </div>
@@ -582,30 +586,30 @@ export default function UserManagementPage() {
       {/* INVITE MODAL */}
       <AnimatePresence>
         {inviteModal && (
-            <motion.div 
+            <motion.div
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+                className="fixed inset-0 z-50 flex items-center justify-center bg-[rgb(0_0_0_/.5)]  p-4"
             >
-                <motion.div 
+                <motion.div
                     initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
                     className="bg-[var(--surface)] rounded-2xl p-8 max-w-lg w-full shadow-2xl border border-[var(--border)]"
                 >
                     <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-bold text-[var(--text)]">{inviteSuccessInfo ? 'Partager les identifiants' : 'Inviter un collaborateur'}</h2>
+                        <h2 className="text-2xl font-semibold text-[var(--text)]">{inviteSuccessInfo ? 'Partager les identifiants' : 'Inviter un collaborateur'}</h2>
                         <button onClick={closeInviteModal} className="p-2 hover:bg-[var(--surface-2)] rounded-full"><X size={20} /></button>
                     </div>
 
                     {inviteSuccessInfo ? (
                         <div className="space-y-5">
-                            <div className="flex items-center gap-3 p-4 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800 rounded-xl">
-                                <CheckCircle2 size={20} className="text-emerald-500 shrink-0" />
+                            <div className="flex items-center gap-3 p-4 bg-[var(--brand-soft)]  border border-[var(--border)]  rounded-xl">
+                                <CheckCircle2 size={20} className="text-[var(--success-text)] shrink-0" />
                                 <p className="text-sm text-[var(--text)]">
                                     <strong>{inviteSuccessInfo.firstName} {inviteSuccessInfo.lastName}</strong> a été invité(e) avec succès. Partage-lui maintenant ses identifiants.
                                 </p>
                             </div>
 
                             <div className="p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl">
-                                <p className="text-xs font-bold uppercase tracking-wide text-[var(--text-muted)] mb-2">Aperçu du message</p>
+                                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)] mb-2">Aperçu du message</p>
                                 <p className="text-xs text-[var(--text-muted)] whitespace-pre-line leading-relaxed">{buildInviteMessage(inviteSuccessInfo)}</p>
                             </div>
 
@@ -613,22 +617,22 @@ export default function UserManagementPage() {
                                 {/* Partage prioritaire : WhatsApp choisit le contact lui-même */}
                                 <button
                                     onClick={() => handleShareWhatsApp(inviteSuccessInfo)}
-                                    className="w-full flex items-center justify-center gap-2 py-3.5 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold rounded-xl shadow-lg transition-colors"
+                                    className="w-full flex items-center justify-center gap-2 py-3.5 bg-[#25D366] hover:bg-[#20bd5a] text-[var(--text)] font-semibold rounded-xl shadow-lg transition-colors"
                                 >
                                     <Smartphone size={18} /> Partager sur WhatsApp
                                 </button>
                                 <div className="grid grid-cols-2 gap-2.5">
                                     <button
                                         onClick={() => handleShareSms(inviteSuccessInfo)}
-                                        className="flex items-center justify-center gap-2 py-3 border border-[var(--border)] rounded-xl font-bold text-sm text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+                                        className="flex items-center justify-center gap-2 py-3 border border-[var(--border)] rounded-xl font-semibold text-sm text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
                                     >
                                         <Mail size={16} /> SMS
                                     </button>
                                     <button
                                         onClick={() => handleCopyInviteMessage(inviteSuccessInfo)}
-                                        className="flex items-center justify-center gap-2 py-3 border border-[var(--border)] rounded-xl font-bold text-sm text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+                                        className="flex items-center justify-center gap-2 py-3 border border-[var(--border)] rounded-xl font-semibold text-sm text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
                                     >
-                                        {copiedInviteMsg ? <><Check size={16} className="text-emerald-500" /> Copié !</> : <>Copier le message</>}
+                                        {copiedInviteMsg ? <><Check size={16} className="text-[var(--success-text)]" /> Copié !</> : <>Copier le message</>}
                                     </button>
                                 </div>
                             </div>
@@ -641,18 +645,18 @@ export default function UserManagementPage() {
                     <form onSubmit={handleInvite} className="space-y-5">
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-bold mb-1">Prénom</label>
-                                <input required value={inviteForm.firstName} onChange={e => setInviteForm({...inviteForm, firstName: e.target.value})} className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/20" />
+                                <label className="block text-sm font-semibold mb-1">Prénom</label>
+                                <input required value={inviteForm.firstName} onChange={e => setInviteForm({...inviteForm, firstName: e.target.value})} className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl outline-none focus:ring-2 focus:ring-[var(--focus)]" />
                             </div>
                             <div>
-                                <label className="block text-sm font-bold mb-1">Nom</label>
-                                <input required value={inviteForm.lastName} onChange={e => setInviteForm({...inviteForm, lastName: e.target.value})} className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/20" />
+                                <label className="block text-sm font-semibold mb-1">Nom</label>
+                                <input required value={inviteForm.lastName} onChange={e => setInviteForm({...inviteForm, lastName: e.target.value})} className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl outline-none focus:ring-2 focus:ring-[var(--focus)]" />
                             </div>
                         </div>
 
                         <div>
-                            <label className="block text-sm font-bold mb-1">Email professionnel</label>
-                            <input type="email" required value={inviteForm.email} onChange={e => setInviteForm({...inviteForm, email: e.target.value})} className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/20" />
+                            <label className="block text-sm font-semibold mb-1">Email professionnel</label>
+                            <input type="email" required value={inviteForm.email} onChange={e => setInviteForm({...inviteForm, email: e.target.value})} className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl outline-none focus:ring-2 focus:ring-[var(--focus)]" />
                         </div>
 
                         <div>
@@ -673,10 +677,10 @@ export default function UserManagementPage() {
                         {/* CHAMPS DÉPARTEMENT POUR MANAGER UNIQUEMENT */}
                         {inviteForm.role === 'MANAGER' && (
                             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
-                                <FancySelect 
+                                <FancySelect
                                     label="Assigner un Département"
-                                    value={inviteForm.departmentId} 
-                                    onChange={(v) => setInviteForm({...inviteForm, departmentId: v})} 
+                                    value={inviteForm.departmentId}
+                                    onChange={(v) => setInviteForm({...inviteForm, departmentId: v})}
                                     icon={Network}
                                     options={departments.map(d => ({ value: d.id, label: d.name }))}
                                     placeholder="Choisir département..."
@@ -686,14 +690,14 @@ export default function UserManagementPage() {
                         )}
 
                         <div>
-                            <label className="block text-sm font-bold mb-1">Mot de passe provisoire</label>
-                            <input type="text" required minLength={6} value={inviteForm.password} onChange={e => setInviteForm({...inviteForm, password: e.target.value})} className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/20 font-mono" placeholder="Ex: Welcome2025!" />
+                            <label className="block text-sm font-semibold mb-1">Mot de passe provisoire</label>
+                            <input type="text" required minLength={6} value={inviteForm.password} onChange={e => setInviteForm({...inviteForm, password: e.target.value})} className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl outline-none focus:ring-2 focus:ring-[var(--focus)] font-mono" placeholder="Ex: Welcome2025!" />
                             <p className="text-xs text-[var(--text-muted)] mt-1">Communiquez ce mot de passe à l'utilisateur.</p>
                         </div>
 
                         <div className="pt-4 flex gap-3">
-                            <button type="button" onClick={closeInviteModal} className="flex-1 py-3 border border-[var(--border)] rounded-xl font-bold hover:bg-[var(--surface-2)]">Annuler</button>
-                            <button type="submit" disabled={isInviting} className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-lg flex justify-center items-center gap-2">
+                            <button type="button" onClick={closeInviteModal} className="flex-1 py-3 border border-[var(--border)] rounded-xl font-semibold hover:bg-[var(--surface-2)]">Annuler</button>
+                            <button type="submit" disabled={isInviting} className="flex-1 py-3 bg-[var(--brand)] hover:bg-[var(--brand)] text-[var(--on-brand)] font-semibold rounded-xl shadow-lg flex justify-center items-center gap-2">
                                 {isInviting ? <Loader2 className="animate-spin" size={20}/> : <><Mail size={18}/> Envoyer l'invitation</>}
                             </button>
                         </div>
@@ -704,5 +708,14 @@ export default function UserManagementPage() {
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+
+export default function UserManagementPageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <UserManagementPage />
+    </ModulePageFrame>
   );
 }

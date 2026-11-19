@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { GlobalLoader } from '@/components/ui/GlobalLoader';
 import { api } from '@/services/api';
+import { PortfolioPageFrame as ModulePageFrame } from '@/components/portfolio/PortfolioPageFrame';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -49,14 +50,14 @@ function StatPill({ icon: Icon, label, value, cls }: { icon: any; label: string;
     <div className="flex items-center gap-3 px-4 py-3 rounded-2xl" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
       <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${cls}`}><Icon size={17} /></div>
       <div>
-        <p className="text-lg font-bold leading-none" style={{ color: 'var(--text)' }}>{value}</p>
+        <p className="text-lg font-semibold leading-none" style={{ color: 'var(--text)' }}>{value}</p>
         <p className="text-[11px] mt-1" style={{ color: 'var(--text-muted)' }}>{label}</p>
       </div>
     </div>
   );
 }
 
-export default function PortfolioAttendancePage() {
+function PortfolioAttendancePage() {
   const [companies, setCompanies] = useState<PortfolioCompany[]>([]);
   const [companyId, setCompanyId] = useState('');
   const [loadingCompanies, setLoadingCompanies] = useState(true);
@@ -104,15 +105,15 @@ export default function PortfolioAttendancePage() {
   return (
     <div className="space-y-6 min-h-screen pb-20">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight" style={{ color: 'var(--text)' }}>Présences</h1>
+        <h1 className="text-3xl font-semibold tracking-tight" style={{ color: 'var(--text)' }}>Présences</h1>
         <p className="mt-1 flex items-center gap-2" style={{ color: 'var(--text-muted)' }}>
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="w-2 h-2 rounded-full bg-[var(--action)] " />
           Suivi de présence, entreprise par entreprise
         </p>
       </div>
 
       {companies.length === 0 ? (
-        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 text-sm font-medium">
+        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-[var(--portfolio-warning-soft)]  text-[var(--warning-text)]  text-sm font-medium">
           <AlertCircle size={16} />
           Ajoutez au moins une entreprise pour consulter les présences.
         </div>
@@ -129,29 +130,29 @@ export default function PortfolioAttendancePage() {
             <select value={year} onChange={e => setYear(Number(e.target.value))} className="px-4 py-2.5 bg-[var(--surface)] border border-[var(--border)] rounded-xl text-sm font-medium" style={{ color: 'var(--text)' }}>
               {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
-            {loadingData && <Loader2 size={18} className="animate-spin text-emerald-500 self-center" />}
+            {loadingData && <Loader2 size={18} className="animate-spin text-[var(--action)] self-center" />}
           </div>
 
           {error && (
-            <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm font-medium">
+            <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-[var(--portfolio-danger-soft)]  text-[var(--danger-text)]  text-sm font-medium">
               <AlertCircle size={16} className="shrink-0" />{error}
             </div>
           )}
 
           {/* ── SNAPSHOT DU JOUR ── */}
           <div>
-            <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: 'var(--text-muted)' }}>Aujourd'hui</p>
+            <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-muted)' }}>Aujourd'hui</p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <StatPill icon={Users2} label="Pointages" value={todayStats.total} cls="bg-sky-100 text-sky-600 dark:bg-sky-900/30 dark:text-sky-400" />
-              <StatPill icon={UserCheck} label="Présents" value={todayStats.present} cls="bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400" />
-              <StatPill icon={Clock} label="En retard" value={todayStats.late} cls="bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400" />
-              <StatPill icon={UserX} label="Absents" value={todayStats.absent} cls="bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400" />
+              <StatPill icon={Users2} label="Pointages" value={todayStats.total} cls="bg-[var(--brand-soft)] text-[var(--action)]  " />
+              <StatPill icon={UserCheck} label="Présents" value={todayStats.present} cls="bg-[var(--brand-soft)] text-[var(--action)]  " />
+              <StatPill icon={Clock} label="En retard" value={todayStats.late} cls="bg-[var(--portfolio-warning-soft)] text-[var(--warning-text)]  " />
+              <StatPill icon={UserX} label="Absents" value={todayStats.absent} cls="bg-[var(--portfolio-danger-soft)] text-[var(--danger-text)]  " />
             </div>
           </div>
 
           {/* ── RAPPORT MENSUEL ── */}
           <div>
-            <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: 'var(--text-muted)' }}>
+            <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-muted)' }}>
               Rapport de {MONTHS[month - 1]} {year}
             </p>
             {report.length === 0 ? (
@@ -161,22 +162,22 @@ export default function PortfolioAttendancePage() {
               </div>
             ) : (
               <div className="rounded-2xl overflow-x-auto" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-                <div className="grid px-4 py-3" style={{ minWidth: 720, gridTemplateColumns: '1fr 140px 90px 90px 100px 100px', gap: 12, borderBottom: '1px solid var(--border)' }}>
+                <div className="grid px-4 py-3" style={{ minWidth: 848, gridTemplateColumns: 'minmax(220px, 1fr) 140px 90px 90px 100px 100px', gap: 12, borderBottom: '1px solid var(--border)' }}>
                   {['Employé', 'Département', 'Présent', 'Retard', 'Absent', 'Heures'].map((h, i) => (
-                    <p key={i} className="text-[11px] font-bold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>{h}</p>
+                    <p key={i} className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>{h}</p>
                   ))}
                 </div>
                 {report.map(row => (
                   <div key={row.id} className="grid items-center px-4 py-3 transition-colors hover:bg-[var(--surface-2)]"
-                    style={{ minWidth: 720, gridTemplateColumns: '1fr 140px 90px 90px 100px 100px', gap: 12, borderBottom: '1px solid var(--border)' }}>
+                    style={{ minWidth: 848, gridTemplateColumns: 'minmax(220px, 1fr) 140px 90px 90px 100px 100px', gap: 12, borderBottom: '1px solid var(--border)' }}>
                     <div className="min-w-0">
                       <p className="text-sm font-semibold truncate" style={{ color: 'var(--text)' }}>{row.name}</p>
                       <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{row.matricule}</p>
                     </div>
                     <p className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>{row.department}</p>
-                    <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{row.daysPresent}</span>
-                    <span className="text-sm font-bold text-amber-600 dark:text-amber-400">{row.daysLate}</span>
-                    <span className="text-sm font-bold text-red-500">{row.daysAbsentUnpaid}</span>
+                    <span className="text-sm font-semibold text-[var(--action)] ">{row.daysPresent}</span>
+                    <span className="text-sm font-semibold text-[var(--warning-text)] ">{row.daysLate}</span>
+                    <span className="text-sm font-semibold text-[var(--danger-text)]">{row.daysAbsentUnpaid}</span>
                     <span className="text-sm font-medium" style={{ color: 'var(--text)' }}>{row.totalHours?.toFixed(1)}h</span>
                   </div>
                 ))}
@@ -186,5 +187,14 @@ export default function PortfolioAttendancePage() {
         </>
       )}
     </div>
+  );
+}
+
+
+export default function PortfolioAttendancePageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <PortfolioAttendancePage />
+    </ModulePageFrame>
   );
 }

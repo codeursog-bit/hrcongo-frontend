@@ -1,4 +1,6 @@
 'use client';
+import { PerformanceOverlay } from '@/components/performance/PerformanceOverlay';
+
 
 // ============================================================================
 // 📄 components/performance/CreateReviewModal.tsx
@@ -16,17 +18,17 @@ import { api } from '@/services/api';
 import { FancySelect } from '@/components/ui/FancySelect';
 
 const REVIEW_TYPES = [
-  { id: 'ANNUAL',      label: 'Annuelle',           desc: 'Bilan de fin d\'année',       emoji: '📅' },
-  { id: 'QUARTERLY',   label: 'Trimestrielle',      desc: 'Bilan du trimestre',          emoji: '📊' },
-  { id: 'PROBATION',   label: "Fin de période d'essai", desc: 'Confirmation ou non',     emoji: '🔍' },
-  { id: 'EXCEPTIONAL', label: 'Exceptionnelle',     desc: 'Évaluation ponctuelle',       emoji: '⭐' },
+  { id: 'ANNUAL',      label: 'Annuelle',           desc: 'Bilan de fin d\'année',        },
+  { id: 'QUARTERLY',   label: 'Trimestrielle',      desc: 'Bilan du trimestre',           },
+  { id: 'PROBATION',   label: "Fin de période d'essai", desc: 'Confirmation ou non',      },
+  { id: 'EXCEPTIONAL', label: 'Exceptionnelle',     desc: 'Évaluation ponctuelle',        },
 ];
 
 const CRITERIA_TEMPLATES = [
-  { key: 'general',    label: 'Grille générale',         emoji: '📋' },
-  { key: 'industrial', label: 'Industrielle / Pétrolière', emoji: '⚙️' },
-  { key: 'commercial', label: 'Commerciale',              emoji: '💼' },
-  { key: 'probation',  label: "Fin de période d'essai",  emoji: '🔍' },
+  { key: 'general',    label: 'Grille générale',          },
+  { key: 'industrial', label: 'Industrielle / Pétrolière',  },
+  { key: 'commercial', label: 'Commerciale',               },
+  { key: 'probation',  label: "Fin de période d'essai",   },
 ];
 
 const QUICK_SCORES = [1, 2, 3, 4, 5];
@@ -34,10 +36,7 @@ const QUICK_SCORES = [1, 2, 3, 4, 5];
 // Grilles renvoyées par l'API : intégrées (incl. « Facteurs de succès ») + modèles de l'entreprise
 interface GridTpl { id: string; name: string; jobTitle?: string | null; criteria: any[] }
 interface Grids { builtin: GridTpl[]; custom: GridTpl[] }
-const BUILTIN_EMOJI: Record<string, string> = {
-  'builtin:general': '📋', 'builtin:industrial': '⚙️', 'builtin:commercial': '💼',
-  'builtin:probation': '🔍', 'builtin:success_factors': '🎯',
-};
+
 const normTitle = (s?: string | null) => (s ?? '').trim().toLowerCase();
 
 interface Props {
@@ -171,31 +170,31 @@ export function CreateReviewModal({ isOpen, onClose, onSuccess, preselectedEmplo
 
   const overall = calcOverall();
   const scoreLbl = overall >= 4.5 ? 'Exceptionnel' : overall >= 3.5 ? 'Très bien' : overall >= 2.5 ? 'Bien' : overall >= 1.5 ? 'À améliorer' : overall > 0 ? 'Insuffisant' : '';
-  const scoreColor = overall >= 4 ? 'text-emerald-600' : overall >= 3 ? 'text-blue-600' : overall >= 2 ? 'text-amber-600' : 'text-red-600';
+  const scoreColor = overall >= 4 ? 'text-[var(--success-text)]' : overall >= 3 ? 'text-[var(--action)]' : overall >= 2 ? 'text-[var(--warning-text)]' : 'text-[var(--danger-text)]';
 
   if (!isOpen) return null;
 
   return (
     <AnimatePresence>
-      <motion.div
+      <PerformanceOverlay
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
-        onClick={onClose}
+        className="fixed inset-0 z-50 flex items-center justify-center bg-[rgb(0_0_0_/.45)] p-4"
+        onClose={onClose}
       >
         <motion.div
           initial={{ scale: 0.95, y: 16 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 16 }}
           onClick={e => e.stopPropagation()}
-          className="bg-white dark:bg-gray-800 rounded-3xl w-full max-w-2xl shadow-2xl border border-gray-100 dark:border-gray-700 overflow-hidden max-h-[92vh] flex flex-col"
+          className="bg-[var(--surface)] rounded-3xl w-full max-w-2xl shadow-2xl border border-[var(--border)] overflow-hidden max-h-[92vh] flex flex-col performance-card"
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-7 py-5 border-b border-gray-100 dark:border-gray-700">
+          <div className="flex items-center justify-between px-7 py-5 border-b border-[var(--border)]">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-xl">
-                <Star size={20} className="text-purple-600 fill-purple-600/30" />
+              <div className="p-2 bg-[var(--brand-soft)] rounded-xl">
+                <Star strokeWidth={1.5} size={20} className="text-[var(--action)] fill-[var(--action)]" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Nouvelle évaluation</h2>
-                <p className="text-xs text-gray-400 mt-0.5">
+                <h2 className="text-xl font-semibold text-[var(--text)]">Nouvelle évaluation</h2>
+                <p className="text-xs text-[var(--text-secondary)] mt-0.5">
                   {step === 'type'     && 'Étape 1 — Sélection et type'}
                   {step === 'criteria' && 'Étape 2 — Notation'}
                   {step === 'comments' && 'Étape 3 — Commentaires'}
@@ -205,8 +204,8 @@ export function CreateReviewModal({ isOpen, onClose, onSuccess, preselectedEmplo
               </div>
             </div>
             {step !== 'submitting' && step !== 'success' && (
-              <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full text-gray-400 transition-colors">
-                <X size={18} />
+              <button onClick={onClose} className="p-2 hover:bg-[var(--surface-2)] rounded-full text-[var(--text-secondary)] transition-colors">
+                <X strokeWidth={1.5} size={18} />
               </button>
             )}
           </div>
@@ -232,7 +231,7 @@ export function CreateReviewModal({ isOpen, onClose, onSuccess, preselectedEmplo
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
+                  <label className="block text-sm font-semibold text-[var(--text)] mb-3">
                     Type d'évaluation *
                   </label>
                   <div className="grid grid-cols-2 gap-2">
@@ -240,28 +239,27 @@ export function CreateReviewModal({ isOpen, onClose, onSuccess, preselectedEmplo
                       <button
                         key={t.id}
                         onClick={() => setReviewType(t.id)}
-                        className={`p-4 rounded-xl border-2 text-left transition-all hover:scale-[1.01]
-                          ${reviewType === t.id
-                            ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
-                            : 'border-gray-100 dark:border-gray-700 hover:border-gray-200'}`}
+                        className={`p-4 rounded-xl border-2 text-left transition-colors ${reviewType === t.id
+                            ? 'border-[var(--border)] bg-[var(--brand-soft)]'
+                            : 'border-[var(--border)] hover:border-[var(--border)]'}`}
                       >
-                        <span className="text-2xl mb-2 block">{t.emoji}</span>
-                        <p className="font-bold text-sm text-gray-900 dark:text-white">{t.label}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">{t.desc}</p>
+                        <span className="text-2xl mb-2 block"><Star size={18} strokeWidth={1.5} aria-hidden="true" /></span>
+                        <p className="font-semibold text-sm text-[var(--text)]">{t.label}</p>
+                        <p className="text-xs text-[var(--text-secondary)] mt-0.5">{t.desc}</p>
                       </button>
                     ))}
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                    <Calendar size={13} className="inline mr-1.5" />Date de l'entretien
+                  <label className="block text-sm font-semibold text-[var(--text)] mb-2">
+                    <Calendar strokeWidth={1.5} size={13} className="inline mr-1.5" />Date de l'entretien
                   </label>
                   <input
                     type="date"
                     value={date}
                     onChange={e => setDate(e.target.value)}
-                    className="w-full p-3 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700/50 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500/30"
+                    className="w-full p-3 border border-[var(--border)] rounded-xl bg-[var(--surface)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
                   />
                 </div>
               </div>
@@ -272,18 +270,16 @@ export function CreateReviewModal({ isOpen, onClose, onSuccess, preselectedEmplo
               <div className="p-7 space-y-6">
 
                 {/* Toggle grille vs score rapide */}
-                <div className="flex items-center gap-3 p-1 bg-gray-100 dark:bg-gray-700 rounded-xl w-fit">
+                <div className="flex items-center gap-3 p-1 bg-[var(--surface-2)] rounded-xl w-fit">
                   <button
                     onClick={() => setUseCriteria(true)}
-                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all
-                      ${useCriteria ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500'}`}
+                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${useCriteria ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-secondary)]'}`}
                   >
                     Grille de critères
                   </button>
                   <button
                     onClick={() => setUseCriteria(false)}
-                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all
-                      ${!useCriteria ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500'}`}
+                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${!useCriteria ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-secondary)]'}`}
                   >
                     Note globale
                   </button>
@@ -295,22 +291,21 @@ export function CreateReviewModal({ isOpen, onClose, onSuccess, preselectedEmplo
                     <div className="space-y-4">
                       {grids && grids.custom.length > 0 && (
                         <div>
-                          <p className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Vos modèles</p>
+                          <p className="text-sm font-semibold text-[var(--text)] mb-2">Vos modèles</p>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             {grids.custom.map(g => (
                               <button
                                 key={g.id}
                                 onClick={() => applyGrid(g)}
-                                className={`flex items-center gap-2 p-3 border rounded-xl text-left transition-all text-sm font-medium text-gray-700 dark:text-gray-300
-                                  ${gridId === g.id ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20' : 'border-gray-200 dark:border-gray-600 hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20'}`}
+                                className={`flex items-center gap-2 p-3 border rounded-xl text-left transition-colors text-sm font-medium text-[var(--text)] ${gridId === g.id ? 'border-[var(--border)] bg-[var(--brand-soft)]' : 'border-[var(--border)] hover:border-[var(--border)] hover:bg-[var(--brand-soft)]'}`}
                               >
-                                <span className="text-lg">🧩</span>
+                                <span className="text-lg"></span>
                                 <span className="min-w-0">
                                   <span className="block truncate">{g.name}</span>
-                                  {g.jobTitle && <span className="block text-xs text-gray-400 truncate">Poste : {g.jobTitle}</span>}
+                                  {g.jobTitle && <span className="block text-xs text-[var(--text-secondary)] truncate">Poste : {g.jobTitle}</span>}
                                 </span>
                                 {isRecommended(g) && (
-                                  <span className="ml-auto shrink-0 px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold">Recommandé</span>
+                                  <span className="ml-auto shrink-0 px-2 py-0.5 rounded-md bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)] text-[11px] font-semibold">Recommandé</span>
                                 )}
                               </button>
                             ))}
@@ -319,7 +314,7 @@ export function CreateReviewModal({ isOpen, onClose, onSuccess, preselectedEmplo
                       )}
 
                       <div>
-                        <p className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                        <p className="text-sm font-semibold text-[var(--text)] mb-2">
                           {grids && grids.custom.length > 0 ? 'Grilles intégrées' : 'Choisir une grille prédéfinie'}
                         </p>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -328,10 +323,9 @@ export function CreateReviewModal({ isOpen, onClose, onSuccess, preselectedEmplo
                                 <button
                                   key={g.id}
                                   onClick={() => applyGrid(g)}
-                                  className={`flex items-center gap-2 p-3 border rounded-xl text-left transition-all text-sm font-medium text-gray-700 dark:text-gray-300
-                                    ${gridId === g.id ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20' : 'border-gray-200 dark:border-gray-600 hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20'}`}
+                                  className={`flex items-center gap-2 p-3 border rounded-xl text-left transition-colors text-sm font-medium text-[var(--text)] ${gridId === g.id ? 'border-[var(--border)] bg-[var(--brand-soft)]' : 'border-[var(--border)] hover:border-[var(--border)] hover:bg-[var(--brand-soft)]'}`}
                                 >
-                                  <span className="text-lg">{BUILTIN_EMOJI[g.id] ?? '📋'}</span>
+                                  <span className="text-lg"><Star size={18} strokeWidth={1.5} aria-hidden="true" /></span>
                                   {g.name}
                                 </button>
                               ))
@@ -340,9 +334,9 @@ export function CreateReviewModal({ isOpen, onClose, onSuccess, preselectedEmplo
                                   key={t.key}
                                   onClick={() => loadTemplate(t.key)}
                                   disabled={loadingTpl}
-                                  className="flex items-center gap-2 p-3 border border-gray-200 dark:border-gray-600 rounded-xl text-left hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all text-sm font-medium text-gray-700 dark:text-gray-300 disabled:opacity-50"
+                                  className="flex items-center gap-2 p-3 border border-[var(--border)] rounded-xl text-left hover:border-[var(--border)] hover:bg-[var(--brand-soft)] transition-colors text-sm font-medium text-[var(--text)] disabled:opacity-50"
                                 >
-                                  <span className="text-lg">{t.emoji}</span>
+                                  <span className="text-lg"><Star size={18} strokeWidth={1.5} aria-hidden="true" /></span>
                                   {t.label}
                                 </button>
                               ))}
@@ -353,14 +347,14 @@ export function CreateReviewModal({ isOpen, onClose, onSuccess, preselectedEmplo
                     {criteria.length > 0 && (
                       <div className="space-y-3">
                         {criteria.map(c => (
-                          <div key={c.id} className="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
+                          <div key={c.id} className="bg-[var(--surface-2)] rounded-xl p-4">
                             <div className="flex items-center justify-between mb-2">
                               <div>
-                                <p className="font-semibold text-sm text-gray-900 dark:text-white">{c.label}</p>
-                                <p className="text-xs text-gray-400">Pondération : {c.weight}%</p>
+                                <p className="font-semibold text-sm text-[var(--text)]">{c.label}</p>
+                                <p className="text-xs text-[var(--text-secondary)]">Pondération : {c.weight}%</p>
                               </div>
                               {c.score > 0 && (
-                                <span className={`text-lg font-bold ${c.score >= 4 ? 'text-emerald-600' : c.score >= 3 ? 'text-blue-600' : c.score >= 2 ? 'text-amber-600' : 'text-red-600'}`}>
+                                <span className={`text-lg font-semibold ${c.score >= 4 ? 'text-[var(--success-text)]' : c.score >= 3 ? 'text-[var(--action)]' : c.score >= 2 ? 'text-[var(--warning-text)]' : 'text-[var(--danger-text)]'}`}>
                                   {c.score}/5
                                 </span>
                               )}
@@ -371,10 +365,9 @@ export function CreateReviewModal({ isOpen, onClose, onSuccess, preselectedEmplo
                                 <button
                                   key={s}
                                   onClick={() => updateCriterionScore(c.id, s)}
-                                  className={`flex-1 py-2 rounded-lg font-bold text-sm border-2 transition-all
-                                    ${c.score === s
-                                      ? 'bg-purple-600 text-white border-purple-600 scale-105 shadow-md'
-                                      : 'bg-white dark:bg-gray-700 text-gray-400 border-gray-200 dark:border-gray-600 hover:border-purple-300'}`}
+                                  className={`flex-1 py-2 rounded-lg font-semibold text-sm border-2 transition-colors ${c.score === s
+                                      ? 'bg-[var(--brand)] text-[var(--on-brand)] border-[var(--border)] shadow-md'
+                                      : 'bg-[var(--surface)] text-[var(--text-secondary)] border-[var(--border)] hover:border-[var(--border)]'}`}
                                 >
                                   {s}
                                 </button>
@@ -385,19 +378,19 @@ export function CreateReviewModal({ isOpen, onClose, onSuccess, preselectedEmplo
                               value={c.comment}
                               onChange={e => updateCriterionComment(c.id, e.target.value)}
                               placeholder="Commentaire optionnel..."
-                              className="w-full px-3 py-1.5 text-xs border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-purple-500/30 placeholder-gray-300"
+                              className="w-full px-3 py-1.5 text-xs border border-[var(--border)] rounded-lg bg-[var(--surface)] text-[var(--text)] focus:outline-none focus:ring-1 focus:ring-[var(--focus)] placeholder-gray-300"
                             />
                           </div>
                         ))}
 
                         {/* Score pondéré calculé */}
                         {overall > 0 && (
-                          <div className="flex items-center justify-between p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-200 dark:border-purple-800">
-                            <span className="font-semibold text-purple-700 dark:text-purple-300 text-sm">Score pondéré</span>
+                          <div className="flex items-center justify-between p-4 bg-[var(--brand-soft)] rounded-xl border border-[var(--border)]">
+                            <span className="font-semibold text-[var(--action)] text-sm">Score pondéré</span>
                             <div className="flex items-center gap-2">
-                              <Star size={16} className="text-purple-600 fill-purple-300" />
-                              <span className={`text-xl font-bold ${scoreColor}`}>{overall.toFixed(2)}/5</span>
-                              <span className="text-xs text-purple-600 dark:text-purple-400">{scoreLbl}</span>
+                              <Star strokeWidth={1.5} size={16} className="text-[var(--action)] fill-[var(--action)]" />
+                              <span className={`text-xl font-semibold ${scoreColor}`}>{overall.toFixed(2)}/5</span>
+                              <span className="text-xs text-[var(--action)]">{scoreLbl}</span>
                             </div>
                           </div>
                         )}
@@ -405,8 +398,8 @@ export function CreateReviewModal({ isOpen, onClose, onSuccess, preselectedEmplo
                     )}
 
                     {criteria.length === 0 && (
-                      <div className="text-center py-8 text-gray-400">
-                        <Sparkles size={32} className="mx-auto mb-2 opacity-30" />
+                      <div className="text-center py-8 text-[var(--text-secondary)]">
+                        <Sparkles strokeWidth={1.5} size={32} className="mx-auto mb-2 opacity-30" />
                         <p className="text-sm">Sélectionnez une grille ci-dessus</p>
                       </div>
                     )}
@@ -416,7 +409,7 @@ export function CreateReviewModal({ isOpen, onClose, onSuccess, preselectedEmplo
                 {/* Note globale simple */}
                 {!useCriteria && (
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-4">
+                    <label className="block text-sm font-semibold text-[var(--text)] mb-4">
                       Note globale *
                     </label>
                     <div className="flex justify-between gap-3">
@@ -424,21 +417,20 @@ export function CreateReviewModal({ isOpen, onClose, onSuccess, preselectedEmplo
                         <button
                           key={s}
                           onClick={() => setQuickScore(s)}
-                          className={`flex-1 py-4 rounded-xl font-bold text-lg border-2 transition-all
-                            ${quickScore === s
-                              ? 'bg-purple-600 text-white border-purple-600 shadow-lg shadow-purple-500/30 scale-105'
-                              : 'bg-white dark:bg-gray-700 text-gray-400 border-gray-200 dark:border-gray-600 hover:border-purple-300'}`}
+                          className={`flex-1 py-4 rounded-xl font-semibold text-lg border-2 transition-colors ${quickScore === s
+                              ? 'bg-[var(--brand)] text-[var(--on-brand)] border-[var(--border)] shadow-lg'
+                              : 'bg-[var(--surface)] text-[var(--text-secondary)] border-[var(--border)] hover:border-[var(--border)]'}`}
                         >
                           {s}
                         </button>
                       ))}
                     </div>
                     <div className="flex justify-between mt-2 px-1">
-                      <span className="text-xs text-gray-400">Insuffisant</span>
-                      <span className="text-xs text-gray-400">Exceptionnel</span>
+                      <span className="text-xs text-[var(--text-secondary)]">Insuffisant</span>
+                      <span className="text-xs text-[var(--text-secondary)]">Exceptionnel</span>
                     </div>
                     {quickScore > 0 && (
-                      <p className={`text-center mt-3 font-bold ${scoreColor}`}>{scoreLbl}</p>
+                      <p className={`text-center mt-3 font-semibold ${scoreColor}`}>{scoreLbl}</p>
                     )}
                   </div>
                 )}
@@ -455,19 +447,19 @@ export function CreateReviewModal({ isOpen, onClose, onSuccess, preselectedEmplo
                   { key: 'nextGoals',    label: '🎯 Objectifs suivants',   value: nextGoals,    set: setNextGoals,    placeholder: 'Objectifs pour la prochaine période...' },
                 ].map(f => (
                   <div key={f.key}>
-                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">{f.label}</label>
+                    <label className="block text-sm font-semibold text-[var(--text)] mb-2">{f.label}</label>
                     <textarea
                       value={f.value}
                       onChange={e => f.set(e.target.value)}
                       placeholder={f.placeholder}
                       rows={3}
-                      className="w-full p-3 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700/50 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 resize-none text-sm placeholder-gray-300"
+                      className="w-full p-3 border border-[var(--border)] rounded-xl bg-[var(--surface)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)] resize-none text-sm placeholder-gray-300"
                     />
                   </div>
                 ))}
 
                 {error && (
-                  <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-600 text-sm">
+                  <div className="p-3 bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] border border-[var(--border)] rounded-xl text-[var(--danger-text)] text-sm">
                     {error}
                   </div>
                 )}
@@ -482,21 +474,21 @@ export function CreateReviewModal({ isOpen, onClose, onSuccess, preselectedEmplo
             {/* ── Succès ─────────────────────────────────────────────────── */}
             {step === 'success' && (
               <div className="py-16 text-center">
-                <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/30 rounded-2xl flex items-center justify-center mx-auto mb-5">
-                  <Check size={40} className="text-emerald-600" strokeWidth={2.5} />
+                <div className="w-20 h-20 bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] rounded-2xl flex items-center justify-center mx-auto mb-5">
+                  <Check size={40} className="text-[var(--success-text)]" strokeWidth={2.5} />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Évaluation créée !</h3>
-                <p className="text-gray-400 text-sm">Vous pouvez la soumettre à l'employé quand vous êtes prêt.</p>
+                <h3 className="text-xl font-semibold text-[var(--text)] mb-2">Évaluation créée !</h3>
+                <p className="text-[var(--text-secondary)] text-sm">Vous pouvez la soumettre à l'employé quand vous êtes prêt.</p>
               </div>
             )}
           </div>
 
           {/* Footer navigation */}
           {(step === 'type' || step === 'criteria' || step === 'comments') && (
-            <div className="px-7 py-5 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex gap-3">
+            <div className="px-7 py-5 border-t border-[var(--border)] bg-[var(--surface-2)] flex gap-3">
               <button
                 onClick={step === 'type' ? onClose : () => setStep(step === 'comments' ? 'criteria' : 'type')}
-                className="flex-1 py-3 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-bold rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-sm"
+                className="flex-1 py-3 border border-[var(--border)] text-[var(--text)] font-semibold rounded-xl hover:bg-[var(--surface-2)] transition-colors text-sm"
               >
                 {step === 'type' ? 'Annuler' : '← Retour'}
               </button>
@@ -505,24 +497,24 @@ export function CreateReviewModal({ isOpen, onClose, onSuccess, preselectedEmplo
                 <button
                   onClick={() => setStep(step === 'type' ? 'criteria' : 'comments')}
                   disabled={!canGoNext()}
-                  className="flex-1 py-3 bg-purple-600 hover:bg-purple-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors text-sm flex items-center justify-center gap-2"
+                  className="flex-1 py-3 bg-[var(--brand)] hover:bg-[var(--brand)] disabled:opacity-40 disabled:cursor-not-allowed text-[var(--on-brand)] font-semibold rounded-xl transition-colors text-sm flex items-center justify-center gap-2"
                 >
-                  Suivant <ChevronRight size={16} />
+                  Suivant <ChevronRight strokeWidth={1.5} size={16} />
                 </button>
               )}
 
               {step === 'comments' && (
                 <button
                   onClick={handleSubmit}
-                  className="flex-1 py-3 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl transition-colors text-sm flex items-center justify-center gap-2"
+                  className="flex-1 py-3 bg-[var(--brand)] hover:bg-[var(--brand)] text-[var(--on-brand)] font-semibold rounded-xl transition-colors text-sm flex items-center justify-center gap-2"
                 >
-                  <Check size={16} /> Enregistrer
+                  <Check strokeWidth={1.5} size={16} /> Enregistrer
                 </button>
               )}
             </div>
           )}
         </motion.div>
-      </motion.div>
+      </PerformanceOverlay>
     </AnimatePresence>
   );
 }

@@ -1,0 +1,385 @@
+'use client';
+
+// ============================================================================
+// 📁 hooks/usePushNotifications.ts — PROD READY
+// ============================================================================
+// CORRECTIFS :
+//   1. register: false dans next.config → on enregistre SW manuellement ici
+//   2. Attente que le SW soit ACTIF avant subscribe() — évite l'AbortError
+//      "no active Service Worker" qui arrive quand le SW est encore installing
+//   3. Auto-nettoyage du vieux SW Workbox si présent (ancien déploiement)
+//      → l'utilisateur n'a JAMAIS besoin de vider son cache manuellement
+//   4. Timeout de sécurité (10s) si le SW ne s'active jamais
+// ============================================================================
+
+import { useState, useEffect, useCallback } from 'react';
+import { api } from '@/services/api';
+
+// ✅ Conversion clé VAPID base64url → ArrayBuffer
+function urlBase64ToArrayBuffer(base64String: string): ArrayBuffer {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64  = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  const output  = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    output[i] = rawData.charCodeAt(i);
+  }
+  return output.buffer.slice(0) as ArrayBuffer;
+}
+
+// ============================================================================
+// ✅ HELPER : Attendre qu'un ServiceWorker soit dans l'état "activated"
+//    Résout l'erreur : "Subscription failed - no active Service Worker"
+//    Cas typique : SW en cours d'installation lors du premier clic "Activer"
+// ============================================================================
+function waitForActivation(reg: ServiceWorkerRegistration): Promise<ServiceWorkerRegistration> {
+  return new Promise((resolve, reject) => {
+    // Déjà actif → on retourne immédiatement
+    if (reg.active && !reg.installing && !reg.waiting) {
+      return resolve(reg);
+    }
+
+    // Timeout de sécurité : si le SW ne s'active pas en 10s → erreur claire
+    const timeout = setTimeout(() => {
+      reject(new Error('Le service worker ne s\'est pas activé dans les temps. Veuillez recharger la page.'));
+    }, 10_000);
+
+    // SW en cours d'installation → on attend le changement d'état
+    const sw = reg.installing ?? reg.waiting;
+    if (sw) {
+      const handler = () => {
+        if (sw.state === 'activated') {
+          clearTimeout(timeout);
+          sw.removeEventListener('statechange', handler);
+          resolve(reg);
+        } else if (sw.state === 'redundant') {
+          // SW rejeté (erreur d'install) → on abandonne
+          clearTimeout(timeout);
+          sw.removeEventListener('statechange', handler);
+          reject(new Error('Installation du service worker échouée. Rechargez la page.'));
+        }
+      };
+      sw.addEventListener('statechange', handler);
+    } else {
+      // Cas edge : pas de SW du tout encore
+      navigator.serviceWorker.ready
+        .then(() => { clearTimeout(timeout); resolve(reg); })
+        .catch((e) => { clearTimeout(timeout); reject(e); });
+    }
+  });
+}
+
+// ============================================================================
+// ✅ HELPER : Nettoyer les vieux SW Workbox générés par next-pwa
+//    (ceux qui avaient register: true et précachaient les manifests Next.js)
+//    → Supprime les vieux SW silencieusement, sans que l'utilisateur ne fasse rien
+// ============================================================================
+async function cleanupStaleServiceWorkers(): Promise<void> {
+  if (!('serviceWorker' in navigator)) return;
+  try {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    for (const reg of registrations) {
+      const swUrl = reg.active?.scriptURL ?? reg.installing?.scriptURL ?? reg.waiting?.scriptURL ?? '';
+      // Supprimer les SW Workbox auto-générés (sw.js est notre SW custom, on le garde)
+      // Les SW Workbox auto-générés sont typiquement nommés "sw.js" aussi mais
+      // leur contenu contient workbox — on les identifie par l'URL si différente
+      // ou en vérifiant s'ils bloquent l'installation du nôtre
+      if (swUrl && !swUrl.endsWith('/sw.js')) {
+        console.log('[Push] Suppression ancien SW:', swUrl);
+        await reg.unregister();
+      }
+    }
+  } catch (e) {
+    // Silencieux — non bloquant
+    console.warn('[Push] Nettoyage SW:', e);
+  }
+}
+
+// ============================================================================
+// ✅ OPT-OUT : si l'utilisateur désactive lui-même les notifications sur cet appareil,
+//    on s'en souvient (par compte). Sans ça, l'activation automatique les réactiverait
+//    au prochain chargement de page.
+// ============================================================================
+function optOutKey(): string {
+  let uid = '';
+  try { uid = JSON.parse(localStorage.getItem('user') || '{}').id || ''; } catch {}
+  return `push-optout:${uid}`;
+}
+
+// ============================================================================
+// 🆔 IDENTIFIANT STABLE DE L'APPAREIL
+//    Généré une fois, gardé dans le navigateur, envoyé à chaque activation. Le serveur
+//    s'en sert pour reconnaître CE téléphone même quand le navigateur lui donne une
+//    nouvelle adresse push (après désactivation/réactivation) : une ligne par appareil,
+//    jamais de doublons. Effacer les données du site / réinstaller l'app = nouvel appareil.
+//    (Un navigateur n'a pas le droit de lire l'IMEI ou l'adresse MAC du téléphone.)
+// ============================================================================
+const DEVICE_ID_KEY = 'konza-device-id';
+
+function getDeviceId(): string {
+  try {
+    let id = localStorage.getItem(DEVICE_ID_KEY);
+    if (id && /^[A-Za-z0-9_-]{8,64}$/.test(id)) return id;
+    id =
+      typeof crypto !== 'undefined' && 'randomUUID' in crypto
+        ? crypto.randomUUID()
+        : `d${Date.now().toString(36)}${Math.random().toString(36).slice(2, 12)}`;
+    localStorage.setItem(DEVICE_ID_KEY, id);
+    return id;
+  } catch {
+    // stockage indisponible (navigation privée stricte) : identifiant de session
+    return `s${Date.now().toString(36)}${Math.random().toString(36).slice(2, 12)}`;
+  }
+}
+
+// ============================================================================
+// 🏷️ Nom lisible de l'appareil (ex. « Chrome · Android »), envoyé au serveur avec
+//    l'abonnement : le super admin voit enfin QUEL appareil est actif ou mort.
+// ============================================================================
+function getDeviceLabel(): string {
+  try {
+    const ua = navigator.userAgent;
+    const os =
+      /Android/i.test(ua) ? 'Android'
+      : /iPhone|iPad|iPod/i.test(ua) ? 'iOS'
+      : /Windows/i.test(ua) ? 'Windows'
+      : /Mac OS X/i.test(ua) ? 'macOS'
+      : /Linux/i.test(ua) ? 'Linux'
+      : 'Appareil';
+    const browser =
+      /Edg\//i.test(ua) ? 'Edge'
+      : /OPR\//i.test(ua) ? 'Opera'
+      : /SamsungBrowser/i.test(ua) ? 'Samsung Internet'
+      : /Firefox\//i.test(ua) ? 'Firefox'
+      : /Chrome\//i.test(ua) ? 'Chrome'
+      : /Safari\//i.test(ua) ? 'Safari'
+      : 'Navigateur';
+    const installed = window.matchMedia?.('(display-mode: standalone)').matches ? ' (app installée)' : '';
+    return `${browser} · ${os}${installed}`.slice(0, 80);
+  } catch {
+    return 'Appareil';
+  }
+}
+
+// ============================================================================
+// HOOK PRINCIPAL
+// ============================================================================
+export function usePushNotifications() {
+  const [isSupported, setIsSupported]   = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [isLoading, setIsLoading]       = useState(false);
+  const [permission, setPermission]     = useState<NotificationPermission>('default');
+  const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null);
+  const [swError, setSwError]           = useState<string | null>(null);
+  // isReady : l'état réel (abonné ou non) est connu → évite que la bannière « clignote » au rechargement
+  const [isReady, setIsReady]           = useState(false);
+  const [optedOut, setOptedOut]         = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      setIsSupported(false);
+      setIsReady(true);
+      return;
+    }
+    setIsSupported(true);
+    setPermission(Notification.permission);
+    const userOptedOut = localStorage.getItem(optOutKey()) === '1';
+    setOptedOut(userOptedOut);
+
+    const initSW = async () => {
+      try {
+        // ✅ 1. Nettoyer les vieux SW Workbox automatiquement
+        await cleanupStaleServiceWorkers();
+
+        // ✅ 2. Enregistrer notre SW custom
+        const reg = await navigator.serviceWorker.register('/sw.js', {
+          // updateViaCache: 'none' force le navigateur à toujours vérifier
+          // si le sw.js a changé → mise à jour automatique à chaque déploiement
+          updateViaCache: 'none',
+        });
+
+        // ✅ 3. Forcer la mise à jour si une nouvelle version est disponible
+        //    (cas : redéploiement Vercel → nouveau sw.js disponible)
+        reg.addEventListener('updatefound', () => {
+          const newSW = reg.installing;
+          if (!newSW) return;
+          console.log('[Push] Nouvelle version SW détectée, mise à jour...');
+          newSW.addEventListener('statechange', () => {
+            if (newSW.state === 'activated') {
+              console.log('[Push] SW mis à jour avec succès');
+            }
+          });
+        });
+
+        // ✅ 4. Vérifier s'il existe déjà une mise à jour en attente
+        await reg.update();
+
+        setRegistration(reg);
+
+        // ✅ 5. (modifié) On NE déclare plus « abonné » d'après le seul navigateur :
+        //    un abonnement peut être mort (410) alors que getSubscription() le renvoie
+        //    encore. isSubscribed passe à true seulement après synchro serveur réussie (étape 6).
+
+        // ✅ 6. ACTIVATION PAR DÉFAUT : si le navigateur a déjà accordé la permission,
+        //    on (ré)enregistre l'appareil automatiquement, sans clic. Couvre : première
+        //    connexion après autorisation, changement de compte sur le même appareil,
+        //    abonnement perdu côté serveur. Une seule fois par session et par compte.
+        if (Notification.permission === 'granted' && !userOptedOut) {
+          try {
+            const activeReg = await waitForActivation(reg);
+            let current = await activeReg.pushManager.getSubscription();
+
+            // 🆕 Le serveur connaît-il encore cet appareil ? Sinon il l'a supprimé (410 =
+            //    abonnement mort) ou ne l'a jamais reçu. Réenvoyer le même endpoint ne
+            //    servirait à rien : on le détruit pour obtenir un endpoint NEUF.
+            if (current) {
+              try {
+                const st = await api.get(
+                  `/notifications/push/status?endpoint=${encodeURIComponent(current.endpoint)}`,
+                ) as any;
+                if (st && st.registered === false) {
+                  await current.unsubscribe();
+                  current = null;
+                  // l'ancienne clé de synchro ne vaut plus rien
+                  Object.keys(sessionStorage)
+                    .filter((k) => k.startsWith('push-synced:'))
+                    .forEach((k) => sessionStorage.removeItem(k));
+                }
+              } catch (e) {
+                console.warn('[Push] Vérif statut serveur:', e);
+              }
+            }
+
+            if (!current) {
+              const { publicKey } = await api.get('/notifications/push/vapid-key') as any;
+              if (publicKey) {
+                current = await activeReg.pushManager.subscribe({
+                  userVisibleOnly: true,
+                  applicationServerKey: urlBase64ToArrayBuffer(publicKey),
+                });
+              }
+            }
+            if (current) {
+              let uid = '';
+              try { uid = JSON.parse(localStorage.getItem('user') || '{}').id || ''; } catch {}
+              const syncKey = `push-synced:${uid}:${current.endpoint}`;
+              if (!sessionStorage.getItem(syncKey)) {
+                await api.post('/notifications/push/subscribe', { ...current.toJSON(), deviceLabel: getDeviceLabel(), deviceId: getDeviceId() });
+                sessionStorage.setItem(syncKey, '1');
+              }
+              // true UNIQUEMENT si le POST ci-dessus a réussi (sinon on tombe dans le catch)
+              setIsSubscribed(true);
+            }
+          } catch (e) {
+            console.warn('[Push] Auto-sync:', e);
+          }
+        }
+      } catch (err: any) {
+        console.error('[Push] Erreur initialisation SW:', err);
+        setSwError(err?.message || 'Erreur service worker');
+      } finally {
+        setIsReady(true);
+      }
+    };
+
+    initSW();
+  }, []);
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // SUBSCRIBE
+  // ──────────────────────────────────────────────────────────────────────────
+  const subscribe = useCallback(async (): Promise<boolean> => {
+    if (!registration) {
+      console.error('[Push] Pas de registration SW');
+      return false;
+    }
+
+    setIsLoading(true);
+    try {
+      // ✅ Demander la permission AVANT de vérifier le SW
+      //    (la permission doit venir d'un geste utilisateur)
+      const perm = await Notification.requestPermission();
+      setPermission(perm);
+      if (perm !== 'granted') return false;
+
+      // ✅ CRITIQUE : Attendre que le SW soit ACTIF
+      //    Résout l'AbortError "no active Service Worker"
+      const activeReg = await waitForActivation(registration);
+
+      // ✅ Récupérer la clé VAPID publique
+      const { publicKey } = await api.get('/notifications/push/vapid-key') as any;
+      if (!publicKey) throw new Error('Clé VAPID non disponible');
+
+      // ✅ Créer l'abonnement Push
+      const subscription = await activeReg.pushManager.subscribe({
+        userVisibleOnly:      true,
+        applicationServerKey: urlBase64ToArrayBuffer(publicKey),
+      });
+
+      // ✅ Envoyer l'abonnement au backend
+      await api.post('/notifications/push/subscribe', { ...subscription.toJSON(), deviceLabel: getDeviceLabel(), deviceId: getDeviceId() });
+      localStorage.removeItem(optOutKey()); // réactivation explicite → on lève l'opt-out
+      setOptedOut(false);
+      setIsSubscribed(true);
+      return true;
+
+    } catch (err: any) {
+      console.error('[Push] Erreur abonnement:', err);
+
+      // ✅ Message d'erreur utilisateur-friendly selon le type d'erreur
+      if (err?.name === 'AbortError') {
+        setSwError('Le service worker n\'est pas encore prêt. Veuillez recharger la page et réessayer.');
+      } else if (err?.name === 'NotAllowedError') {
+        setSwError('Permission refusée par le navigateur.');
+      } else {
+        setSwError(err?.message || 'Impossible d\'activer les notifications');
+      }
+      return false;
+
+    } finally {
+      setIsLoading(false);
+    }
+  }, [registration]);
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // UNSUBSCRIBE
+  // ──────────────────────────────────────────────────────────────────────────
+  const unsubscribe = useCallback(async (): Promise<boolean> => {
+    if (!registration) return false;
+    setIsLoading(true);
+    // 🐛 CORRIGÉ : mémoriser le choix AVANT, sinon l'activation automatique
+    //    ré-abonnait l'appareil au prochain chargement (« impossible de désactiver »).
+    localStorage.setItem(optOutKey(), '1');
+    setOptedOut(true);
+    try {
+      const sub = await registration.pushManager.getSubscription();
+      const endpoint = sub?.endpoint; // capturé avant unsubscribe() côté navigateur
+      if (sub) await sub.unsubscribe();
+      // On cible cet appareil précisément — les autres appareils de ce compte restent abonnés.
+      // 🐛 CORRIGÉ : `api.delete(url, body)` envoie son 2e argument TEL QUEL comme corps.
+      // L'ancien `{ data: { endpoint } }` (syntaxe axios) arrivait enveloppé côté serveur,
+      // qui ne trouvait aucun endpoint et retirait TOUS les appareils du compte.
+      await api.delete('/notifications/push/unsubscribe', { endpoint, deviceId: getDeviceId() });
+      setIsSubscribed(false);
+      return true;
+    } catch (err) {
+      console.error('[Push] Erreur désabonnement:', err);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [registration]);
+
+  return {
+    isSupported,
+    isSubscribed,
+    isLoading,
+    permission,
+    swError,       // ✅ Exposé pour que PushNotificationBanner puisse l'afficher
+    isReady,
+    optedOut,
+    subscribe,
+    unsubscribe,
+  };
+}

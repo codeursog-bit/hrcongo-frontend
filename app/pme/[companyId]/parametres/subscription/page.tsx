@@ -13,6 +13,7 @@ import {
   Loader2, AlertTriangle, Sparkles, Info, Shield,
 } from 'lucide-react';
 import { api } from '@/services/api';
+import { ModulePageFrame } from '@/components/requests/ModulePageFrame';
 
 interface Subscription {
   plan:             string;
@@ -41,7 +42,7 @@ const STATUS_STYLES: Record<string, { color: string; bg: string; label: string; 
   PAUSED:   { color: 'text-gray-600 dark:text-gray-400',       bg: 'bg-gray-100 dark:bg-gray-800',          label: 'Pausé',         icon: <AlertTriangle size={12} /> },
 };
 
-export default function PmeSubscriptionPage() {
+function PmeSubscriptionPage() {
   const params    = useParams();
   const companyId = params.companyId as string;
 
@@ -212,5 +213,14 @@ export default function PmeSubscriptionPage() {
         </div>
       )}
     </div>
+  );
+}
+
+
+export default function PmeSubscriptionPageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <PmeSubscriptionPage />
+    </ModulePageFrame>
   );
 }

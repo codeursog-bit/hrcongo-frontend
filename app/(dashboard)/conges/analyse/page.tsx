@@ -1,4 +1,7 @@
 'use client';
+import '@/components/leave-history/leave-workspace.css';
+import { LeaveModuleFrame as ModulePageFrame } from '@/components/leave-history/LeaveModuleFrame';
+import { ModulePageSkeleton } from '@/components/requests/ModulePageFrame';
 
 // ============================================================================
 // 📁 app/(dashboard)/conges/analyse/page.tsx
@@ -21,9 +24,9 @@ export default function AnalyseCongesPage() {
   }, []);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-      <div className="mb-1">
-        <h1 className="text-3xl font-bold text-[var(--text)]">Analyse des congés</h1>
+    <ModulePageFrame kind="dashboard"><div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+      <div className="mb-1 leave-header">
+        <h1 className="text-3xl font-semibold text-[var(--text)]">Analyse des congés</h1>
         <p className="text-sm text-[var(--text-muted)] mt-1">
           Calendrier, tableau de bord et tendances pluriannuelles — congés payés, maladie, maternité/paternité, sans solde et anticipés
         </p>
@@ -32,6 +35,6 @@ export default function AnalyseCongesPage() {
       <CongeSubNav userRole={userRole} />
 
       <AbsenceAnalyticsBoard scope="leave" />
-    </div>
+    </div></ModulePageFrame>
   );
 }

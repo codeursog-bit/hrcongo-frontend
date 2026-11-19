@@ -1,4 +1,5 @@
 'use client';
+import { PortfolioDialog } from '@/components/portfolio/PortfolioDialog';
 
 // app/(dashboard)/mes-entreprises/page.tsx
 // Portefeuille multi-entreprises — même style que le reste de l'admin
@@ -13,6 +14,7 @@ import {
 } from 'lucide-react';
 import { GlobalLoader } from '@/components/ui/GlobalLoader';
 import { api } from '@/services/api';
+import { PortfolioPageFrame as ModulePageFrame } from '@/components/portfolio/PortfolioPageFrame';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -35,28 +37,22 @@ const EMPTY_FORM: CreateCompanyForm = {
   address: '', city: '', phone: '', email: '', country: 'CG',
 };
 
-const AVATAR_GRADIENTS = [
-  'from-emerald-500 to-teal-400', 'from-sky-500 to-cyan-400',
-  'from-violet-500 to-purple-400', 'from-amber-500 to-orange-400',
-  'from-rose-500 to-pink-400', 'from-indigo-500 to-blue-400',
-];
 
 // ─── Avatar entreprise : logo si dispo (fond blanc, cadré proprement), sinon initiales ──
 
 function CompanyAvatar({ company, idx, size = 'md' }: { company: PortfolioCompany; idx: number; size?: 'md' | 'sm' }) {
   const initials = company.name.slice(0, 2).toUpperCase();
-  const gradient = AVATAR_GRADIENTS[idx % AVATAR_GRADIENTS.length];
   const dims = size === 'md' ? 'w-11 h-11 rounded-xl' : 'w-9 h-9 rounded-lg';
 
   if (company.logo) {
     return (
-      <div className={`${dims} bg-white shrink-0 overflow-hidden flex items-center justify-center`} style={{ border: '1px solid var(--border)' }}>
+      <div className={`${dims} bg-[var(--surface)] shrink-0 overflow-hidden flex items-center justify-center`} style={{ border: '1px solid var(--border)' }}>
         <img src={company.logo} alt={company.name} className="w-full h-full object-contain p-1.5" />
       </div>
     );
   }
   return (
-    <div className={`${dims} bg-gradient-to-br ${gradient} flex items-center justify-center text-white font-bold ${size === 'md' ? 'text-sm' : 'text-xs'} shrink-0`}>
+    <div className={`${dims} portfolio-company-avatar flex items-center justify-center text-[var(--on-brand)] font-semibold ${size === 'md' ? 'text-sm' : 'text-xs'} shrink-0`}>
       {initials}
     </div>
   );
@@ -68,13 +64,13 @@ function CompanyCard({ company, idx, onOpen, opening }: {
   company: PortfolioCompany; idx: number; onOpen: (c: PortfolioCompany) => void; opening: boolean;
 }) {
   return (
-    <div className="group relative rounded-2xl p-5 transition-all duration-300 hover:-translate-y-1"
+    <div className="portfolio-company-card group relative rounded-2xl p-5"
       style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3 min-w-0">
           <CompanyAvatar company={company} idx={idx} />
           <div className="min-w-0">
-            <p className="font-bold text-sm truncate" style={{ color: 'var(--text)' }}>{company.name}</p>
+            <p className="font-semibold text-sm truncate" style={{ color: 'var(--text)' }}>{company.name}</p>
             {company.city && (
               <p className="text-xs flex items-center gap-1 mt-0.5" style={{ color: 'var(--text-muted)' }}>
                 <MapPin size={11} />{company.city}
@@ -83,11 +79,11 @@ function CompanyCard({ company, idx, onOpen, opening }: {
           </div>
         </div>
         {company.isActive ? (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 shrink-0">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[var(--brand-soft)] text-[var(--action)]   shrink-0">
             <CheckCircle2 size={11} /> Active
           </span>
         ) : (
-          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 shrink-0">
+          <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[var(--portfolio-danger-soft)] text-[var(--danger-text)]   shrink-0">
             Inactive
           </span>
         )}
@@ -103,7 +99,7 @@ function CompanyCard({ company, idx, onOpen, opening }: {
       <button
         onClick={() => onOpen(company)}
         disabled={opening}
-        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold bg-emerald-500 hover:bg-emerald-600 text-white transition-colors disabled:opacity-60 disabled:cursor-wait"
+        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold bg-[var(--action)] hover:bg-[var(--action)] text-[var(--on-brand)] transition-colors disabled:opacity-60 disabled:cursor-wait"
       >
         {opening ? <Loader2 size={16} className="animate-spin" /> : <ArrowRight size={16} />}
         {opening ? 'Ouverture…' : 'Ouvrir'}
@@ -131,14 +127,14 @@ function CompanyRow({ company, idx, onOpen, opening }: {
         </div>
       </div>
       {company.isActive ? (
-        <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">Active</span>
+        <span className="text-[10px] font-semibold text-[var(--action)] ">Active</span>
       ) : (
-        <span className="text-[10px] font-bold text-red-600 dark:text-red-400">Inactive</span>
+        <span className="text-[10px] font-semibold text-[var(--danger-text)] ">Inactive</span>
       )}
       <button
         onClick={() => onOpen(company)}
         disabled={opening}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500 hover:bg-emerald-600 text-white transition-colors disabled:opacity-60"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--action)] hover:bg-[var(--action)] text-[var(--on-brand)] transition-colors disabled:opacity-60"
       >
         {opening ? <Loader2 size={13} className="animate-spin" /> : <ArrowRight size={13} />}
         Ouvrir
@@ -174,13 +170,9 @@ function CreateCompanyModal({ onClose, onCreated }: { onClose: () => void; onCre
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <motion.div
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={() => !saving && onClose()}
-      />
-      <motion.div
+    <PortfolioDialog onClose={() => !saving && onClose()}>
+
+<motion.div
         initial={{ opacity: 0, scale: 0.94, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.94, y: 16 }}
         transition={{ type: 'spring', stiffness: 320, damping: 28 }}
         className="relative w-full max-w-lg rounded-2xl overflow-hidden z-10"
@@ -188,11 +180,11 @@ function CreateCompanyModal({ onClose, onCreated }: { onClose: () => void; onCre
       >
         <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-emerald-500/15 flex items-center justify-center">
-              <Building2 size={18} className="text-emerald-500" />
+            <div className="w-9 h-9 rounded-lg bg-[var(--action)] flex items-center justify-center">
+              <Building2 size={18} className="text-[var(--action)]" />
             </div>
             <div>
-              <h2 className="text-sm font-bold" style={{ color: 'var(--text)' }}>Ajouter une entreprise</h2>
+              <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Ajouter une entreprise</h2>
               <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Les champs marqués * sont obligatoires</p>
             </div>
           </div>
@@ -215,7 +207,7 @@ function CreateCompanyModal({ onClose, onCreated }: { onClose: () => void; onCre
         </div>
 
         {error && (
-          <div className="mx-6 mb-4 flex items-center gap-2 px-4 py-3 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-xs font-medium">
+          <div className="mx-6 mb-4 flex items-center gap-2 px-4 py-3 rounded-xl bg-[var(--portfolio-danger-soft)]  text-[var(--danger-text)]  text-xs font-medium">
             <AlertCircle size={14} className="shrink-0" />
             {error}
           </div>
@@ -225,7 +217,7 @@ function CreateCompanyModal({ onClose, onCreated }: { onClose: () => void; onCre
           <button
             onClick={handleSubmit}
             disabled={saving}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-emerald-500 hover:bg-emerald-600 text-white transition-colors disabled:opacity-60 disabled:cursor-wait"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-[var(--action)] hover:bg-[var(--action)] text-[var(--on-brand)] transition-colors disabled:opacity-60 disabled:cursor-wait"
           >
             {saving ? <Loader2 size={15} className="animate-spin" /> : <Plus size={15} />}
             {saving ? 'Création…' : 'Créer et ajouter'}
@@ -240,7 +232,7 @@ function CreateCompanyModal({ onClose, onCreated }: { onClose: () => void; onCre
           </button>
         </div>
       </motion.div>
-    </div>
+</PortfolioDialog>
   );
 }
 
@@ -255,7 +247,7 @@ function Field({ label, value, onChange, placeholder, type = 'text' }: {
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full px-3 py-2.5 rounded-xl text-sm bg-[var(--surface-2)] border border-[var(--border)] focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+        className="w-full px-3 py-2.5 rounded-xl text-sm bg-[var(--surface-2)] border border-[var(--border)] focus:ring-2 focus:ring-[var(--focus)] focus:border-[var(--border)] transition-all"
         style={{ color: 'var(--text)' }}
       />
     </div>
@@ -264,7 +256,7 @@ function Field({ label, value, onChange, placeholder, type = 'text' }: {
 
 // ─── Page principale ──────────────────────────────────────────────────────────
 
-export default function MesEntreprisesPage() {
+function MesEntreprisesPage() {
   const router = useRouter();
   const [companies, setCompanies] = useState<PortfolioCompany[]>([]);
   const [loading, setLoading] = useState(true);
@@ -320,22 +312,22 @@ export default function MesEntreprisesPage() {
       {/* ── HEADER ── */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight" style={{ color: 'var(--text)' }}>Mes entreprises</h1>
+          <h1 className="text-3xl font-semibold tracking-tight" style={{ color: 'var(--text)' }}>Mes entreprises</h1>
           <p className="mt-1 flex items-center gap-2" style={{ color: 'var(--text-muted)' }}>
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-[var(--action)] " />
             {companies.length} entreprise{companies.length > 1 ? 's' : ''} dans votre portefeuille
           </p>
         </div>
         <button
           onClick={() => setShowCreate(true)}
-          className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold transition-colors flex items-center gap-2"
+          className="px-5 py-2.5 rounded-xl bg-[var(--action)] hover:bg-[var(--action)] text-[var(--on-brand)] font-semibold transition-colors flex items-center gap-2"
         >
           <Plus size={20} /> Ajouter une entreprise
         </button>
       </div>
 
       {openError && (
-        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm font-medium">
+        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-[var(--portfolio-danger-soft)]  text-[var(--danger-text)]  text-sm font-medium">
           <AlertCircle size={16} className="shrink-0" />
           {openError}
         </div>
@@ -345,21 +337,21 @@ export default function MesEntreprisesPage() {
       {companies.length > 0 && (
         <div className="flex flex-col sm:flex-row gap-3 items-center">
           <div className="relative flex-1 w-full max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2  text-[var(--text-secondary)]" size={18} />
             <input
               type="text"
               placeholder="Rechercher une entreprise..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-[var(--surface)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+              className="w-full pl-10 pr-4 py-2.5 bg-[var(--surface)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[var(--focus)] focus:border-[var(--border)] transition-all"
               style={{ color: 'var(--text)' }}
             />
           </div>
-          <div className="flex bg-[var(--surface-2)] p-1 rounded-xl ml-auto">
-            <button onClick={() => setView('grid')} className={`p-2.5 rounded-lg transition-all ${view === 'grid' ? 'bg-[var(--surface)] text-emerald-500 shadow-sm' : 'text-gray-500'}`}>
+          <div className="portfolio-tabs flex bg-[var(--surface-2)] p-1 rounded-xl ml-auto">
+            <button onClick={() => setView('grid')} className={`p-2.5 rounded-lg transition-all ${view === 'grid' ? "bg-[var(--surface)] text-[var(--action)] shadow-sm" : "text-[var(--text-secondary)]"}`}>
               <LayoutGrid size={18} />
             </button>
-            <button onClick={() => setView('list')} className={`p-2.5 rounded-lg transition-all ${view === 'list' ? 'bg-[var(--surface)] text-emerald-500 shadow-sm' : 'text-gray-500'}`}>
+            <button onClick={() => setView('list')} className={`p-2.5 rounded-lg transition-all ${view === 'list' ? "bg-[var(--surface)] text-[var(--action)] shadow-sm" : "text-[var(--text-secondary)]"}`}>
               <List size={18} />
             </button>
           </div>
@@ -376,7 +368,7 @@ export default function MesEntreprisesPage() {
           <p className="text-xs mt-1 mb-5" style={{ color: 'var(--text-muted)' }}>Ajoutez votre première entreprise pour commencer</p>
           <button
             onClick={() => setShowCreate(true)}
-            className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold transition-colors flex items-center gap-2"
+            className="px-5 py-2.5 rounded-xl bg-[var(--action)] hover:bg-[var(--action)] text-[var(--on-brand)] font-semibold transition-colors flex items-center gap-2"
           >
             <Plus size={18} /> Ajouter une entreprise
           </button>
@@ -386,7 +378,7 @@ export default function MesEntreprisesPage() {
           <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Aucune entreprise ne correspond à votre recherche</p>
         </div>
       ) : view === 'grid' ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="portfolio-company-grid">
           {filtered.map((c, idx) => (
             <CompanyCard key={c.id} company={c} idx={idx} onOpen={handleOpen} opening={openingId === c.id} />
           ))}
@@ -399,5 +391,14 @@ export default function MesEntreprisesPage() {
         </div>
       )}
     </div>
+  );
+}
+
+
+export default function MesEntreprisesPageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <MesEntreprisesPage />
+    </ModulePageFrame>
   );
 }

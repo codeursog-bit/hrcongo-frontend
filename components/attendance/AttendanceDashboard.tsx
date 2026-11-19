@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell, LabelList, PieChart, Pie, Legend,
-  LineChart, Line,
+  LineChart, Line, AreaChart, Area,
 } from 'recharts';
 import { api } from '@/services/api';
 import { FancySelect } from '@/components/ui/FancySelect';
@@ -27,12 +27,13 @@ import { WorkforcePeriodPicker } from '@/components/workforce/WorkforcePeriodPic
 import { WfPeriodState, WfScopeMode, defaultPeriod, monthsCount } from '@/lib/workforce';
 import { AdTopEmployee, AdView, attendanceEndpoint, num1, pct } from '@/lib/attendance-dashboard';
 import { AttendanceExportDialog } from './AttendanceExportDialog';
+import { useModuleVisuals } from '@/components/requests/ModulePageFrame';
 
 // ─── Couleurs ────────────────────────────────────────────────────────────────
 const C = {
-  navy: '#1F497D', teal: '#4BACC6', red: '#C0504D', orange: '#F79646', green: '#10B981', amber: '#F59E0B',
-  purple: '#8064A2', kpi: '#28236B',
-  multi: ['#4F81BD', '#C0504D', '#9BBB59', '#8064A2', '#4BACC6', '#F79646', '#2C4D75', '#772C2A'],
+  navy: 'var(--brand)', teal: 'var(--green)', red: 'var(--danger)', orange: 'var(--mustard)', green: 'var(--green)', amber: 'var(--mustard)',
+  purple: 'var(--text-secondary)', kpi: 'var(--surface-2)',
+  multi: ['var(--brand)', 'var(--green)', 'var(--mustard)', 'var(--text-secondary)'],
 };
 const TT = {
   contentStyle: { backgroundColor: 'var(--surface)', color: 'var(--text)', borderRadius: 12, border: '1px solid var(--border)' },
@@ -50,7 +51,7 @@ type Row = { label: string; count: number };
 function Card({ title, icon, hint, children }: { title: string; icon?: React.ReactNode; hint?: string; children: React.ReactNode }) {
   return (
     <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-sm">
-      <h3 className="text-sm font-bold text-[var(--text)] mb-1 flex items-center gap-2">{icon}{title}</h3>
+      <h3 className="text-sm font-semibold text-[var(--text)] mb-1 flex items-center gap-2">{icon}{title}</h3>
       {hint && <p className="text-xs text-[var(--text-muted)] mb-3">{hint}</p>}
       <div className={hint ? '' : 'mt-3'}>{children}</div>
     </div>
@@ -62,6 +63,7 @@ function Empty({ text = 'Aucune donnée sur cette période.' }: { text?: string 
 }
 
 function HBar({ data, color, labelWidth = 150, rowH = 30, suffix = '' }: { data: Row[]; color: string; labelWidth?: number; rowH?: number; suffix?: string }) {
+  const {refonte: uiRefonte, motion: uiMotion} = useModuleVisuals();
   if (data.length === 0) return <Empty />;
   const h = Math.max(140, data.length * rowH + 20);
   return (
@@ -72,7 +74,7 @@ function HBar({ data, color, labelWidth = 150, rowH = 30, suffix = '' }: { data:
           <XAxis type="number" hide />
           <YAxis dataKey="label" type="category" width={labelWidth} axisLine={false} tickLine={false} tick={TICK} interval={0} />
           <Tooltip {...TT} formatter={(v: any) => `${v}${suffix}`} />
-          <Bar dataKey="count" name="Valeur" fill={color} radius={[0, 6, 6, 0]}>
+          <Bar dataKey="count" name="Valeur" fill={color} radius={uiRefonte ? [10,10,10,10] : [0, 6, 6, 0]} maxBarSize={uiRefonte ? 16 : undefined} isAnimationActive={uiRefonte ? uiMotion : undefined} animationDuration={uiRefonte ? 700 : undefined}>
             <LabelList dataKey="count" position="right" {...LBL} formatter={(v: any) => `${v}${suffix}`} />
           </Bar>
         </BarChart>
@@ -82,6 +84,7 @@ function HBar({ data, color, labelWidth = 150, rowH = 30, suffix = '' }: { data:
 }
 
 function VBar({ data, colors, height = 240 }: { data: Row[]; colors: string[]; height?: number }) {
+  const {refonte: uiRefonte, motion: uiMotion} = useModuleVisuals();
   if (data.every((d) => d.count === 0)) return <Empty />;
   return (
     <div style={{ height }}>
@@ -91,7 +94,7 @@ function VBar({ data, colors, height = 240 }: { data: Row[]; colors: string[]; h
           <XAxis dataKey="label" axisLine={false} tickLine={false} tick={TICK} interval={0} />
           <YAxis axisLine={false} tickLine={false} tick={TICK} allowDecimals={false} />
           <Tooltip {...TT} />
-          <Bar dataKey="count" name="Nombre" radius={[6, 6, 0, 0]}>
+          <Bar dataKey="count" name="Nombre" radius={uiRefonte ? [12,12,12,12] : [6, 6, 0, 0]} maxBarSize={uiRefonte ? 20 : undefined} isAnimationActive={uiRefonte ? uiMotion : undefined} animationDuration={uiRefonte ? 700 : undefined}>
             {data.map((_, i) => <Cell key={i} fill={colors[i % colors.length]} />)}
             <LabelList dataKey="count" position="top" {...LBL} />
           </Bar>
@@ -102,13 +105,14 @@ function VBar({ data, colors, height = 240 }: { data: Row[]; colors: string[]; h
 }
 
 function Donut({ data, colors, height = 240 }: { data: Row[]; colors: string[]; height?: number }) {
+  const {refonte: uiRefonte, motion: uiMotion} = useModuleVisuals();
   const d = data.filter((x) => x.count > 0);
   if (d.length === 0) return <Empty />;
   return (
     <div style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
-          <Pie data={d} dataKey="count" nameKey="label" cx="50%" cy="50%" innerRadius={48} outerRadius={82} paddingAngle={2}
+          <Pie data={d} dataKey="count" nameKey="label" cx="50%" cy="50%" innerRadius={48} outerRadius={82} paddingAngle={2} cornerRadius={uiRefonte ? 8 : undefined} isAnimationActive={uiRefonte ? uiMotion : undefined} animationDuration={uiRefonte ? 700 : undefined}
             label={({ value }: any) => value} labelLine={false} stroke="var(--surface)">
             {d.map((_, i) => <Cell key={i} fill={colors[i % colors.length]} />)}
           </Pie>
@@ -122,15 +126,15 @@ function Donut({ data, colors, height = 240 }: { data: Row[]; colors: string[]; 
 
 function Kpi({ title, value, sub, tone = 'light' }: { title: string; value: string; sub?: string; tone?: 'dark' | 'light' }) {
   return tone === 'dark' ? (
-    <div className="rounded-2xl p-5 text-center text-white shadow-sm" style={{ background: C.kpi }}>
-      <p className="text-xs font-bold tracking-wider">{title}</p>
-      <p className="text-4xl font-extrabold mt-2">{value}</p>
+    <div className="rounded-2xl p-5 text-center bg-[var(--brand)] text-[var(--on-brand)] shadow-sm" style={{ background: C.kpi }}>
+      <p className="text-xs font-semibold ">{title}</p>
+      <p className="text-4xl font-semibold mt-2">{value}</p>
       {sub && <p className="text-xs mt-1 opacity-80">{sub}</p>}
     </div>
   ) : (
     <div className="rounded-2xl p-5 text-center bg-[var(--surface)] border border-[var(--border)] shadow-sm">
-      <p className="text-xs font-bold tracking-wider text-[var(--text-muted)]">{title}</p>
-      <p className="text-3xl font-extrabold mt-2 text-[var(--text)]">{value}</p>
+      <p className="text-xs font-semibold  text-[var(--text-muted)]">{title}</p>
+      <p className="text-3xl font-semibold mt-2 text-[var(--text)]">{value}</p>
       {sub && <p className="text-xs mt-1 text-[var(--text-muted)]">{sub}</p>}
     </div>
   );
@@ -139,8 +143,8 @@ function Kpi({ title, value, sub, tone = 'light' }: { title: string; value: stri
 function TopTable({ rows, valueLabel, extraLabel, fmtExtra }: { rows: AdTopEmployee[]; valueLabel: string; extraLabel: string; fmtExtra?: (n: number) => string }) {
   if (rows.length === 0) return <Empty />;
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
+    <div className="overflow-x-auto attendance-table-scroll" tabIndex={0} role="region" aria-label="Tableau défilant horizontalement">
+      <table className="w-full text-sm attendance-table">
         <thead>
           <tr className="text-left text-xs uppercase tracking-wide text-[var(--text-muted)] border-b border-[var(--border)]">
             <th className="py-2 pr-3">Salarié</th><th className="py-2 pr-3">Département</th>
@@ -152,7 +156,7 @@ function TopTable({ rows, valueLabel, extraLabel, fmtExtra }: { rows: AdTopEmplo
             <tr key={r.id} className="border-b border-[var(--border)] last:border-0 text-[var(--text)]">
               <td className="py-2 pr-3 font-semibold">{r.fullName}</td>
               <td className="py-2 pr-3 text-[var(--text-muted)]">{r.department}</td>
-              <td className="py-2 pr-3 text-right font-bold">{r.value}</td>
+              <td className="py-2 pr-3 text-right font-semibold">{r.value}</td>
               <td className="py-2 text-right">{fmtExtra ? fmtExtra(r.extra) : r.extra}</td>
             </tr>
           ))}
@@ -181,6 +185,7 @@ interface Props {
 }
 
 export function AttendanceDashboard({ scope, companyId, title, initialPeriod }: Props) {
+  const {refonte: uiRefonte, motion: uiMotion} = useModuleVisuals();
   const [period, setPeriod] = useState<WfPeriodState>(initialPeriod ?? defaultPeriod());
   const [companies, setCompanies] = useState<string>('ALL');
   const [view, setView] = useState<AdView | null>(null);
@@ -228,7 +233,7 @@ export function AttendanceDashboard({ scope, companyId, title, initialPeriod }: 
           <Tooltip {...TT} />
           <Legend formatter={legendFmt} />
           {keys.map((k) => (
-            <Bar key={k.key} dataKey={k.key} name={k.name} fill={k.color} radius={[4, 4, 0, 0]}>
+            <Bar key={k.key} dataKey={k.key} name={k.name} fill={k.color} radius={uiRefonte ? [12,12,12,12] : [4, 4, 0, 0]} maxBarSize={uiRefonte ? 20 : undefined} isAnimationActive={uiRefonte ? uiMotion : undefined} animationDuration={uiRefonte ? 700 : undefined}>
               <LabelList dataKey={k.key} position="top" {...LBL} />
             </Bar>
           ))}
@@ -238,13 +243,13 @@ export function AttendanceDashboard({ scope, companyId, title, initialPeriod }: 
   );
 
   return (
-    <section className="pt-8 mt-4 border-t border-[var(--border)] space-y-5">
+    <section className="attendance-analytics space-y-6">
       {/* En-tête + barre d'outils */}
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <BarChart3 size={18} className="text-emerald-500" />
-            <h2 className="text-lg font-bold text-[var(--text)]">{title ?? 'Tableau de bord — présences, absences et permissions'}</h2>
+            <BarChart3 size={18} className="text-[var(--success-text)]" />
+            <h2 className="text-lg font-semibold text-[var(--text)]">{title ?? 'Tableau de bord — présences, absences et permissions'}</h2>
           </div>
           <p className="text-sm text-[var(--text-muted)] mt-1">
             {view ? `${view.companyName} — ${view.period.label} · ${view.headcount} salarié${view.headcount > 1 ? 's' : ''}` : 'Chargement…'}
@@ -258,7 +263,7 @@ export function AttendanceDashboard({ scope, companyId, title, initialPeriod }: 
             </div>
           )}
           <button onClick={() => setDialog(true)} disabled={!view}
-            className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold flex items-center gap-2 disabled:opacity-60">
+            className="px-5 py-2.5 rounded-xl bg-[var(--brand)] hover:bg-[var(--brand)] text-[var(--on-brand)] font-semibold flex items-center gap-2 disabled:opacity-60">
             <Download size={18} /> Télécharger l’Excel
           </button>
         </div>
@@ -267,17 +272,17 @@ export function AttendanceDashboard({ scope, companyId, title, initialPeriod }: 
       <WorkforcePeriodPicker value={period} onChange={setPeriod} />
 
       {!valid && (
-        <div className="flex items-start gap-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 px-4 py-3 text-sm">
+        <div className="flex items-start gap-2 rounded-xl bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] border border-[var(--border)] text-[var(--warning-text)]  px-4 py-3 text-sm">
           <AlertCircle size={16} className="mt-0.5 shrink-0" /> {n === 0 ? 'Période invalide : le début doit précéder la fin (mois futurs exclus).' : 'Maximum 24 mois.'}
         </div>
       )}
       {error && (
-        <div className="flex items-start gap-2 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 px-4 py-3 text-sm">
+        <div className="flex items-start gap-2 rounded-xl bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] border border-[var(--border)] text-[var(--danger-text)] px-4 py-3 text-sm">
           <AlertCircle size={16} className="mt-0.5 shrink-0" /> {error}
         </div>
       )}
       {view?.warnings?.map((w, i) => (
-        <div key={i} className="flex items-start gap-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 px-4 py-3 text-sm">
+        <div key={i} className="flex items-start gap-2 rounded-xl bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] border border-[var(--border)] text-[var(--warning-text)]  px-4 py-3 text-sm">
           <AlertCircle size={16} className="mt-0.5 shrink-0" /> {w}
         </div>
       ))}
@@ -289,7 +294,7 @@ export function AttendanceDashboard({ scope, companyId, title, initialPeriod }: 
       {view && T && A && P && L && (
         <div className={`space-y-6 transition-opacity ${loading ? 'opacity-60' : ''}`}>
           {/* KPI communs */}
-          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 attendance-metrics">
             <Kpi tone="dark" title="TAUX DE PRÉSENCE" value={T.theoreticalDays > 0 ? pct(T.presenceRate) : 'n/d'} sub={`${T.workedDays} j travaillés / ${T.theoreticalDays} j à travailler`} />
             <Kpi title="TAUX D’ABSENTÉISME" value={T.theoreticalDays > 0 ? pct(T.absenteeismRate) : 'n/d'} sub={`${T.absenceDays} j d’absence · ${T.absUnjustified} non justifiée${T.absUnjustified > 1 ? 's' : ''}`} />
             <Kpi title="TAUX DE RETARD" value={T.workedDays > 0 ? pct(T.lateRate) : 'n/d'} sub={`${T.late} jour${T.late > 1 ? 's' : ''} en retard`} />
@@ -302,7 +307,7 @@ export function AttendanceDashboard({ scope, companyId, title, initialPeriod }: 
           <div className="inline-flex p-1 rounded-xl bg-[var(--surface-2)] border border-[var(--border)]">
             {TABS.map((t) => (
               <button key={t.id} type="button" onClick={() => setTab(t.id)}
-                className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 ${tab === t.id ? 'bg-emerald-500 text-white shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text)]'}`}>
+                className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 ${tab === t.id ? 'bg-[var(--brand)] text-[var(--on-brand)] shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text)]'}`}>
                 {t.icon}{t.label}
               </button>
             ))}
@@ -311,7 +316,7 @@ export function AttendanceDashboard({ scope, companyId, title, initialPeriod }: 
           {/* ───────────── PRÉSENCES ───────────── */}
           {tab === 'PRESENCES' && (
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-              <Card title="Répartition des jours" icon={<PieIcon size={15} className="text-emerald-500" />}
+              <Card title="Répartition des jours" icon={<PieIcon size={15} className="text-[var(--success-text)]" />}
                 hint="Les jours de retard comptent comme jours travaillés. Les congés sont affichés ici mais exclus des taux, comme les fériés et les repos.">
                 <Donut colors={[C.navy, C.teal, C.amber, C.red, C.purple, C.green]} data={[
                   { label: 'Présent', count: T.present }, { label: 'Télétravail', count: T.remote }, { label: 'En retard', count: T.late },
@@ -319,15 +324,22 @@ export function AttendanceDashboard({ scope, companyId, title, initialPeriod }: 
                   { label: 'Congé', count: T.leave },
                 ]} />
               </Card>
-              <Card title="Absentéisme par département (%)" icon={<Building2 size={15} className="text-emerald-500" />}>
+              <Card title="Absentéisme par département (%)" icon={<Building2 size={15} className="text-[var(--success-text)]" />}>
                 <HBar color={C.red} suffix=" %" labelWidth={170}
                   data={view.departments.filter((d) => d.workedDays + d.absenceDays > 0).map((d) => ({ label: d.label, count: +(d.absenteeismRate * 100).toFixed(1) }))} />
               </Card>
               {evo.length > 1 && (
-                <Card title="Taux de présence et d’absentéisme (%)" icon={<TrendingUp size={15} className="text-emerald-500" />}>
+                <Card title="Taux de présence et d’absentéisme (%)" icon={<TrendingUp size={15} className="text-[var(--success-text)]" />}>
                   <div style={{ height: 250 }}>
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={evoPct} margin={{ top: 22, right: 16, left: -10, bottom: 8 }}>
+                      {uiRefonte ? <AreaChart data={evoPct} margin={{ top: 22, right: 16, left: -10, bottom: 8 }}>
+                        <XAxis dataKey="short" axisLine={false} tickLine={false} tick={TICK} />
+                        <YAxis axisLine={false} tickLine={false} tick={TICK} domain={[0,100]} />
+                        <Tooltip {...TT} formatter={(v:any)=>`${v} %`} />
+                        <Legend formatter={legendFmt} />
+                        <Area type="monotone" dataKey="Présence" stroke={C.navy} fill="var(--loan-gradient-1)" strokeWidth={2.5} dot={false} isAnimationActive={uiMotion} animationDuration={700} />
+                        <Area type="monotone" dataKey="Absentéisme" stroke={C.red} fill="var(--loan-gradient-3)" strokeWidth={2.5} dot={false} isAnimationActive={uiMotion} animationDuration={700} />
+                      </AreaChart> : <LineChart data={evoPct} margin={{ top: 22, right: 16, left: -10, bottom: 8 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
                         <XAxis dataKey="short" axisLine={false} tickLine={false} tick={TICK} />
                         <YAxis axisLine={false} tickLine={false} tick={TICK} domain={[0, 100]} />
@@ -335,35 +347,35 @@ export function AttendanceDashboard({ scope, companyId, title, initialPeriod }: 
                         <Legend formatter={legendFmt} />
                         <Line type="monotone" dataKey="Présence" stroke={C.navy} strokeWidth={3} dot={{ r: 4 }}><LabelList dataKey="Présence" position="top" {...LBL} /></Line>
                         <Line type="monotone" dataKey="Absentéisme" stroke={C.red} strokeWidth={3} dot={{ r: 4 }}><LabelList dataKey="Absentéisme" position="bottom" {...LBL} /></Line>
-                      </LineChart>
+                      </LineChart>}
                     </ResponsiveContainer>
                   </div>
                 </Card>
               )}
               {evo.length > 1 && (
-                <Card title="Jours d’absence et de retard par mois" icon={<Clock size={15} className="text-emerald-500" />}>
+                <Card title="Jours d’absence et de retard par mois" icon={<Clock size={15} className="text-[var(--success-text)]" />}>
                   {monthBars([{ key: 'absenceDays', name: 'Jours d’absence', color: C.red }, { key: 'lateDays', name: 'Jours en retard', color: C.orange }])}
                 </Card>
               )}
               {view.absenceBreakdown && view.absenceBreakdown.total > 0 && (
                 <div className="xl:col-span-2">
-                  <Card title="Absences justifiées et non justifiées" icon={<AlertCircle size={15} className="text-emerald-500" />}
+                  <Card title="Absences justifiées et non justifiées" icon={<AlertCircle size={15} className="text-[var(--success-text)]" />}
                     hint="Justifiée : couverte par une demande d’absence validée (maladie, mariage, décès, naissance, conventionnelle, exceptionnelle…). Non justifiée : aucun pointage et aucune demande validée.">
-                    <div className="grid grid-cols-2 gap-3 mb-4">
-                      <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3">
+                    <div className="grid grid-cols-2 gap-3 mb-4 attendance-metrics">
+                      <div className="rounded-xl border border-[var(--border)] bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] px-4 py-3">
                         <div className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Justifiées</div>
-                        <div className="text-2xl font-bold text-[var(--text)]">{num1(view.absenceBreakdown.justified)} j</div>
+                        <div className="text-2xl font-semibold text-[var(--text)]">{num1(view.absenceBreakdown.justified)} j</div>
                         <div className="text-xs text-[var(--text-muted)]">{view.absenceBreakdown.justifiedEmployees} salarié{view.absenceBreakdown.justifiedEmployees > 1 ? 's' : ''}</div>
                       </div>
-                      <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3">
+                      <div className="rounded-xl border border-[var(--border)] bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] px-4 py-3">
                         <div className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Non justifiées</div>
-                        <div className="text-2xl font-bold text-[var(--text)]">{num1(view.absenceBreakdown.unjustified)} j</div>
+                        <div className="text-2xl font-semibold text-[var(--text)]">{num1(view.absenceBreakdown.unjustified)} j</div>
                         <div className="text-xs text-[var(--text-muted)]">{view.absenceBreakdown.unjustifiedEmployees} salarié{view.absenceBreakdown.unjustifiedEmployees > 1 ? 's' : ''}</div>
                       </div>
                     </div>
                     {view.absenceBreakdown.motifs.length === 0 ? <Empty text="Aucune absence justifiée sur la période." /> : (
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
+                      <div className="overflow-x-auto attendance-table-scroll" tabIndex={0} role="region" aria-label="Tableau défilant horizontalement">
+                        <table className="w-full text-sm attendance-table">
                           <thead>
                             <tr className="text-left text-xs uppercase tracking-wide text-[var(--text-muted)] border-b border-[var(--border)]">
                               <th className="py-2 pr-3">Motif</th><th className="py-2 pr-3">Type</th>
@@ -389,15 +401,15 @@ export function AttendanceDashboard({ scope, companyId, title, initialPeriod }: 
                   </Card>
                 </div>
               )}
-              <Card title="Salariés les plus en retard" icon={<Clock size={15} className="text-emerald-500" />}
+              <Card title="Salariés les plus en retard" icon={<Clock size={15} className="text-[var(--success-text)]" />}
                 hint="Jours en retard sur la période. Un retard compte comme jour travaillé : le salarié est présent, mais arrivé après l’heure.">
                 <TopTable rows={view.topLate ?? []} valueLabel="Jours de retard" extraLabel="Taux de retard" fmtExtra={(x) => `${num1(x)} %`} />
               </Card>
               <div className="xl:col-span-2">
-                <Card title="Détail par département" icon={<Building2 size={15} className="text-emerald-500" />}>
+                <Card title="Détail par département" icon={<Building2 size={15} className="text-[var(--success-text)]" />}>
                   {view.departments.length === 0 ? <Empty /> : (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
+                    <div className="overflow-x-auto attendance-table-scroll" tabIndex={0} role="region" aria-label="Tableau défilant horizontalement">
+                      <table className="w-full text-sm attendance-table">
                         <thead>
                           <tr className="text-left text-xs uppercase tracking-wide text-[var(--text-muted)] border-b border-[var(--border)]">
                             <th className="py-2 pr-3">Département</th><th className="py-2 pr-3 text-right">Effectif</th>
@@ -414,7 +426,7 @@ export function AttendanceDashboard({ scope, companyId, title, initialPeriod }: 
                               <td className="py-2 pr-3 text-right">{d.absenceDays}</td>
                               <td className="py-2 pr-3 text-right">{d.lateDays}</td>
                               <td className="py-2 pr-3 text-right">{d.workedDays + d.absenceDays > 0 ? pct(d.presenceRate) : 'n/d'}</td>
-                              <td className="py-2 text-right font-bold">{d.workedDays + d.absenceDays > 0 ? pct(d.absenteeismRate) : 'n/d'}</td>
+                              <td className="py-2 text-right font-semibold">{d.workedDays + d.absenceDays > 0 ? pct(d.absenteeismRate) : 'n/d'}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -429,7 +441,7 @@ export function AttendanceDashboard({ scope, companyId, title, initialPeriod }: 
           {/* ───────────── ABSENCES ───────────── */}
           {tab === 'ABSENCES' && (
             <>
-              <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 attendance-metrics">
                 <Kpi title="DEMANDES" value={String(A.total)} sub={`${A.approved} approuvée${A.approved > 1 ? 's' : ''}`} />
                 <Kpi title="EN ATTENTE" value={String(A.pending)} />
                 <Kpi title="JOURS APPROUVÉS" value={num1(A.approvedDays)} sub="jours ouvrés" />
@@ -437,20 +449,20 @@ export function AttendanceDashboard({ scope, companyId, title, initialPeriod }: 
                 <Kpi title="DONT NON PAYÉS" value={num1(A.unpaidDays)} sub="jours" />
               </div>
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                <Card title="Par type (demandes approuvées)" icon={<PieIcon size={15} className="text-emerald-500" />}>
+                <Card title="Par type (demandes approuvées)" icon={<PieIcon size={15} className="text-[var(--success-text)]" />}>
                   <Donut colors={C.multi} data={A.byType.map((t) => ({ label: t.label, count: t.count }))} />
                 </Card>
-                <Card title="Par motif (demandes approuvées)" icon={<BarChart3 size={15} className="text-emerald-500" />}>
+                <Card title="Par motif (demandes approuvées)" icon={<BarChart3 size={15} className="text-[var(--success-text)]" />}>
                   <HBar color={C.teal} labelWidth={150} data={A.bySubType.map((t) => ({ label: t.label, count: t.count }))} />
                 </Card>
-                <Card title="Demandes par statut" icon={<BarChart3 size={15} className="text-emerald-500" />}>
-                  <VBar colors={[C.amber, C.green, C.red, '#94A3B8']} data={A.byStatus} />
+                <Card title="Demandes par statut" icon={<BarChart3 size={15} className="text-[var(--success-text)]" />}>
+                  <VBar colors={[C.amber, C.green, C.red, 'var(--text-secondary)']} data={A.byStatus} />
                 </Card>
-                <Card title="Salariés les plus absents" icon={<UserX size={15} className="text-emerald-500" />} hint="Jours d’absence (payée + non payée) sur la période.">
+                <Card title="Salariés les plus absents" icon={<UserX size={15} className="text-[var(--success-text)]" />} hint="Jours d’absence (payée + non payée) sur la période.">
                   <TopTable rows={view.topAbsent} valueLabel="Jours d’absence" extraLabel="Retards" />
                 </Card>
                 {evo.length > 1 && (
-                  <Card title="Absences approuvées par mois" icon={<TrendingUp size={15} className="text-emerald-500" />} hint="Rattachées au mois de début de l’absence.">
+                  <Card title="Absences approuvées par mois" icon={<TrendingUp size={15} className="text-[var(--success-text)]" />} hint="Rattachées au mois de début de l’absence.">
                     {monthBars([{ key: 'absenceRequests', name: 'Demandes approuvées', color: C.teal }])}
                   </Card>
                 )}
@@ -461,7 +473,7 @@ export function AttendanceDashboard({ scope, companyId, title, initialPeriod }: 
           {/* ───────────── PERMISSIONS ───────────── */}
           {tab === 'PERMISSIONS' && (
             <>
-              <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 attendance-metrics">
                 <Kpi title="TICKETS" value={String(P.total)} sub={`${P.approved} approuvé${P.approved > 1 ? 's' : ''}`} />
                 <Kpi title="HEURES DE SORTIE" value={num1(P.totalHours)} sub="retours validés" />
                 <Kpi title="DURÉE MOYENNE" value={`${num1(P.avgHours)} h`} />
@@ -469,20 +481,20 @@ export function AttendanceDashboard({ scope, companyId, title, initialPeriod }: 
                 <Kpi title="RETOURS NON VALIDÉS" value={String(P.notReturned)} sub="permissions approuvées" />
               </div>
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                <Card title="Par type (permissions approuvées)" icon={<PieIcon size={15} className="text-emerald-500" />}>
+                <Card title="Par type (permissions approuvées)" icon={<PieIcon size={15} className="text-[var(--success-text)]" />}>
                   <Donut colors={C.multi} data={P.byType} />
                 </Card>
-                <Card title="Missions par nature" icon={<BarChart3 size={15} className="text-emerald-500" />}>
+                <Card title="Missions par nature" icon={<BarChart3 size={15} className="text-[var(--success-text)]" />}>
                   <HBar color={C.orange} labelWidth={150} data={P.byMission} />
                 </Card>
-                <Card title="Tickets par statut" icon={<BarChart3 size={15} className="text-emerald-500" />}>
-                  <VBar colors={[C.amber, C.green, C.red, '#94A3B8']} data={P.byStatus} />
+                <Card title="Tickets par statut" icon={<BarChart3 size={15} className="text-[var(--success-text)]" />}>
+                  <VBar colors={[C.amber, C.green, C.red, 'var(--text-secondary)']} data={P.byStatus} />
                 </Card>
-                <Card title="Salariés les plus sortis" icon={<Ticket size={15} className="text-emerald-500" />} hint="Permissions approuvées sur la période.">
+                <Card title="Salariés les plus sortis" icon={<Ticket size={15} className="text-[var(--success-text)]" />} hint="Permissions approuvées sur la période.">
                   <TopTable rows={view.topPermissions} valueLabel="Permissions" extraLabel="Heures" fmtExtra={(x) => `${num1(x)} h`} />
                 </Card>
                 {evo.length > 1 && (
-                  <Card title="Permissions approuvées par mois" icon={<TrendingUp size={15} className="text-emerald-500" />} hint="Rattachées au mois de la sortie.">
+                  <Card title="Permissions approuvées par mois" icon={<TrendingUp size={15} className="text-[var(--success-text)]" />} hint="Rattachées au mois de la sortie.">
                     {monthBars([{ key: 'permissions', name: 'Permissions approuvées', color: C.orange }])}
                   </Card>
                 )}
@@ -493,7 +505,7 @@ export function AttendanceDashboard({ scope, companyId, title, initialPeriod }: 
           {/* ───────────── CONGÉS ───────────── */}
           {tab === 'CONGES' && (
             <>
-              <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 attendance-metrics">
                 <Kpi title="DEMANDES" value={String(L.total)} sub={`${L.approved} approuvée${L.approved > 1 ? 's' : ''}`} />
                 <Kpi title="JOURS DE CONGÉ PRIS" value={num1(T.leave)} sub="selon les synthèses de présence" />
                 <Kpi title="JOURS ACCORDÉS" value={num1(L.approvedDays)} sub="congés approuvés débutant sur la période" />
@@ -501,17 +513,17 @@ export function AttendanceDashboard({ scope, companyId, title, initialPeriod }: 
                 <Kpi title="PART DES JOURS EN CONGÉ" value={pct(T.leaveRate)} sub={`${T.leaveEmployees} salarié${T.leaveEmployees > 1 ? 's' : ''} concerné${T.leaveEmployees > 1 ? 's' : ''}`} />
               </div>
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                <Card title="Par type (jours accordés)" icon={<PieIcon size={15} className="text-emerald-500" />} hint="Congés approuvés, rattachés au mois de début.">
+                <Card title="Par type (jours accordés)" icon={<PieIcon size={15} className="text-[var(--success-text)]" />} hint="Congés approuvés, rattachés au mois de début.">
                   <Donut colors={C.multi} data={L.byType.map((t) => ({ label: t.label, count: t.days ?? 0 }))} />
                 </Card>
-                <Card title="Demandes de congé par statut" icon={<BarChart3 size={15} className="text-emerald-500" />}>
-                  <VBar colors={[C.amber, C.green, C.red, '#94A3B8']} data={L.byStatus} />
+                <Card title="Demandes de congé par statut" icon={<BarChart3 size={15} className="text-[var(--success-text)]" />}>
+                  <VBar colors={[C.amber, C.green, C.red, 'var(--text-secondary)']} data={L.byStatus} />
                 </Card>
-                <Card title="Salariés les plus en congé" icon={<CalendarDays size={15} className="text-emerald-500" />} hint="Jours de congé sur la période (synthèses de présence).">
+                <Card title="Salariés les plus en congé" icon={<CalendarDays size={15} className="text-[var(--success-text)]" />} hint="Jours de congé sur la période (synthèses de présence).">
                   <TopTable rows={view.topLeave} valueLabel="Jours de congé" extraLabel="Congés approuvés" />
                 </Card>
                 {evo.length > 1 && (
-                  <Card title="Jours de congé par mois" icon={<TrendingUp size={15} className="text-emerald-500" />}>
+                  <Card title="Jours de congé par mois" icon={<TrendingUp size={15} className="text-[var(--success-text)]" />}>
                     {monthBars([{ key: 'leaveDays', name: 'Jours de congé', color: C.green }])}
                   </Card>
                 )}
@@ -521,8 +533,8 @@ export function AttendanceDashboard({ scope, companyId, title, initialPeriod }: 
         </div>
       )}
 
-      <AttendanceExportDialog open={dialog} onClose={() => setDialog(false)} scope={scope} initialPeriod={period} companyId={companyId}
-        companies={allCompanies} initialCompanies={companies} companyLabel={view?.companyName ?? 'Entreprise'} />
+      <div className="loan-document-protected" style={{display:'contents'}}><AttendanceExportDialog open={dialog} onClose={() => setDialog(false)} scope={scope} initialPeriod={period} companyId={companyId}
+        companies={allCompanies} initialCompanies={companies} companyLabel={view?.companyName ?? 'Entreprise'} /></div>
     </section>
   );
 }

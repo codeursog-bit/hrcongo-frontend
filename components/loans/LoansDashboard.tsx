@@ -1,4 +1,5 @@
 'use client';
+import { useLoanVisuals, LoanModuleSkeleton } from '@/components/loans/LoanModuleFrame';
 
 // ============================================================================
 // 📁 components/loans/LoansDashboard.tsx
@@ -18,7 +19,7 @@ import {
   Download, Loader2, AlertCircle, Banknote, HandCoins, Wallet, Building2, TrendingUp, PieChart as PieIcon, BarChart3, Users,
 } from 'lucide-react';
 import {
-  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell, LabelList, PieChart, Pie, Legend,
+  ResponsiveContainer, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell, LabelList, Label, PieChart, Pie, Legend,
   LineChart, Line,
 } from 'recharts';
 import { api } from '@/services/api';
@@ -30,9 +31,9 @@ import { LoansExportDialog } from './LoansExportDialog';
 
 // ─── Couleurs ────────────────────────────────────────────────────────────────
 const C = {
-  navy: '#1F497D', teal: '#4BACC6', red: '#C0504D', orange: '#F79646', green: '#10B981', amber: '#F59E0B',
-  purple: '#8064A2', kpi: '#28236B',
-  multi: ['#4F81BD', '#C0504D', '#9BBB59', '#8064A2', '#4BACC6', '#F79646', '#2C4D75', '#772C2A'],
+  navy: 'var(--loan-chart-1, #1F497D)', teal: 'var(--loan-chart-2, #4BACC6)', red: 'var(--loan-chart-1, #C0504D)', orange: 'var(--loan-chart-2, #F79646)', green: 'var(--loan-chart-2, #10B981)', amber: 'var(--loan-chart-3, #F59E0B)',
+  purple: 'var(--loan-chart-2, #8064A2)', kpi: 'var(--loan-kpi-surface, #28236B)',
+  multi: ['var(--loan-chart-3, #4F81BD)', 'var(--loan-chart-1, #C0504D)', 'var(--loan-chart-2, #9BBB59)', 'var(--loan-chart-2, #8064A2)', 'var(--loan-chart-3, #4BACC6)', 'var(--loan-chart-3, #F79646)', 'var(--loan-chart-2, #2C4D75)', 'var(--loan-chart-3, #772C2A)'],
 };
 const TT = {
   contentStyle: { backgroundColor: 'var(--surface)', color: 'var(--text)', borderRadius: 12, border: '1px solid var(--border)' },
@@ -64,6 +65,7 @@ function Empty({ text = 'Aucune donnée sur cette période.' }: { text?: string 
 }
 
 function HBar({ data, color, labelWidth = 150, rowH = 30, fmt = plain, tip }: { data: Row[]; color: string; labelWidth?: number; rowH?: number; fmt?: Fmt; tip?: Fmt }) {
+  const {refonte,motion}=useLoanVisuals();
   if (data.length === 0 || data.every((d) => d.count === 0)) return <Empty />;
   const h = Math.max(140, data.length * rowH + 20);
   return (
@@ -74,7 +76,7 @@ function HBar({ data, color, labelWidth = 150, rowH = 30, fmt = plain, tip }: { 
           <XAxis type="number" hide />
           <YAxis dataKey="label" type="category" width={labelWidth} axisLine={false} tickLine={false} tick={TICK} interval={0} />
           <Tooltip {...TT} formatter={(v: any) => (tip ?? fmt)(Number(v))} />
-          <Bar dataKey="count" name="Valeur" fill={color} radius={[0, 6, 6, 0]}>
+          <Bar dataKey="count" name="Valeur" fill={color} radius={refonte ? [10,10,10,10] : [0, 6, 6, 0]} maxBarSize={refonte ? 16 : undefined} background={refonte ? {fill:"var(--surface-2)",radius:10} : undefined} animationDuration={refonte ? 700 : undefined} isAnimationActive={refonte ? motion : undefined}>
             <LabelList dataKey="count" position="right" {...LBL} formatter={(v: any) => fmt(Number(v))} />
           </Bar>
         </BarChart>
@@ -84,6 +86,7 @@ function HBar({ data, color, labelWidth = 150, rowH = 30, fmt = plain, tip }: { 
 }
 
 function VBar({ data, colors, height = 240, fmt = plain, tip }: { data: Row[]; colors: string[]; height?: number; fmt?: Fmt; tip?: Fmt }) {
+  const {refonte,motion}=useLoanVisuals();
   if (data.every((d) => d.count === 0)) return <Empty />;
   return (
     <div style={{ height }}>
@@ -93,7 +96,7 @@ function VBar({ data, colors, height = 240, fmt = plain, tip }: { data: Row[]; c
           <XAxis dataKey="label" axisLine={false} tickLine={false} tick={TICK} interval={0} />
           <YAxis axisLine={false} tickLine={false} tick={TICK} allowDecimals={false} tickFormatter={(v: any) => fmt(Number(v))} />
           <Tooltip {...TT} formatter={(v: any) => (tip ?? fmt)(Number(v))} />
-          <Bar dataKey="count" name="Valeur" radius={[6, 6, 0, 0]}>
+          <Bar dataKey="count" name="Valeur" radius={refonte ? [10,10,10,10] : [6, 6, 0, 0]} maxBarSize={refonte ? 16 : undefined} background={refonte ? {fill:"var(--surface-2)",radius:10} : undefined} animationDuration={refonte ? 700 : undefined} isAnimationActive={refonte ? motion : undefined}>
             {data.map((_, i) => <Cell key={i} fill={colors[i % colors.length]} />)}
             <LabelList dataKey="count" position="top" {...LBL} formatter={(v: any) => fmt(Number(v))} />
           </Bar>
@@ -104,15 +107,17 @@ function VBar({ data, colors, height = 240, fmt = plain, tip }: { data: Row[]; c
 }
 
 function Donut({ data, colors, height = 240, fmt = plain }: { data: Row[]; colors: string[]; height?: number; fmt?: Fmt }) {
+  const {refonte,motion}=useLoanVisuals();
   const d = data.filter((x) => x.count > 0);
   if (d.length === 0) return <Empty />;
   return (
     <div style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
-          <Pie data={d} dataKey="count" nameKey="label" cx="50%" cy="50%" innerRadius={48} outerRadius={82} paddingAngle={2}
-            label={({ value }: any) => fmt(Number(value))} labelLine={false} stroke="var(--surface)">
+          <Pie data={d} dataKey="count" nameKey="label" cx="50%" cy="50%" innerRadius={48} outerRadius={82} paddingAngle={refonte ? 5 : 2}
+            label={({ value }: any) => fmt(Number(value))} labelLine={false} stroke="var(--surface)" cornerRadius={refonte ? 8 : 0} animationDuration={refonte ? 700 : undefined} isAnimationActive={refonte ? motion : undefined}>
             {d.map((_, i) => <Cell key={i} fill={colors[i % colors.length]} />)}
+            {refonte && <Label value={fmt(d.reduce((total,item)=>total+item.count,0))} position="center" fill="var(--text)" fontSize={20} fontWeight={600} />}
           </Pie>
           <Tooltip {...TT} formatter={(v: any) => fmt(Number(v))} />
           <Legend formatter={legendFmt} />
@@ -124,7 +129,7 @@ function Donut({ data, colors, height = 240, fmt = plain }: { data: Row[]; color
 
 function Kpi({ title, value, sub, tone = 'light' }: { title: string; value: string; sub?: string; tone?: 'dark' | 'light' }) {
   return tone === 'dark' ? (
-    <div className="rounded-2xl p-5 text-center text-white shadow-sm" style={{ background: C.kpi }}>
+    <div className="rounded-2xl p-5 text-center text-white shadow-sm" style={{ background: C.kpi, color: "var(--loan-kpi-text, white)" }}>
       <p className="text-xs font-bold tracking-wider">{title}</p>
       <p className="text-2xl xl:text-3xl font-extrabold mt-2 break-words">{value}</p>
       {sub && <p className="text-xs mt-1 opacity-80">{sub}</p>}
@@ -174,7 +179,7 @@ const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: 'ADVANCES', label: 'Avances', icon: <Wallet size={15} /> },
   { id: 'STOCK', label: 'Encours', icon: <Banknote size={15} /> },
 ];
-const STATUS_COLORS = ['#F59E0B', '#F79646', '#10B981', '#4F81BD', '#C0504D', '#94A3B8'];
+const STATUS_COLORS = ['var(--loan-chart-3, #F59E0B)', 'var(--loan-chart-3, #F79646)', 'var(--loan-chart-2, #10B981)', 'var(--loan-chart-neutral, #4F81BD)', 'var(--loan-chart-danger, #C0504D)', 'var(--loan-chart-neutral, #94A3B8)'];
 
 interface Props {
   scope: WfScopeMode;
@@ -185,6 +190,7 @@ interface Props {
 }
 
 export function LoansDashboard({ scope, companyId, title, initialPeriod }: Props) {
+  const {refonte,motion}=useLoanVisuals();
   const [period, setPeriod] = useState<WfPeriodState>(initialPeriod ?? defaultPeriod());
   const [companies, setCompanies] = useState<string>('ALL');
   const [view, setView] = useState<LdView | null>(null);
@@ -267,7 +273,7 @@ export function LoansDashboard({ scope, companyId, title, initialPeriod }: Props
       ))}
 
       {loading && !view && (
-        <div className="flex items-center justify-center py-16 text-[var(--text-muted)]"><Loader2 className="animate-spin mr-2" size={18} /> Calcul en cours…</div>
+        refonte ? <LoanModuleSkeleton /> : <div className="flex items-center justify-center py-16 text-[var(--text-muted)]"><Loader2 className="animate-spin mr-2" size={18} /> Calcul en cours…</div>
       )}
 
       {view && T && (
@@ -311,8 +317,8 @@ export function LoansDashboard({ scope, companyId, title, initialPeriod }: Props
                         <YAxis axisLine={false} tickLine={false} tick={TICK} tickFormatter={(v: any) => short(Number(v))} />
                         <Tooltip {...TT} formatter={(v: any) => fcfa(Number(v))} />
                         <Legend formatter={legendFmt} />
-                        <Bar dataKey="loansGrantedAmount" name="Prêts" fill={C.navy} radius={[4, 4, 0, 0]}><LabelList dataKey="loansGrantedAmount" position="top" {...LBL} formatter={(v: any) => (Number(v) > 0 ? short(Number(v)) : '')} /></Bar>
-                        <Bar dataKey="advancesGrantedAmount" name="Avances" fill={C.orange} radius={[4, 4, 0, 0]}><LabelList dataKey="advancesGrantedAmount" position="top" {...LBL} formatter={(v: any) => (Number(v) > 0 ? short(Number(v)) : '')} /></Bar>
+                        <Bar dataKey="loansGrantedAmount" name="Prêts" fill={C.navy} radius={refonte ? [10,10,10,10] : [4, 4, 0, 0]} maxBarSize={refonte ? 16 : undefined} background={refonte ? {fill:"var(--surface-2)",radius:10} : undefined} animationDuration={refonte ? 700 : undefined} isAnimationActive={refonte ? motion : undefined}><LabelList dataKey="loansGrantedAmount" position="top" {...LBL} formatter={(v: any) => (Number(v) > 0 ? short(Number(v)) : '')} /></Bar>
+                        <Bar dataKey="advancesGrantedAmount" name="Avances" fill={C.orange} radius={refonte ? [10,10,10,10] : [4, 4, 0, 0]} maxBarSize={refonte ? 16 : undefined} background={refonte ? {fill:"var(--surface-2)",radius:10} : undefined} animationDuration={refonte ? 700 : undefined} isAnimationActive={refonte ? motion : undefined}><LabelList dataKey="advancesGrantedAmount" position="top" {...LBL} formatter={(v: any) => (Number(v) > 0 ? short(Number(v)) : '')} /></Bar>
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -322,7 +328,15 @@ export function LoansDashboard({ scope, companyId, title, initialPeriod }: Props
                 <Card title="Accordé et remboursé par mois (FCFA)" icon={<TrendingUp size={15} className="text-emerald-500" />} hint="Remboursé = retenues sur paie + espèces du mois.">
                   <div style={{ height: 250 }}>
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={evoLine} margin={{ top: 22, right: 16, left: -4, bottom: 8 }}>
+                      {refonte ? (<AreaChart data={evoLine} margin={{ top: 22, right: 16, left: -4, bottom: 8 }}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+                        <XAxis dataKey="short" axisLine={false} tickLine={false} tick={TICK} />
+                        <YAxis axisLine={false} tickLine={false} tick={TICK} tickFormatter={(v: any) => short(Number(v))} />
+                        <Tooltip {...TT} formatter={(v: any) => fcfa(Number(v))} />
+                        <Legend formatter={legendFmt} />
+                        <Area type="monotone" dataKey="Accordé" stroke={C.red} strokeWidth={2.25} dot={false} fill="var(--loan-gradient-1)" fillOpacity={1} animationDuration={700} isAnimationActive={motion} ><LabelList dataKey="Accordé" position="top" {...LBL} formatter={(v: any) => short(Number(v))} /></Area>
+                        <Area type="monotone" dataKey="Remboursé" stroke={C.green} strokeWidth={2.25} dot={false} fill="var(--loan-gradient-2)" fillOpacity={1} animationDuration={700} isAnimationActive={motion} ><LabelList dataKey="Remboursé" position="bottom" {...LBL} formatter={(v: any) => short(Number(v))} /></Area>
+                      </AreaChart>) : (<LineChart data={evoLine} margin={{ top: 22, right: 16, left: -4, bottom: 8 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
                         <XAxis dataKey="short" axisLine={false} tickLine={false} tick={TICK} />
                         <YAxis axisLine={false} tickLine={false} tick={TICK} tickFormatter={(v: any) => short(Number(v))} />
@@ -330,7 +344,7 @@ export function LoansDashboard({ scope, companyId, title, initialPeriod }: Props
                         <Legend formatter={legendFmt} />
                         <Line type="monotone" dataKey="Accordé" stroke={C.red} strokeWidth={3} dot={{ r: 4 }}><LabelList dataKey="Accordé" position="top" {...LBL} formatter={(v: any) => short(Number(v))} /></Line>
                         <Line type="monotone" dataKey="Remboursé" stroke={C.green} strokeWidth={3} dot={{ r: 4 }}><LabelList dataKey="Remboursé" position="bottom" {...LBL} formatter={(v: any) => short(Number(v))} /></Line>
-                      </LineChart>
+                      </LineChart>)}
                     </ResponsiveContainer>
                   </div>
                 </Card>

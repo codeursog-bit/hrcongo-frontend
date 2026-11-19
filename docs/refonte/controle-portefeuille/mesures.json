@@ -1,0 +1,205 @@
+{
+  "date": "2026-11-19",
+  "files": {
+    "app/(dashboard)/portefeuille/absences/page.tsx": {
+      "api": "af08d44e56bb7db76572978648657555b9a89c93a3d69c9c791dad57b24469a2",
+      "effects": "3a4cf4f7a19a23b1488708883567dd73be2645d377565ebdc8735dfff485a2fa",
+      "states": "f53cc25d9fc07458f6cc550aa43ab03f601260db24f99a9d4c3960a19f0bdc22",
+      "variables": "f2648c68932e8aa0c3de13fdeb655ac626d33353a6bdce362e6d09ea1e3dbf1f",
+      "conditions": "dc9cd03d3aa110e6e5315c0b9551d1cf3b9d4a79d033f9193056dd501c34a3a8",
+      "constraints": "9d21bcd95bca9cc2776123968cd5c1845b12489e8bc19624dace5363f0366027",
+      "documents": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "savedShiftColors": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "app/(dashboard)/portefeuille/avis/page.tsx": {
+      "api": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "effects": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "states": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "variables": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "conditions": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "constraints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "documents": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "savedShiftColors": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "app/(dashboard)/portefeuille/conges/page.tsx": {
+      "api": "52f5b4bdc0134b180bcc0043b8f375f3ed82818666cdc6406f277d21d147bb5d",
+      "effects": "3a4cf4f7a19a23b1488708883567dd73be2645d377565ebdc8735dfff485a2fa",
+      "states": "6405303941e1d55fca7f045eaa58f48c8b8fec430c167ad2e3aa9c461032b907",
+      "variables": "d0620f0f1cf9b2fa53b7a6e284cd2d550291b2083ee8bf06f79500bf1f01b25b",
+      "conditions": "86698503367fed220e7ff8d533f4643b996633fef7914c0dffcbd6a88ab10ca0",
+      "constraints": "b6bba19a2699b4c959511d9a3bd67af80cb3fdfc76bfcd16d66a724ff276cc64",
+      "documents": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "savedShiftColors": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "app/(dashboard)/portefeuille/dashboard/page.tsx": {
+      "api": "2b6940786b0b299dbeea3032ce710d992b159c80043e8f7ca90d9940b4bc6ab3",
+      "effects": "4aa8bc8e88e349d92672c664446883606b2163c55e6767f48d97e213277e61d4",
+      "states": "fb269c31cb20865ef00420524a1409526a60a904d00bdc34590cedda7d4884a6",
+      "variables": "068e49316bd4c0d25256ff90423b72f03e1d856427cfaf63076b1c0d47b7cb03",
+      "conditions": "8f124f9e0c207a6db31f711ecc354f608944d24847db1fd41ca7714221d8a003",
+      "constraints": "ff473d4486b5211e5e576b45aefa0c84dc4d31c3a06f6db5718c6365a6573cae",
+      "documents": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "savedShiftColors": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "app/(dashboard)/portefeuille/demandes/page.tsx": {
+      "api": "ee433f3c71d9b569132c06aaedfb932a4504d114212a783adde8c7ed33393975",
+      "effects": "ced716ec9f4637798d625dcde7c7acda84b7cbe10381cde742512f74cc599eb7",
+      "states": "158bae0e9946bca11141eb4ba3aeb5219d43289c680d996008151764696416d8",
+      "variables": "4c0181ec4b7dffbcbc5534192c8e16ca443cae5ae02eb8a16c10ff37f0d032ea",
+      "conditions": "940f209185f4046102a10fb9501291596db62812ff6d5ac0bb5c32cddeb7114a",
+      "constraints": "f7c481e3a93cf0629c7b4fbc99dcfdb73532a3921dd1e1a289610514e7c2db07",
+      "documents": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "savedShiftColors": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "app/(dashboard)/portefeuille/effectifs/page.tsx": {
+      "api": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "effects": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "states": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "variables": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "conditions": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "constraints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "documents": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "savedShiftColors": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "app/(dashboard)/portefeuille/employes/page.tsx": {
+      "api": "e9d1d10e22f914406b793c0205b9da4731241cb21226629ea94d73d9b4eb7fd6",
+      "effects": "ac1c9f91a3f27677cd1f664700a503f5a64129dbdf92af1c9a65b2cb6dd667f1",
+      "states": "2a49d54c139b39870ee325fb8bf6d94c889373af1ccca339e9afc5308b8c80a2",
+      "variables": "64fd338b77652b919a5916f81dc0f98a21b2283fd1f8db6b42f67601e9b39bde",
+      "conditions": "738be395144fbd102fc5c5e01d97a31babf44ec8617f1b4b65c0d05d6e7cb7c9",
+      "constraints": "254cbe2fd061c483c8924a853e13fee32e142013cc73af8c5c4109a2cd436dc6",
+      "documents": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "savedShiftColors": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "app/(dashboard)/portefeuille/equipe/page.tsx": {
+      "api": "a52a96e5a4de235e8442031bd1a69736ab2b320bbd2a913c753761aa802599bf",
+      "effects": "7305288c7f08b72a05647c7b7b2213c85e08afea747c18774c18d7951ee27693",
+      "states": "0d5b6457eb8ce44ab927d52cc1d225be6d2c08193054023cc5e4d634010a779b",
+      "variables": "d7f1c241cffaafc72d74027938369f89e96f17c553660a47ff506b0c7a682f74",
+      "conditions": "3d079ed4a6c9f590736d9ad1165727e2fd936ee69d6ba3fffa578920c505b25f",
+      "constraints": "32cc964720ec2904d57e062200bec90a6df2dbbdc2ec5bcde27f7ead67c2b4bd",
+      "documents": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "savedShiftColors": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "app/(dashboard)/portefeuille/layout.tsx": {
+      "api": "aa58eb7deceae0456fc40e3ca8a1596827f60e6494786a5f3edc0613a8d73ced",
+      "effects": "899b827180c4bc1dff74d75c80f9bd63c87b1f2537ba709ca4826ffde049db2a",
+      "states": "7c1896cdb3204e49cd46846ff78968390719c7ea2fb591d4c552f3085b0b32de",
+      "variables": "d70b57ad93a66ffc774d2ed30a4c66e184d94f8f955c35418e3c58010db831ba",
+      "conditions": "87ce272b73075ecc0fa094c600ec9b46f3bc54f56036db75431176e5c387eb09",
+      "constraints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "documents": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "savedShiftColors": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "app/(dashboard)/portefeuille/mes-entreprises/page.tsx": {
+      "api": "b23db03e0ef8791e4df7d4102bb53a7d5a33ebc162b6ececb718425cff815711",
+      "effects": "5145905315e35a5570a27a9640ecf6135883bd87895a086808ed8ed6de2f98ab",
+      "states": "ff557244cee5afafe192f5e8c4316b196cf46b80e7a9c7bfe1dbe75e08664370",
+      "variables": "ff2cb8e686f9ece45634f7eabf8eacccdf59e831ea601d598114ade3d95a803f",
+      "conditions": "3b2f5d373cb88a6b2a437ac0aee8c8b42f561551e1309ed97704467f62bdc193",
+      "constraints": "90c77cc8394236c5b77caf7f3d3592915686496b0c17dc7448474f2fc08baafe",
+      "documents": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "savedShiftColors": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "app/(dashboard)/portefeuille/messages/page.tsx": {
+      "api": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "effects": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "states": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "variables": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "conditions": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "constraints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "documents": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "savedShiftColors": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "app/(dashboard)/portefeuille/paie/liste/page.tsx": {
+      "api": "dae8685e27394f84f4c05338a207328faca46e2cd6c3b1b227ebad2f5c1cd7a4",
+      "effects": "484314861a91bdfbb87d6b0d7a8c0f9e1fad54990652dc7979be2be7f95bf2f1",
+      "states": "3fc3ad47b9d795bba5cf2fa202d57a849ff87b3d4d799d3a1c43d5da41a4f5ec",
+      "variables": "b22d732851e8a8bc2613eb8da0b5bd4822f3fefc650209129ca48153f61806bd",
+      "conditions": "1b281bd22b63cdb3c392511e0e1f8e7ab72f06d792d24aac1564e9d5e49ed271",
+      "constraints": "4aa10ba3bdd052fe65afa3da56643f9fc8e3c5eb53960469b05c658ac40a5c48",
+      "documents": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "savedShiftColors": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "app/(dashboard)/portefeuille/paie/page.tsx": {
+      "api": "793115b2413856d13292c476144de34570ec14da2e356e4971a15c9256032db8",
+      "effects": "8de5f6c29957b4ce89bd0442c058dae164a12abe5d28c317653f3d3adbc5825d",
+      "states": "75dd16e25150935a928ebe1bf56677b281e3045abc7e244c5107281620593ae8",
+      "variables": "e7b74da1e669b5ce317666fc0b66a9f46f4d72943c9bf8620acf788238c9a66c",
+      "conditions": "c200d0a94fe51ea737a9fb385219d9eb93e4b4a4f8df36f16f9edd5dcc0c90db",
+      "constraints": "f82bf229a4b5507892d2c93052825af7f9f814dc961001bbc7acb09703a0a0a1",
+      "documents": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "savedShiftColors": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "app/(dashboard)/portefeuille/presences/page.tsx": {
+      "api": "1379be92fcbfaa3ed5098ceb65cd7994dc6af9ae70caf704e1d1a3568da1f191",
+      "effects": "89a83cda25887ff18126f11ee808214848ea692f97679a04ee8adad6b7ffdc20",
+      "states": "c8bc30e5a7eae7aed71b0965325ea732b97265d924fd6e2f667fc3e26411dfc8",
+      "variables": "e77b869ab10d8434720e18f6007baaa0e6dedb75ff0ca396e3b43cc3670bfbfe",
+      "conditions": "dd94f65f7f62aea1d80489c2dfb6af98b090c88a9a6f5004c848e06a78fc671f",
+      "constraints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "documents": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "savedShiftColors": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "app/(dashboard)/portefeuille/presences-absences/page.tsx": {
+      "api": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "effects": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "states": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "variables": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "conditions": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "constraints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "documents": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "savedShiftColors": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "app/(dashboard)/portefeuille/prets/page.tsx": {
+      "api": "11c9abdd916ccd6850ec8e4dcc5d019e9b1c965985cdf5b00c4e03262b6f97d8",
+      "effects": "11d6149ed6d34f9a5d99227e98323d32428a0cf075e655f838bd8a56bce1d511",
+      "states": "154d0bd304f2fffe71012d8a9161ace86b21be0d7e19361baafbf0f163295b37",
+      "variables": "10546135eafc13898bd1db9dfbc58c614bb9eda65612307d36ff7b7e07957515",
+      "conditions": "5b399ddd6fe308a28d3216ef6c260cc36684cffc601c2be9eea881f04c3bfeb3",
+      "constraints": "6038add5aaaf9db20f392f961d59d30c5f58913be9142993b353eddee56d521b",
+      "documents": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "savedShiftColors": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "app/(dashboard)/portefeuille/prets-avances/page.tsx": {
+      "api": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "effects": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "states": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "variables": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "conditions": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "constraints": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "documents": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "savedShiftColors": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "app/(dashboard)/portefeuille/rapports/page.tsx": {
+      "api": "b3815ac1be5d6a8a00da45ae1f03fa34d03ac333ff48f54cfd9383f75a1d84c1",
+      "effects": "acaa3c87459b909a3439235f50a515c9487c81d68066d40ab3942fd1b8b3ad5e",
+      "states": "f258dc425b5e5cab9270d6bb389b43ff2d69cd9d854437c66174fd5eaf8665f8",
+      "variables": "d3e06bd2762217d1051e3a1c759cc971ec14aa632f69b903a20e6648d874232f",
+      "conditions": "3af1594bfe17a8046f7b00069cc1d4da9e2ef8c0cd28028e073eb255e1fd88b5",
+      "constraints": "0315120b3bae9d9d0cb80258f0986ea0804c2474423d14c2fe30b75628cdff8c",
+      "documents": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "savedShiftColors": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "components/portfolio/PortfolioSidebar.tsx": {
+      "api": "db02f866d35ade91269e3b6ded01cd73dbe9812631bf81caefacea96ecc8bb74",
+      "effects": "5ec9ae4d04d32901c150d20c8dce1046241df049d4b0d35cd4cd2a715a472efe",
+      "states": "c10878eabea8c5837811a081a6bd926e896dfa821fd2b1b7158760998ff74ec5",
+      "variables": "db2fa25587272dabaad2e7d8fac1570e8baf45af4b1daa60f9a231a86f78015f",
+      "conditions": "ef6ff51242f00d48e68424b1c21ae4319bd00a41e2246e676a5c97414ccc9ca2",
+      "constraints": "d1b5b16221cb612f690e12b8883e8217ecd5e114b79a01e44669bd7f8c4e424d",
+      "documents": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "savedShiftColors": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "components/portfolio/PortfolioTopNav.tsx": {
+      "api": "7eaa17ea117004cb381b16a64a86f33505d930a1866413aafc157812f7561357",
+      "effects": "ab1b260e2584a5b2065f0f75a81737440a17197bf187a63fe82ea0342e2b138a",
+      "states": "ce234da0986604e6ea6505d93bf3a7c99f873397e25685e794837814332e33d3",
+      "variables": "c19a79b3f2f644e48b120badddfadba55b73642f26e1d354c275b3218e9a82e6",
+      "conditions": "de2f1b63b3fe90bd5278fa9bac3b89bed06e296104e288c0833fe0df29154604",
+      "constraints": "fc1975a591c9ca92d8fca93f1bde8edd34385a8a22bf2421b296631d67f5d3b5",
+      "documents": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "savedShiftColors": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    }
+  }
+}

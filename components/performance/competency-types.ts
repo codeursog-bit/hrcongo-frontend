@@ -11,9 +11,9 @@ export const CATEGORY_LABEL: Record<CompetencyCategory, string> = {
 };
 
 export const CATEGORY_CLS: Record<CompetencyCategory, string> = {
-  TECHNICAL: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
-  BEHAVIORAL: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300',
-  MANAGERIAL: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300',
+  TECHNICAL: 'bg-[var(--brand-soft)] text-[var(--action)]',
+  BEHAVIORAL: 'bg-[var(--brand-soft)] text-[var(--action)]',
+  MANAGERIAL: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)]',
 };
 
 export interface CompetencyItem {

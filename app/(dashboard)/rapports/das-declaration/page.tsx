@@ -1,4 +1,6 @@
 'use client';
+import { ModuleSelect } from '@/components/ui/ModuleSelect';
+
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -11,6 +13,7 @@ import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import RapportsSubNav from '@/components/RapportsSubNav';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import { ReportsFrame as ModulePageFrame } from '@/components/reports/ReportsFrame';
 
 // ─── TYPES ─────────────────────────────────────────────────────────────────
 interface DasEmployeeLine {
@@ -74,7 +77,7 @@ function downloadBlob(blob: Blob, filename: string) {
   window.URL.revokeObjectURL(url);
 }
 
-export default function DasDeclarationPage() {
+function DasDeclarationPage() {
   const currentYear = new Date().getFullYear();
 
   const [years, setYears] = useState<number[]>([]);
@@ -171,13 +174,13 @@ export default function DasDeclarationPage() {
       <RapportsSubNav active="/rapports/das-declaration" />
 
       <div className="mb-6 mt-6 print:hidden">
-        <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center justify-between flex-wrap gap-3 reports-header">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-[var(--brand)] rounded-xl shadow-lg shadow-[var(--brand)]/30">
-              <FileSpreadsheet className="w-5 h-5 text-white" />
+            <div className="p-2.5 bg-[var(--surface)] rounded-xl shadow-lg shadow-[var(--brand)]/30">
+              <FileSpreadsheet strokeWidth={1.5} className="w-5 h-5 text-[var(--text)]" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-[var(--text)]">
+              <h1 className="text-lg font-semibold text-[var(--text)]">
                 Déclaration Annuelle des Salaires — DAS I
               </h1>
               <p className="text-sm text-[var(--text-muted)]">
@@ -191,7 +194,7 @@ export default function DasDeclarationPage() {
               onClick={() => setRangeMode(false)}
               className={`px-3 py-2 text-sm font-semibold rounded-xl transition-colors ${
                 !rangeMode
-                  ? 'bg-[var(--brand)] text-white shadow-md shadow-[var(--brand)]/30'
+                  ? 'bg-[var(--brand)] text-[var(--text)] shadow-md shadow-[var(--brand)]/30'
                   : 'bg-[var(--surface)] border border-[var(--border)] text-[var(--text)]'
               }`}
             >
@@ -201,7 +204,7 @@ export default function DasDeclarationPage() {
               onClick={() => setRangeMode(true)}
               className={`px-3 py-2 text-sm font-semibold rounded-xl transition-colors ${
                 rangeMode
-                  ? 'bg-[var(--brand)] text-white shadow-md shadow-[var(--brand)]/30'
+                  ? 'bg-[var(--brand)] text-[var(--text)] shadow-md shadow-[var(--brand)]/30'
                   : 'bg-[var(--surface)] border border-[var(--border)] text-[var(--text)]'
               }`}
             >
@@ -214,7 +217,7 @@ export default function DasDeclarationPage() {
         <div className="mt-4 flex items-center gap-3 flex-wrap">
           {!rangeMode ? (
             <div className="relative">
-              <select
+              <ModuleSelect
                 value={year}
                 onChange={(e) => setYear(Number(e.target.value))}
                 className="pl-3 pr-8 py-2 text-sm rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] font-medium appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/50"
@@ -224,13 +227,13 @@ export default function DasDeclarationPage() {
                     {y}
                   </option>
                 ))}
-              </select>
-              <ChevronDown className="w-4 h-4 absolute right-2.5 top-2.5 text-[var(--text-muted)] pointer-events-none" />
+              </ModuleSelect>
+              <ChevronDown strokeWidth={1.5} className="w-4 h-4 absolute right-2.5 top-2.5 text-[var(--text-muted)] pointer-events-none" />
             </div>
           ) : (
             <>
               <div className="relative">
-                <select
+                <ModuleSelect
                   value={startYear}
                   onChange={(e) => setStartYear(Number(e.target.value))}
                   className="pl-3 pr-8 py-2 text-sm rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] font-medium appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/50"
@@ -240,12 +243,12 @@ export default function DasDeclarationPage() {
                       {y}
                     </option>
                   ))}
-                </select>
-                <ChevronDown className="w-4 h-4 absolute right-2.5 top-2.5 text-[var(--text-muted)] pointer-events-none" />
+                </ModuleSelect>
+                <ChevronDown strokeWidth={1.5} className="w-4 h-4 absolute right-2.5 top-2.5 text-[var(--text-muted)] pointer-events-none" />
               </div>
               <span className="text-[var(--text-muted)] text-sm">à</span>
               <div className="relative">
-                <select
+                <ModuleSelect
                   value={endYear}
                   onChange={(e) => setEndYear(Number(e.target.value))}
                   className="pl-3 pr-8 py-2 text-sm rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] font-medium appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/50"
@@ -255,8 +258,8 @@ export default function DasDeclarationPage() {
                       {y}
                     </option>
                   ))}
-                </select>
-                <ChevronDown className="w-4 h-4 absolute right-2.5 top-2.5 text-[var(--text-muted)] pointer-events-none" />
+                </ModuleSelect>
+                <ChevronDown strokeWidth={1.5} className="w-4 h-4 absolute right-2.5 top-2.5 text-[var(--text-muted)] pointer-events-none" />
               </div>
             </>
           )}
@@ -267,24 +270,24 @@ export default function DasDeclarationPage() {
               className="p-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-2)] transition-colors"
               title="Rafraîchir"
             >
-              <RefreshCw className="w-4 h-4 text-[var(--text-muted)]" />
+              <RefreshCw strokeWidth={1.5} className="w-4 h-4 text-[var(--text-muted)]" />
             </button>
           )}
         </div>
 
         {error && (
-          <div className="mt-4 flex items-start gap-3 p-4 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-2xl">
-            <AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-            <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+          <div className="mt-4 flex items-start gap-3 p-4 bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] border border-[var(--border)] rounded-2xl">
+            <AlertTriangle strokeWidth={1.5} className="w-5 h-5 text-[var(--danger-text)] shrink-0 mt-0.5" />
+            <p className="text-sm text-[var(--danger-text)]">{error}</p>
           </div>
         )}
       </div>
 
       {/* ── Mode plage d'années : juste l'action d'export groupé ─────────── */}
       {rangeMode ? (
-        <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)]/60 p-6 shadow-sm print:hidden">
+        <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)]/60 p-6 shadow-sm print:hidden reports-card">
           <div className="flex items-center gap-3 mb-4">
-            <FileArchive className="w-5 h-5 text-[var(--brand)]" />
+            <FileArchive strokeWidth={1.5} className="w-5 h-5 text-[var(--brand)]" />
             <h2 className="font-semibold text-[var(--text)]">
               Export groupé {startYear} → {endYear}
             </h2>
@@ -297,12 +300,12 @@ export default function DasDeclarationPage() {
           <button
             onClick={() => setPendingExport('range')}
             disabled={exporting}
-            className="flex items-center gap-2 px-5 py-2.5 bg-[var(--brand)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow-md shadow-[var(--brand)]/30 transition-all"
+            className="flex items-center gap-2 px-5 py-2.5 bg-[var(--brand)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-[var(--text)] text-sm font-semibold rounded-xl shadow-md shadow-[var(--brand)]/30 transition-colors"
           >
             {exporting ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 strokeWidth={1.5} className="w-4 h-4 animate-spin" />
             ) : (
-              <Download className="w-4 h-4" />
+              <Download strokeWidth={1.5} className="w-4 h-4" />
             )}
             Télécharger le zip
           </button>
@@ -333,44 +336,44 @@ export default function DasDeclarationPage() {
 
           {/* ── Indicateurs ─────────────────────────────────────────────── */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4 print:hidden">
-            <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)]/60 shadow-sm">
+            <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)]/60 shadow-sm reports-card">
               <div>
                 <p className="text-xs text-[var(--text-muted)]">Effectif déclaré</p>
-                <p className="text-lg font-bold text-[var(--text)]">
+                <p className="text-lg font-semibold text-[var(--text)]">
                   {recap.totals.effectif}
                 </p>
               </div>
-              <Users className="w-5 h-5 text-[var(--brand)]" />
+              <Users strokeWidth={1.5} className="w-5 h-5 text-[var(--brand)]" />
             </div>
-            <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)]/60 shadow-sm">
+            <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)]/60 shadow-sm reports-card">
               <div>
                 <p className="text-xs text-[var(--text-muted)]">Masse salariale brute</p>
-                <p className="text-lg font-bold text-[var(--text)]">
+                <p className="text-lg font-semibold text-[var(--text)]">
                   {fmt(recap.totals.salaireBrut)} F
                 </p>
               </div>
-              <Banknote className="w-5 h-5 text-emerald-500" />
+              <Banknote strokeWidth={1.5} className="w-5 h-5 text-[var(--action)]" />
             </div>
-            <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)]/60 shadow-sm">
+            <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)]/60 shadow-sm reports-card">
               <div>
                 <p className="text-xs text-[var(--text-muted)]">IRPP retenu (cumul)</p>
-                <p className="text-lg font-bold text-[var(--text)]">
+                <p className="text-lg font-semibold text-[var(--text)]">
                   {fmt(recap.totals.irppRetenu)} F
                 </p>
               </div>
-              <CheckCircle2 className="w-5 h-5 text-[var(--accent-2)]" />
+              <CheckCircle2 strokeWidth={1.5} className="w-5 h-5 text-[var(--accent-2)]" />
             </div>
-            <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)]/60 shadow-sm">
+            <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)]/60 shadow-sm reports-card">
               <div>
                 <p className="text-xs text-[var(--text-muted)]">Avantages en nature</p>
-                <p className={`text-lg font-bold ${recap.totals.avantageNature > 0 ? 'text-[var(--text)]' : 'text-[var(--text-muted)]'}`}>
+                <p className={`text-lg font-semibold ${recap.totals.avantageNature > 0 ? 'text-[var(--text)]' : 'text-[var(--text-muted)]'}`}>
                   {fmt(recap.totals.avantageNature)} F
                 </p>
                 {recap.totals.avantageNature === 0 && (
                   <p className="text-[11px] text-[var(--text-muted)] mt-0.5">Aucune prime configurée « en nature »</p>
                 )}
               </div>
-              <Building2 className="w-5 h-5 text-amber-500" />
+              <Building2 strokeWidth={1.5} className="w-5 h-5 text-[var(--warning-text)]" />
             </div>
           </div>
 
@@ -488,20 +491,20 @@ export default function DasDeclarationPage() {
             <button
               onClick={() => setPendingExport('single')}
               disabled={exporting || recap.employees.length === 0}
-              className="flex items-center gap-2 px-5 py-2.5 bg-[var(--brand)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow-md shadow-[var(--brand)]/30 transition-all"
+              className="flex items-center gap-2 px-5 py-2.5 bg-[var(--brand)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-[var(--text)] text-sm font-semibold rounded-xl shadow-md shadow-[var(--brand)]/30 transition-colors"
             >
               {exporting ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 strokeWidth={1.5} className="w-4 h-4 animate-spin" />
               ) : (
-                <Download className="w-4 h-4" />
+                <Download strokeWidth={1.5} className="w-4 h-4" />
               )}
               Exporter le DAS I (.xlsx)
             </button>
             <button
               onClick={handlePrint}
-              className="flex items-center gap-2 px-5 py-2.5 bg-[var(--surface)] hover:bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text)] text-sm font-semibold rounded-xl transition-all"
+              className="flex items-center gap-2 px-5 py-2.5 bg-[var(--surface)] hover:bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text)] text-sm font-semibold rounded-xl transition-colors"
             >
-              <Printer className="w-4 h-4" />
+              <Printer strokeWidth={1.5} className="w-4 h-4" />
               Imprimer
             </button>
           </div>
@@ -510,11 +513,11 @@ export default function DasDeclarationPage() {
 
       {/* ── Modale de revue avant export ────────────────────────────────── */}
       {pendingExport && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm print:hidden">
-          <div className="w-full max-w-md bg-[var(--surface)] rounded-2xl shadow-2xl border border-[var(--border)]/60 overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[color-mix(in_srgb,var(--surface-2)_50%,transparent)] print:hidden">
+          <div className="w-full max-w-md bg-[var(--surface)] rounded-2xl shadow-2xl border border-[var(--border)]/60 overflow-hidden reports-card">
             <div className="p-5 flex items-start gap-3 border-b border-[var(--border)]">
               <div className="p-2 bg-[var(--brand-soft)] rounded-xl shrink-0">
-                <ShieldCheck className="w-5 h-5 text-[var(--brand)]" />
+                <ShieldCheck strokeWidth={1.5} className="w-5 h-5 text-[var(--brand)]" />
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold text-[var(--text)]">
@@ -526,7 +529,7 @@ export default function DasDeclarationPage() {
                 className="p-1 rounded-lg text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
                 aria-label="Fermer"
               >
-                <X className="w-4 h-4" />
+                <X strokeWidth={1.5} className="w-4 h-4" />
               </button>
             </div>
 
@@ -553,12 +556,12 @@ export default function DasDeclarationPage() {
               <button
                 onClick={pendingExport === 'range' ? runExportRange : runExport}
                 disabled={exporting}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--brand)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow-md shadow-[var(--brand)]/30 transition-all"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--brand)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-[var(--text)] text-sm font-semibold rounded-xl shadow-md shadow-[var(--brand)]/30 transition-colors"
               >
                 {exporting ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 strokeWidth={1.5} className="w-4 h-4 animate-spin" />
                 ) : (
-                  <Download className="w-4 h-4" />
+                  <Download strokeWidth={1.5} className="w-4 h-4" />
                 )}
                 C'est vérifié, télécharger
               </button>
@@ -567,5 +570,14 @@ export default function DasDeclarationPage() {
         </div>
       )}
     </div>
+  );
+}
+
+
+export default function DasDeclarationPageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <DasDeclarationPage />
+    </ModulePageFrame>
   );
 }

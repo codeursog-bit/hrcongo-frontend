@@ -17,6 +17,7 @@
 // Dépendance à installer : npm install html5-qrcode
 // ============================================================================
 
+import { AttendanceDisplayFrame } from '@/components/attendance/AttendanceDisplayFrame';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Html5Qrcode, Html5QrcodeScannerState, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import {
@@ -171,7 +172,7 @@ function NfcWaves({ className }: { className?: string }) {
   );
 }
 
-export default function KioskPage() {
+function KioskPageContent() {
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [keyDraft, setKeyDraft] = useState('');
   const [showSettings, setShowSettings] = useState(false);
@@ -854,3 +855,4 @@ export default function KioskPage() {
     </div>
   );
 }
+export default function KioskPage(){return <AttendanceDisplayFrame kind="kiosk"><KioskPageContent /></AttendanceDisplayFrame>;}

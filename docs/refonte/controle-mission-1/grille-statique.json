@@ -1,0 +1,5337 @@
+{
+  "note": "Indicators, not a claim of full visual or business compliance. Protected content may occur inside mixed pages; do not replace globally.",
+  "records": [
+    {
+      "file": "app/(dashboard)/apparence/page.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/audit/page.tsx",
+      "palette": 20,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/avis/page.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/cnss-declaration/page.tsx",
+      "palette": 303,
+      "hex": 0,
+      "emoji": 3,
+      "gradient": 0,
+      "pulse": 1,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/conges/[id]/page.tsx",
+      "palette": 93,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/conges/analyse/page.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/conges/calendrier/page.tsx",
+      "palette": 44,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/conges/diagrammes/page.tsx",
+      "palette": 22,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/conges/gestion/page.tsx",
+      "palette": 62,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/conges/historique/page.tsx",
+      "palette": 47,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/conges/mon-espace/page.tsx",
+      "palette": 110,
+      "hex": 1,
+      "emoji": 0,
+      "gradient": 2,
+      "pulse": 0,
+      "blur": 1,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/conges/nouveau/page.tsx",
+      "palette": 105,
+      "hex": 1,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 1,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/conges/page.tsx",
+      "palette": 110,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 1,
+      "blur": 1,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/conges/planning/page.tsx",
+      "palette": 25,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/conges/programme/page.tsx",
+      "palette": 99,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/conges/provision/page.tsx",
+      "palette": 64,
+      "hex": 1,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/conges/soldes/page.tsx",
+      "palette": 97,
+      "hex": 0,
+      "emoji": 1,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/contrats/employe/[employeeId]/page.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/contrats/generer/page.tsx",
+      "palette": 37,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/contrats/page.tsx",
+      "palette": 188,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 1,
+      "blur": 2,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/contrats/rupture/page.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/contrats/rupture/pse/page.tsx",
+      "palette": 159,
+      "hex": 2,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 1,
+      "blur": 2,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/demandes/page.tsx",
+      "palette": 9,
+      "hex": 0,
+      "emoji": 1,
+      "gradient": 0,
+      "pulse": 1,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/documents/generate/page.tsx",
+      "palette": 52,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/documents/legal/page.tsx",
+      "palette": 51,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/documents/page.tsx",
+      "palette": 184,
+      "hex": 0,
+      "emoji": 1,
+      "gradient": 0,
+      "pulse": 1,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/employes/[id]/conges/page.tsx",
+      "palette": 24,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/employes/[id]/edit/page.tsx",
+      "palette": 133,
+      "hex": 0,
+      "emoji": 4,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/employes/[id]/page.tsx",
+      "palette": 353,
+      "hex": 0,
+      "emoji": 17,
+      "gradient": 0,
+      "pulse": 1,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/employes/[id]/primes/page.tsx",
+      "palette": 223,
+      "hex": 0,
+      "emoji": 2,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/employes/import/page.tsx",
+      "palette": 87,
+      "hex": 5,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/employes/nouveau/formulaire/page.tsx",
+      "palette": 33,
+      "hex": 3,
+      "emoji": 2,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 4,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/employes/nouveau/page.tsx",
+      "palette": 23,
+      "hex": 0,
+      "emoji": 1,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/employes/page.tsx",
+      "palette": 115,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 1,
+      "blur": 1,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/finances/page.tsx",
+      "palette": 41,
+      "hex": 12,
+      "emoji": 0,
+      "gradient": 1,
+      "pulse": 0,
+      "blur": 1,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/formation/page.tsx",
+      "palette": 343,
+      "hex": 18,
+      "emoji": 8,
+      "gradient": 5,
+      "pulse": 0,
+      "blur": 8,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/loans/dashboard/page.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/loans/mon-espace/page.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/loans/nouveau/page.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 1,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/loans/page.tsx",
+      "palette": 191,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 3,
+      "pulse": 0,
+      "blur": 3,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/loans/rapport/page.tsx",
+      "palette": 13,
+      "hex": 14,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/loans/releve/[employeeId]/page.tsx",
+      "palette": 8,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/loans/releve/page.tsx",
+      "palette": 21,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/loans/suivi-dettes/[employeeId]/page.tsx",
+      "palette": 42,
+      "hex": 2,
+      "emoji": 1,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/loans/suivi-dettes/page.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/loans/validations/page.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/ma-paie/page.tsx",
+      "palette": 25,
+      "hex": 15,
+      "emoji": 2,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/ma-signature/page.tsx",
+      "palette": 11,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/materiel/page.tsx",
+      "palette": 76,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 1,
+      "blur": 2,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/mon-profil/page.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 1,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/notifications/page.tsx",
+      "palette": 24,
+      "hex": 0,
+      "emoji": 1,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/offline/page.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/onboarding/page.tsx",
+      "palette": 114,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 1,
+      "pulse": 0,
+      "blur": 1,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/paie/[id]/modifier/page.tsx",
+      "palette": 259,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/paie/[id]/page.tsx",
+      "palette": 51,
+      "hex": 37,
+      "emoji": 1,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 1,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/paie/components/PayrollBatchActionsFooter.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/paie/components/PayrollStatsCards.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/paie/components/PayrollTableRow.tsx",
+      "palette": 44,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/paie/comptabilite/page.tsx",
+      "palette": 137,
+      "hex": 0,
+      "emoji": 13,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/paie/impayes/page.tsx",
+      "palette": 203,
+      "hex": 0,
+      "emoji": 9,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/paie/manuel/page.tsx",
+      "palette": 405,
+      "hex": 0,
+      "emoji": 7,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 1,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/paie/masse/PeriodStep.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/paie/masse/ProcessingStep.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/paie/masse/SelectionStep.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 1,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/paie/masse/StepHeader.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/paie/masse/SuccessModal.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/paie/masse/page.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 7,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/paie/nouveau/components/EmployeeSelector.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/paie/nouveau/page.tsx",
+      "palette": 104,
+      "hex": 0,
+      "emoji": 4,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 1,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/paie/page.tsx",
+      "palette": 29,
+      "hex": 0,
+      "emoji": 7,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 1,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/paie/simulateur/page.tsx",
+      "palette": 355,
+      "hex": 2,
+      "emoji": 4,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/parametres/bulletin/page.tsx",
+      "palette": 0,
+      "hex": 32,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/parametres/circuits/page.tsx",
+      "palette": 12,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/parametres/departements/page.tsx",
+      "palette": 31,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 3,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/parametres/entreprise/page.tsx",
+      "palette": 310,
+      "hex": 4,
+      "emoji": 9,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 1,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/parametres/page.tsx",
+      "palette": 15,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 2,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/parametres/paie/page.tsx",
+      "palette": 252,
+      "hex": 0,
+      "emoji": 2,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 1,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/parametres/primes/page.tsx",
+      "palette": 187,
+      "hex": 0,
+      "emoji": 4,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 1,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/parametres/securite/page.tsx",
+      "palette": 214,
+      "hex": 8,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/parametres/subscription/page.tsx",
+      "palette": 198,
+      "hex": 0,
+      "emoji": 3,
+      "gradient": 1,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/parametres/taxes/page.tsx",
+      "palette": 106,
+      "hex": 0,
+      "emoji": 4,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 2,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/parametres/users/page.tsx",
+      "palette": 76,
+      "hex": 2,
+      "emoji": 1,
+      "gradient": 0,
+      "pulse": 1,
+      "blur": 2,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/performance/carriere/employe/[id]/page.tsx",
+      "palette": 76,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 1,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/performance/carriere/page.tsx",
+      "palette": 136,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 1,
+      "pulse": 0,
+      "blur": 1,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/performance/competences/employe/[id]/page.tsx",
+      "palette": 9,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/performance/competences/page.tsx",
+      "palette": 188,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 1,
+      "pulse": 0,
+      "blur": 1,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/performance/cycles/[id]/page.tsx",
+      "palette": 131,
+      "hex": 0,
+      "emoji": 1,
+      "gradient": 1,
+      "pulse": 0,
+      "blur": 1,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/performance/cycles/page.tsx",
+      "palette": 99,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 1,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/performance/fiche/[id]/page.tsx",
+      "palette": 161,
+      "hex": 0,
+      "emoji": 2,
+      "gradient": 2,
+      "pulse": 0,
+      "blur": 2,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/performance/modeles/page.tsx",
+      "palette": 117,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 1,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/performance/mon-espace/page.tsx",
+      "palette": 64,
+      "hex": 0,
+      "emoji": 1,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/performance/objectifs/page.tsx",
+      "palette": 149,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 1,
+      "pulse": 0,
+      "blur": 1,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/performance/page.tsx",
+      "palette": 178,
+      "hex": 0,
+      "emoji": 2,
+      "gradient": 2,
+      "pulse": 1,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/portefeuille/absences/page.tsx",
+      "palette": 48,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 1,
+      "blur": 2,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/portefeuille/avis/page.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/portefeuille/conges/page.tsx",
+      "palette": 48,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 1,
+      "blur": 2,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/portefeuille/dashboard/page.tsx",
+      "palette": 78,
+      "hex": 4,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 3,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/portefeuille/demandes/page.tsx",
+      "palette": 65,
+      "hex": 1,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 1,
+      "blur": 1,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/portefeuille/effectifs/page.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/portefeuille/employes/page.tsx",
+      "palette": 18,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 1,
+      "blur": 1,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/portefeuille/equipe/page.tsx",
+      "palette": 28,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 1,
+      "blur": 1,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/portefeuille/layout.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/portefeuille/mes-entreprises/page.tsx",
+      "palette": 54,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 1,
+      "pulse": 1,
+      "blur": 1,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/portefeuille/paie/liste/page.tsx",
+      "palette": 34,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 1,
+      "blur": 1,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/portefeuille/paie/page.tsx",
+      "palette": 54,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 1,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/portefeuille/presences/page.tsx",
+      "palette": 31,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 1,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/portefeuille/prets/page.tsx",
+      "palette": 66,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 1,
+      "blur": 2,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/portefeuille/rapports/page.tsx",
+      "palette": 20,
+      "hex": 14,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 1,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/presences/CorrectionsView.tsx",
+      "palette": 147,
+      "hex": 0,
+      "emoji": 11,
+      "gradient": 0,
+      "pulse": 1,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/presences/DailyView.tsx",
+      "palette": 59,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/presences/WeeklyView.tsx",
+      "palette": 18,
+      "hex": 8,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/presences/absences/historique/page.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/presences/absences/mon-espace/page.tsx",
+      "palette": 34,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/presences/absences/nouveau/page.tsx",
+      "palette": 73,
+      "hex": 0,
+      "emoji": 1,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/presences/absences/page.tsx",
+      "palette": 67,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/presences/absences/rapport/page.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/presences/absences/suivi/page.tsx",
+      "palette": 70,
+      "hex": 3,
+      "emoji": 1,
+      "gradient": 0,
+      "pulse": 1,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/presences/dashboard/page.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/presences/ecrans/page.tsx",
+      "palette": 21,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/presences/page.tsx",
+      "palette": 8,
+      "hex": 0,
+      "emoji": 6,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/presences/permissions/historique/page.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/presences/permissions/mon-espace/page.tsx",
+      "palette": 59,
+      "hex": 2,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/presences/permissions/nouveau/page.tsx",
+      "palette": 9,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/presences/permissions/page.tsx",
+      "palette": 73,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/presences/permissions/rapport/page.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/presences/permissions/suivi/[employeeId]/page.tsx",
+      "palette": 27,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/presences/permissions/suivi/page.tsx",
+      "palette": 17,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/presences/permissions/validations/page.tsx",
+      "palette": 57,
+      "hex": 2,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 1,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/presences/pointage-manuel/page.tsx",
+      "palette": 64,
+      "hex": 0,
+      "emoji": 3,
+      "gradient": 1,
+      "pulse": 1,
+      "blur": 10,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/presences/pointage/page.tsx",
+      "palette": 136,
+      "hex": 0,
+      "emoji": 9,
+      "gradient": 1,
+      "pulse": 8,
+      "blur": 5,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/presences/resume/page.tsx",
+      "palette": 118,
+      "hex": 0,
+      "emoji": 3,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/presences/shifts/page.tsx",
+      "palette": 112,
+      "hex": 13,
+      "emoji": 14,
+      "gradient": 6,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/presences/synchronisation/page.tsx",
+      "palette": 71,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 1,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/presences/tablettes/page.tsx",
+      "palette": 41,
+      "hex": 0,
+      "emoji": 2,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 1,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/pricing/page.tsx",
+      "palette": 80,
+      "hex": 0,
+      "emoji": 1,
+      "gradient": 5,
+      "pulse": 2,
+      "blur": 2,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/primes/attribuer/page.tsx",
+      "palette": 89,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 1,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/rapports/absences/page.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/rapports/analyse-conges/page.tsx",
+      "palette": 37,
+      "hex": 14,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 3,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/rapports/analyse-paie/page.tsx",
+      "palette": 9,
+      "hex": 22,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 4,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/rapports/complet/page.tsx",
+      "palette": 34,
+      "hex": 12,
+      "emoji": 2,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 7,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/rapports/comptabilite/page.tsx",
+      "palette": 47,
+      "hex": 0,
+      "emoji": 7,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/rapports/das-declaration/page.tsx",
+      "palette": 11,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 1,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/rapports/departements/page.tsx",
+      "palette": 16,
+      "hex": 10,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/rapports/effectifs/page.tsx",
+      "palette": 21,
+      "hex": 35,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 2,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/rapports/indicateurs/page.tsx",
+      "palette": 0,
+      "hex": 35,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 1,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/rapports/its-bnc/page.tsx",
+      "palette": 1,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/rapports/journal-paie/page.tsx",
+      "palette": 26,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/rapports/mouvements-effectifs/page.tsx",
+      "palette": 1,
+      "hex": 12,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/rapports/observatoire-conges/page.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/rapports/page.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/rapports/recap-bulletins-annuel/page.tsx",
+      "palette": 9,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 1,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/rapports/recap-personnel/page.tsx",
+      "palette": 55,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 1,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/recrutement/ModeSelectionModal.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/recrutement/candidat/[id]/page.tsx",
+      "palette": 5,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/recrutement/customize-career-page/page.tsx",
+      "palette": 33,
+      "hex": 12,
+      "emoji": 0,
+      "gradient": 2,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/recrutement/demandes/page.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/recrutement/entretiens/page.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/recrutement/ia/analytics/page.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/recrutement/ia/candidats/[id]/page.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/recrutement/ia/candidats/page.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/recrutement/ia/create/page.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 3,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/recrutement/manuel/candidats/[id]/page.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/recrutement/manuel/candidats/page.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/recrutement/manuel/create/page.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 2,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 1,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/recrutement/offres/[id]/edit/page.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 1,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/recrutement/page.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/recrutement/pipeline/page.tsx",
+      "palette": 1,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/recrutement/tableau-de-bord/page.tsx",
+      "palette": 2,
+      "hex": 1,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/rh-blog/[slug]/edit/page.tsx",
+      "palette": 7,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/rh-blog/nouveau/page.tsx",
+      "palette": 4,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/rh-blog/page.tsx",
+      "palette": 88,
+      "hex": 3,
+      "emoji": 0,
+      "gradient": 6,
+      "pulse": 0,
+      "blur": 2,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/(dashboard)/success/page.tsx",
+      "palette": 142,
+      "hex": 0,
+      "emoji": 1,
+      "gradient": 13,
+      "pulse": 4,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/auth/forgot-password/page.tsx",
+      "palette": 0,
+      "hex": 3,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/auth/layout.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/auth/login/page.tsx",
+      "palette": 99,
+      "hex": 3,
+      "emoji": 6,
+      "gradient": 6,
+      "pulse": 2,
+      "blur": 2,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/auth/register/page.tsx",
+      "palette": 125,
+      "hex": 1,
+      "emoji": 4,
+      "gradient": 6,
+      "pulse": 0,
+      "blur": 1,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/auth/reset-password/page.tsx",
+      "palette": 3,
+      "hex": 9,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/design-system/page.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/ecran/page.tsx",
+      "palette": 13,
+      "hex": 4,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/kiosk/page.tsx",
+      "palette": 48,
+      "hex": 10,
+      "emoji": 1,
+      "gradient": 4,
+      "pulse": 0,
+      "blur": 2,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/layout.tsx",
+      "palette": 0,
+      "hex": 1,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/pme/[companyId]/apparence/page.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/pme/[companyId]/bulletins/page.tsx",
+      "palette": 18,
+      "hex": 3,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/pme/[companyId]/paie/page.tsx",
+      "palette": 69,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 1,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/pme/[companyId]/parametres/page.tsx",
+      "palette": 32,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 2,
+      "pulse": 0,
+      "blur": 2,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/pme/[companyId]/parametres/subscription/page.tsx",
+      "palette": 83,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 1,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "app/pme/[companyId]/rapports/comptabilite/page.tsx",
+      "palette": 196,
+      "hex": 0,
+      "emoji": 13,
+      "gradient": 1,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/AccessDenied.tsx",
+      "palette": 5,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 2,
+      "pulse": 0,
+      "blur": 1,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/DashboardContent.tsx",
+      "palette": 72,
+      "hex": 1,
+      "emoji": 2,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/PeriodSelector.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/RapportsSubNav.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/RequestModuleNav.tsx",
+      "palette": 6,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/YearlyEvolutionPanel.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/absence-analytics/AbsenceAnalyticsBoard.tsx",
+      "palette": 261,
+      "hex": 2,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/absences/AbsencesOverview.tsx",
+      "palette": 31,
+      "hex": 7,
+      "emoji": 1,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/appearance/AppearanceLink.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/appearance/AppearancePage.tsx",
+      "palette": 0,
+      "hex": 1,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/attendance/AttendanceDashboard.tsx",
+      "palette": 40,
+      "hex": 19,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/attendance/AttendanceDialog.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/attendance/AttendanceDisplayFrame.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/attendance/AttendanceLoadError.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/attendance/AttendanceModuleFrame.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/auth/AuthShell.tsx",
+      "palette": 0,
+      "hex": 1,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/auth/FormElements.tsx",
+      "palette": 14,
+      "hex": 14,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/auth/layout.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/chat/ChatPage.tsx",
+      "palette": 1,
+      "hex": 1,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 1,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/dashboard/MyDay.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/dashboard/MyDayWidgets.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/dashboard/PilotageDashboard.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/dashboard/day-calendar.ts",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/dashboard/day-types.ts",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/design-system/charts.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/design-system/feedback.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/design-system/primitives.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/employees/CnssDeclarationField.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/employees/WorkforceOverview.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/employees/create/Step1Identity.tsx",
+      "palette": 4,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/employees/create/Step2Family.tsx",
+      "palette": 4,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/employees/create/Step4Validation.tsx",
+      "palette": 5,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 2,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/formation/AttendanceSheetPrintable.tsx",
+      "protected": true
+    },
+    {
+      "file": "components/formation/SessionsView.tsx",
+      "palette": 84,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/layout/DashboardShell.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/layout/RootAppearance.tsx",
+      "palette": 5,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/layout/ShellSearch.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/layout/Sidebar.tsx",
+      "palette": 0,
+      "hex": 1,
+      "emoji": 0,
+      "gradient": 2,
+      "pulse": 5,
+      "blur": 1,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/layout/ThemeControl.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/layout/TopNav.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/leave-history/LeaveCharts.tsx",
+      "palette": 14,
+      "hex": 23,
+      "emoji": 0,
+      "gradient": 2,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/loans/CashPaymentModal.tsx",
+      "palette": 49,
+      "hex": 0,
+      "emoji": 1,
+      "gradient": 4,
+      "pulse": 0,
+      "blur": 3,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/loans/EditDebtModal.tsx",
+      "palette": 3,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/loans/LoanModuleFrame.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/loans/LoanSpaceView.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/loans/LoanValidationCharts.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/loans/LoansDashboard.tsx",
+      "palette": 25,
+      "hex": 22,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/loans/LoansOverview.tsx",
+      "palette": 35,
+      "hex": 8,
+      "emoji": 1,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/performance/PerformanceNav.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/permissions/PermissionsOverview.tsx",
+      "palette": 28,
+      "hex": 9,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/portfolio/PortfolioSidebar.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 1,
+      "pulse": 0,
+      "blur": 1,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/portfolio/PortfolioTopNav.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/providers/AppearanceProvider.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/providers/DemoProvider.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/providers/NotificationProvider.tsx",
+      "palette": 31,
+      "hex": 0,
+      "emoji": 3,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 1,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/providers/ThemeProvider.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/recruitment/RecruitmentModals.tsx",
+      "palette": 9,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/recruitment/recruitment-ui.tsx",
+      "palette": 8,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/request-history/RequestHistoryView.tsx",
+      "palette": 44,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/request-reports/LoansRequestsPanel.tsx",
+      "palette": 15,
+      "hex": 1,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/request-reports/RequestReportDashboard.tsx",
+      "palette": 43,
+      "hex": 11,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/requests/ModuleNav.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/requests/ModulePageFrame.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/requests/index.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/templates/FoundationPreview.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/templates/index.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/ui/AlertBadge.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/ui/ErrorLayout.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/ui/FancySelect.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/ui/KonzaLoader.tsx",
+      "palette": 0,
+      "hex": 2,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/ui/PlaceholderPage.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/ui/ProfileAvatar.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/ui/SearchSelect.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/ui/StatCard.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/ui/basic.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/ui/useToast.tsx",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "components/workforce/WorkforceDashboard.tsx",
+      "palette": 27,
+      "hex": 27,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": true,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "hooks/useAnniversaries.ts",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "hooks/useAnnouncements.ts",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "hooks/useCompanyLogo.ts",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "hooks/useDayEvents.ts",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "hooks/useDayOverview.ts",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "hooks/usePersonalDay.ts",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "hooks/useTasks.ts",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "lib/appearance-bootstrap.ts",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "lib/appearance.ts",
+      "palette": 0,
+      "hex": 54,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "lib/certificate-templates.ts",
+      "palette": 0,
+      "hex": 19,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "lib/data/anniversaries.api.ts",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "lib/data/anniversaries.ts",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "lib/data/announcements.api.ts",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "lib/data/announcements.ts",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "lib/data/appearance.api.ts",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "lib/data/appearance.ts",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "lib/data/context.ts",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "lib/data/day-events.api.ts",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "lib/data/day-events.ts",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "lib/data/day-overview.api.ts",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "lib/data/day-overview.ts",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "lib/data/tasks.api.ts",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "lib/data/tasks.ts",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "lib/personal-dashboard-stats.ts",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "lib/request-status.ts",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "lib/shell/page-index.ts",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "lib/theme.ts",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "types/contracts/anniversaries.ts",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "types/contracts/announcements.ts",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "types/contracts/appearance.ts",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "types/contracts/day-events.ts",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "types/contracts/day-overview.ts",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    },
+    {
+      "file": "types/contracts/tasks.ts",
+      "palette": 0,
+      "hex": 0,
+      "emoji": 0,
+      "gradient": 0,
+      "pulse": 0,
+      "blur": 0,
+      "frame": false,
+      "manualReview": [
+        "cards and status semantics",
+        "header and duplicate navigation",
+        "selectors and keyboard access",
+        "states and toasts",
+        "visual dark/mobile",
+        "API/permissions/calculations and official exports"
+      ]
+    }
+  ]
+}

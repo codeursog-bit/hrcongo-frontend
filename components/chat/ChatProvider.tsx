@@ -1,4 +1,5 @@
 'use client';
+import { useSubscription } from '@/hooks/useSubscription';
 
 // ============================================================================
 // 📁 components/chat/ChatProvider.tsx — le moteur du "faux temps réel"
@@ -69,6 +70,8 @@ export const useChat = () => useContext(ChatContext);
 export const useChatUnread = () => useContext(ChatContext).unreadTotal;
 
 export function ChatProvider({ children }: { children: React.ReactNode }) {
+  const {subscription}=useSubscription();
+  const permitted=subscription?.planDetails?.limits?.hasInternalMessaging===true && !subscription?.accessRestricted;
   const [enabled, setEnabled] = useState(false);
   const [unreadTotal, setUnreadTotal] = useState(0);
   const [lastChange, setLastChange] = useState<ChatChange>(DEFAULT.lastChange);
@@ -88,7 +91,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || !permitted) return;
 
     let stopped = false;
     let errors = 0;
@@ -164,7 +167,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('online', onOnline);
     };
-  }, [enabled]);
+  }, [enabled,permitted]);
 
   const setFocus = useCallback((f: ChatFocus) => {
     if (focusRef.current === f) return;
@@ -185,8 +188,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const pollNow = useCallback(() => runRef.current(), []);
 
   const value = useMemo<ChatContextValue>(
-    () => ({ enabled, unreadTotal, lastChange, setFocus, pokeActivity, pollNow }),
-    [enabled, unreadTotal, lastChange, setFocus, pokeActivity, pollNow],
+    () => ({ enabled:enabled&&permitted, unreadTotal:permitted?unreadTotal:0, lastChange, setFocus, pokeActivity, pollNow }),
+    [enabled, permitted, unreadTotal, lastChange, setFocus, pokeActivity, pollNow],
   );
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

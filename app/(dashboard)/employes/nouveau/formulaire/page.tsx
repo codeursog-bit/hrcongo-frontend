@@ -554,7 +554,7 @@ function CreateEmployeeFormInner() {
             </div>
 
             {/* Step content */}
-            <div id="employee-step-content" tabIndex={-1} aria-busy={showCelebration} className="employee-create-content">
+            <div data-guide="employes-form-workspace" id="employee-step-content" tabIndex={-1} aria-busy={showCelebration} className="employee-create-content">
               <AnimatePresence mode="wait" custom={direction}>
                 <motion.div
                   key={currentStep}

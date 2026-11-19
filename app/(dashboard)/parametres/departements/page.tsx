@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAlert } from '@/components/providers/AlertProvider';
 import { api } from '@/services/api';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import { SettingsFrame as ModulePageFrame } from '@/components/settings/SettingsFrame';
 
 interface Department {
   id: string;
@@ -20,7 +21,7 @@ interface Department {
   };
 }
 
-export default function DepartmentsPage() {
+function DepartmentsPage() {
   const router = useRouter();
    const alert = useAlert();
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -112,19 +113,19 @@ export default function DepartmentsPage() {
   return (
     <div className="max-w-5xl mx-auto pb-20 relative">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+      <div className="settings-page-header flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
         <div className="flex items-center gap-4">
            <button onClick={() => router.back()} className="p-2 bg-[var(--surface)] rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)] transition-colors">
              <ArrowLeft size={20} className="text-[var(--text-muted)]" />
            </button>
            <div>
-              <h1 className="text-3xl font-bold text-[var(--text)] tracking-tight">Départements</h1>
+              <h1 className="text-3xl font-semibold text-[var(--text)] tracking-tight">Départements</h1>
               <p className="text-[var(--text-muted)]">Structurez votre organigramme.</p>
            </div>
         </div>
         <button 
           onClick={openCreate}
-          className="px-5 py-3 bg-emerald-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 hover:scale-105 hover:bg-emerald-700 transition-all flex items-center gap-2"
+          className="px-5 py-3 bg-[var(--brand)] text-[var(--on-brand)] font-semibold rounded-xl shadow-lg   hover:bg-[var(--brand)] transition-colors flex items-center gap-2"
         >
            <Plus size={20} /> Ajouter Département
         </button>
@@ -134,39 +135,39 @@ export default function DepartmentsPage() {
       {isLoading ? (
         <KonzaLoader variant="section" />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="settings-departments-list grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
            {departments.map((dept) => (
              <motion.div 
                key={dept.id}
                initial={{ opacity: 0, scale: 0.9 }}
                animate={{ opacity: 1, scale: 1 }}
-               className="group bg-[var(--surface)] backdrop-blur-md border border-[var(--border)] rounded-2xl p-6 hover:border-emerald-500/50 hover:bg-[var(--surface)] transition-all relative overflow-hidden"
+               className="settings-department-row group bg-[var(--surface)]  border border-[var(--border)] rounded-2xl p-6 hover:border-[var(--border)] hover:bg-[var(--surface)] transition-colors relative overflow-hidden"
              >
-                <div className="absolute top-0 right-0 p-4 flex gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                <div className="settings-row-actions absolute top-0 right-0 p-4 flex gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                    <button
                      type="button"
                      onClick={() => openEdit(dept)}
                      title="Modifier"
-                     className="p-2 text-[var(--text-muted)] hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-colors"
+                     className="p-2 text-[var(--text-muted)] hover:text-[var(--success-text)] hover:bg-[var(--brand-soft)]  rounded-lg transition-colors"
                    ><Edit2 size={16} /></button>
                    <button
                      type="button"
                      onClick={() => setDeleteTarget(dept)}
                      title="Supprimer"
-                     className="p-2 text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                     className="p-2 text-[var(--text-muted)] hover:text-[var(--danger-text)] hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  rounded-lg transition-colors"
                    ><Trash2 size={16} /></button>
                 </div>
 
-                <div className="w-14 h-14 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 rounded-2xl flex items-center justify-center mb-4 shadow-inner">
+                <div className="settings-row-icon w-14 h-14 bg-[var(--brand-soft)]  text-[var(--success-text)] rounded-2xl flex items-center justify-center mb-4 shadow-inner">
                    <Network size={28} />
                 </div>
                 
-                <h3 className="text-xl font-bold text-[var(--text)] mb-1">{dept.name}</h3>
+                <h3 className="text-xl font-semibold text-[var(--text)] mb-1">{dept.name}</h3>
                 {dept.code && <p className="text-xs font-mono text-[var(--text-muted)] mb-4">{dept.code}</p>}
                 
-                <div className="flex items-center gap-2 text-sm text-[var(--text-muted)] bg-[var(--surface-2)] w-fit px-3 py-1.5 rounded-full">
+                <div className="settings-row-meta flex items-center gap-2 text-sm text-[var(--text-muted)] bg-[var(--surface-2)] w-fit px-3 py-1.5 rounded-full">
                    <Users size={14} />
-                   <span className="font-bold text-[var(--text)]">{getCount(dept)}</span> collaborateurs
+                   <span className="font-semibold text-[var(--text)]">{getCount(dept)}</span> collaborateurs
                 </div>
              </motion.div>
            ))}
@@ -174,10 +175,10 @@ export default function DepartmentsPage() {
            {/* Empty State Card */}
            <button 
               onClick={openCreate}
-              className="border-2 border-dashed border-[var(--border)] rounded-2xl p-6 flex flex-col items-center justify-center text-[var(--text-muted)] hover:border-emerald-500 hover:text-emerald-500 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/10 transition-all min-h-[200px]"
+              className="border-2 border-dashed border-[var(--border)] rounded-2xl p-6 flex flex-col items-center justify-center text-[var(--text-muted)] hover:border-[var(--border)] hover:text-[var(--success-text)] hover:bg-[var(--brand-soft)]  transition-colors min-h-[200px]"
            >
               <Plus size={32} className="mb-2" />
-              <span className="font-bold">Créer nouveau</span>
+              <span className="font-semibold">Créer nouveau</span>
            </button>
         </div>
       )}
@@ -187,7 +188,7 @@ export default function DepartmentsPage() {
         {showModal && (
           <motion.div 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xl p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[rgb(0_0_0_/.5)]  p-4"
           >
             <motion.div 
               initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
@@ -196,38 +197,38 @@ export default function DepartmentsPage() {
                <button onClick={closeModal} className="absolute top-4 right-4 p-2 text-[var(--text-muted)] hover:text-[var(--text)]"><X size={20}/></button>
                
                <div className="flex items-center gap-4 mb-8">
-                  <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center">
+                  <div className="w-12 h-12 bg-[var(--brand-soft)]  text-[var(--success-text)]  rounded-full flex items-center justify-center">
                      <Network size={24} />
                   </div>
-                  <h2 className="text-2xl font-bold text-[var(--text)]">{editing ? 'Modifier le département' : 'Nouveau Service'}</h2>
+                  <h2 className="text-2xl font-semibold text-[var(--text)]">{editing ? 'Modifier le département' : 'Nouveau Service'}</h2>
                </div>
 
                <form onSubmit={handleSubmit} className="space-y-6">
                   <div>
-                     <label className="block text-sm font-bold text-[var(--text)] mb-2">Nom du département</label>
+                     <label className="block text-sm font-semibold text-[var(--text)] mb-2">Nom du département</label>
                      <input 
                         required
                         autoFocus
                         placeholder="Ex: Marketing, IT, Finance..."
                         value={formData.name}
                         onChange={(e) => setFormData({...formData, name: e.target.value})}
-                        className="w-full p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-emerald-500/50 outline-none text-lg"
+                        className="w-full p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[var(--focus)] outline-none text-lg"
                      />
                   </div>
                   <div>
-                     <label className="block text-sm font-bold text-[var(--text)] mb-2">Code (Optionnel)</label>
+                     <label className="block text-sm font-semibold text-[var(--text)] mb-2">Code (Optionnel)</label>
                      <input 
                         placeholder="Ex: MKT, IT, FIN..."
                         value={formData.code}
                         onChange={(e) => setFormData({...formData, code: e.target.value.toUpperCase()})}
-                        className="w-full p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-emerald-500/50 outline-none font-mono tracking-wider"
+                        className="w-full p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[var(--focus)] outline-none font-mono tracking-wider"
                      />
                   </div>
 
                   <button 
                      type="submit" 
                      disabled={isSubmitting}
-                     className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg transition-all flex justify-center items-center gap-2"
+                     className="w-full py-4 bg-[var(--brand)] hover:bg-[var(--brand)] text-[var(--on-brand)] font-semibold rounded-xl shadow-lg transition-colors flex justify-center items-center gap-2"
                   >
                      {isSubmitting ? <Loader2 className="animate-spin" /> : <Save size={20} />}
                      {editing ? 'Enregistrer les modifications' : 'Créer le département'}
@@ -243,20 +244,20 @@ export default function DepartmentsPage() {
         {deleteTarget && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xl p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[rgb(0_0_0_/.5)]  p-4"
           >
             <motion.div
               initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
               className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-8 max-w-md w-full shadow-2xl"
             >
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center">
+                <div className="w-12 h-12 bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  text-[var(--danger-text)]  rounded-full flex items-center justify-center">
                   <Trash2 size={24} />
                 </div>
-                <h2 className="text-xl font-bold text-[var(--text)]">Supprimer ce département ?</h2>
+                <h2 className="text-xl font-semibold text-[var(--text)]">Supprimer ce département ?</h2>
               </div>
               <p className="text-[var(--text-muted)] mb-6">
-                Le département <span className="font-bold text-[var(--text)]">« {deleteTarget.name} »</span> sera supprimé définitivement.
+                Le département <span className="font-semibold text-[var(--text)]">« {deleteTarget.name} »</span> sera supprimé définitivement.
                 Un département qui contient encore des collaborateurs ne peut pas être supprimé.
               </p>
               <div className="flex gap-3">
@@ -264,7 +265,7 @@ export default function DepartmentsPage() {
                   type="button"
                   onClick={() => setDeleteTarget(null)}
                   disabled={isDeleting}
-                  className="flex-1 py-3 bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text)] font-bold rounded-xl hover:bg-[var(--surface)] transition-all"
+                  className="flex-1 py-3 bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text)] font-semibold rounded-xl hover:bg-[var(--surface)] transition-colors"
                 >
                   Annuler
                 </button>
@@ -272,7 +273,7 @@ export default function DepartmentsPage() {
                   type="button"
                   onClick={handleDelete}
                   disabled={isDeleting}
-                  className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-all flex justify-center items-center gap-2"
+                  className="flex-1 py-3 bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] text-[var(--text)] font-semibold rounded-xl transition-colors flex justify-center items-center gap-2"
                 >
                   {isDeleting ? <Loader2 className="animate-spin" size={18} /> : <Trash2 size={18} />}
                   Supprimer
@@ -283,5 +284,14 @@ export default function DepartmentsPage() {
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+
+export default function DepartmentsPageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <DepartmentsPage />
+    </ModulePageFrame>
   );
 }

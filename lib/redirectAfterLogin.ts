@@ -12,6 +12,7 @@ export function getRedirectUrl(user: {
 
   // Super admin → panel admin
   if (role === 'SUPER_ADMIN') return '/admin';
+  if (role === 'SUPPORT') return '/admin/support';
 
   // 🆕 Admin multi-entreprises → son portefeuille, pas le dashboard normal
   // (avant les autres checks : même s'il a un companyId actif, c'est le

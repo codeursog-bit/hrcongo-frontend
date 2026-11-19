@@ -8,6 +8,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { FileText, Loader2, Download, ChevronDown } from 'lucide-react';
 import { api } from '@/services/api';
+import { ModulePageFrame } from '@/components/requests/ModulePageFrame';
 
 const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 const fmt    = (n: number) => new Intl.NumberFormat('fr-CG', { maximumFractionDigits: 0 }).format(n);
@@ -19,7 +20,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   PAID:      { label: 'Payé',      color: 'text-emerald-400' },
 };
 
-export default function PmeBulletinsPage() {
+function PmeBulletinsPage() {
   const params    = useParams();
   const companyId = params.companyId as string;
 
@@ -161,5 +162,14 @@ export default function PmeBulletinsPage() {
         )}
       </div>
     </div>
+  );
+}
+
+
+export default function PmeBulletinsPageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <PmeBulletinsPage />
+    </ModulePageFrame>
   );
 }

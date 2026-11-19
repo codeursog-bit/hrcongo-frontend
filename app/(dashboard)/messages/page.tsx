@@ -4,12 +4,12 @@
 // Suspense obligatoire : ChatPage lit useSearchParams() (lien profond ?c=<id> des notifications push).
 
 import { Suspense } from 'react';
-import ChatPage from '@/components/chat/ChatPage';
+import MessagesWorkspace from '@/components/support/MessagesWorkspace';
 
 export default function MessagesPage() {
   return (
     <Suspense fallback={null}>
-      <ChatPage />
+      <MessagesWorkspace />
     </Suspense>
   );
 }

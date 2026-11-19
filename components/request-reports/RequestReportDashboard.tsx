@@ -1,4 +1,5 @@
 'use client';
+import { useModuleVisuals, ModulePageSkeleton } from '@/components/requests/ModulePageFrame';
 
 // ============================================================================
 // 📁 components/request-reports/RequestReportDashboard.tsx
@@ -57,6 +58,8 @@ function stats(rs: HistoryRow[]) {
 }
 
 export default function RequestReportDashboard({ kind }: { kind: RequestKind }) {
+  const [uiLoadError,setUiLoadError]=useState('');
+ const {refonte:uiRefonte,motion:uiMotion}=useModuleVisuals();
   const { bp } = useBasePath();
   const now = new Date();
   const isPerm = kind === 'permission';
@@ -79,7 +82,7 @@ export default function RequestReportDashboard({ kind }: { kind: RequestKind }) 
       try {
         const list: any = await api.get(isPerm ? '/permission-tickets' : '/absence-requests');
         setRows(toRows(kind, Array.isArray(list) ? list : []));
-      } catch (e) { console.error('Rapport : chargement impossible', e); }
+      } catch (e) { console.error('Rapport : chargement impossible', e); setUiLoadError('Le rapport n’a pas pu être chargé. Réessayez dans un instant.'); }
       finally { setLoading(false); }
     })();
   }, [kind, isPerm]);
@@ -162,7 +165,7 @@ export default function RequestReportDashboard({ kind }: { kind: RequestKind }) 
 
   // Permissions — ponctualité des retours validés
   const punctuality = useMemo(() => {
-    const b = [['En avance', 0, '#10b981'], ['À l’heure (± 10 min)', 0, '#0ea5e9'], ['Retard 10 – 60 min', 0, '#f59e0b'], ['Retard > 1 h', 0, '#ef4444']] as [string, number, string][];
+    const b = [['En avance', 0, 'var(--loan-chart-2)'], ['À l’heure (± 10 min)', 0, 'var(--loan-chart-1)'], ['Retard 10 – 60 min', 0, 'var(--loan-chart-1)'], ['Retard > 1 h', 0, 'var(--loan-chart-1)']] as [string, number, string][];
     base.filter(r => r.ret === 'CONFIRMED' && r.overrunMin != null).forEach(r => {
       const o = r.overrunMin as number;
       b[o < -10 ? 0 : o <= 10 ? 1 : o <= 60 ? 2 : 3][1] += 1;
@@ -233,7 +236,8 @@ export default function RequestReportDashboard({ kind }: { kind: RequestKind }) 
         ...(isPerm ? [fmtMinutes(r.outMin), r.overrunMin != null && r.overrunMin > 0 ? fmtMinutes(r.overrunMin) : '', r.adjusted ? 'Oui' : 'Non'] : [String(r.days ?? 0)])]));
   };
 
-  if (loading) return <KonzaLoader variant="page" />;
+  if (loading) return uiRefonte ? <ModulePageSkeleton label="Chargement des demandes" /> : <KonzaLoader variant="page" />;
+  if(uiRefonte && uiLoadError) return <div role="alert" className="loan-module-error"><p>{uiLoadError}</p><button type="button" onClick={()=>window.location.reload()}>Réessayer</button></div>;
 
   const typeNames = Object.values(TYPE_LABELS);
   const typeColorList = Object.keys(TYPE_LABELS).map(k => TYPE_COLORS[k]);
@@ -244,8 +248,8 @@ export default function RequestReportDashboard({ kind }: { kind: RequestKind }) 
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-xl font-bold text-[var(--text)]">Rapport — {isPerm ? 'Permissions' : 'Absences'}</h1>
+      <div className="attendance-page-heading">
+        <h1 className="text-xl font-semibold text-[var(--text)]">Rapport — {isPerm ? 'Permissions' : 'Absences'}</h1>
         <p className="text-sm text-[var(--text-muted)]">
           Tableau de bord de pilotage · {periodLabel(period)}{P ? ' · évolution comparée à la période précédente' : ''}. Cliquez sur un graphique pour filtrer.
         </p>
@@ -267,24 +271,24 @@ export default function RequestReportDashboard({ kind }: { kind: RequestKind }) 
       )}
 
       {/* KPI — cliquez sur une tuile marquée pour isoler les demandes concernées */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
-        <KpiTile icon={ListChecks} tone="bg-sky-50 text-sky-600 dark:bg-sky-900/20" label={isPerm ? 'Tickets' : 'Demandes'} value={S.total} hint={`${S.pending} en attente · ${S.cancelled} annulé(s)`} delta={P ? deltaPct(S.total, P.total) : undefined} />
-        <KpiTile icon={CheckCircle2} tone="bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20" label="Taux d’approbation" value={S.approvalRate != null ? `${S.approvalRate} %` : '—'} hint={`${S.approved} approuvée(s) · ${S.rejected} refusée(s)`}
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 attendance-metrics">
+        <KpiTile icon={ListChecks} tone="bg-[var(--brand-soft)] text-[var(--action)] " label={isPerm ? 'Tickets' : 'Demandes'} value={S.total} hint={`${S.pending} en attente · ${S.cancelled} annulé(s)`} delta={P ? deltaPct(S.total, P.total) : undefined} />
+        <KpiTile icon={CheckCircle2} tone="bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)] " label="Taux d’approbation" value={S.approvalRate != null ? `${S.approvalRate} %` : '—'} hint={`${S.approved} approuvée(s) · ${S.rejected} refusée(s)`}
           delta={P ? deltaPct(S.approvalRate, P.approvalRate) : undefined} />
-        <KpiTile icon={Timer} tone="bg-violet-50 text-violet-600 dark:bg-violet-900/20" label="Délai moyen de décision" value={fmtMinutes(S.response)} delta={P ? deltaPct(S.response, P.response) : undefined} invert />
+        <KpiTile icon={Timer} tone="bg-[var(--brand-soft)] text-[var(--action)] " label="Délai moyen de décision" value={fmtMinutes(S.response)} delta={P ? deltaPct(S.response, P.response) : undefined} invert />
         {isPerm ? (<>
-          <KpiTile icon={Clock} tone="bg-amber-50 text-amber-600 dark:bg-amber-900/20" label="Durée moyenne de sortie" value={fmtMinutes(S.avgOut)} hint={`sur ${S.confirmed} retour(s) validé(s)`} delta={P ? deltaPct(S.avgOut, P.avgOut) : undefined} invert />
-          <KpiTile icon={Clock} tone="bg-sky-50 text-sky-600 dark:bg-sky-900/20" label="Heures hors poste" value={`${Math.round(S.outHours * 10) / 10} h`} hint="cumul des retours validés" delta={P ? deltaPct(S.outHours, P.outHours) : undefined} invert />
-          <KpiTile icon={AlertTriangle} tone="bg-red-50 text-red-600 dark:bg-red-900/20" label="Retours en dépassement" value={S.lateRate != null ? `${S.lateRate} %` : '—'} hint={S.lateCount ? `${S.lateCount} sur ${S.confirmed} · cliquer pour les isoler` : `${S.lateCount} sur ${S.confirmed} validés`}
+          <KpiTile icon={Clock} tone="bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)] " label="Durée moyenne de sortie" value={fmtMinutes(S.avgOut)} hint={`sur ${S.confirmed} retour(s) validé(s)`} delta={P ? deltaPct(S.avgOut, P.avgOut) : undefined} invert />
+          <KpiTile icon={Clock} tone="bg-[var(--brand-soft)] text-[var(--action)] " label="Heures hors poste" value={`${Math.round(S.outHours * 10) / 10} h`} hint="cumul des retours validés" delta={P ? deltaPct(S.outHours, P.outHours) : undefined} invert />
+          <KpiTile icon={AlertTriangle} tone="bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] text-[var(--danger-text)] " label="Retours en dépassement" value={S.lateRate != null ? `${S.lateRate} %` : '—'} hint={S.lateCount ? `${S.lateCount} sur ${S.confirmed} · cliquer pour les isoler` : `${S.lateCount} sur ${S.confirmed} validés`}
             delta={P ? deltaPct(S.lateRate, P.lateRate) : undefined} invert onClick={S.lateCount || flag === 'late' ? () => toggleFlag('late') : undefined} active={flag === 'late'} />
-          <KpiTile icon={ShieldCheck} tone="bg-amber-50 text-amber-600 dark:bg-amber-900/20" label="Retours à valider" value={S.returnsPending} hint={S.returnsPending ? 'cliquer pour les isoler' : 'rien en attente'} onClick={S.returnsPending || flag === 'pending' ? () => toggleFlag('pending') : undefined} active={flag === 'pending'} />
-          <KpiTile icon={PencilLine} tone="bg-violet-50 text-violet-600 dark:bg-violet-900/20" label="Heures corrigées" value={S.adjusted} hint="par l’administration" onClick={S.adjusted || flag === 'adjusted' ? () => toggleFlag('adjusted') : undefined} active={flag === 'adjusted'} />
+          <KpiTile icon={ShieldCheck} tone="bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)] " label="Retours à valider" value={S.returnsPending} hint={S.returnsPending ? 'cliquer pour les isoler' : 'rien en attente'} onClick={S.returnsPending || flag === 'pending' ? () => toggleFlag('pending') : undefined} active={flag === 'pending'} />
+          <KpiTile icon={PencilLine} tone="bg-[var(--brand-soft)] text-[var(--action)] " label="Heures corrigées" value={S.adjusted} hint="par l’administration" onClick={S.adjusted || flag === 'adjusted' ? () => toggleFlag('adjusted') : undefined} active={flag === 'adjusted'} />
         </>) : (<>
-          <KpiTile icon={CalendarDays} tone="bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20" label="Jours d’absence approuvés" value={`${S.days} j`} delta={P ? deltaPct(S.days, P.days) : undefined} invert />
-          <KpiTile icon={FileText} tone="bg-amber-50 text-amber-600 dark:bg-amber-900/20" label="Durée moyenne" value={S.avgDays != null ? `${S.avgDays.toFixed(1).replace('.', ',')} j` : '—'} />
-          <KpiTile icon={Hourglass} tone="bg-amber-50 text-amber-600 dark:bg-amber-900/20" label="En attente de décision" value={S.pending} hint={S.pending ? 'cliquer pour les isoler' : `${S.cancelled} annulée(s)`} onClick={S.pending || status === 'PENDING' ? () => setStatus(status === 'PENDING' ? '' : 'PENDING') : undefined} active={status === 'PENDING'} />
-          <KpiTile icon={Users2} tone="bg-sky-50 text-sky-600 dark:bg-sky-900/20" label="Absents aujourd’hui" value={absentToday} hint="absences approuvées en cours" />
-          <KpiTile icon={FileText} tone="bg-red-50 text-red-600 dark:bg-red-900/20" label="Maladies avec justificatif" value={S.sick ? `${pct(S.sickProof, S.sick)} %` : '—'} hint={S.sick ? `${S.sickProof} sur ${S.sick} maladie(s) approuvée(s)` : 'aucune maladie sur la période'} />
+          <KpiTile icon={CalendarDays} tone="bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)] " label="Jours d’absence approuvés" value={`${S.days} j`} delta={P ? deltaPct(S.days, P.days) : undefined} invert />
+          <KpiTile icon={FileText} tone="bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)] " label="Durée moyenne" value={S.avgDays != null ? `${S.avgDays.toFixed(1).replace('.', ',')} j` : '—'} />
+          <KpiTile icon={Hourglass} tone="bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)] " label="En attente de décision" value={S.pending} hint={S.pending ? 'cliquer pour les isoler' : `${S.cancelled} annulée(s)`} onClick={S.pending || status === 'PENDING' ? () => setStatus(status === 'PENDING' ? '' : 'PENDING') : undefined} active={status === 'PENDING'} />
+          <KpiTile icon={Users2} tone="bg-[var(--brand-soft)] text-[var(--action)] " label="Absents aujourd’hui" value={absentToday} hint="absences approuvées en cours" />
+          <KpiTile icon={FileText} tone="bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] text-[var(--danger-text)] " label="Maladies avec justificatif" value={S.sick ? `${pct(S.sickProof, S.sick)} %` : '—'} hint={S.sick ? `${S.sickProof} sur ${S.sick} maladie(s) approuvée(s)` : 'aucune maladie sur la période'} />
         </>)}
       </div>
 
@@ -299,7 +303,7 @@ export default function RequestReportDashboard({ kind }: { kind: RequestKind }) 
               <Tooltip /><Legend />
               {typeNames.map((n, i) => (
                 <Bar key={n} dataKey={n} stackId="a" fill={typeColorList[i]} cursor="pointer"
-                  onClick={(d: any) => setPeriod({ ...period, mode: 'month', year: chartYear, month: d?.payload?.idx ?? period.month })} />
+                  onClick={(d: any) => setPeriod({ ...period, mode: 'month', year: chartYear, month: d?.payload?.idx ?? period.month })} maxBarSize={uiRefonte ? 16 : undefined} background={uiRefonte ? {fill:"var(--surface-2)",radius:10} : undefined} isAnimationActive={uiRefonte ? uiMotion : undefined} animationDuration={uiRefonte ? 700 : undefined} />
               ))}
             </BarChart>
           </ResponsiveContainer>
@@ -310,8 +314,8 @@ export default function RequestReportDashboard({ kind }: { kind: RequestKind }) 
             <ResponsiveContainer width="100%" height={260}>
               <PieChart>
                 <Pie data={byStatus} dataKey="value" nameKey="name" innerRadius={55} outerRadius={90} cursor="pointer"
-                  label={(d: any) => `${pct(d.value, S.total)}%`} onClick={(d: any) => setStatus(status === d?.code ? '' : d?.code)}>
-                  {byStatus.map(d => <Cell key={d.code} fill={STATUS_COLORS[d.code]} opacity={!status || status === d.code ? 1 : 0.35} />)}
+                  label={(d: any) => `${pct(d.value, S.total)}%`} onClick={(d: any) => setStatus(status === d?.code ? '' : d?.code)} cornerRadius={uiRefonte ? 8 : 0} isAnimationActive={uiRefonte ? uiMotion : undefined} animationDuration={uiRefonte ? 700 : undefined}>
+                  {byStatus.map(d => <Cell key={d.code} fill={uiRefonte ? ({APPROVED:"var(--green)",PENDING:"var(--mustard)",REJECTED:"var(--danger)",CANCELLED:"var(--text-secondary)"}[d.code] || "var(--text-secondary)") : STATUS_COLORS[d.code]} opacity={!status || status === d.code ? 1 : 0.35} />)}
                 </Pie>
                 <Tooltip /><Legend />
               </PieChart>
@@ -324,8 +328,8 @@ export default function RequestReportDashboard({ kind }: { kind: RequestKind }) 
             <ResponsiveContainer width="100%" height={240}>
               <PieChart>
                 <Pie data={byType} dataKey="value" nameKey="name" outerRadius={85} cursor="pointer" label={(d: any) => `${pct(d.value, S.total)}%`}
-                  onClick={(d: any) => setType(type === d?.code ? '' : d?.code)}>
-                  {byType.map(d => <Cell key={d.code} fill={TYPE_COLORS[d.code]} opacity={!type || type === d.code ? 1 : 0.35} />)}
+                  onClick={(d: any) => setType(type === d?.code ? '' : d?.code)} cornerRadius={uiRefonte ? 8 : 0} isAnimationActive={uiRefonte ? uiMotion : undefined} animationDuration={uiRefonte ? 700 : undefined}>
+                  {byType.map(d => <Cell key={d.code} fill={uiRefonte ? (d.code==="MISSION" ? "var(--green)" : d.code==="AUTRE" ? "var(--mustard)" : "var(--brand)") : TYPE_COLORS[d.code]} opacity={!type || type === d.code ? 1 : 0.35} />)}
                 </Pie>
                 <Tooltip /><Legend />
               </PieChart>
@@ -341,8 +345,8 @@ export default function RequestReportDashboard({ kind }: { kind: RequestKind }) 
                 <XAxis type="number" fontSize={12} allowDecimals={false} />
                 <YAxis type="category" dataKey="name" fontSize={11} width={95} />
                 <Tooltip />
-                <Bar dataKey="value" name={isPerm ? 'Tickets' : 'Jours'} radius={[0, 6, 6, 0]} cursor="pointer" onClick={(d: any) => setDept(dept === d?.name ? '' : d?.name)}>
-                  {byDept.map((d, i) => <Cell key={d.name} fill={DEPT_PALETTE[i % DEPT_PALETTE.length]} opacity={!dept || dept === d.name ? 1 : 0.35} />)}
+                <Bar dataKey="value" name={isPerm ? 'Tickets' : 'Jours'} radius={uiRefonte ? [10,10,10,10] : [0, 6, 6, 0]} cursor="pointer" onClick={(d: any) => setDept(dept === d?.name ? '' : d?.name)} maxBarSize={uiRefonte ? 16 : undefined} background={uiRefonte ? {fill:"var(--surface-2)",radius:10} : undefined} isAnimationActive={uiRefonte ? uiMotion : undefined} animationDuration={uiRefonte ? 700 : undefined}>
+                  {byDept.map((d, i) => <Cell key={d.name} fill={uiRefonte ? `var(--loan-chart-${i%3+1})` : DEPT_PALETTE[i % DEPT_PALETTE.length]} opacity={!dept || dept === d.name ? 1 : 0.35} />)}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
@@ -354,7 +358,7 @@ export default function RequestReportDashboard({ kind }: { kind: RequestKind }) 
             <BarChart data={decisionBuckets}>
               <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
               <XAxis dataKey="name" fontSize={10} /><YAxis fontSize={12} allowDecimals={false} /><Tooltip />
-              <Bar dataKey="value" name="Demandes" fill="#8b5cf6" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="value" name="Demandes" fill="var(--loan-chart-3)" radius={uiRefonte ? [10,10,10,10] : [6, 6, 0, 0]} maxBarSize={uiRefonte ? 16 : undefined} background={uiRefonte ? {fill:"var(--surface-2)",radius:10} : undefined} isAnimationActive={uiRefonte ? uiMotion : undefined} animationDuration={uiRefonte ? 700 : undefined} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -367,10 +371,10 @@ export default function RequestReportDashboard({ kind }: { kind: RequestKind }) 
           </ChartCard>
           <ChartCard title="Circuit du ticket" subtitle="De la demande à la validation du retour">
             <Funnel steps={[
-              { label: 'Demandés', value: S.total, color: '#0ea5e9' },
-              { label: 'Autorisés', value: S.approved, color: '#10b981' },
-              { label: 'Retours déclarés', value: S.declared, color: '#f59e0b' },
-              { label: 'Retours validés', value: S.confirmed, color: '#059669' },
+              { label: 'Demandés', value: S.total, color: 'var(--loan-chart-1)' },
+              { label: 'Autorisés', value: S.approved, color: 'var(--loan-chart-2)' },
+              { label: 'Retours déclarés', value: S.declared, color: 'var(--loan-chart-1)' },
+              { label: 'Retours validés', value: S.confirmed, color: 'var(--loan-chart-1)' },
             ]} />
           </ChartCard>
           <ChartCard className="lg:col-span-3" title="Ponctualité des retours validés" subtitle="Heure de retour validée comparée à l’heure prévue">
@@ -379,7 +383,7 @@ export default function RequestReportDashboard({ kind }: { kind: RequestKind }) 
                 <BarChart data={punctuality} layout="vertical" margin={{ left: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" opacity={0.2} horizontal={false} />
                   <XAxis type="number" fontSize={12} allowDecimals={false} /><YAxis type="category" dataKey="name" fontSize={11} width={130} /><Tooltip />
-                  <Bar dataKey="value" name="Retours" radius={[0, 6, 6, 0]}>{punctuality.map(p => <Cell key={p.name} fill={p.color} />)}</Bar>
+                  <Bar dataKey="value" name="Retours" radius={uiRefonte ? [10,10,10,10] : [0, 6, 6, 0]} maxBarSize={uiRefonte ? 16 : undefined} background={uiRefonte ? {fill:"var(--surface-2)",radius:10} : undefined} isAnimationActive={uiRefonte ? uiMotion : undefined} animationDuration={uiRefonte ? 700 : undefined}>{punctuality.map(p => <Cell key={p.name} fill={p.color} />)}</Bar>
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -391,7 +395,7 @@ export default function RequestReportDashboard({ kind }: { kind: RequestKind }) 
             <ResponsiveContainer width="100%" height={230}>
               <BarChart data={durationBuckets}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.2} /><XAxis dataKey="name" fontSize={11} /><YAxis fontSize={12} allowDecimals={false} /><Tooltip />
-                <Bar dataKey="value" name="Absences" fill="#10b981" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="value" name="Absences" fill="var(--loan-chart-2)" radius={uiRefonte ? [10,10,10,10] : [6, 6, 0, 0]} maxBarSize={uiRefonte ? 16 : undefined} background={uiRefonte ? {fill:"var(--surface-2)",radius:10} : undefined} isAnimationActive={uiRefonte ? uiMotion : undefined} animationDuration={uiRefonte ? 700 : undefined} />
               </BarChart>
             </ResponsiveContainer>
           </ChartCard>
@@ -399,15 +403,15 @@ export default function RequestReportDashboard({ kind }: { kind: RequestKind }) 
             <ResponsiveContainer width="100%" height={230}>
               <BarChart data={startWeekday}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.2} /><XAxis dataKey="name" fontSize={12} /><YAxis fontSize={12} allowDecimals={false} /><Tooltip />
-                <Bar dataKey="value" name="Demandes" fill="#0ea5e9" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="value" name="Demandes" fill="var(--loan-chart-1)" radius={uiRefonte ? [10,10,10,10] : [6, 6, 0, 0]} maxBarSize={uiRefonte ? 16 : undefined} background={uiRefonte ? {fill:"var(--surface-2)",radius:10} : undefined} isAnimationActive={uiRefonte ? uiMotion : undefined} animationDuration={uiRefonte ? 700 : undefined} />
               </BarChart>
             </ResponsiveContainer>
           </ChartCard>
           <ChartCard title="Motifs des absences approuvées">
             {subTypes.length === 0 ? <EmptyChart h={230} /> : (
               <ResponsiveContainer width="100%" height={230}>
-                <PieChart><Pie data={subTypes} dataKey="value" nameKey="name" innerRadius={45} outerRadius={80}>
-                  {subTypes.map((d, i) => <Cell key={d.name} fill={DEPT_PALETTE[i % DEPT_PALETTE.length]} />)}
+                <PieChart><Pie data={subTypes} dataKey="value" nameKey="name" innerRadius={45} outerRadius={80} cornerRadius={uiRefonte ? 8 : 0} isAnimationActive={uiRefonte ? uiMotion : undefined} animationDuration={uiRefonte ? 700 : undefined}>
+                  {subTypes.map((d, i) => <Cell key={d.name} fill={uiRefonte ? `var(--loan-chart-${i%3+1})` : DEPT_PALETTE[i % DEPT_PALETTE.length]} />)}
                 </Pie><Tooltip /><Legend /></PieChart>
               </ResponsiveContainer>
             )}
@@ -418,8 +422,8 @@ export default function RequestReportDashboard({ kind }: { kind: RequestKind }) 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <ChartCard title={isPerm ? 'Classement — employés les plus en sortie' : 'Classement — employés les plus absents'} subtitle="Hors refusées et annulées — cliquez sur un employé pour filtrer"
           action={<Users2 size={16} className="text-[var(--text-muted)]" />}>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto attendance-table-scroll" tabIndex={0} role="region" aria-label="Tableau défilant horizontalement">
+            <table className="w-full text-sm attendance-table">
               <thead><tr className="text-[10px] uppercase text-[var(--text-muted)]">
                 <th className="text-left py-1.5 w-8">#</th><th className="text-left">Employé</th><th className="text-right">{isPerm ? 'Tickets' : 'Demandes'}</th>
                 <th className="text-right">{isPerm ? 'Temps dehors' : 'Jours'}</th>{isPerm && <th className="text-right">Retards</th>}
@@ -427,12 +431,12 @@ export default function RequestReportDashboard({ kind }: { kind: RequestKind }) 
               <tbody className="divide-y divide-[var(--border)]">
                 {top.length === 0 ? <tr><td colSpan={5} className="py-8 text-center text-[var(--text-muted)]">Aucune donnée.</td></tr> : top.map((e, i) => (
                   <tr key={e.id || e.name} onClick={() => e.id && setEmp(emp === e.id ? '' : e.id)} title="Cliquer pour isoler cet employé"
-                    className={`cursor-pointer hover:bg-[var(--surface-2)]/60 ${emp && emp === e.id ? 'bg-emerald-50/70 dark:bg-emerald-900/10' : ''}`}>
+                    className={`cursor-pointer hover:bg-[var(--surface-2)]/60 ${emp && emp === e.id ? 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] ' : ''}`}>
                     <td className="py-2 text-[var(--text-muted)] font-semibold">{i + 1}</td>
                     <td className="py-2"><p className="font-semibold text-[var(--text)]">{e.name}</p><p className="text-[11px] text-[var(--text-muted)]">{e.dept}</p></td>
-                    <td className="py-2 text-right font-bold text-[var(--text)]">{e.n}</td>
+                    <td className="py-2 text-right font-semibold text-[var(--text)]">{e.n}</td>
                     <td className="py-2 text-right text-[var(--text)]">{isPerm ? fmtMinutes(e.metric) : `${e.metric} j`}</td>
-                    {isPerm && <td className={`py-2 text-right font-semibold ${e.late ? 'text-red-500' : 'text-[var(--text-muted)]'}`}>{e.late}</td>}
+                    {isPerm && <td className={`py-2 text-right font-semibold ${e.late ? 'text-[var(--danger-text)]' : 'text-[var(--text-muted)]'}`}>{e.late}</td>}
                   </tr>
                 ))}
               </tbody>
@@ -441,7 +445,7 @@ export default function RequestReportDashboard({ kind }: { kind: RequestKind }) 
         </ChartCard>
 
         <ChartCard title={status ? `Demandes — ${STATUS_LABELS[status].toLowerCase()}` : 'Dernières demandes de la période'}
-          action={<Link href={bp(isPerm ? '/presences/permissions/historique' : '/presences/absences/historique')} className="text-xs font-semibold text-emerald-600 hover:underline">Ouvrir l’historique</Link>}>
+          action={<Link href={bp(isPerm ? '/presences/permissions/historique' : '/presences/absences/historique')} className="text-xs font-semibold text-[var(--success-text)] hover:underline">Ouvrir l’historique</Link>}>
           <div className="space-y-2">
             {detail.length === 0 ? <p className="py-8 text-center text-sm text-[var(--text-muted)]">Aucune demande.</p> : detail.map(r => (
               <div key={r.id} className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-[var(--surface-2)]/50">

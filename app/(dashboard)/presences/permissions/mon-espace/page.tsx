@@ -1,4 +1,10 @@
 'use client';
+import { RequestStatusTabs, RequestStatusBadge, RequestEmptyState } from '@/components/requests';
+import { requestStatus, type RequestGroup } from '@/lib/request-status';
+import { AttendanceModuleFrame as ModulePageFrame } from '@/components/attendance/AttendanceModuleFrame';
+import { useModulePageVisuals } from '@/components/requests/ModulePageFrame';
+import { ModulePageSkeleton } from '@/components/requests/ModulePageFrame';
+import { Button } from '@/components/design-system/primitives';
 
 // ============================================================================
 // 📁 app/(dashboard)/presences/permissions/mon-espace/page.tsx
@@ -14,7 +20,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import {
-  ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+  ResponsiveContainer, AreaChart, Area, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from 'recharts';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
@@ -32,9 +38,9 @@ import { effectiveDeparture, returnState, fmtTime, personName } from '@/lib/perm
 type Status = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
 
 const STATUS_CONFIG: Record<Status, { label: string; badge: string; icon: any }> = {
-  PENDING:   { label: 'En attente', badge: 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800', icon: Clock },
-  APPROVED:  { label: 'Autorisé',   badge: 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800', icon: CheckCircle2 },
-  REJECTED:  { label: 'Refusé',     badge: 'bg-red-50 text-red-700 border-red-100 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800', icon: XCircle },
+  PENDING:   { label: 'En attente', badge: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)] border-[var(--border)]   ', icon: Clock },
+  APPROVED:  { label: 'Autorisé',   badge: 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)] border-[var(--border)]   ', icon: CheckCircle2 },
+  REJECTED:  { label: 'Refusé',     badge: 'bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] text-[var(--danger-text)] border-[var(--border)]   ', icon: XCircle },
   CANCELLED: { label: 'Annulé',     badge: 'bg-[var(--surface-2)] text-[var(--text-muted)]', icon: Ban },
 };
 
@@ -47,6 +53,9 @@ const TYPE_CONFIG: Record<string, { label: string; icon: any }> = {
 const PAGE_SIZE = 10;
 
 export default function MonEspacePermissionsPage() {
+ const {refonte:uiRefonte,motion:uiMotion}=useModulePageVisuals();
+ const [uiStatus,setUiStatus]=useState<RequestGroup>('all');
+ const [uiLoadError,setUiLoadError]=useState('');
   const { bp } = useBasePath();
   const [tickets, setTickets] = useState<any[]>([]);
   const [employee, setEmployee] = useState<any>(null);
@@ -76,13 +85,14 @@ export default function MonEspacePermissionsPage() {
         setEmployee(emp);
         setCompany(me?.company ?? null);
         setSelectedId(tix?.[0]?.id ?? null);
-      } catch (e) { console.error('Erreur chargement de mes tickets', e); }
+      } catch (e) { console.error('Erreur chargement de mes tickets', e); setUiLoadError('Le chargement a échoué. Réessayez dans un instant.'); }
       finally { setIsLoading(false); }
     })();
   }, []);
 
-  const totalPages = Math.max(1, Math.ceil(tickets.length / PAGE_SIZE));
-  const paginated = tickets.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const uiTickets=tickets.filter(ticket=>uiStatus==='all'||requestStatus(ticket.status).group===uiStatus);
+  const totalPages = Math.max(1, Math.ceil(uiTickets.length / PAGE_SIZE));
+  const paginated = uiTickets.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const selected = tickets.find(t => t.id === selectedId) || null;
 
   const handleCancel = async (id: string) => {
@@ -146,32 +156,32 @@ export default function MonEspacePermissionsPage() {
     });
   }, [tickets]);
 
-  if (isLoading) return <KonzaLoader variant="page" />;
+  if (isLoading) return <ModulePageSkeleton label="Chargement des permissions" />;
 
   return (
-    <div className="max-w-[1500px] mx-auto pb-24 space-y-6">
+    <ModulePageFrame kind="list" error={uiLoadError}><div className="max-w-[1500px] mx-auto pb-24 space-y-6">
       <PresenceModuleSwitcher />
       <PermissionsSubNav userRole={userRole} />
 
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs font-bold tracking-[0.2em] text-[var(--text-muted)] uppercase mb-1">Mon espace</p>
-          <h1 className="text-2xl font-bold text-[var(--text)]">Mes tickets de permission</h1>
+      <div className="flex items-center justify-between attendance-page-header">
+        <div className="attendance-page-heading">
+          <p className="text-xs font-semibold tracking-[0.2em] text-[var(--text-muted)]  mb-1">Mon espace</p>
+          <h1 className="text-2xl font-semibold text-[var(--text)]">Mes tickets de permission</h1>
         </div>
-        <Link href={bp('/presences/permissions/nouveau')} className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-sm flex items-center gap-2 shadow-lg shadow-emerald-500/30">
+        <Link href={bp('/presences/permissions/nouveau')} className="px-4 py-2.5 bg-[var(--brand)] hover:bg-[var(--brand)] text-[var(--on-brand)] rounded-xl font-semibold text-sm flex items-center gap-2 shadow-lg ">
           <Plus size={18} /> Nouveau ticket
         </Link>
       </div>
 
       <div className="flex gap-1 bg-[var(--surface-2)] p-1 rounded-xl w-fit">
-        <button onClick={() => setMySpaceTab('validations')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${mySpaceTab === 'validations' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>Mes validations</button>
-        <button onClick={() => setMySpaceTab('suivi')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${mySpaceTab === 'suivi' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>Suivi de mes permissions</button>
+        <Button variant="ghost" onClick={() => setMySpaceTab('validations')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${mySpaceTab === 'validations' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>Mes validations</Button>
+        <Button variant="ghost" onClick={() => setMySpaceTab('suivi')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${mySpaceTab === 'suivi' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>Suivi de mes permissions</Button>
       </div>
 
       {mySpaceTab === 'validations' && (
       <>
       {tickets.length > 0 && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 attendance-metrics">
           <MyKpiCard icon={Ticket} label="Total de mes demandes" value={myRequestKpis.total} tone="slate" />
           <MyKpiCard icon={CheckCircle2} label="Autorisées" value={myRequestKpis.approved} tone="emerald" />
           <MyKpiCard icon={Clock} label="En attente" value={myRequestKpis.pending} tone="amber" />
@@ -179,10 +189,11 @@ export default function MonEspacePermissionsPage() {
         </div>
       )}
 
-      {tickets.length === 0 ? (
+      <RequestStatusTabs value={uiStatus} onChange={value=>{setUiStatus(value);setPage(1);setSelectedId(null);}} />
+      {uiTickets.length === 0 ? (
         <div className="text-center py-24 bg-[var(--surface)] rounded-2xl border border-[var(--border)]">
           <Clock size={32} className="text-[var(--text-muted)] mx-auto mb-3" />
-          <h3 className="text-lg font-bold text-[var(--text)] mb-1">Aucun ticket pour l&apos;instant</h3>
+          <h3 className="text-lg font-semibold text-[var(--text)] mb-1">Aucun ticket pour l&apos;instant</h3>
           <p className="text-[var(--text-muted)] text-sm">Toutes vos sorties (urgence ou mission) seront tracées ici.</p>
         </div>
       ) : (
@@ -194,7 +205,7 @@ export default function MonEspacePermissionsPage() {
               const Icon = tCfg.icon;
               const active = t.id === selectedId;
               return (
-                <button key={t.id} onClick={() => setSelectedId(t.id)} className={`w-full text-left p-4 rounded-2xl border transition-all ${active ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 shadow-sm' : 'border-[var(--border)] bg-[var(--surface)] hover:border-[var(--text-muted)]'}`}>
+                <Button variant="ghost" key={t.id} onClick={() => setSelectedId(t.id)} className={`w-full text-left p-4 rounded-2xl border transition-colors ${active ? 'border-[var(--border)] bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  shadow-sm' : 'border-[var(--border)] bg-[var(--surface)] hover:border-[var(--text-muted)]'}`}>
                   <div className="flex items-center gap-2">
                     <Icon size={14} className="text-[var(--text-muted)]" />
                     <p className="font-semibold text-sm text-[var(--text)]">{tCfg.label}</p>
@@ -204,19 +215,19 @@ export default function MonEspacePermissionsPage() {
                     <ArrowRight size={11} />
                     <span className="font-mono">{new Date(t.expectedReturnTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
-                  <span className={`inline-block mt-2 text-[10px] font-semibold px-2 py-0.5 rounded-md border ${sCfg.badge}`}>{sCfg.label}</span>
+                  <RequestStatusBadge status={t.status} />
                   {t.status === 'APPROVED' && returnState(t) === 'PENDING_VALIDATION' && (
-                    <span className="inline-block mt-2 ml-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-md border bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800">Retour à valider</span>
+                    <span className="inline-block mt-2 ml-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-md border bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)] border-[var(--border)]   ">Retour à valider</span>
                   )}
-                </button>
+                </Button>
               );
             })}
 
-            {tickets.length > PAGE_SIZE && (
+            {uiTickets.length > PAGE_SIZE && (
               <div className="flex items-center justify-between pt-1">
-                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-2 rounded-lg text-xs font-semibold border border-[var(--border)] text-[var(--text-muted)] disabled:opacity-30">Précédent</button>
-                <span className="text-xs text-[var(--text-muted)]">Page {page} / {totalPages} · {tickets.length} ticket{tickets.length > 1 ? 's' : ''}</span>
-                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-3 py-2 rounded-lg text-xs font-semibold border border-[var(--border)] text-[var(--text-muted)] disabled:opacity-30">Suivant</button>
+                <Button variant="ghost" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-2 rounded-lg text-xs font-semibold border border-[var(--border)] text-[var(--text-muted)] disabled:opacity-30">Précédent</Button>
+                <span className="text-xs text-[var(--text-muted)]">Page {page} / {totalPages} · {uiTickets.length} ticket{uiTickets.length > 1 ? 's' : ''}</span>
+                <Button variant="ghost" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-3 py-2 rounded-lg text-xs font-semibold border border-[var(--border)] text-[var(--text-muted)] disabled:opacity-30">Suivant</Button>
               </div>
             )}
           </div>
@@ -230,7 +241,7 @@ export default function MonEspacePermissionsPage() {
               <motion.div key={selected.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
                 <div className="p-6 border-b border-[var(--border)] flex items-start justify-between gap-4">
                   <div>
-                    <h2 className="text-lg font-bold text-[var(--text)]">{(TYPE_CONFIG[selected.type] ?? TYPE_CONFIG.AUTRE).label}</h2>
+                    <h2 className="text-lg font-semibold text-[var(--text)]">{(TYPE_CONFIG[selected.type] ?? TYPE_CONFIG.AUTRE).label}</h2>
                     <p className="text-sm text-[var(--text-muted)]">Créé le {new Date(selected.createdAt).toLocaleDateString('fr-FR')}</p>
                   </div>
                   <span className={`text-xs font-semibold px-3 py-1.5 rounded-lg border shrink-0 ${(STATUS_CONFIG[selected.status as Status] ?? STATUS_CONFIG.PENDING).badge}`}>
@@ -252,12 +263,12 @@ export default function MonEspacePermissionsPage() {
                     <PermissionReturnSummary ticket={selected} audience="employee" />
 
                     <div className="text-sm">
-                      <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Motif</p>
+                      <p className="text-xs font-semibold text-[var(--text-muted)]   mb-1.5">Motif</p>
                       <p className="text-[var(--text-muted)] bg-[var(--surface-2)] p-3.5 rounded-xl">{selected.reason}</p>
                     </div>
 
                     {selected.status === 'REJECTED' && selected.rejectionReason && (
-                      <div className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 p-3.5 rounded-xl">Motif du refus : {selected.rejectionReason}</div>
+                      <div className="text-sm text-[var(--danger-text)] bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  p-3.5 rounded-xl">Motif du refus : {selected.rejectionReason}</div>
                     )}
 
                     {/* 💬 En attente / refusée : l'employé peut contacter l'administration pour s'expliquer */}
@@ -269,30 +280,30 @@ export default function MonEspacePermissionsPage() {
 
                     <div className="flex gap-2 pt-1 flex-wrap">
                       {selected.status === 'PENDING' && (
-                        <button onClick={() => handleCancel(selected.id)} disabled={busy === selected.id} className="flex-1 py-2.5 border border-[var(--border)] hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-200 hover:text-red-600 text-[var(--text-muted)] text-sm font-semibold rounded-xl flex items-center justify-center gap-2 disabled:opacity-40">
+                        <Button variant="ghost" onClick={() => handleCancel(selected.id)} disabled={busy === selected.id} className="flex-1 py-2.5 border border-[var(--border)] hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] dark:hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] hover:border-[var(--border)] hover:text-[var(--danger-text)] text-[var(--text-muted)] text-sm font-semibold rounded-xl flex items-center justify-center gap-2 disabled:opacity-40">
                           {busy === selected.id ? <Loader2 size={16} className="animate-spin" /> : <X size={16} />} Annuler
-                        </button>
+                        </Button>
                       )}
                       {selected.status === 'APPROVED' && returnState(selected) === 'NOT_RETURNED' && (
-                        <button onClick={() => handleMarkReturn(selected.id)} disabled={busy === selected.id} className="flex-1 py-2.5 bg-[var(--text)] text-[var(--bg)] text-sm font-semibold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50">
+                        <Button variant="ghost" onClick={() => handleMarkReturn(selected.id)} disabled={busy === selected.id} className="flex-1 py-2.5 bg-[var(--text)] text-[var(--bg)] text-sm font-semibold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50">
                           {busy === selected.id ? <Loader2 size={16} className="animate-spin" /> : <LogOut size={16} />} Je suis de retour
-                        </button>
+                        </Button>
                       )}
                     </div>
                     <div className="flex gap-2">
-                      <button onClick={() => setTimeout(() => printTicket(TICKET_ID), 50)} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)]">
+                      <Button variant="ghost" onClick={() => setTimeout(() => printTicket(TICKET_ID), 50)} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)]">
                         <Printer size={16} /> Imprimer
-                      </button>
-                      <button onClick={handleDownloadPdf} disabled={isExportingPdf} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)] disabled:opacity-40">
+                      </Button>
+                      <Button variant="ghost" onClick={handleDownloadPdf} disabled={isExportingPdf} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)] disabled:opacity-40">
                         {isExportingPdf ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} PDF
-                      </button>
+                      </Button>
                     </div>
                   </div>
 
                   <div className="space-y-3">
-                    <button onClick={() => setShowPreviewModal(true)} className="w-full py-2.5 border border-dashed border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)]">
+                    <Button variant="ghost" onClick={() => setShowPreviewModal(true)} className="w-full py-2.5 border border-dashed border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)]">
                       <Eye size={16} /> Aperçu du ticket
-                    </button>
+                    </Button>
                   </div>
                 </div>
 
@@ -316,7 +327,7 @@ export default function MonEspacePermissionsPage() {
 
       {mySpaceTab === 'suivi' && (
         <div className="space-y-6">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 attendance-metrics">
             <MyKpiCard icon={Ticket} label="Total de mes demandes" value={myRequestKpis.total} tone="slate" />
             <MyKpiCard icon={CheckCircle2} label="Autorisées" value={myRequestKpis.approved} tone="emerald" />
             <MyKpiCard icon={Clock} label="En attente" value={myRequestKpis.pending} tone="amber" />
@@ -324,23 +335,23 @@ export default function MonEspacePermissionsPage() {
           </div>
 
           <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
-            <p className="text-sm font-bold text-[var(--text)] mb-4">Évolution de mes sorties (12 derniers mois)</p>
+            <p className="text-sm font-semibold text-[var(--text)] mb-4">Évolution de mes sorties (12 derniers mois)</p>
             <ResponsiveContainer width="100%" height={240}>
-              <LineChart data={trendData}>
+              <AreaChart data={trendData}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
                 <XAxis dataKey="mois" fontSize={12} />
                 <YAxis fontSize={12} allowDecimals={false} />
                 <Tooltip />
                 <Legend />
-                <Line type="monotone" dataKey="Demandés" stroke="#0ea5e9" strokeWidth={2.5} dot={false} />
-                <Line type="monotone" dataKey="Autorisés" stroke="#10b981" strokeWidth={2.5} dot={false} />
-              </LineChart>
+                <Area type="monotone" dataKey="Demandés" stroke="var(--loan-chart-1)" strokeWidth={2.5} dot={false}  fill="var(--loan-gradient-1)" fillOpacity={1} isAnimationActive={uiMotion} animationDuration={700}/>
+                <Area type="monotone" dataKey="Autorisés" stroke="var(--loan-chart-2)" strokeWidth={2.5} dot={false}  fill="var(--loan-gradient-2)" fillOpacity={1} isAnimationActive={uiMotion} animationDuration={700}/>
+              </AreaChart>
             </ResponsiveContainer>
           </div>
 
           <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
             <div className="p-4 border-b border-[var(--border)]">
-              <p className="text-sm font-bold text-[var(--text)]">Historique complet</p>
+              <p className="text-sm font-semibold text-[var(--text)]">Historique complet</p>
             </div>
             <div className="divide-y divide-[var(--border)]">
               {tickets.length === 0 ? (
@@ -359,14 +370,14 @@ export default function MonEspacePermissionsPage() {
                         </p>
                         {t.reason && <p className="text-xs text-[var(--text-muted)] mt-0.5">{t.reason}</p>}
                         {t.status === 'APPROVED' && returnState(t) === 'CONFIRMED' && (
-                          <p className="text-xs text-emerald-600 dark:text-emerald-300 mt-0.5">Sorti de {fmtTime(effectiveDeparture(t))} à {fmtTime(t.actualReturnTime)}</p>
+                          <p className="text-xs text-[var(--success-text)]  mt-0.5">Sorti de {fmtTime(effectiveDeparture(t))} à {fmtTime(t.actualReturnTime)}</p>
                         )}
                         {t.status === 'APPROVED' && returnState(t) === 'PENDING_VALIDATION' && (
-                          <p className="text-xs text-amber-600 dark:text-amber-300 mt-0.5">Retour déclaré à {fmtTime(t.returnDeclaredAt)} — en attente de validation</p>
+                          <p className="text-xs text-[var(--warning-text)]  mt-0.5">Retour déclaré à {fmtTime(t.returnDeclaredAt)} — en attente de validation</p>
                         )}
                       </div>
                     </div>
-                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border shrink-0 ${sCfg.badge}`}>{sCfg.label}</span>
+                    <RequestStatusBadge status={t.status} />
                   </div>
                 );
               })}
@@ -378,22 +389,22 @@ export default function MonEspacePermissionsPage() {
       <DocumentPreviewModal open={showPreviewModal} onClose={() => setShowPreviewModal(false)}>
         {printData && <PermissionTicketPrintable id="my-perm-doc-preview" data={printData as any} />}
       </DocumentPreviewModal>
-    </div>
+    </div></ModulePageFrame>
   );
 }
 
 function MyKpiCard({ icon: Icon, label, value, tone }: { icon: any; label: string; value: number; tone: 'slate' | 'emerald' | 'amber' | 'sky' }) {
   const cls: Record<string, string> = {
     slate: 'bg-[var(--surface)] text-[var(--text)] border-[var(--border)]',
-    emerald: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-100 dark:border-emerald-900',
-    amber: 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border-amber-100 dark:border-amber-900',
-    sky: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-100 dark:border-emerald-900',
+    emerald: 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  text-[var(--success-text)]  border-[var(--border)] ',
+    amber: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  text-[var(--warning-text)]  border-[var(--border)] ',
+    sky: 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  text-[var(--success-text)]  border-[var(--border)] ',
   };
   return (
     <div className={`rounded-2xl border p-4 ${cls[tone]}`}>
       <Icon size={16} className="opacity-60 mb-2" />
       <p className="text-[11px] font-semibold uppercase tracking-wide opacity-70 mb-1">{label}</p>
-      <p className="text-lg font-bold">{value}</p>
+      <p className="text-lg font-semibold">{value}</p>
     </div>
   );
 }

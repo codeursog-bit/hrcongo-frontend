@@ -1,4 +1,6 @@
 'use client';
+import { ModuleSelect } from '@/components/ui/ModuleSelect';
+
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
@@ -11,6 +13,7 @@ import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import RapportsSubNav from '@/components/RapportsSubNav';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import { ReportsFrame as ModulePageFrame } from '@/components/reports/ReportsFrame';
 
 // ─── Types (miroir de das1-declaration.service.ts côté backend — l'API et
 // les noms de route restent "das1" côté backend, seul l'affichage change) ─
@@ -78,7 +81,7 @@ function downloadBlob(blob: Blob, filename: string) {
   window.URL.revokeObjectURL(url);
 }
 
-export default function BulletinAnnuelPage() {
+function BulletinAnnuelPage() {
   const router = useRouter();
   const { bp } = useBasePath();
 
@@ -142,19 +145,19 @@ export default function BulletinAnnuelPage() {
     <div className="min-h-screen bg-[var(--bg)] p-4 md:p-6 print:bg-white print:p-0">
       {/* ── En-tête ─────────────────────────────────────────────────────── */}
       <div className="mb-6 print:hidden">
-        <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center justify-between flex-wrap gap-3 reports-header">
           <div className="flex items-center gap-3">
             <button
               onClick={() => router.push(bp('/rapports'))}
               className="p-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-2)] transition-colors"
             >
-              <ArrowLeft className="w-4 h-4 text-[var(--text-muted)]" />
+              <ArrowLeft strokeWidth={1.5} className="w-4 h-4 text-[var(--text-muted)]" />
             </button>
-            <div className="p-2.5 bg-[var(--brand)] rounded-xl shadow-lg shadow-[var(--brand)]/30">
-              <FileSpreadsheet className="w-5 h-5 text-white" />
+            <div className="p-2.5 bg-[var(--surface)] rounded-xl shadow-lg shadow-[var(--brand)]/30">
+              <FileSpreadsheet strokeWidth={1.5} className="w-5 h-5 text-[var(--text)]" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-[var(--text)]">
+              <h1 className="text-lg font-semibold text-[var(--text)]">
                 Bulletin Annuel — Bulletin Individuel DAS
               </h1>
               <p className="text-sm text-[var(--text-muted)]">
@@ -166,7 +169,7 @@ export default function BulletinAnnuelPage() {
 
         <div className="mt-4 flex items-center gap-3 flex-wrap">
           <div className="relative">
-            <select
+            <ModuleSelect
               value={year}
               onChange={(e) => setYear(Number(e.target.value))}
               className="pl-3 pr-8 py-2 text-sm rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] font-medium appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/50"
@@ -176,8 +179,8 @@ export default function BulletinAnnuelPage() {
                   {y}
                 </option>
               ))}
-            </select>
-            <ChevronDown className="w-4 h-4 absolute right-2.5 top-2.5 text-[var(--text-muted)] pointer-events-none" />
+            </ModuleSelect>
+            <ChevronDown strokeWidth={1.5} className="w-4 h-4 absolute right-2.5 top-2.5 text-[var(--text-muted)] pointer-events-none" />
           </div>
 
           <button
@@ -185,16 +188,16 @@ export default function BulletinAnnuelPage() {
             className="p-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-2)] transition-colors"
             title="Rafraîchir"
           >
-            <RefreshCw className="w-4 h-4 text-[var(--text-muted)]" />
+            <RefreshCw strokeWidth={1.5} className="w-4 h-4 text-[var(--text-muted)]" />
           </button>
         </div>
 
         <RapportsSubNav active="/rapports/recap-bulletins-annuel" />
 
         {error && (
-          <div className="mt-4 flex items-start gap-3 p-4 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-2xl">
-            <AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-            <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+          <div className="mt-4 flex items-start gap-3 p-4 bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] border border-[var(--border)] rounded-2xl">
+            <AlertTriangle strokeWidth={1.5} className="w-5 h-5 text-[var(--danger-text)] shrink-0 mt-0.5" />
+            <p className="text-sm text-[var(--danger-text)]">{error}</p>
           </div>
         )}
       </div>
@@ -220,40 +223,40 @@ export default function BulletinAnnuelPage() {
 
           {/* ── Indicateurs ───────────────────────────────────────────── */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4 print:hidden">
-            <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)]/60 shadow-sm">
+            <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)]/60 shadow-sm reports-card">
               <div>
                 <p className="text-xs text-[var(--text-muted)]">Employés inclus</p>
-                <p className="text-lg font-bold text-[var(--text)]">{bulletins.length}</p>
+                <p className="text-lg font-semibold text-[var(--text)]">{bulletins.length}</p>
                 <p className="text-[11px] text-[var(--text-muted)]">CDD / CDI uniquement</p>
               </div>
-              <Users className="w-5 h-5 text-[var(--brand)]" />
+              <Users strokeWidth={1.5} className="w-5 h-5 text-[var(--brand)]" />
             </div>
-            <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)]/60 shadow-sm">
+            <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)]/60 shadow-sm reports-card">
               <div>
                 <p className="text-xs text-[var(--text-muted)]">Masse salariale (espèces)</p>
-                <p className="text-lg font-bold text-[var(--text)]">{fmt(totalMontantEspeces)} F</p>
+                <p className="text-lg font-semibold text-[var(--text)]">{fmt(totalMontantEspeces)} F</p>
               </div>
-              <Wallet className="w-5 h-5 text-emerald-500" />
+              <Wallet strokeWidth={1.5} className="w-5 h-5 text-[var(--action)]" />
             </div>
-            <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)]/60 shadow-sm">
+            <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)]/60 shadow-sm reports-card">
               <div>
                 <p className="text-xs text-[var(--text-muted)]">IRPP retenu cumulé</p>
-                <p className="text-lg font-bold text-[var(--text)]">{fmt(totalIrpp)} F</p>
+                <p className="text-lg font-semibold text-[var(--text)]">{fmt(totalIrpp)} F</p>
               </div>
-              <Landmark className="w-5 h-5 text-red-500" />
+              <Landmark strokeWidth={1.5} className="w-5 h-5 text-[var(--danger-text)]" />
             </div>
-            <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)]/60 shadow-sm">
+            <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)]/60 shadow-sm reports-card">
               <div>
                 <p className="text-xs text-[var(--text-muted)]">Indemnités non imposables</p>
-                <p className="text-lg font-bold text-[var(--text)]">{fmt(totalIndemnites)} F</p>
+                <p className="text-lg font-semibold text-[var(--text)]">{fmt(totalIndemnites)} F</p>
               </div>
-              <ShieldCheck className="w-5 h-5 text-[var(--accent-2)]" />
+              <ShieldCheck strokeWidth={1.5} className="w-5 h-5 text-[var(--accent-2)]" />
             </div>
           </div>
 
           {/* ── Recherche ─────────────────────────────────────────────── */}
           <div className="relative mb-4 print:hidden">
-            <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+            <Search strokeWidth={1.5} className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
             <input
               type="text"
               value={search}
@@ -372,20 +375,20 @@ export default function BulletinAnnuelPage() {
             <button
               onClick={() => setPendingExport(true)}
               disabled={exporting || bulletins.length === 0}
-              className="flex items-center gap-2 px-5 py-2.5 bg-[var(--brand)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow-md shadow-[var(--brand)]/30 transition-all"
+              className="flex items-center gap-2 px-5 py-2.5 bg-[var(--brand)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-[var(--text)] text-sm font-semibold rounded-xl shadow-md shadow-[var(--brand)]/30 transition-colors"
             >
               {exporting ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 strokeWidth={1.5} className="w-4 h-4 animate-spin" />
               ) : (
-                <Download className="w-4 h-4" />
+                <Download strokeWidth={1.5} className="w-4 h-4" />
               )}
               Exporter le Bulletin Annuel (.xlsx)
             </button>
             <button
               onClick={handlePrint}
-              className="flex items-center gap-2 px-5 py-2.5 bg-[var(--surface)] hover:bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text)] text-sm font-semibold rounded-xl transition-all"
+              className="flex items-center gap-2 px-5 py-2.5 bg-[var(--surface)] hover:bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text)] text-sm font-semibold rounded-xl transition-colors"
             >
-              <Printer className="w-4 h-4" />
+              <Printer strokeWidth={1.5} className="w-4 h-4" />
               Imprimer
             </button>
           </div>
@@ -398,11 +401,11 @@ export default function BulletinAnnuelPage() {
 
       {/* ── Modale de revue avant export ────────────────────────────────── */}
       {pendingExport && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm print:hidden">
-          <div className="w-full max-w-md bg-[var(--surface)] rounded-2xl shadow-2xl border border-[var(--border)]/60 overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[color-mix(in_srgb,var(--surface-2)_50%,transparent)] print:hidden">
+          <div className="w-full max-w-md bg-[var(--surface)] rounded-2xl shadow-2xl border border-[var(--border)]/60 overflow-hidden reports-card">
             <div className="p-5 flex items-start gap-3 border-b border-[var(--border)]">
               <div className="p-2 bg-[var(--brand-soft)] rounded-xl shrink-0">
-                <ShieldCheck className="w-5 h-5 text-[var(--brand)]" />
+                <ShieldCheck strokeWidth={1.5} className="w-5 h-5 text-[var(--brand)]" />
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold text-[var(--text)]">
@@ -417,7 +420,7 @@ export default function BulletinAnnuelPage() {
                 className="p-1 rounded-lg text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
                 aria-label="Fermer"
               >
-                <X className="w-4 h-4" />
+                <X strokeWidth={1.5} className="w-4 h-4" />
               </button>
             </div>
 
@@ -448,12 +451,12 @@ export default function BulletinAnnuelPage() {
               <button
                 onClick={runExport}
                 disabled={exporting}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--brand)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow-md shadow-[var(--brand)]/30 transition-all"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--brand)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-[var(--text)] text-sm font-semibold rounded-xl shadow-md shadow-[var(--brand)]/30 transition-colors"
               >
                 {exporting ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 strokeWidth={1.5} className="w-4 h-4 animate-spin" />
                 ) : (
-                  <Download className="w-4 h-4" />
+                  <Download strokeWidth={1.5} className="w-4 h-4" />
                 )}
                 C'est vérifié, télécharger
               </button>
@@ -462,5 +465,14 @@ export default function BulletinAnnuelPage() {
         </div>
       )}
     </div>
+  );
+}
+
+
+export default function BulletinAnnuelPageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <BulletinAnnuelPage />
+    </ModulePageFrame>
   );
 }

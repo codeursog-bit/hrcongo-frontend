@@ -3,7 +3,8 @@
 // ===========================
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Zap, Activity, Terminal, Play, CheckCircle2, AlertTriangle, X } from 'lucide-react';
+import { Zap, Terminal, Play, CheckCircle2, AlertTriangle, X } from 'lucide-react';
+import { Badge, Button, Card } from '@/components/design-system/primitives';
 
 interface ProcessingStepProps {
   isProcessing: boolean;
@@ -28,105 +29,59 @@ export default function ProcessingStep({
   onStart,
   onShowSummary
 }: ProcessingStepProps) {
-  // Debug
-  React.useEffect(() => {
-    console.log('🔍 ProcessingStep - isProcessing:', isProcessing, 'progress:', progress);
-  }, [isProcessing, progress]);
-
   return (
-    <motion.div 
-      initial={{ opacity: 0, scale: 0.95 }} 
-      animate={{ opacity: 1, scale: 1 }} 
-      className="flex flex-col items-center justify-center h-full max-w-2xl mx-auto"
-    >
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mx-auto w-full max-w-3xl">
       {isProcessing || progress > 0 ? (
-        <div className="w-full space-y-8">
-          <div className="relative w-48 h-48 mx-auto">
-            <svg className="w-full h-full transform -rotate-90">
-              <circle cx="96" cy="96" r="88" stroke="currentColor" strokeWidth="12" fill="transparent" className="text-gray-100 dark:text-gray-700" />
-              <circle 
-                cx="96" cy="96" r="88" stroke="#10B981" strokeWidth="12" fill="transparent" 
-                strokeDasharray={552} strokeDashoffset={552 - (552 * progress) / 100} 
-                className="transition-all duration-500 ease-out drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]"
-                strokeLinecap="round"
-              />
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <Zap className="text-emerald-500 mb-2 animate-pulse" size={32} />
-              <span className="text-4xl font-bold text-[var(--text)]">{progress}%</span>
+        <div className="space-y-5">
+          <Card title="Traitement du lot" action={<Badge tone={isProcessing ? 'info' : 'success'}>{isProcessing ? 'En cours' : 'Terminé'}</Badge>}>
+            <div className="space-y-4">
+              <div className="flex items-end justify-between gap-4">
+                <p className="text-sm text-[var(--text-secondary)]">{currentEmployee || 'Mise à jour des bulletins'}</p>
+                <strong className="text-2xl tabular-nums text-[var(--text)]">{progress}%</strong>
+              </div>
+              <div role="progressbar" aria-label="Progression du traitement" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}
+                className="h-2 overflow-hidden rounded-full bg-[var(--surface-2)]">
+                <div className="h-full rounded-full bg-[var(--green)] transition-[width] duration-300" style={{ width: `${progress}%` }} />
+              </div>
             </div>
+          </Card>
+
+          <div className="grid gap-4 sm:grid-cols-3">
+            <Card title="Bulletins créés">
+              <p className="text-3xl font-semibold tabular-nums text-[var(--success-text)]">{results.success}</p>
+              <CheckCircle2 className="mt-2 text-[var(--success-text)]" size={18} aria-hidden="true" />
+            </Card>
+            <Card title="Ignorés">
+              <p className="text-3xl font-semibold tabular-nums text-[var(--warning-text)]">{results.skipped}</p>
+              <AlertTriangle className="mt-2 text-[var(--warning-text)]" size={18} aria-hidden="true" />
+            </Card>
+            <Card title="En échec">
+              <p className="text-3xl font-semibold tabular-nums text-[var(--danger-text)]">{results.failed}</p>
+              <X className="mt-2 text-[var(--danger-text)]" size={18} aria-hidden="true" />
+            </Card>
           </div>
 
-          <div className="text-center">
-            <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-6 py-3 mb-4">
-              <Activity className="text-emerald-500 animate-pulse" size={18} />
-              <span className="font-bold text-[var(--text)]">Traitement en cours...</span>
+          <Card title="Journal du traitement" action={<Terminal size={16} aria-hidden="true" className="text-[var(--text-secondary)]" />}>
+            <div aria-live="polite" className="max-h-56 space-y-2 overflow-y-auto rounded-xl bg-[var(--surface-2)] p-4 font-mono text-xs text-[var(--text-secondary)]">
+              {logs.length ? logs.map((log, i) => <p key={i} className="break-words">{log}</p>) : <p>Les étapes du traitement apparaîtront ici.</p>}
             </div>
-            <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400 animate-pulse">{currentEmployee}</p>
-          </div>
-          
-          <div className="w-full bg-gray-900 dark:bg-black rounded-2xl p-4 h-64 overflow-y-auto border border-gray-700 font-mono text-xs space-y-1 shadow-inner">
-            <div className="flex items-center gap-2 mb-2 pb-2 border-b border-gray-800">
-              <Terminal size={14} className="text-emerald-400" />
-              <span className="text-emerald-400">PAYROLL_BATCH_PROCESSOR v2.0</span>
-            </div>
-            {logs.map((log, i) => (
-              <motion.div 
-                key={i} 
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="text-gray-300"
-              >
-                {log}
-              </motion.div>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-3 gap-4">
-            <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 text-center">
-              <CheckCircle2 className="mx-auto text-emerald-500 mb-2" size={20} />
-              <p className="text-2xl font-bold text-emerald-600">{results.success}</p>
-              <p className="text-xs text-gray-500">Créés</p>
-            </div>
-            <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-center">
-              <AlertTriangle className="mx-auto text-amber-500 mb-2" size={20} />
-              <p className="text-2xl font-bold text-amber-600">{results.skipped}</p>
-              <p className="text-xs text-gray-500">Ignorés</p>
-            </div>
-            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-center">
-              <X className="mx-auto text-red-500 mb-2" size={20} />
-              <p className="text-2xl font-bold text-red-600">{results.failed}</p>
-              <p className="text-xs text-gray-500">Échecs</p>
-            </div>
-          </div>
+          </Card>
 
           {(progress === 100 && !isProcessing) && (
-            <motion.button
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              onClick={onShowSummary}
-              className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-2xl shadow-xl hover:scale-105 transition-all"
-            >
-              Voir le résumé complet
-            </motion.button>
+            <Button className="w-full" onClick={onShowSummary}>Voir le résumé complet</Button>
           )}
         </div>
       ) : (
-        <div className="text-center">
-          <div className="w-24 h-24 bg-emerald-500 text-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-500/30">
-            <Play size={40} className="ml-1"/>
+        <Card title="Vérification avant lancement" action={<Badge tone="success">Prêt</Badge>} className="text-center">
+          <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--brand-soft)] text-[var(--brand-strong)]">
+            <Play size={20} strokeWidth={1.5} aria-hidden="true" />
           </div>
-          <h2 className="text-3xl font-bold text-[var(--text)] mb-4">Prêt à lancer ?</h2>
-          <p className="text-gray-500 text-lg mb-8 max-w-md mx-auto">
-            Génération de <strong className="text-[var(--text)]">{selectedCount} bulletins</strong> pour <strong className="text-[var(--text)]">{estimatedCost.toLocaleString()} FCFA</strong>.
+          <h2 className="text-xl font-semibold text-[var(--text)]">Générer les bulletins sélectionnés</h2>
+          <p className="mx-auto my-3 max-w-lg text-sm leading-6 text-[var(--text-secondary)]">
+            {selectedCount} bulletin(s) à traiter · Masse estimée : <strong className="tabular-nums text-[var(--text)]">{estimatedCost.toLocaleString('fr-FR')} FCFA</strong>
           </p>
-          <button 
-            onClick={onStart} 
-            className="px-10 py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-2xl shadow-xl hover:scale-105 transition-all text-lg flex items-center justify-center gap-3 mx-auto"
-          >
-            <Zap size={24} /> Lancer le Traitement
-          </button>
-        </div>
+          <Button onClick={onStart}><Zap size={17} strokeWidth={1.5} aria-hidden="true" />Lancer le traitement</Button>
+        </Card>
       )}
     </motion.div>
   );

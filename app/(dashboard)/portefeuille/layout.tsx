@@ -16,6 +16,9 @@ import PortfolioTopNav from '@/components/portfolio/PortfolioTopNav';
 import { api } from '@/services/api';
 import PushNotificationBanner from '@/components/PushNotificationBanner';
 import { ChatProvider } from '@/components/chat/ChatProvider';
+import { CompanyBrandProvider } from '@/components/layout/CompanyBrand';
+import '@/components/layout/shell.css';
+import '@/components/ui/select.css';
 
 interface StoredUser {
   firstName?: string;
@@ -66,8 +69,9 @@ export default function PortfolioLayout({ children }: { children: React.ReactNod
   return (
     // ChatProvider : compteur de messages non lus (sidebar) + page /portefeuille/messages.
     // Il se désactive tout seul si le rôle n'a pas accès au chat.
-    <ChatProvider>
-    <div className="flex h-screen font-sans overflow-hidden relative" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
+    <CompanyBrandProvider><ChatProvider>
+    <div className="konza-shell flex h-screen font-sans overflow-hidden relative" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
+      <a href="#konza-main" className="shell-skip-link">Aller au contenu</a>
       <PortfolioSidebar
         userName={userName}
         userEmail={user?.email}
@@ -84,12 +88,12 @@ export default function PortfolioLayout({ children }: { children: React.ReactNod
           userPhotoUrl={userPhotoUrl}
           onMenuClick={() => setSidebarOpen(true)}
         />
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 scroll-smooth custom-scrollbar">
+        <main id="konza-main" tabIndex={-1} className="shell-main flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 scroll-smooth custom-scrollbar">
           <PushNotificationBanner />
           {children}
         </main>
       </div>
     </div>
-    </ChatProvider>
+    </ChatProvider></CompanyBrandProvider>
   );
 }

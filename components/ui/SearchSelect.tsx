@@ -1,14 +1,12 @@
 'use client';
 
-// ============================================================================
-// 📁 components/ui/SearchSelect.tsx
+// components/ui/SearchSelect.tsx
 // Liste déroulante avec barre de recherche (sans accent, sans casse).
-// La liste s'ouvre dans le flux (pas de portail) : aucun risque d'être
-// coupée par le scroll d'une modale.
-// ============================================================================
-
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+// Même rendu que FancySelect (voir select.css). La liste s'ouvre dans le flux (pas de portail) :
+// aucun risque d'être coupée par le scroll d'une modale. Clavier : ↑ ↓ Entrée Échap.
+import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Search, X, Check } from 'lucide-react';
+import './select.css';
 
 export interface SearchSelectOption {
   value: string;
@@ -24,13 +22,15 @@ interface Props {
 }
 
 const norm = (s: string) =>
-  s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+  s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 
 export default function SearchSelect({
   value, onChange, options, placeholder = 'Rechercher…', className = '',
 }: Props) {
+  const uid = useId();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
+  const [active, setActive] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
 
   const selected = options.find(o => o.value === value);
@@ -41,6 +41,8 @@ export default function SearchSelect({
     return options.filter(o => norm(o.label).includes(q));
   }, [options, query]);
 
+  useEffect(() => { setActive(0); }, [query, open]);
+
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent) => {
@@ -50,48 +52,63 @@ export default function SearchSelect({
     return () => document.removeEventListener('mousedown', onDown);
   }, [open]);
 
+  useEffect(() => {
+    if (open) document.getElementById(`${uid}-opt-${active}`)?.scrollIntoView({ block: 'nearest' });
+  }, [active, open, uid]);
+
   const pick = (v: string) => { onChange(v); setOpen(false); setQuery(''); };
 
+  const listId = `${uid}-list`;
+
   return (
-    <div ref={ref} className="relative">
-      <div className="relative">
-        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" />
+    <div ref={ref} className="k-select">
+      <div className="k-select-field">
+        <Search size={16} strokeWidth={1.5} className="k-select-field-icon" aria-hidden="true" />
         <input
           type="text"
+          role="combobox"
+          aria-expanded={open}
+          aria-controls={open ? listId : undefined}
+          aria-autocomplete="list"
+          aria-activedescendant={open && filtered.length > 0 ? `${uid}-opt-${active}` : undefined}
           value={open ? query : (selected?.label ?? '')}
           placeholder={placeholder}
+          autoComplete="off"
           onFocus={() => setOpen(true)}
           onChange={e => { setQuery(e.target.value); setOpen(true); }}
           onKeyDown={e => {
-            if (e.key === 'Enter' && open && filtered.length > 0) { e.preventDefault(); pick(filtered[0].value); }
-            if (e.key === 'Escape') { setOpen(false); setQuery(''); }
+            if (e.key === 'ArrowDown') { e.preventDefault(); if (!open) setOpen(true); else if (filtered.length) setActive(i => (i + 1) % filtered.length); }
+            else if (e.key === 'ArrowUp') { e.preventDefault(); if (open && filtered.length) setActive(i => (i - 1 + filtered.length) % filtered.length); }
+            else if (e.key === 'Enter' && open && filtered.length > 0) { e.preventDefault(); pick(filtered[active]?.value ?? filtered[0].value); }
+            else if (e.key === 'Escape') { setOpen(false); setQuery(''); }
           }}
-          className={`w-full pl-8 pr-8 py-2 text-sm rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] ${className}`}
+          className={`k-select-trigger k-select-input ${className}`}
         />
         {value && (
-          <button
-            type="button"
-            onClick={() => pick('')}
-            aria-label="Effacer"
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded text-[var(--text-muted)] hover:text-[var(--text)]"
-          >
-            <X size={14} />
+          <button type="button" onClick={() => pick('')} aria-label="Effacer la sélection" className="k-select-clear">
+            <X size={16} strokeWidth={1.5} aria-hidden="true" />
           </button>
         )}
       </div>
       {open && (
-        <ul className="mt-1 max-h-48 overflow-y-auto rounded-lg border border-[var(--border)] bg-[var(--surface)] shadow-lg">
+        <ul id={listId} role="listbox" aria-label="Résultats" className="k-select-menu k-select-menu-inline">
           {filtered.length === 0 ? (
-            <li className="px-3 py-2 text-sm text-[var(--text-muted)]">Aucun résultat</li>
-          ) : filtered.map(o => (
-            <li key={o.value}>
+            <li role="presentation" className="k-select-empty">Aucun résultat</li>
+          ) : filtered.map((o, i) => (
+            <li key={o.value} role="presentation">
               <button
+                id={`${uid}-opt-${i}`}
                 type="button"
+                role="option"
+                aria-selected={o.value === value}
+                data-active={i === active}
+                tabIndex={-1}
+                onMouseEnter={() => setActive(i)}
                 onClick={() => pick(o.value)}
-                className="w-full flex items-center justify-between gap-2 px-3 py-2 text-left text-sm text-[var(--text)] hover:bg-[var(--surface-2)]"
+                className="k-select-option"
               >
                 <span className="truncate">{o.label}</span>
-                {o.value === value && <Check size={14} className="text-emerald-500 shrink-0" />}
+                {o.value === value && <Check size={16} strokeWidth={2} aria-hidden="true" />}
               </button>
             </li>
           ))}

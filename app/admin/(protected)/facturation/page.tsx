@@ -12,8 +12,9 @@ import {
 } from 'lucide-react';
 import { adminService } from '@/lib/services/adminService';
 import { useQueryClient } from '@tanstack/react-query';
+import { CompanyEntitlements } from '@/components/admin/billing/CompanyEntitlements';
 
-type Tab = 'prices' | 'codes' | 'quotes' | 'invoices' | 'provider';
+type Tab = 'prices' | 'codes' | 'quotes' | 'invoices' | 'provider' | 'entitlements';
 
 const fmt = (n: number) => `${(n ?? 0).toLocaleString('fr-FR')} F`;
 const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleDateString('fr-FR') : '—');
@@ -82,6 +83,7 @@ export default function BillingConfigPage() {
           { k: 'quotes',   l: 'Devis',           I: FileText },
           { k: 'invoices', l: 'Factures',        I: Receipt },
           { k: 'provider', l: 'Agrégateur',      I: Plug },
+          { k: 'entitlements', l: 'Options entreprises', I: Plug },
         ] as { k: Tab; l: string; I: any }[]).map(t => (
           <button key={t.k} onClick={() => setTab(t.k)}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors ${
@@ -97,6 +99,7 @@ export default function BillingConfigPage() {
       {tab === 'quotes'   && <QuotesTab />}
       {tab === 'invoices' && <InvoicesTab />}
       {tab === 'provider' && <ProviderTab />}
+      {tab === 'entitlements' && <CompanyEntitlements />}
     </div>
   );
 }
@@ -543,7 +546,7 @@ function QuotesTab() {
           </div>
           <label className="text-xs text-gray-400 space-y-1 block">Plan activé (fonctionnalités)
             <select className={inputCls} value={f.plan} onChange={e => setF({ ...f, plan: e.target.value })}>
-              <option value="BASIC">Basique</option><option value="PRO">Pro</option><option value="ENTERPRISE">Enterprise</option>
+              <option value="STARTER">25 employés</option><option value="BASIC">50 employés</option><option value="PRO">100 employés</option><option value="ENTERPRISE">Plus de 100 employés</option>
             </select>
           </label>
           <label className="text-xs text-gray-400 space-y-1 block">Montant à payer (FCFA)

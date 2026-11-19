@@ -51,7 +51,7 @@ export function usePayrollData(selectedMonth: string, selectedYear: number) {
         // ✅ CORRECTION : Conversion Number explicite
         grossSalary: Number(p.grossSalary) || 0,
         netSalary: Number(p.netSalary) || 0,
-        charges: (Number(p.cnssSalarial) || 0) + (Number(p.its) || 0),
+        charges: Number(p.totalDeductions) || 0,
         status: p.status === 'DRAFT' ? 'Draft' : p.status === 'VALIDATED' ? 'Validated' : p.status === 'TO_PAY' ? 'ToPay' : p.status === 'PAID' ? 'Paid' : 'Cancelled',
         month: MONTHS[(p.month || 1) - 1],
         year: p.year || new Date().getFullYear()

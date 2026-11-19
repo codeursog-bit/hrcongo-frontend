@@ -1,0 +1,42 @@
+@media screen {
+  .attendance-module-page { min-width: 0; --ad-brand:var(--brand); --ad-green:var(--green); --ad-mustard:var(--mustard); --ad-danger:var(--danger); --ad-hero:var(--surface-2); }
+  .attendance-module-page .loan-module-content [style*="--ad-hero"] { color:var(--text); }
+  .attendance-module-page .loan-module-content { font-variant-numeric: tabular-nums; }
+  .attendance-module-page .loan-module-content h1 { font-size: clamp(1.6rem, 3vw, 2rem); letter-spacing: -.035em; }
+  .attendance-module-page .loan-module-content :where(button,a)[class*="bg-emerald-500"]:not(.loan-document-protected *) {
+    background: var(--brand); color: var(--on-brand); border-color: transparent;
+  }
+  .attendance-module-page .loan-module-content :where(button,a)[class*="bg-emerald-500"]:not(.loan-document-protected *):hover { background: var(--brand-strong); }
+  .attendance-module-page .loan-module-content :where(button,a):focus-visible { outline: 3px solid var(--brand); outline-offset: 3px; }
+  .attendance-module-page .loan-module-content :where(svg.lucide):not(.loan-document-protected *) { stroke-width: 1.5; }
+  .attendance-module-page .loan-module-content :where([class*="backdrop-blur"]):not(.loan-document-protected *) { backdrop-filter: none; }
+  .attendance-module-page .loan-module-content :where([class*="shadow-2xl"]):not(.loan-document-protected *) { box-shadow: var(--shadow-card); }
+  .attendance-module-page .loan-module-content > div > .absolute.inset-0.pointer-events-none { display: none; }
+  .attendance-module-page .loan-module-content .recharts-wrapper { max-width: 100%; }
+  .attendance-module-page .loan-module-content :where(input,select,textarea):not(.loan-document-protected *) { font: inherit; }
+  .attendance-module-page .loan-module-content :where(button,a)[class*="bg-gradient"]:not(.loan-document-protected *) {background:var(--brand);color:var(--on-brand);box-shadow:none;}
+  .attendance-module-page .recharts-cartesian-grid {opacity:0;}
+  .attendance-module-page :where(.recharts-cartesian-axis-tick-value,.recharts-legend-item-text) {fill:var(--text-secondary);color:var(--text-secondary);}
+  .attendance-module-page .recharts-default-tooltip {background:var(--surface)!important;border:0!important;box-shadow:var(--shadow-pop);border-radius:14px;color:var(--text)!important;}
+  .attendance-module-page .recharts-tooltip-label {color:var(--text);}
+  .attendance-dialog {position:fixed;inset:0;margin:auto;padding:0;border:0;border-radius:24px;width:min(680px,calc(100vw - 32px));max-width:calc(100vw - 32px);max-height:calc(100dvh - 32px);overflow:auto;color:var(--text);background:var(--surface);box-shadow:var(--shadow-pop);}
+  .attendance-dialog::backdrop {background:rgb(0 0 0 / .48);}
+  .attendance-dialog[open] {animation:attendance-dialog-in .2s cubic-bezier(.2,.8,.2,1);}
+  .attendance-dialog > div {max-width:none!important;border-radius:24px;}
+  .attendance-load-error {background:var(--surface);padding:20px 24px;border-radius:20px;box-shadow:var(--shadow-card);color:var(--text);display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;}
+  .attendance-load-error button {padding:12px 18px;background:var(--surface-2);border-radius:14px;}
+  .attendance-demo-notice {padding:18px 22px;margin-bottom:24px;border-radius:20px;background:var(--surface-2);color:var(--text);font-size:13px;line-height:1.6;}
+  .attendance-demo-notice p {margin:4px 0 8px;color:var(--text-secondary);}
+  .attendance-demo-notice a {display:inline-flex;margin-right:20px;min-height:44px;align-items:center;color:var(--text);text-decoration:underline;text-underline-offset:4px;}
+}
+@keyframes attendance-dialog-in {from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@media screen and (max-width: 640px) {
+  .attendance-module-page .loan-module-content .flex.items-center.gap-3:has(>a) { flex-wrap: wrap; }
+  .attendance-module-page .loan-module-content .flex.gap-2:has(>input) { flex-wrap: wrap; }
+  .attendance-module-page .loan-module-content .flex.gap-2 > input { flex-basis: 180px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .attendance-module-page :where(.animate-ping,.animate-pulse,[class*="animate-[ping"]) { animation: none !important; }
+  .attendance-dialog[open] {animation:none;}
+}
+@media print { .attendance-module-page { display: contents !important; } }

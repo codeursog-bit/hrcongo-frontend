@@ -62,8 +62,8 @@ export default function ReturnValidationPanel({
   };
 
   return (
-    <div className="rounded-xl border border-amber-200 dark:border-amber-800 p-4 space-y-3">
-      <p className="text-sm font-bold text-[var(--text)]">Valider le retour</p>
+    <div className="rounded-xl border border-[var(--border)]  p-4 space-y-3">
+      <p className="text-sm font-semibold text-[var(--text)]">Valider le retour</p>
       <p className="text-xs text-[var(--text-muted)]">
         L’employé a déclaré son retour à <b className="text-[var(--text)]">{fmtTime(ticket.returnDeclaredAt)}</b>. Vérifiez les heures avant de confirmer.
       </p>
@@ -81,22 +81,22 @@ export default function ReturnValidationPanel({
           {adjusted && (
             <textarea value={note} onChange={e => setNote(e.target.value)} rows={2} placeholder="Motif de l’ajustement (obligatoire)" className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-xs resize-none" />
           )}
-          {error && <p className="text-xs text-red-600">{error}</p>}
+          {error && <p className="text-xs text-[var(--danger-text)]">{error}</p>}
           <div className="flex gap-2">
-            <button onClick={confirm} disabled={busy} className="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2">
+            <button onClick={confirm} disabled={busy} className="flex-1 py-2.5 bg-[var(--brand)] hover:bg-[var(--brand)] disabled:opacity-50 text-[var(--on-brand)] text-sm font-semibold rounded-xl flex items-center justify-center gap-2">
               {busy ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />} Confirmer le retour
             </button>
-            <button onClick={() => { setRejectMode(true); setError(''); }} disabled={busy} className="px-4 py-2.5 border border-[var(--border)] hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 text-[var(--text-muted)] text-sm font-semibold rounded-xl flex items-center gap-1.5">
+            <button onClick={() => { setRejectMode(true); setError(''); }} disabled={busy} className="px-4 py-2.5 border border-[var(--border)] hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] dark:hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] hover:text-[var(--danger-text)] text-[var(--text-muted)] text-sm font-semibold rounded-xl flex items-center gap-1.5">
               <X size={15} /> Non validé
             </button>
           </div>
         </>
       ) : (
         <div className="space-y-2">
-          <textarea value={reason} onChange={e => setReason(e.target.value)} rows={2} autoFocus placeholder="Motif (ex. déclaré par erreur, pas encore revenu…)" className="w-full px-3 py-2 rounded-lg border border-red-200 dark:border-red-800 bg-[var(--surface)] text-xs resize-none" />
-          {error && <p className="text-xs text-red-600">{error}</p>}
+          <textarea value={reason} onChange={e => setReason(e.target.value)} rows={2} autoFocus placeholder="Motif (ex. déclaré par erreur, pas encore revenu…)" className="w-full px-3 py-2 rounded-lg border border-[var(--border)]  bg-[var(--surface)] text-xs resize-none" />
+          {error && <p className="text-xs text-[var(--danger-text)]">{error}</p>}
           <div className="flex gap-2">
-            <button onClick={reject} disabled={busy || !reason.trim()} className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 disabled:opacity-40 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2">
+            <button onClick={reject} disabled={busy || !reason.trim()} className="flex-1 py-2.5 bg-[var(--danger)] hover:bg-[var(--danger)] disabled:opacity-40 text-[var(--on-brand)] text-sm font-semibold rounded-xl flex items-center justify-center gap-2">
               {busy ? <Loader2 size={15} className="animate-spin" /> : <X size={15} />} Confirmer le refus
             </button>
             <button onClick={() => { setRejectMode(false); setReason(''); setError(''); }} className="px-4 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)]">Annuler</button>

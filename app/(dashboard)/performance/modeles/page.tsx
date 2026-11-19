@@ -1,4 +1,6 @@
 'use client';
+import { PerformanceOverlay } from '@/components/performance/PerformanceOverlay';
+
 
 // ============================================================================
 // 📄 app/(dashboard)/performance/modeles/page.tsx
@@ -19,6 +21,7 @@ import PerformanceNav from '@/components/performance/PerformanceNav';
 import { useBasePath } from '@/hooks/useBasePath';
 import { HR_ROLES, getStoredUser, sumWeights } from '@/components/performance/sheet-types';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import { PerformanceFrame as ModulePageFrame } from '@/components/performance/PerformanceFrame';
 
 interface Criterion { id?: string; label: string; description?: string; weight: number }
 interface Objective { title: string; kpi?: string | null; weight: number }
@@ -32,7 +35,7 @@ interface TemplatesResponse {
 }
 
 const inputCls =
-  'w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/40 focus:border-purple-400';
+  'w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--focus)] focus:border-[var(--border)]';
 
 function evenWeights(n: number): number[] {
   if (n <= 0) return [];
@@ -46,10 +49,10 @@ function TotalChip({ items }: { items: Array<{ weight?: number | null }> }) {
   const total = sumWeights(items);
   const ok = Math.abs(total - 100) < 0.011;
   return (
-    <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-lg ${ok
-      ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
-      : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'}`}>
-      {ok ? <CheckCircle2 size={12} /> : <AlertTriangle size={12} />} {total} %
+    <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg ${ok
+      ? 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)]'
+      : 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)]'}`}>
+      {ok ? <CheckCircle2 strokeWidth={1.5} size={12} /> : <AlertTriangle strokeWidth={1.5} size={12} />} {total} %
     </span>
   );
 }
@@ -89,37 +92,37 @@ function TemplateEditor({ template, positions, onClose, onSaved }: { template: T
   };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm sm:p-4" onClick={onClose}>
+    <PerformanceOverlay initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[rgb(0_0_0_/.45)] sm:p-4" onClose={onClose}>
       <motion.div initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 40, opacity: 0 }}
         onClick={e => e.stopPropagation()}
-        className="bg-white dark:bg-gray-800 rounded-t-3xl sm:rounded-3xl w-full sm:max-w-2xl shadow-2xl border border-gray-100 dark:border-gray-700 max-h-[94vh] flex flex-col">
-        <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700">
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white">{template ? 'Modifier la grille' : 'Nouvelle grille'}</h2>
-          <button onClick={onClose} aria-label="Fermer" className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"><X size={18} /></button>
+        className="bg-[var(--surface)] rounded-t-3xl sm:rounded-3xl w-full sm:max-w-2xl shadow-2xl border border-[var(--border)] max-h-[94vh] flex flex-col performance-card">
+        <div className="flex items-center justify-between p-5 border-b border-[var(--border)]">
+          <h2 className="text-lg font-semibold text-[var(--text)]">{template ? 'Modifier la grille' : 'Nouvelle grille'}</h2>
+          <button onClick={onClose} aria-label="Fermer" className="p-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--surface-2)]"><X strokeWidth={1.5} size={18} /></button>
         </div>
 
         <div className="p-5 space-y-6 overflow-y-auto">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Nom de la grille</label>
+              <label className="text-sm font-medium text-[var(--text)]">Nom de la grille</label>
               <input className={`${inputCls} mt-1`} value={name} onChange={e => setName(e.target.value)} placeholder="ex : Chauffeur" />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Pour quel poste ? <span className="text-xs font-normal text-gray-400">(facultatif)</span></label>
+              <label className="text-sm font-medium text-[var(--text)]">Pour quel poste ? <span className="text-xs font-normal text-[var(--text-secondary)]">(facultatif)</span></label>
               <input className={`${inputCls} mt-1`} list="template-positions" value={jobTitle} onChange={e => setJobTitle(e.target.value)} placeholder="Choisissez un poste existant" />
               <datalist id="template-positions">{positions.map(p => <option key={p} value={p} />)}</datalist>
-              <p className="text-xs text-gray-400 mt-1">Doit être écrit comme dans la fiche employé : c'est ce qui rattache le modèle aux bons employés.</p>
+              <p className="text-xs text-[var(--text-secondary)] mt-1">Doit être écrit comme dans la fiche employé : c'est ce qui rattache le modèle aux bons employés.</p>
             </div>
           </div>
 
           {/* Critères */}
           <div className="space-y-3">
             <div className="flex items-center justify-between gap-2">
-              <div><h3 className="font-bold text-gray-900 dark:text-white">Critères de notation</h3><p className="text-xs text-gray-400">Ce sur quoi on note. « % » = l'importance du critère (le total doit faire 100 %).</p></div>
+              <div><h3 className="font-semibold text-[var(--text)]">Critères de notation</h3><p className="text-xs text-[var(--text-secondary)]">Ce sur quoi on note. « % » = l'importance du critère (le total doit faire 100 %).</p></div>
               <div className="flex items-center gap-2">
                 <TotalChip items={criteria} />
-                <button type="button" onClick={() => rebalance('c')} className="text-xs font-bold text-purple-600 hover:underline">Répartir</button>
+                <button type="button" onClick={() => rebalance('c')} className="text-xs font-semibold text-[var(--action)] hover:underline">Répartir</button>
               </div>
             </div>
             {criteria.map((c, i) => (
@@ -131,15 +134,15 @@ function TemplateEditor({ template, positions, onClose, onSaved }: { template: T
                 <div className="flex items-center gap-1 shrink-0">
                   <input type="number" min={1} max={100} inputMode="decimal" className={`${inputCls} w-[4.5rem] text-center`} value={c.weight}
                     onChange={e => setC(i, { weight: Number(e.target.value) })} aria-label="Poids en pourcentage" />
-                  <span className="text-sm text-gray-400">%</span>
+                  <span className="text-sm text-[var(--text-secondary)]">%</span>
                   <button type="button" aria-label="Retirer" onClick={() => setCriteria(prev => prev.filter((_, k) => k !== i))}
-                    className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"><Trash2 size={16} /></button>
+                    className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-[var(--danger-text)] hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]"><Trash2 strokeWidth={1.5} size={16} /></button>
                 </div>
               </div>
             ))}
             <button type="button" onClick={() => setCriteria(prev => [...prev, { label: '', weight: 0 }])}
-              className="w-full py-2.5 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-600 text-gray-500 hover:border-purple-400 hover:text-purple-600 font-bold text-sm flex items-center justify-center gap-2">
-              <Plus size={16} /> Ajouter un critère
+              className="w-full py-2.5 rounded-xl border-2 border-dashed border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border)] hover:text-[var(--action)] font-semibold text-sm flex items-center justify-center gap-2">
+              <Plus strokeWidth={1.5} size={16} /> Ajouter un critère
             </button>
           </div>
 
@@ -147,13 +150,13 @@ function TemplateEditor({ template, positions, onClose, onSaved }: { template: T
           <div className="space-y-3">
             <div className="flex items-center justify-between gap-2">
               <div>
-                <h3 className="font-bold text-gray-900 dark:text-white">Objectifs de départ <span className="text-xs font-normal text-gray-400">(facultatif)</span></h3>
-                <p className="text-xs text-gray-400">Donnés automatiquement à un employé de ce poste qui n'a encore aucun objectif.</p>
+                <h3 className="font-semibold text-[var(--text)]">Objectifs de départ <span className="text-xs font-normal text-[var(--text-secondary)]">(facultatif)</span></h3>
+                <p className="text-xs text-[var(--text-secondary)]">Donnés automatiquement à un employé de ce poste qui n'a encore aucun objectif.</p>
               </div>
               {objectives.length > 0 && (
                 <div className="flex items-center gap-2 shrink-0">
                   <TotalChip items={objectives} />
-                  <button type="button" onClick={() => rebalance('o')} className="text-xs font-bold text-purple-600 hover:underline">Répartir</button>
+                  <button type="button" onClick={() => rebalance('o')} className="text-xs font-semibold text-[var(--action)] hover:underline">Répartir</button>
                 </div>
               )}
             </div>
@@ -166,35 +169,35 @@ function TemplateEditor({ template, positions, onClose, onSaved }: { template: T
                 <div className="flex items-center gap-1 shrink-0">
                   <input type="number" min={1} max={100} inputMode="decimal" className={`${inputCls} w-[4.5rem] text-center`} value={o.weight}
                     onChange={e => setO(i, { weight: Number(e.target.value) })} aria-label="Poids en pourcentage" />
-                  <span className="text-sm text-gray-400">%</span>
+                  <span className="text-sm text-[var(--text-secondary)]">%</span>
                   <button type="button" aria-label="Retirer" onClick={() => setObjectives(prev => prev.filter((_, k) => k !== i))}
-                    className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"><Trash2 size={16} /></button>
+                    className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-[var(--danger-text)] hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]"><Trash2 strokeWidth={1.5} size={16} /></button>
                 </div>
               </div>
             ))}
             <button type="button" onClick={() => setObjectives(prev => [...prev, { title: '', kpi: '', weight: 0 }])}
-              className="w-full py-2.5 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-600 text-gray-500 hover:border-purple-400 hover:text-purple-600 font-bold text-sm flex items-center justify-center gap-2">
-              <Plus size={16} /> Ajouter un objectif
+              className="w-full py-2.5 rounded-xl border-2 border-dashed border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border)] hover:text-[var(--action)] font-semibold text-sm flex items-center justify-center gap-2">
+              <Plus strokeWidth={1.5} size={16} /> Ajouter un objectif
             </button>
           </div>
 
-          {error && <p className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 rounded-xl p-3 break-words">{error}</p>}
+          {error && <p className="text-sm text-[var(--danger-text)] bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] rounded-xl p-3 break-words">{error}</p>}
         </div>
 
-        <div className="p-5 border-t border-gray-100 dark:border-gray-700 flex gap-3">
-          <button onClick={onClose} className="flex-1 py-3 rounded-xl border border-gray-200 dark:border-gray-600 font-bold text-gray-600 dark:text-gray-300">Annuler</button>
+        <div className="p-5 border-t border-[var(--border)] flex gap-3">
+          <button onClick={onClose} className="flex-1 py-3 rounded-xl border border-[var(--border)] font-semibold text-[var(--text-secondary)]">Annuler</button>
           <button onClick={save} disabled={saving || !name.trim()}
-            className="flex-1 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold shadow-lg shadow-purple-500/20 disabled:opacity-60 flex items-center justify-center gap-2">
-            {saving && <Loader2 size={16} className="animate-spin" />} Enregistrer
+            className="flex-1 py-3 rounded-xl bg-[var(--brand)] hover:bg-[var(--brand)] text-[var(--on-brand)] font-semibold shadow-lg disabled:opacity-60 flex items-center justify-center gap-2">
+            {saving && <Loader2 strokeWidth={1.5} size={16} className="animate-spin" />} Enregistrer
           </button>
         </div>
       </motion.div>
-    </motion.div>
+    </PerformanceOverlay>
   );
 }
 
 // ─── Page ────────────────────────────────────────────────────────────────────
-export default function TemplatesPage() {
+function TemplatesPage() {
   const { bp } = useBasePath();
   const [data, setData] = useState<TemplatesResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -240,25 +243,25 @@ export default function TemplatesPage() {
   return (
     <div className="max-w-[1200px] mx-auto pb-20 space-y-6 sm:space-y-8">
       <PerformanceNav />
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 performance-header">
         <div>
-          <Link href={bp('/performance/cycles')} className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-purple-600 mb-2">
-            <ArrowLeft size={14} /> Campagnes
+          <Link href={bp('/performance/cycles')} className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--action)] mb-2">
+            <ArrowLeft strokeWidth={1.5} size={14} /> Campagnes
           </Link>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Grilles de notation</h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base">La liste des critères sur lesquels on note. Créez-en une par poste : elle est utilisée automatiquement.</p>
+          <h1 className="text-2xl sm:text-3xl font-semibold text-[var(--text)] tracking-tight">Grilles de notation</h1>
+          <p className="text-[var(--text-secondary)] text-sm sm:text-base">La liste des critères sur lesquels on note. Créez-en une par poste : elle est utilisée automatiquement.</p>
         </div>
         {isHR && (
           <button onClick={() => setEditing('new')}
-            className="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold shadow-lg shadow-purple-500/20 flex items-center justify-center gap-2">
-            <Plus size={20} /> Nouvelle grille
+            className="px-5 py-2.5 rounded-xl bg-[var(--brand)] hover:bg-[var(--brand)] text-[var(--on-brand)] font-semibold shadow-lg flex items-center justify-center gap-2">
+            <Plus strokeWidth={1.5} size={20} /> Nouvelle grille
           </button>
         )}
       </div>
 
       {error && (
-        <div className="rounded-xl bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 text-sm p-4 flex items-center gap-2">
-          <AlertTriangle size={16} /> {error}
+        <div className="rounded-xl bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] text-[var(--danger-text)] text-sm p-4 flex items-center gap-2">
+          <AlertTriangle strokeWidth={1.5} size={16} /> {error}
         </div>
       )}
 
@@ -267,43 +270,43 @@ export default function TemplatesPage() {
       ) : data && (
         <>
           {data.custom.length === 0 ? (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-10 text-center">
-              <Layers className="mx-auto text-gray-300 mb-3" size={36} />
-              <p className="font-bold text-gray-900 dark:text-white">Vous n'avez pas encore créé de grille</p>
-              <p className="text-sm text-gray-500 mt-1">Pas de souci : une grille standard est utilisée pour tout le monde tant que vous n'en créez pas.</p>
+            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-10 text-center performance-card">
+              <Layers strokeWidth={1.5} className="mx-auto text-[var(--text-secondary)] mb-3" size={36} />
+              <p className="font-semibold text-[var(--text)]">Vous n'avez pas encore créé de grille</p>
+              <p className="text-sm text-[var(--text-secondary)] mt-1">Pas de souci : une grille standard est utilisée pour tout le monde tant que vous n'en créez pas.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 performance-catalog">
               {data.custom.map(t => (
                 <motion.div key={t.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                  className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-5 flex flex-col">
+                  className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm p-5 flex flex-col performance-card">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <h3 className="font-bold text-gray-900 dark:text-white truncate">{t.name}</h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5 truncate">
-                        <Briefcase size={13} /> {t.jobTitle || 'Tous les postes'}
+                      <h3 className="font-semibold text-[var(--text)] truncate">{t.name}</h3>
+                      <p className="text-sm text-[var(--text-secondary)] flex items-center gap-1.5 truncate">
+                        <Briefcase strokeWidth={1.5} size={13} /> {t.jobTitle || 'Tous les postes'}
                       </p>
                       {t.jobTitle && Object.keys(positions).length > 0 && (
                         positions[t.jobTitle.trim().toLowerCase()]
-                          ? <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">{positions[t.jobTitle.trim().toLowerCase()].count} employé(s) concerné(s)</p>
-                          : <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 flex items-start gap-1"><AlertTriangle size={12} className="mt-0.5 shrink-0" /> Aucun employé n'a ce poste : vérifiez l'orthographe.</p>
+                          ? <p className="text-xs text-[var(--success-text)] mt-1">{positions[t.jobTitle.trim().toLowerCase()].count} employé(s) concerné(s)</p>
+                          : <p className="text-xs text-[var(--warning-text)] mt-1 flex items-start gap-1"><AlertTriangle strokeWidth={1.5} size={12} className="mt-0.5 shrink-0" /> Aucun employé n'a ce poste : vérifiez l'orthographe.</p>
                       )}
                     </div>
                     {isHR && (
                       <div className="flex items-center gap-1 shrink-0">
-                        <button onClick={() => setEditing(t)} aria-label="Modifier" className="p-2 rounded-lg text-gray-400 hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20"><Pencil size={16} /></button>
-                        <button onClick={() => remove(t)} aria-label="Supprimer" className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"><Trash2 size={16} /></button>
+                        <button onClick={() => setEditing(t)} aria-label="Modifier" className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-[var(--action)] hover:bg-[var(--brand-soft)]"><Pencil strokeWidth={1.5} size={16} /></button>
+                        <button onClick={() => remove(t)} aria-label="Supprimer" className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-[var(--danger-text)] hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]"><Trash2 strokeWidth={1.5} size={16} /></button>
                       </div>
                     )}
                   </div>
-                  <ul className="mt-4 space-y-1.5 text-sm text-gray-600 dark:text-gray-300 flex-1">
+                  <ul className="mt-4 space-y-1.5 text-sm text-[var(--text-secondary)] flex-1">
                     {t.criteria.slice(0, 5).map((c, i) => (
-                      <li key={i} className="flex items-center justify-between gap-2"><span className="truncate">{c.label}</span><span className="text-gray-400 shrink-0">{c.weight} %</span></li>
+                      <li key={i} className="flex items-center justify-between gap-2"><span className="truncate">{c.label}</span><span className="text-[var(--text-secondary)] shrink-0">{c.weight} %</span></li>
                     ))}
-                    {t.criteria.length > 5 && <li className="text-xs text-gray-400">+ {t.criteria.length - 5} autre(s)</li>}
+                    {t.criteria.length > 5 && <li className="text-xs text-[var(--text-secondary)]">+ {t.criteria.length - 5} autre(s)</li>}
                   </ul>
                   {t.objectives && t.objectives.length > 0 && (
-                    <p className="mt-3 text-xs text-gray-400">{t.objectives.length} objectif(s) proposé(s)</p>
+                    <p className="mt-3 text-xs text-[var(--text-secondary)]">{t.objectives.length} objectif(s) proposé(s)</p>
                   )}
                 </motion.div>
               ))}
@@ -311,12 +314,12 @@ export default function TemplatesPage() {
           )}
 
           <div className="space-y-3">
-            <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wide">Grilles déjà prêtes (non modifiables)</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+            <h2 className="text-sm font-semibold text-[var(--text-secondary)]">Grilles déjà prêtes (non modifiables)</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 performance-catalog">
               {data.builtin.map(b => (
-                <div key={b.id} className="bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700 p-4">
-                  <p className="font-bold text-gray-800 dark:text-gray-200 text-sm">{b.name}</p>
-                  <p className="text-xs text-gray-400 mt-1">{b.criteria.length} critères</p>
+                <div key={b.id} className="bg-[var(--surface-2)] rounded-2xl border border-[var(--border)] p-4">
+                  <p className="font-semibold text-[var(--text)] text-sm">{b.name}</p>
+                  <p className="text-xs text-[var(--text-secondary)] mt-1">{b.criteria.length} critères</p>
                 </div>
               ))}
             </div>
@@ -336,5 +339,14 @@ export default function TemplatesPage() {
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+
+export default function TemplatesPageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <TemplatesPage />
+    </ModulePageFrame>
   );
 }

@@ -1,4 +1,7 @@
 'use client';
+import { DocumentReader } from '@/components/ui/DocumentReader';
+import { SettingsFrame } from '@/components/settings/SettingsFrame';
+import { SettingsModelChoice } from '@/components/settings/SettingsModelChoice';
 
 // ============================================================================
 // app/(dashboard)/parametres/bulletin/page.tsx
@@ -21,6 +24,8 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { api } from '@/services/api';
+import { Building2, User, CalendarDays, Wallet, Clock, Gift, Landmark, HardHat, Banknote, BarChart3, PenLine, MessageSquare, FileText, Square, Printer, Eye, RotateCcw } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { invalidateBulletinTemplateCache } from '@/hooks/useBulletinConfig';
 import BulletinRenderer from '@/components/BulletinRenderer';
 import BulletinRendererClarifie from '@/components/BulletinRendererClarifie';
@@ -118,20 +123,20 @@ const DEMO_FACTURE_PRO: BulletinPayroll = {
 
 // ─── Métadonnées blocs (pour l'onglet Blocs du mode Template) ────────────────
 
-const BLOC_META: Record<string, { emoji:string; desc:string; required?:boolean; appOnly?:boolean }> = {
-  header:     {emoji:'🏢', desc:'Logo, nom, adresse, numéros fiscaux',   required:true  },
-  employee:   {emoji:'👤', desc:'Nom, poste, contrat, CNSS, ancienneté', required:true  },
-  time:       {emoji:'📅', desc:'Jours travaillés, absences, congés'                    },
-  salary:     {emoji:'💰', desc:'Salaire de base et gains',              required:true  },
-  overtime:   {emoji:'⏰', desc:'Heures sup. — Décret n°78-360'                         },
-  bonuses:    {emoji:'🎁', desc:'Transport, repas, primes diverses'                     },
-  deductions: {emoji:'🏛', desc:'CNSS salariale + ITS/IRPP',            required:true  },
-  employer:   {emoji:'🏗', desc:'CNSS patronale + TUS'                                  },
-  net:        {emoji:'💵', desc:'Montant net versé à l\'employé',        required:true  },
-  recap:      {emoji:'📊', desc:'Brut / net / coût total'                               },
-  signatures: {emoji:'✍', desc:'Zone signatures employeur + employé'                   },
-  message:    {emoji:'💬', desc:'Message personnalisé de l\'employeur'                  },
-  legal:      {emoji:'📋', desc:'Réglementation Congo 2026',             appOnly:true   },
+const BLOC_META: Record<string, { icon:LucideIcon; desc:string; required?:boolean; appOnly?:boolean }> = {
+  header:     {icon:Building2, desc:'Logo, nom, adresse, numéros fiscaux',   required:true  },
+  employee:   {icon:User, desc:'Nom, poste, contrat, CNSS, ancienneté', required:true  },
+  time:       {icon:CalendarDays, desc:'Jours travaillés, absences, congés'                    },
+  salary:     {icon:Wallet, desc:'Salaire de base et gains',              required:true  },
+  overtime:   {icon:Clock, desc:'Heures sup. — Décret n°78-360'                         },
+  bonuses:    {icon:Gift, desc:'Transport, repas, primes diverses'                     },
+  deductions: {icon:Landmark, desc:'CNSS salariale + ITS/IRPP',            required:true  },
+  employer:   {icon:HardHat, desc:'CNSS patronale + TUS'                                  },
+  net:        {icon:Banknote, desc:'Montant net versé à l\'employé',        required:true  },
+  recap:      {icon:BarChart3, desc:'Brut / net / coût total'                               },
+  signatures: {icon:PenLine, desc:'Zone signatures employeur + employé'                   },
+  message:    {icon:MessageSquare, desc:'Message personnalisé de l\'employeur'                  },
+  legal:      {icon:FileText, desc:'Réglementation Congo 2026',             appOnly:true   },
 };
 
 const COLOR_PRESETS = [
@@ -151,7 +156,8 @@ function SortableBlock({ block, onToggle, onRename, primary }: {
   block: BlockConfig; onToggle:(id:string)=>void; onRename:(id:string,label:string)=>void; primary:string;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: block.id });
-  const meta = BLOC_META[block.id] ?? { emoji:'□', desc:'' };
+  const meta = BLOC_META[block.id] ?? { icon:Square, desc:'' };
+  const MetaIcon = meta.icon;
   const [editing, setEditing] = useState(false);
   const [draft, setDraft]     = useState(block.label);
   const commit = () => { onRename(block.id, draft || block.label); setEditing(false); };
@@ -168,7 +174,7 @@ function SortableBlock({ block, onToggle, onRename, primary }: {
       <div {...attributes} {...listeners} style={{ cursor:'grab', display:'flex', flexDirection:'column', gap:3, padding:'2px 3px', flexShrink:0 }}>
         {[0,1,2].map(i => <div key={i} style={{ width:13, height:2, borderRadius:1, background:'var(--border)' }} />)}
       </div>
-      <span style={{ fontSize:15, flexShrink:0 }}>{meta.emoji}</span>
+      <span style={{ display:'flex', flexShrink:0, color:'var(--text-muted)' }}><MetaIcon size={16} strokeWidth={1.5} /></span>
       <div style={{ flex:1, minWidth:0 }}>
         {editing
           ? <input autoFocus value={draft} onChange={e=>setDraft(e.target.value)} onBlur={commit} onKeyDown={e=>e.key==='Enter'&&commit()}
@@ -326,7 +332,7 @@ export default function BulletinDesignerPage() {
       }
     }
 
-    flash('Bulletin enregistré — actif dans toute l\'application ✓', true);
+    flash('Bulletin enregistré — actif dans toute l\'application', true);
   } catch {
     flash('Erreur lors de l\'enregistrement. Réessayez.', false);
   } finally {
@@ -367,21 +373,21 @@ export default function BulletinDesignerPage() {
   const p = cfg.style.primaryColor;
 
   // ─── Loading ────────────────────────────────────────────────────────────────
-  if (loading) return (
-    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'80vh', gap:14, fontFamily:'Inter,sans-serif' }}>
-      <div style={{ width:40, height:40, borderRadius:'50%', border:'3px solid var(--border)', borderTopColor:'#10B981', animation:'spin .8s linear infinite' }} />
+  if (loading) return (<SettingsFrame kind="detail">
+    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'80vh', gap:14, fontFamily:'inherit' }}>
+      <div style={{ width:40, height:40, borderRadius:'50%', border:'3px solid var(--border)', borderTopColor:'var(--brand)', animation:'spin .8s linear infinite' }} />
       <div style={{ color:'var(--text-muted)', fontSize:14 }}>Chargement de votre bulletin…</div>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
-  );
+  </SettingsFrame>);
 
   // ─── Mode Canvas — éditeur plein écran ─────────────────────────────────────
   if (appMode === 'canvas') {
     const missingRequired = REQUIRED_VARIABLES.filter(rv => !canvas.blocks.some(b => b.variable === rv));
     const canSave = missingRequired.length === 0 && canvas.blocks.length > 0;
 
-    return (
-      <div style={{ display:'flex', flexDirection:'column', height:'calc(100vh - 80px)', fontFamily:'"Inter","Helvetica Neue",Arial,sans-serif', overflow:'hidden' }}>
+    return (<SettingsFrame kind="detail">
+      <div style={{ display:'flex', flexDirection:'column', height:'calc(100vh - 80px)', fontFamily:'inherit', overflow:'hidden' }}>
 
         {/* Barre du haut */}
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 16px', background:'var(--surface)', borderBottom:'1.5px solid var(--border)', flexShrink:0 }}>
@@ -391,51 +397,51 @@ export default function BulletinDesignerPage() {
               ← Mode Templates
             </button>
             <div style={{ width:1, height:20, background:'var(--border)' }} />
-            <span style={{ fontSize:14, fontWeight:700, color:'var(--text)' }}>🎨 Éditeur personnalisé</span>
+            <span style={{ fontSize:14, fontWeight:700, color:'var(--text)' }}>Éditeur personnalisé</span>
             <span style={{ fontSize:11, color:'var(--text-muted)' }}>— construisez votre bulletin de A à Z</span>
           </div>
           <div style={{ display:'flex', gap:8, alignItems:'center' }}>
             {!canSave && canvas.blocks.length > 0 && (
-              <span style={{ fontSize:11, color:'#92400e', background:'#fef3c7', padding:'4px 10px', borderRadius:20, fontWeight:600 }}>
+              <span style={{ fontSize:11, color:'var(--text)', background:'color-mix(in srgb, var(--mustard) 22%, transparent)', padding:'4px 10px', borderRadius:20, fontWeight:600 }}>
                 Éléments manquants : {missingRequired.map(v => VARIABLE_LABELS[v]).join(', ')}
               </span>
             )}
-            <button onClick={save} disabled={saving || !canSave}
+            <button className="settings-document-save" onClick={save} disabled={saving || !canSave}
               style={{ padding:'9px 18px', borderRadius:9, border:'none', cursor: (saving || !canSave) ? 'not-allowed' : 'pointer',
                 background: canSave ? canvas.primaryColor : 'var(--border)', color: canSave ? '#fff' : 'var(--text-muted)',
                 fontSize:13, fontWeight:700, opacity: saving ? 0.7 : 1, boxShadow: canSave ? `0 3px 10px ${canvas.primaryColor}44` : 'none' }}>
-              {saving ? '⏳ Enregistrement…' : '✅ Enregistrer'}
+              {saving ? 'Enregistrement…' : 'Enregistrer'}
             </button>
           </div>
         </div>
 
         {/* Éditeur canvas */}
         <div style={{ flex:1, overflow:'hidden' }}>
-          <CanvasEditor
+          <div className="loan-document-protected" style={{display:'contents'}}><CanvasEditor
             payroll={payroll}
             initial={canvas}
             onChange={setCanvas}
-          />
+          /></div>
         </div>
 
         {/* Toast */}
         {toast && (
-          <div style={{ position:'fixed', bottom:24, right:24, zIndex:9999, padding:'12px 18px', borderRadius:10, fontSize:12, fontWeight:700, color:'#fff', background: toast.ok?'#10B981':'#EF4444', boxShadow:'0 6px 20px rgba(0,0,0,.2)', animation:'fadeUp .3s ease' }}>
+          <div style={{ position:'fixed', bottom:24, right:24, zIndex:9999, padding:'12px 18px', borderRadius:10, fontSize:12, fontWeight:700, color:'#fff', background: toast.ok?'var(--green)':'var(--danger)', boxShadow:'0 6px 20px rgba(0,0,0,.2)', animation:'fadeUp .3s ease' }}>
             {toast.msg}
           </div>
         )}
         <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}`}</style>
       </div>
-    );
+    </SettingsFrame>);
   }
 
   // ─── Mode Template — interface split-screen ─────────────────────────────────
 
   const TABS = [
-    { id:'gabarit', label:'🏗 Gabarit'  },
-    { id:'style',   label:'🎨 Style'    },
-    { id:'blocs',   label:'📦 Blocs'    },
-    { id:'options', label:'⚙️ Options'  },
+    { id:'gabarit', label:'Gabarit'  },
+    { id:'style',   label:'Style'    },
+    { id:'blocs',   label:'Blocs'    },
+    { id:'options', label:'Options'  },
   ] as const;
 
   const GabaritTab = () => (
@@ -455,7 +461,7 @@ export default function BulletinDesignerPage() {
       >
         <div style={{ width:40, height:40, borderRadius:10, border:`2px dashed ${p}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:20, flexShrink:0, color: p }}>+</div>
         <div>
-          <div style={{ fontSize:13, fontWeight:700, color:'var(--text)', marginBottom:2 }}>✨ Créer mon propre bulletin</div>
+          <div style={{ fontSize:13, fontWeight:700, color:'var(--text)', marginBottom:2 }}>Créer mon propre bulletin</div>
           <div style={{ fontSize:11, color:'var(--text-muted)' }}>Partir d'un canvas vide — glisser-déposer vos blocs, choisir quoi afficher</div>
         </div>
       </div>
@@ -467,7 +473,7 @@ export default function BulletinDesignerPage() {
       {TEMPLATE_LIST.map(tpl => {
         const active = cfg.templateId === tpl.templateId;
         return (
-          <div key={tpl.templateId} onClick={() => applyTemplate(tpl.templateId)}
+          <SettingsModelChoice selected={active} onPreview={() => setShowPreview(true)} key={tpl.templateId} onClick={() => applyTemplate(tpl.templateId)}
             style={{ padding:'12px 14px', borderRadius:10, cursor:'pointer', marginBottom:8,
               border: active ? `2px solid ${p}` : '1.5px solid var(--border)',
               background: active ? `${p}0d` : 'var(--surface)', transition:'all .15s' }}>
@@ -489,7 +495,7 @@ export default function BulletinDesignerPage() {
               <div style={{ flex:3, borderRadius:2, background:'var(--border)' }} />
               <div style={{ flex:1, borderRadius:2, background: active ? tpl.style.secondaryColor : 'var(--border)' }} />
             </div>
-          </div>
+          </SettingsModelChoice>
         );
       })}
     </div>
@@ -579,7 +585,7 @@ export default function BulletinDesignerPage() {
       <div>
         <Label>Style de l'en-tête</Label>
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
-          {([['gradient','🌈 Dégradé'],['dark','🌑 Sombre'],['line','📏 Sobre'],['minimal','✂️ Minimal']] as const).map(([v,l])=>(
+          {([['gradient','Dégradé'],['dark','Sombre'],['line','Sobre'],['minimal','Minimal']] as const).map(([v,l])=>(
             <Pill key={v} label={l} active={cfg.style.headerStyle===v} onClick={()=>setStyle('headerStyle',v)} primary={p} />
           ))}
         </div>
@@ -645,7 +651,7 @@ export default function BulletinDesignerPage() {
       {FACTURE_MODELS.map(m => {
         const active = ((cfg as any).factureTemplateId ?? 'forfait') === m.id;
         return (
-          <div key={m.id} onClick={() => setCfg(prev => ({ ...prev, factureTemplateId: m.id as any }))}
+          <SettingsModelChoice selected={active} onPreview={() => setShowPreview(true)} key={m.id} onClick={() => setCfg(prev => ({ ...prev, factureTemplateId: m.id as any }))}
             style={{ padding:'12px 14px', borderRadius:10, cursor:'pointer', marginBottom:8,
               border: active ? `2px solid ${p}` : '1.5px solid var(--border)',
               background: active ? `${p}0d` : 'var(--surface)', transition:'all .15s' }}>
@@ -660,7 +666,7 @@ export default function BulletinDesignerPage() {
                 </div>
               )}
             </div>
-          </div>
+          </SettingsModelChoice>
         );
       })}
     </div>
@@ -712,16 +718,30 @@ export default function BulletinDesignerPage() {
     </div>
   );
 
-  return (
-    <div style={{ display:'grid', gridTemplateColumns: showPreview ? '360px 1fr' : '460px', height:'calc(100vh - 80px)', overflow:'hidden', fontFamily:'"Inter","Helvetica Neue",Arial,sans-serif', background:'var(--bg)' }}>
+  return (<SettingsFrame kind="detail">
+    <div className={`settings-document-layout${showPreview ? '' : ' is-closed'}`}>
 
       {/* ══ PANNEAU GAUCHE ══ */}
-      <div style={{ background:'var(--surface)', borderRight:'1.5px solid var(--border)', display:'flex', flexDirection:'column', overflow:'hidden' }}>
+      <div className="settings-document-controls">
         <div style={{ padding:'16px 16px 0', borderBottom:'1px solid var(--surface-2)', flexShrink:0 }}>
           <h1 style={{ fontSize:16, fontWeight:800, color:'var(--text)', margin:'0 0 2px' }}>
-            {previewKind==='facture' ? '🧾 Facture prestataire' : 'Mon bulletin de paie'}
+            {previewKind==='facture' ? 'Facture prestataire' : 'Mon bulletin de paie'}
           </h1>
-          <p style={{ fontSize:11, color:'var(--text-muted)', margin:'0 0 12px' }}>La preview se met à jour en temps réel</p>
+          <p style={{ fontSize:11, color:'var(--text-muted)', margin:'0 0 12px' }}>L’aperçu se met à jour à chaque réglage.</p>
+<div className="settings-document-kind" style={{ display:'flex', gap:3, background:'var(--surface-2)', borderRadius:8, padding:3 }}>
+                <button onClick={()=>setPreviewKind('bulletin')}
+                  style={{ padding:'5px 10px', borderRadius:6, border:'none', cursor:'pointer', fontSize:11, fontWeight:600,
+                    background: previewKind==='bulletin' ? 'var(--surface)' : 'transparent', color: previewKind==='bulletin' ? 'var(--text)' : 'var(--text-muted)',
+                    boxShadow: previewKind==='bulletin' ? '0 1px 3px rgba(0,0,0,.12)' : 'none' }}>
+                  Salarié
+                </button>
+                <button onClick={()=>setPreviewKind('facture')}
+                  style={{ padding:'5px 10px', borderRadius:6, border:'none', cursor:'pointer', fontSize:11, fontWeight:600,
+                    background: previewKind==='facture' ? 'var(--surface)' : 'transparent', color: previewKind==='facture' ? 'var(--text)' : 'var(--text-muted)',
+                    boxShadow: previewKind==='facture' ? '0 1px 3px rgba(0,0,0,.12)' : 'none' }}>
+                  Prestataire
+                </button>
+              </div>
           {previewKind==='bulletin' && (
             <div style={{ display:'flex', gap:5, flexWrap:'wrap' as const, marginBottom:12 }}>
               {TABS.map(t=>(
@@ -749,22 +769,22 @@ export default function BulletinDesignerPage() {
           )}
         </div>
 
-        <div style={{ padding:'14px 16px', borderTop:'1.5px solid var(--border)', display:'flex', gap:8, flexShrink:0 }}>
-          <button onClick={save} disabled={saving}
+        <div className="settings-document-actions">
+          <button className="settings-document-save" onClick={save} disabled={saving}
             style={{ flex:1, padding:'12px', borderRadius:10, border:'none', cursor: saving?'wait':'pointer',
               background:p, color:'#fff', fontSize:13, fontWeight:700, opacity: saving?0.7:1, boxShadow:`0 3px 10px ${p}44` }}>
-            {saving ? '⏳ Enregistrement…' : '✅ Enregistrer'}
+            {saving ? 'Enregistrement…' : 'Enregistrer'}
           </button>
           <button onClick={()=>{ if(confirm(`Revenir au gabarit "${cfg.name}" d'origine ?`)) setCfg(getBaseTemplate(cfg.templateId)); }}
-            title="Réinitialiser" style={{ padding:'12px 13px', borderRadius:10, cursor:'pointer', fontSize:13, background:'var(--surface)', border:'1.5px solid var(--border)', color:'var(--text-muted)' }}>↺</button>
+            title="Réinitialiser" style={{ padding:'12px 13px', borderRadius:10, cursor:'pointer', fontSize:13, background:'var(--surface)', border:'1.5px solid var(--border)', color:'var(--text-muted)' }}><RotateCcw size={15} strokeWidth={1.5} /></button>
           <button onClick={()=>setShowPreview(v=>!v)} title={showPreview?'Masquer preview':'Afficher preview'}
-            style={{ padding:'12px 13px', borderRadius:10, cursor:'pointer', fontSize:13, background: showPreview?'#ecfdf5':'var(--surface)', border:`1.5px solid ${showPreview?p:'var(--border)'}`, color: showPreview?p:'var(--text-muted)' }}>👁</button>
+            style={{ padding:'12px 13px', borderRadius:10, cursor:'pointer', fontSize:13, background: showPreview?'var(--brand-soft)':'var(--surface)', border:`1.5px solid ${showPreview?p:'var(--border)'}`, color: showPreview?p:'var(--text-muted)' }}><Eye size={15} strokeWidth={1.5} /></button>
         </div>
       </div>
 
       {/* ══ PREVIEW LIVE ══ */}
       {showPreview && (
-        <div style={{ display:'flex', flexDirection:'column', overflow:'hidden' }}>
+        <div id="settings-model-reader" className="settings-document-reader">
           <div style={{ padding:'10px 16px', background:'var(--surface)', borderBottom:'1.5px solid var(--border)', display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
             <div style={{ display:'flex', alignItems:'center', gap:8 }}>
               <div style={{ width:7, height:7, borderRadius:'50%', background:'#10B981', boxShadow:'0 0 0 3px #d1fae5' }} />
@@ -772,28 +792,15 @@ export default function BulletinDesignerPage() {
               <span style={{ fontSize:11, color:'var(--text-muted)' }}>— exactement ce que verront vos employés</span>
             </div>
             <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-              <div style={{ display:'flex', gap:3, background:'var(--surface-2)', borderRadius:8, padding:3 }}>
-                <button onClick={()=>setPreviewKind('bulletin')}
-                  style={{ padding:'5px 10px', borderRadius:6, border:'none', cursor:'pointer', fontSize:11, fontWeight:600,
-                    background: previewKind==='bulletin' ? 'var(--surface)' : 'transparent', color: previewKind==='bulletin' ? 'var(--text)' : 'var(--text-muted)',
-                    boxShadow: previewKind==='bulletin' ? '0 1px 3px rgba(0,0,0,.12)' : 'none' }}>
-                  👤 Salarié
-                </button>
-                <button onClick={()=>setPreviewKind('facture')}
-                  style={{ padding:'5px 10px', borderRadius:6, border:'none', cursor:'pointer', fontSize:11, fontWeight:600,
-                    background: previewKind==='facture' ? 'var(--surface)' : 'transparent', color: previewKind==='facture' ? 'var(--text)' : 'var(--text-muted)',
-                    boxShadow: previewKind==='facture' ? '0 1px 3px rgba(0,0,0,.12)' : 'none' }}>
-                  🧾 Prestataire
-                </button>
-              </div>
+
               <button onClick={()=>window.print()}
                 style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:8, border:'1.5px solid var(--border)', background:'var(--surface)', cursor:'pointer', fontSize:12, fontWeight:600, color:'var(--text)' }}>
-                🖨️ Imprimer / PDF
+                <Printer size={14} strokeWidth={1.5} /> Imprimer / PDF
               </button>
             </div>
           </div>
           <div style={{ flex:1, overflowY:'auto', padding:'20px', background:'var(--surface-2)', display:'flex', justifyContent:'center' }}>
-            <div style={{ width:794, background:'#fff', borderRadius:10, boxShadow:'0 4px 20px rgba(0,0,0,.1)', overflow:'hidden' }}>
+            <DocumentReader key={previewKind + (previewKind === 'facture' ? (cfg as any).factureTemplateId : cfg.templateId)} title="Aperçu du modèle" fitPage initialZoom={0.72}>
               {previewKind === 'facture' ? (
                 (cfg as any).factureTemplateId === 'professionnelle' ? (
                   <FactureRendererPro payroll={DEMO_FACTURE_PRO} template={cfg} previewMode />
@@ -811,18 +818,18 @@ export default function BulletinDesignerPage() {
               ) : (
                 <BulletinRenderer payroll={previewPayroll} template={cfg} previewMode />
               )}
-            </div>
+            </DocumentReader>
           </div>
         </div>
       )}
 
       {/* Toast */}
       {toast && (
-        <div style={{ position:'fixed', bottom:24, right:24, zIndex:9999, padding:'12px 18px', borderRadius:10, fontSize:12, fontWeight:700, color:'#fff', background: toast.ok?'#10B981':'#EF4444', boxShadow:'0 6px 20px rgba(0,0,0,.2)', animation:'fadeUp .3s ease' }}>
+        <div style={{ position:'fixed', bottom:24, right:24, zIndex:9999, padding:'12px 18px', borderRadius:10, fontSize:12, fontWeight:700, color:'#fff', background: toast.ok?'var(--green)':'var(--danger)', boxShadow:'0 6px 20px rgba(0,0,0,.2)', animation:'fadeUp .3s ease' }}>
           {toast.msg}
         </div>
       )}
       <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}`}</style>
     </div>
-  );
+  </SettingsFrame>);
 }

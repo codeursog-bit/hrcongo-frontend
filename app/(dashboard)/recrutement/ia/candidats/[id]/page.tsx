@@ -2,16 +2,18 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
 import {
-  ArrowLeft, Mail, Phone, Calendar, Download, Loader2,
+  ArrowLeft, Mail, Phone, Calendar, Download,
   CheckCircle2, XCircle, AlertTriangle, BrainCircuit, Sparkles,
-  TrendingUp, Award, Target, Zap, FileText, MapPin, Briefcase, User,
+  TrendingUp, Award, Target, Zap, FileText, MapPin, Briefcase,
 } from 'lucide-react';
 import Link from 'next/link';
 import { api } from '@/services/api';
 import { ToastProvider, useToast } from '@/components/ui/useToast';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import { Badge, Button, Card, EmptyState, Input, Textarea } from '@/components/design-system/primitives';
+import { Modal } from '@/components/design-system/feedback';
+import { RecruitmentDetailPage as DetailPage } from '@/components/recruitment/RecruitmentFrame';
 
 // ─────────────────────────────────────────────
 // TYPES
@@ -52,11 +54,11 @@ interface CandidateIA {
   createdAt: string;
 }
 
-const DECISION_CONFIG: Record<AIDecision, { label: string; color: string; icon: React.ElementType }> = {
-  RETENU:        { label: 'Retenu',         color: 'bg-emerald-600',            icon: Award },
-  MOYENNE:       { label: 'Moyen',          color: 'bg-amber-600',              icon: TrendingUp },
-  SECONDE_CHANCE:{ label: 'Seconde Chance', color: 'bg-[var(--text-muted)]',    icon: Target },
-  REFUS:         { label: 'Refusé',         color: 'bg-red-600',                icon: XCircle },
+const DECISION_CONFIG: Record<AIDecision, { label: string; tone: 'success' | 'warning' | 'neutral' | 'danger'; icon: React.ElementType }> = {
+  RETENU:        { label: 'Retenu',         tone: 'success', icon: Award },
+  MOYENNE:       { label: 'Moyen',          tone: 'warning', icon: TrendingUp },
+  SECONDE_CHANCE:{ label: 'Seconde Chance', tone: 'neutral', icon: Target },
+  REFUS:         { label: 'Refusé',         tone: 'danger', icon: XCircle },
 };
 
 // ─────────────────────────────────────────────
@@ -142,22 +144,23 @@ function DetailCandidatIAContent({ id }: { id: string }) {
     }
   };
 
-  // ── LOADING ──
   if (isLoading) {
-    return (
-      <KonzaLoader variant="page" />
-    );
+    return <DetailPage title="Dossier candidat"><KonzaLoader variant="page" label="Chargement du candidat…" /></DetailPage>;
   }
 
   if (!candidate) {
     return (
-      <div className="min-h-screen bg-[var(--bg)] flex flex-col items-center justify-center p-4">
-        <XCircle size={64} className="text-red-500 mb-6" />
-        <h1 className="text-2xl font-bold text-[var(--text)] mb-4">Candidat introuvable</h1>
-        <Link href="/recrutement/ia/candidats" className="px-6 py-3 bg-[var(--surface-2)] hover:bg-[var(--border)] text-[var(--text)] rounded-xl font-bold transition-colors">
-          Retour au Pipeline
-        </Link>
-      </div>
+      <DetailPage title="Dossier candidat" action={<Link className="k-button k-button-secondary" href="/recrutement/ia/candidats">Retour au pipeline</Link>}>
+        <Card>
+          <EmptyState
+            title="Candidat introuvable"
+            icon={XCircle}
+            action={<Link className="k-button k-button-secondary" href="/recrutement/ia/candidats">Retour au pipeline</Link>}
+          >
+            Ce dossier n’est pas disponible.
+          </EmptyState>
+        </Card>
+      </DetailPage>
     );
   }
 
@@ -167,375 +170,263 @@ function DetailCandidatIAContent({ id }: { id: string }) {
   const isInInterview = candidate.status === 'INTERVIEW';
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] relative overflow-hidden">
-
-      {/* BG Glows */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
-      </div>
-
-      {/* ── MODAL ENTRETIEN ── */}
-      {showInterviewModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="bg-[var(--surface)] border border-amber-500/30 rounded-2xl p-8 max-w-md w-full shadow-2xl"
-          >
-            <h3 className="text-xl font-bold text-[var(--text)] mb-1 flex items-center gap-3">
-              <Calendar className="text-amber-500" size={22} />
-              {isInInterview ? 'Modifier l\'entretien' : 'Planifier un entretien'}
-            </h3>
-            <p className="text-[var(--text-muted)] text-sm mb-6">
-              Pour <span className="text-[var(--text)] font-medium">{candidate.firstName} {candidate.lastName}</span>
-            </p>
-
-            <div className="space-y-4 mb-8">
-              <div>
-                <label className="text-sm font-bold text-[var(--text-muted)] mb-2 block">Date et heure</label>
-                <input
-                  type="datetime-local"
-                  className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-4 py-3 text-[var(--text)] focus:ring-2 focus:ring-amber-500/40 outline-none transition-all"
-                  value={interviewDate}
-                  onChange={(e) => setInterviewDate(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="text-sm font-bold text-[var(--text-muted)] mb-2 block">Notes (lieu, modalités…)</label>
-                <textarea
-                  className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-4 py-3 text-[var(--text)] placeholder:text-[var(--text-muted)] focus:ring-2 focus:ring-amber-500/40 outline-none resize-none min-h-[80px] transition-all"
-                  placeholder="Ex : Entretien en présentiel, bâtiment A, 2e étage…"
-                  value={interviewNotes}
-                  onChange={(e) => setInterviewNotes(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowInterviewModal(false)}
-                className="flex-1 py-3 bg-[var(--surface-2)] hover:bg-[var(--border)] text-[var(--text)] rounded-xl font-bold transition-colors"
-              >
-                Annuler
-              </button>
-              <button
-                onClick={handleScheduleInterview}
-                disabled={isScheduling}
-                className="flex-1 py-3 bg-amber-600 hover:bg-amber-500 text-white rounded-xl font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg"
-              >
-                {isScheduling ? <Loader2 className="animate-spin" size={18} /> : <Calendar size={18} />}
-                Confirmer
-              </button>
-            </div>
-          </motion.div>
+    <>
+      <Modal
+        open={showInterviewModal}
+        onClose={() => setShowInterviewModal(false)}
+        title={isInInterview ? 'Modifier l’entretien' : 'Planifier un entretien'}
+        actions={
+          <>
+            <Button variant="secondary" onClick={() => setShowInterviewModal(false)}>Annuler</Button>
+            <Button onClick={handleScheduleInterview} loading={isScheduling}>
+              <Calendar size={16} strokeWidth={1.5} aria-hidden="true" /> Confirmer
+            </Button>
+          </>
+        }
+      >
+        <p>Pour <strong className="text-[var(--text)]">{candidate.firstName} {candidate.lastName}</strong></p>
+        <div className="mt-5 grid gap-4">
+          <Input
+            label="Date et heure"
+            type="datetime-local"
+            value={interviewDate}
+            onChange={(e) => setInterviewDate(e.target.value)}
+          />
+          <Textarea
+            label="Notes (lieu, modalités…)"
+            placeholder="Ex : Entretien en présentiel, bâtiment A, 2e étage…"
+            value={interviewNotes}
+            onChange={(e) => setInterviewNotes(e.target.value)}
+            rows={3}
+          />
         </div>
-      )}
+      </Modal>
 
-      <div className="max-w-7xl mx-auto py-8 px-4 relative z-10">
-
-        {/* HEADER */}
-        <div className="flex items-center gap-4 mb-10">
-          <button
-            onClick={() => router.back()}
-            className="p-3 bg-[var(--surface)] hover:bg-[var(--surface-2)] rounded-xl border border-[var(--border)] transition-all"
-          >
-            <ArrowLeft size={20} className="text-[var(--text)]" />
-          </button>
-          <div className="flex-1 min-w-0">
-            <div className="flex flex-wrap items-center gap-3 mb-1">
-              <h1 className="text-2xl font-black text-[var(--text)]">{candidate.firstName} {candidate.lastName}</h1>
-              <div className="px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-1.5">
-                <BrainCircuit size={13} className="text-emerald-500" />
-                <span className="text-xs font-bold text-emerald-500">Analyse IA</span>
-              </div>
-              {isInInterview && (
-                <div className="px-3 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center gap-1.5">
-                  <Calendar size={13} className="text-amber-500" />
-                  <span className="text-xs font-bold text-amber-500">En entretien</span>
-                </div>
-              )}
+      <DetailPage
+        title={`${candidate.firstName} ${candidate.lastName}`}
+        description={`Postulé le ${new Date(candidate.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}`}
+        action={
+          <Button variant="secondary" onClick={() => router.back()} aria-label="Retour à la page précédente">
+            <ArrowLeft size={17} strokeWidth={1.5} aria-hidden="true" /> Retour
+          </Button>
+        }
+        status={
+          <div className="flex flex-wrap gap-2">
+            <Badge tone={aiConfig.tone}><BrainCircuit size={13} strokeWidth={1.5} aria-hidden="true" /> Analyse IA · {aiConfig.label}</Badge>
+            {isInInterview && <Badge tone="warning"><Calendar size={13} strokeWidth={1.5} aria-hidden="true" /> En entretien</Badge>}
+          </div>
+        }
+        aside={
+          <Card className="text-center">
+            <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-full bg-[var(--brand-soft)] text-xl font-semibold text-[var(--text)]" aria-hidden="true">
+              {candidate.firstName?.[0] || ''}{candidate.lastName?.[0] || ''}
             </div>
-            <p className="text-[var(--text-muted)] text-sm">
-              Postulé le {new Date(candidate.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
-            </p>
-          </div>
-        </div>
+            <h2 className="text-lg font-semibold text-[var(--text)]">{candidate.firstName} {candidate.lastName}</h2>
+            <div className="mt-3"><Badge tone={aiConfig.tone}><AIIcon size={14} strokeWidth={1.5} aria-hidden="true" /> {aiConfig.label}</Badge></div>
 
-        {candidate.jobOffer.status === 'PUBLISHED' && (
-          <div className="mb-6 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 space-y-3">
-            <h2 className="font-bold">Accès au test candidat</h2>
-            <p className="text-sm text-[var(--text-muted)]">Un nouveau lien remplace le précédent et remet les réponses et le score du test à zéro. Il est valable 24 heures.</p>
-            <button onClick={renewTestAccess} disabled={creatingTestAccess} className="rounded-lg bg-emerald-600 px-4 py-2 text-white disabled:opacity-50">
-              {creatingTestAccess ? 'Création…' : 'Réinitialiser le test et créer un lien'}
-            </button>
-            {testUrl && <div className="flex gap-2">
-              <input aria-label="Lien du test à transmettre au candidat" readOnly value={testUrl} className="min-w-0 flex-1 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-2" />
-              <button className="rounded-lg border border-[var(--border)] px-3" onClick={async () => {
-                try { await navigator.clipboard.writeText(testUrl); toast.success('Lien copié', 'Vous pouvez le transmettre au candidat.'); }
-                catch { toast.error('Copie indisponible', 'Sélectionnez le lien et copiez-le manuellement.'); }
-              }}>Copier</button>
-            </div>}
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-          {/* ── SIDEBAR ── */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="lg:col-span-1">
-            <div className="bg-[var(--surface)] backdrop-blur-xl border border-[var(--border)] rounded-2xl p-8 shadow-2xl text-center sticky top-8">
-
-              {/* Avatar */}
-              <div className="w-24 h-24 bg-emerald-500 rounded-full flex items-center justify-center text-white text-3xl font-bold mx-auto mb-4 shadow-2xl shadow-emerald-500/20">
-                {candidate.firstName[0]}{candidate.lastName[0]}
-              </div>
-
-              <h2 className="text-xl font-bold text-[var(--text)] mb-1">{candidate.firstName} {candidate.lastName}</h2>
-
-              {/* Badge IA suggestion */}
-              <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-xl ${aiConfig.color} text-white font-bold text-sm mt-2 mb-6 shadow-lg`}>
-                <AIIcon size={15} />
-                {aiConfig.label}
-              </div>
-
-              {/* Score */}
-              <div className="bg-emerald-500/10 p-5 rounded-2xl border-2 border-emerald-500/30 mb-5">
-                <p className="text-xs font-bold text-emerald-500 uppercase tracking-wider mb-1">Score Total</p>
-                <p className="text-5xl font-black text-emerald-500">{candidate.totalScore}</p>
-                <p className="text-[var(--text-muted)] text-sm mb-3">/100</p>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="bg-[var(--surface-2)] p-2 rounded-lg border border-[var(--border)]">
-                    <p className="text-[var(--text-muted)] mb-0.5">CV</p>
-                    <p className="text-[var(--text)] font-bold">{candidate.cvScore}<span className="text-[var(--text-muted)]">/35</span></p>
-                  </div>
-                  <div className="bg-[var(--surface-2)] p-2 rounded-lg border border-[var(--border)]">
-                    <p className="text-[var(--text-muted)] mb-0.5">Test</p>
-                    <p className="text-[var(--text)] font-bold">{candidate.testScore}<span className="text-[var(--text-muted)]">/65</span></p>
-                  </div>
+            <section aria-label="Scores du candidat" className="my-5 rounded-[var(--radius-card)] bg-[var(--surface-2)] p-5">
+              <p className="text-xs font-semibold text-[var(--text-muted)]">Score total</p>
+              <p className="mt-1 text-4xl font-semibold tabular-nums text-[var(--text)]">{candidate.totalScore}<span className="text-base text-[var(--text-muted)]">/100</span></p>
+              <dl className="mt-4 grid grid-cols-2 gap-3 text-left">
+                <div className="rounded-[var(--radius-control)] bg-[var(--surface)] p-3">
+                  <dt className="text-xs text-[var(--text-muted)]">CV</dt>
+                  <dd className="mt-1 font-semibold tabular-nums text-[var(--text)]">{candidate.cvScore}<span className="text-xs text-[var(--text-muted)]">/35</span></dd>
                 </div>
-              </div>
-
-              {/* Entretien planifié */}
-              {candidate.interviewDate && (
-                <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 mb-5 text-left">
-                  <p className="text-xs font-bold text-amber-500 mb-1 flex items-center gap-1.5">
-                    <Calendar size={11} /> Entretien planifié
-                  </p>
-                  <p className="text-sm text-[var(--text)] font-medium">
-                    {new Date(candidate.interviewDate).toLocaleDateString('fr-FR', {
-                      weekday: 'short', day: 'numeric', month: 'short',
-                      hour: '2-digit', minute: '2-digit',
-                    })}
-                  </p>
-                  {candidate.interviewNotes && (
-                    <p className="text-xs text-[var(--text-muted)] mt-1 leading-relaxed">{candidate.interviewNotes}</p>
-                  )}
+                <div className="rounded-[var(--radius-control)] bg-[var(--surface)] p-3">
+                  <dt className="text-xs text-[var(--text-muted)]">Test</dt>
+                  <dd className="mt-1 font-semibold tabular-nums text-[var(--text)]">{candidate.testScore}<span className="text-xs text-[var(--text-muted)]">/65</span></dd>
                 </div>
-              )}
+              </dl>
+            </section>
 
-              {/* Contact */}
-              <div className="space-y-3 mb-6 text-left">
-                <a href={`mailto:${candidate.email}`} className="flex items-center gap-3 text-sm text-[var(--text-muted)] hover:text-emerald-500 transition-colors">
-                  <Mail size={14} className="text-emerald-500 shrink-0" />
-                  <span className="break-all">{candidate.email}</span>
-                </a>
-                <a href={`tel:${candidate.phone}`} className="flex items-center gap-3 text-sm text-[var(--text-muted)] hover:text-emerald-500 transition-colors">
-                  <Phone size={14} className="text-emerald-500 shrink-0" />
-                  <span>{candidate.phone}</span>
-                </a>
+            {candidate.interviewDate && (
+              <div className="mb-5 rounded-[var(--radius-control)] bg-[var(--surface-2)] p-4 text-left">
+                <p className="mb-1.5 flex items-center gap-2 text-xs font-semibold text-[var(--mustard)]">
+                  <Calendar size={14} strokeWidth={1.5} aria-hidden="true" /> Entretien planifié
+                </p>
+                <p className="text-sm font-medium text-[var(--text)]">
+                  {new Date(candidate.interviewDate).toLocaleDateString('fr-FR', {
+                    weekday: 'short', day: 'numeric', month: 'short',
+                    hour: '2-digit', minute: '2-digit',
+                  })}
+                </p>
+                {candidate.interviewNotes && <p className="mt-1 text-xs leading-relaxed text-[var(--text-muted)]">{candidate.interviewNotes}</p>}
               </div>
+            )}
 
-              {/* Bouton entretien */}
-              <button
-                onClick={() => setShowInterviewModal(true)}
-                className="w-full py-3 mb-3 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg"
+            <div className="mb-5 grid gap-3 text-left">
+              <a href={`mailto:${candidate.email}`} className="flex min-w-0 items-center gap-3 text-sm text-[var(--text-muted)] hover:text-[var(--brand-strong)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--brand)]">
+                <Mail size={15} strokeWidth={1.5} className="shrink-0" aria-hidden="true" />
+                <span className="break-all">{candidate.email}</span>
+              </a>
+              <a href={`tel:${candidate.phone}`} className="flex items-center gap-3 text-sm text-[var(--text-muted)] hover:text-[var(--brand-strong)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--brand)]">
+                <Phone size={15} strokeWidth={1.5} className="shrink-0" aria-hidden="true" />
+                <span>{candidate.phone}</span>
+              </a>
+            </div>
+
+            <Button className="mb-2 w-full" variant="secondary" onClick={() => setShowInterviewModal(true)}>
+              <Calendar size={16} strokeWidth={1.5} aria-hidden="true" />
+              {isInInterview ? 'Modifier l’entretien' : 'Planifier un entretien'}
+            </Button>
+
+            <div className="grid gap-2 border-t border-[var(--border)] pt-4">
+              <p className="text-left text-xs font-semibold text-[var(--text-muted)]">Documents</p>
+              <a
+                href={candidate.resumeUrl.replace('/raw/upload/', '/raw/upload/fl_attachment/')}
+                target="_blank"
+                rel="noopener noreferrer"
+                download
+                className="k-button k-button-secondary w-full"
               >
-                <Calendar size={17} />
-                {isInInterview ? 'Modifier l\'entretien' : 'Planifier un entretien'}
-              </button>
-
-              {/* ── Documents téléchargeables ── */}
-              <div className="space-y-2">
-                <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider px-1">Documents</p>
-
-                {/* CV */}
+                <Download size={15} strokeWidth={1.5} aria-hidden="true" /> Télécharger le CV
+              </a>
+              {candidate.additionalDocUrl && (
                 <a
-                  href={candidate.resumeUrl.replace('/raw/upload/', '/raw/upload/fl_attachment/')}
+                  href={candidate.additionalDocUrl.replace('/raw/upload/', '/raw/upload/fl_attachment/')}
                   target="_blank"
                   rel="noopener noreferrer"
                   download
-                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg"
+                  className="k-button k-button-secondary w-full"
                 >
-                  <Download size={17} /> Télécharger le CV
+                  <Download size={15} strokeWidth={1.5} aria-hidden="true" /> Télécharger le document joint
                 </a>
-
-                {/* Document additionnel */}
-                {candidate.additionalDocUrl && (
-                  <a
-                    href={candidate.additionalDocUrl.replace('/raw/upload/', '/raw/upload/fl_attachment/')}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    download
-                    className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20"
-                  >
-                    <Download size={17} /> Télécharger le document joint
-                  </a>
-                )}
-              </div>
-            </div>
-          </motion.div>
-
-          {/* ── MAIN ── */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="lg:col-span-2 space-y-6">
-
-            {/* Poste */}
-            <div className="bg-[var(--surface)] backdrop-blur-xl border border-[var(--border)] rounded-2xl p-7 shadow-2xl">
-              <h3 className="text-base font-bold text-[var(--text)] mb-4 flex items-center gap-2">
-                <Briefcase size={18} className="text-emerald-500" /> Poste visé
-              </h3>
-              <p className="text-xl font-bold text-[var(--text)] mb-4">{candidate.jobOffer.title}</p>
-              <div className="flex flex-wrap gap-2.5">
-                <span className="flex items-center gap-1.5 bg-[var(--surface-2)] px-3 py-1.5 rounded-lg border border-[var(--border)] text-sm text-[var(--text-muted)]">
-                  <Briefcase size={13} className="text-[var(--text-muted)]" /> {candidate.jobOffer.department.name}
-                </span>
-                <span className="flex items-center gap-1.5 bg-[var(--surface-2)] px-3 py-1.5 rounded-lg border border-[var(--border)] text-sm text-[var(--text-muted)]">
-                  <MapPin size={13} className="text-[var(--text-muted)]" /> {candidate.jobOffer.location}
-                </span>
-                <span className="flex items-center gap-1.5 bg-[var(--surface-2)] px-3 py-1.5 rounded-lg border border-[var(--border)] text-sm text-[var(--text-muted)]">
-                  <FileText size={13} className="text-[var(--text-muted)]" /> {candidate.jobOffer.type}
-                </span>
-              </div>
-            </div>
-
-            {/* Analyse IA */}
-            <div className="bg-emerald-500/5 backdrop-blur-xl border-2 border-emerald-500/30 rounded-2xl p-7 shadow-2xl">
-              <h3 className="text-lg font-bold mb-6 flex items-center gap-3 text-[var(--text)]">
-                <BrainCircuit className="text-emerald-500" size={24} /> Intelligence Artificielle
-              </h3>
-
-              {/* Raisonnement */}
-              {candidate.aiReasoning && (
-                <div className="bg-emerald-500/10 p-5 rounded-2xl border border-emerald-500/30 mb-5">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Sparkles size={16} className="text-emerald-500" />
-                    <h4 className="font-bold text-emerald-500 text-sm">Raisonnement IA</h4>
-                  </div>
-                  <p className="text-[var(--text-muted)] leading-relaxed text-sm">{candidate.aiReasoning}</p>
-                </div>
               )}
-
-              {/* Forces / Faiblesses */}
-              {candidate.cvAnalysis && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
-                  <div className="bg-emerald-500/5 p-4 rounded-2xl border border-emerald-500/20">
-                    <h5 className="text-xs font-bold text-emerald-500 uppercase mb-3 flex items-center gap-1.5">
-                      <CheckCircle2 size={12} /> Points Forts
-                    </h5>
-                    <ul className="space-y-1.5">
-                      {candidate.cvAnalysis.strengths?.map((s, i) => (
-                        <li key={i} className="text-sm text-[var(--text-muted)] flex items-start gap-2">
-                          <Zap size={12} className="text-emerald-500 mt-0.5 shrink-0" />{s}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div className="bg-red-500/5 p-4 rounded-2xl border border-red-500/20">
-                    <h5 className="text-xs font-bold text-red-500 uppercase mb-3 flex items-center gap-1.5">
-                      <XCircle size={12} /> Points Faibles
-                    </h5>
-                    <ul className="space-y-1.5">
-                      {candidate.cvAnalysis.weaknesses?.map((w, i) => (
-                        <li key={i} className="text-sm text-[var(--text-muted)] flex items-start gap-2">
-                          <AlertTriangle size={12} className="text-red-500 mt-0.5 shrink-0" />{w}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              )}
-
-              {/* Activité suspecte */}
-              {((candidate.tabSwitchCount ?? 0) > 0 || candidate.suspiciousActivity) && (
-                <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 mb-5 flex items-start gap-3">
-                  <AlertTriangle size={20} className="text-amber-500 shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-bold text-amber-500 mb-1">Activité Suspecte Détectée</p>
-                    <p className="text-[var(--text-muted)] text-sm">
-                      {(candidate.tabSwitchCount ?? 0) > 0 && `${candidate.tabSwitchCount} changement(s) d'onglet pendant le test. `}
-                      {candidate.suspiciousActivity && 'Comportement anormal détecté.'}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* Décision RH */}
-              <div className="pt-6 border-t border-[var(--border)]">
-                <h4 className="text-base font-bold mb-5 text-[var(--text)] flex items-center gap-2">
-                  <User size={18} className="text-emerald-500" /> Décision RH
-                </h4>
-
-                {hasOverride && (
-                  <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3.5 mb-5 flex items-center gap-3">
-                    <AlertTriangle size={17} className="text-amber-500 shrink-0" />
-                    <p className="text-sm text-amber-500 font-bold">
-                      Override actif : {candidate.aiSuggestion} → {candidate.hrDecision}
-                    </p>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-2 gap-2.5 mb-5">
-                  {(Object.entries(DECISION_CONFIG) as [AIDecision, typeof DECISION_CONFIG[AIDecision]][]).map(([key, config]) => {
-                    const Icon = config.icon;
-                    const isActive = hrDecision === key;
-                    return (
-                      <button
-                        key={key}
-                        onClick={() => setHrDecision(key)}
-                        className={`p-4 rounded-xl border-2 font-bold transition-all flex items-center justify-center gap-2 text-sm ${
-                          isActive
-                            ? `${config.color} border-transparent text-white shadow-lg scale-[1.03]`
-                            : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--text-muted)] bg-[var(--surface-2)] hover:bg-[var(--border)]'
-                        }`}
-                      >
-                        <Icon size={17} />{config.label}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <textarea
-                  className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl p-4 mb-4 text-[var(--text)] placeholder:text-[var(--text-muted)] focus:ring-2 focus:ring-emerald-500/40 outline-none min-h-[90px] resize-none transition-all text-sm"
-                  placeholder="Notes RH (facultatif)…"
-                  value={hrNotes}
-                  onChange={(e) => setHrNotes(e.target.value)}
-                />
-
-                <button
-                  onClick={handleSaveDecision}
-                  disabled={!hrDecision || isSavingDecision}
-                  className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-xl shadow-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2.5"
-                >
-                  {isSavingDecision ? <Loader2 className="animate-spin" size={20} /> : <CheckCircle2 size={20} />}
-                  Valider la Décision RH
-                </button>
-              </div>
             </div>
-
-            {/* Lettre de motivation */}
-            {candidate.coverLetter && (
-              <div className="bg-[var(--surface)] backdrop-blur-xl border border-[var(--border)] rounded-2xl p-7 shadow-2xl">
-                <h3 className="text-base font-bold text-[var(--text)] mb-4 flex items-center gap-2">
-                  <FileText size={18} className="text-emerald-500" /> Lettre de Motivation
-                </h3>
-                <p className="text-[var(--text-muted)] whitespace-pre-line leading-relaxed text-sm">
-                  {candidate.coverLetter}
-                </p>
+          </Card>
+        }
+      >
+        {candidate.jobOffer.status === 'PUBLISHED' && (
+          <Card title="Accès au test candidat">
+            <p className="mb-4 text-sm leading-relaxed text-[var(--text-muted)]">Un nouveau lien remplace le précédent et remet les réponses et le score du test à zéro. Il est valable 24 heures.</p>
+            <Button onClick={renewTestAccess} loading={creatingTestAccess}>
+              {creatingTestAccess ? 'Création…' : 'Réinitialiser le test et créer un lien'}
+            </Button>
+            {testUrl && (
+              <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end">
+                <Input label="Lien du test à transmettre au candidat" readOnly value={testUrl} />
+                <Button variant="secondary" className="shrink-0" onClick={async () => {
+                  try { await navigator.clipboard.writeText(testUrl); toast.success('Lien copié', 'Vous pouvez le transmettre au candidat.'); }
+                  catch { toast.error('Copie indisponible', 'Sélectionnez le lien et copiez-le manuellement.'); }
+                }}>Copier</Button>
               </div>
             )}
-          </motion.div>
-        </div>
-      </div>
-    </div>
+          </Card>
+        )}
+
+        <Card title="Poste visé">
+          <p className="mb-4 text-lg font-semibold text-[var(--text)]">{candidate.jobOffer.title}</p>
+          <div className="flex flex-wrap gap-x-5 gap-y-3 text-sm text-[var(--text-muted)]">
+            <span className="inline-flex items-center gap-2"><Briefcase size={15} strokeWidth={1.5} aria-hidden="true" /> {candidate.jobOffer.department?.name ?? 'Sans département'}</span>
+            <span className="inline-flex items-center gap-2"><MapPin size={15} strokeWidth={1.5} aria-hidden="true" /> {candidate.jobOffer.location}</span>
+            <span className="inline-flex items-center gap-2"><FileText size={15} strokeWidth={1.5} aria-hidden="true" /> {candidate.jobOffer.type}</span>
+          </div>
+        </Card>
+
+        <Card title="Analyse IA">
+          {candidate.aiReasoning && (
+            <section className="mb-5">
+              <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-[var(--text)]">
+                <Sparkles size={15} strokeWidth={1.5} aria-hidden="true" /> Raisonnement IA
+              </h3>
+              <p className="text-sm leading-relaxed text-[var(--text-muted)]">{candidate.aiReasoning}</p>
+            </section>
+          )}
+
+          {candidate.cvAnalysis && (
+            <div className="grid gap-5 md:grid-cols-2">
+              <section>
+                <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-[var(--green)]">
+                  <CheckCircle2 size={15} strokeWidth={1.5} aria-hidden="true" /> Points forts
+                </h3>
+                <ul className="grid gap-2">
+                  {candidate.cvAnalysis.strengths?.map((s, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm leading-relaxed text-[var(--text-muted)]">
+                      <Zap size={14} strokeWidth={1.5} className="mt-0.5 shrink-0 text-[var(--green)]" aria-hidden="true" />{s}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+              <section>
+                <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-[var(--danger)]">
+                  <XCircle size={15} strokeWidth={1.5} aria-hidden="true" /> Points faibles
+                </h3>
+                <ul className="grid gap-2">
+                  {candidate.cvAnalysis.weaknesses?.map((w, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm leading-relaxed text-[var(--text-muted)]">
+                      <AlertTriangle size={14} strokeWidth={1.5} className="mt-0.5 shrink-0 text-[var(--danger)]" aria-hidden="true" />{w}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            </div>
+          )}
+
+          {((candidate.tabSwitchCount ?? 0) > 0 || candidate.suspiciousActivity) && (
+            <section className="mt-5 rounded-[var(--radius-control)] bg-[color-mix(in_srgb,var(--mustard)_14%,transparent)] p-4" aria-label="Activité détectée">
+              <h3 className="mb-1 flex items-center gap-2 text-sm font-semibold text-[var(--mustard)]">
+                <AlertTriangle size={16} strokeWidth={1.5} aria-hidden="true" /> Activité suspecte détectée
+              </h3>
+              <p className="text-sm leading-relaxed text-[var(--text-muted)]">
+                {(candidate.tabSwitchCount ?? 0) > 0 && `${candidate.tabSwitchCount} changement(s) d'onglet pendant le test. `}
+                {candidate.suspiciousActivity && 'Comportement anormal détecté.'}
+              </p>
+            </section>
+          )}
+        </Card>
+
+        <Card title="Décision RH">
+          {hasOverride && (
+            <div className="mb-5 flex items-start gap-2 rounded-[var(--radius-control)] bg-[color-mix(in_srgb,var(--mustard)_14%,transparent)] p-4">
+              <AlertTriangle size={16} strokeWidth={1.5} className="mt-0.5 shrink-0 text-[var(--mustard)]" aria-hidden="true" />
+              <p className="text-sm font-medium text-[var(--text)]">Override actif : {candidate.aiSuggestion} → {candidate.hrDecision}</p>
+            </div>
+          )}
+
+          <fieldset>
+            <legend className="mb-3 text-sm font-semibold text-[var(--text)]">Choisir une décision</legend>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {(Object.entries(DECISION_CONFIG) as [AIDecision, typeof DECISION_CONFIG[AIDecision]][]).map(([key, config]) => {
+                const Icon = config.icon;
+                const isActive = hrDecision === key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setHrDecision(key)}
+                    aria-pressed={isActive}
+                    className={`k-button k-button-secondary min-h-12 justify-start ${isActive ? 'ring-2 ring-[var(--brand)]' : ''}`}
+                  >
+                    <Icon size={16} strokeWidth={1.5} className={config.tone === 'success' ? 'text-[var(--green)]' : config.tone === 'warning' ? 'text-[var(--mustard)]' : config.tone === 'danger' ? 'text-[var(--danger)]' : 'text-[var(--text-muted)]'} aria-hidden="true" />
+                    {config.label}
+                    {isActive && <CheckCircle2 size={15} className="ml-auto text-[var(--brand-strong)]" aria-hidden="true" />}
+                  </button>
+                );
+              })}
+            </div>
+          </fieldset>
+
+          <div className="mt-5">
+            <Textarea
+              label="Notes RH (facultatif)"
+              placeholder="Notes RH (facultatif)…"
+              value={hrNotes}
+              onChange={(e) => setHrNotes(e.target.value)}
+              rows={4}
+            />
+          </div>
+          <Button className="mt-4" onClick={handleSaveDecision} disabled={!hrDecision} loading={isSavingDecision}>
+            <CheckCircle2 size={16} strokeWidth={1.5} aria-hidden="true" /> Valider la décision RH
+          </Button>
+        </Card>
+
+        {candidate.coverLetter && (
+          <Card title="Lettre de motivation">
+            <p className="whitespace-pre-line text-sm leading-relaxed text-[var(--text-muted)]">{candidate.coverLetter}</p>
+          </Card>
+        )}
+      </DetailPage>
+    </>
   );
 }
 

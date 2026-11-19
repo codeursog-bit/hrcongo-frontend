@@ -1,4 +1,6 @@
 'use client';
+import { Button } from '@/components/design-system/primitives';
+import { LoanModuleFrame, LoanModuleSkeleton } from '@/components/loans/LoanModuleFrame';
 
 // ============================================================================
 // 📁 app/(dashboard)/loans/releve/[employeeId]/page.tsx
@@ -33,6 +35,7 @@ const fmtMonth = (d: string) => { const s = new Date(d).toLocaleDateString('fr-F
 type Mouvement = { date: string; motif: string; ref: string; montant: number; remboursement: number; periode?: boolean };
 
 export default function ReleveEmployeeDetailPage() {
+  const [refonteError,setRefonteError]=useState('');
   const { employeeId } = useParams<{ employeeId: string }>();
   const router = useRouter();
   const { bp } = useBasePath();
@@ -88,7 +91,7 @@ export default function ReleveEmployeeDetailPage() {
 
         rows.sort((r1, r2) => new Date(r1.date).getTime() - new Date(r2.date).getTime());
         setMouvements(rows);
-      } catch (e) { console.error('Erreur relevé employé', e); }
+      } catch (e) { console.error('Erreur relevé employé', e); setRefonteError('Le chargement a échoué. Réessayez dans un instant.'); }
       finally { setIsLoading(false); }
     })();
   }, [employeeId]);
@@ -99,31 +102,31 @@ export default function ReleveEmployeeDetailPage() {
     return { totalMontant, totalRemb, solde: totalMontant - totalRemb };
   }, [mouvements]);
 
-  if (isLoading) return <KonzaLoader variant="page" />;
+  if (isLoading) return <LoanModuleSkeleton />;
 
   const initials = `${employee?.firstName?.[0] ?? ''}${employee?.lastName?.[0] ?? ''}`;
 
   return (
-    <div className="max-w-[1200px] mx-auto pb-24 space-y-5 print:max-w-full">
+    <LoanModuleFrame kind="detail" error={refonteError}><div className="max-w-[1200px] mx-auto pb-24 space-y-5 print:max-w-full">
       <div className="print:hidden">
         <FinanceSubNav userRole={userRole} />
       </div>
 
       <div className="flex items-center justify-between print:hidden">
-        <button onClick={() => router.push(bp('/loans/releve'))} className="flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text)] font-semibold">
+        <Button variant="ghost" onClick={() => router.push(bp('/loans/releve'))} className="flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text)] font-semibold">
           <ArrowLeft size={16} /> Retour au relevé
-        </button>
+        </Button>
         <div className="flex gap-2">
-          <button onClick={() => router.push(bp(`/loans/suivi-dettes/${employeeId}`))} className="px-3 py-1.5 border border-[var(--border)] text-xs font-semibold rounded-lg text-[var(--text-muted)] flex items-center gap-1.5">
+          <Button variant="ghost" onClick={() => router.push(bp(`/loans/suivi-dettes/${employeeId}`))} className="px-3 py-1.5 border border-[var(--border)] text-xs font-semibold rounded-lg text-[var(--text-muted)] flex items-center gap-1.5">
             <Pencil size={12} /> Modifier / gérer
-          </button>
-          <button onClick={() => window.print()} className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg flex items-center gap-1.5">
+          </Button>
+          <Button variant="primary" onClick={() => window.print()} className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg flex items-center gap-1.5">
             <Printer size={12} /> Imprimer
-          </button>
+          </Button>
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 loan-document-protected">
         <div className="w-14 h-14 rounded-2xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-base font-bold text-emerald-600 overflow-hidden shrink-0 print:hidden">
           {employee?.photoUrl ? <img src={employee.photoUrl} className="w-full h-full object-cover" alt={initials} /> : initials}
         </div>
@@ -134,7 +137,7 @@ export default function ReleveEmployeeDetailPage() {
       </div>
 
       {/* ── Totaux, façon ligne 2 de la feuille Excel ── */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-3 loan-document-protected">
         <div className="bg-[var(--surface)] rounded-xl border border-[var(--border)] p-3 text-center">
           <p className="text-[10px] font-semibold text-[var(--text-muted)] uppercase mb-1">Total emprunté</p>
           <p className="font-bold text-[var(--text)]">{fmt(totals.totalMontant)}</p>
@@ -150,7 +153,7 @@ export default function ReleveEmployeeDetailPage() {
       </div>
 
       {/* ── Relevé chronologique ── */}
-      <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
+      <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden loan-document-protected">
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-[11px] font-semibold text-[var(--text-muted)] uppercase border-b border-[var(--border)]">
@@ -174,6 +177,6 @@ export default function ReleveEmployeeDetailPage() {
           </tbody>
         </table>
       </div>
-    </div>
+    </div></LoanModuleFrame>
   );
 }

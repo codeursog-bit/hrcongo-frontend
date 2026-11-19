@@ -1,4 +1,9 @@
 'use client';
+import { ModulePageFrame, ModulePageSkeleton } from '@/components/requests/ModulePageFrame';
+import { Button } from '@/components/design-system/primitives';
+import '@/components/requests/service-pages.css';
+import { useToast } from '@/components/design-system/feedback';
+
 
 // ============================================================================
 // 📄 app/(dashboard)/documents/page.tsx  — Page Documents complète
@@ -208,29 +213,29 @@ function DocumentRow({
       {/* Actions */}
       <td className="px-4 py-3.5">
         <div className="flex items-center gap-1">
-          <button
+          <Button variant="ghost"
             onClick={() => onView(doc)}
             className="p-1.5 rounded-lg hover:bg-sky-50 dark:hover:bg-sky-900/20 text-gray-400 hover:text-sky-600 transition-colors"
             title="Voir"
           >
             <Eye size={15} />
-          </button>
-          <button
+          </Button>
+          <Button variant="ghost"
             onClick={() => onDownload(doc)}
             className="p-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/20 text-gray-400 hover:text-emerald-600 transition-colors"
             title="Télécharger"
           >
             <Download size={15} />
-          </button>
+          </Button>
 
           {isHR && (
             <div className="relative">
-              <button
+              <Button variant="ghost"
                 onClick={() => setMenuOpen(!menuOpen)}
                 className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-gray-600 transition-colors"
               >
                 <MoreVertical size={15} />
-              </button>
+              </Button>
 
               {menuOpen && (
                 <>
@@ -238,27 +243,27 @@ function DocumentRow({
                   <div className="absolute right-0 top-8 z-20 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl shadow-lg py-1 w-44">
                     {doc.status === 'PENDING_REVIEW' && (
                       <>
-                        <button
+                        <Button variant="ghost"
                           onClick={() => { onVerify(doc); setMenuOpen(false); }}
                           className="w-full flex items-center gap-2 px-3 py-2 text-sm text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
                         >
                           <ShieldCheck size={14} /> Valider
-                        </button>
-                        <button
+                        </Button>
+                        <Button variant="ghost"
                           onClick={() => { onReject(doc); setMenuOpen(false); }}
                           className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                         >
                           <ShieldX size={14} /> Rejeter
-                        </button>
+                        </Button>
                         <div className="my-1 border-t border-gray-100 dark:border-gray-700" />
                       </>
                     )}
-                    <button
+                    <Button variant="ghost"
                       onClick={() => { onDelete(doc); setMenuOpen(false); }}
                       className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                     >
                       <Trash2 size={14} /> Supprimer
-                    </button>
+                    </Button>
                   </div>
                 </>
               )}
@@ -273,6 +278,8 @@ function DocumentRow({
 // ─── Page principale ──────────────────────────────────────────────────────────
 
 export default function DocumentsPage() {
+  const uiNotify = useToast();
+  const [uiLoadError, setUiLoadError] = useState('');
   const [documents, setDocuments]   = useState<Document[]>([]);
   const [stats, setStats]           = useState<Stats | null>(null);
   const [loading, setLoading]       = useState(true);
@@ -288,6 +295,7 @@ export default function DocumentsPage() {
   const [isHR, setIsHR] = useState(false);
 
   const load = useCallback(async () => {
+    setUiLoadError('');
     setLoading(true);
     try {
       const [docs, statsData, me] = await Promise.all([
@@ -304,6 +312,7 @@ export default function DocumentsPage() {
       }
     } catch (e) {
       console.error('Erreur chargement documents:', e);
+      setUiLoadError('Les documents n’ont pas pu être chargés. Réessayez dans un instant.');
       setDocuments([]);
     } finally {
       setLoading(false);
@@ -325,6 +334,7 @@ export default function DocumentsPage() {
     if (!confirm(`Valider le document "${doc.name}" ?`)) return;
     try {
       await api.patch(`/documents/${doc.id}/verify`, {});
+      uiNotify('success', 'Document validé');
       load();
     } catch { alert('Erreur lors de la validation'); }
   };
@@ -333,6 +343,7 @@ export default function DocumentsPage() {
     if (!confirm(`Supprimer définitivement "${doc.name}" ? Cette action est irréversible.`)) return;
     try {
       await api.delete(`/documents/${doc.id}`);
+      uiNotify('success', 'Document supprimé');
       load();
     } catch { alert('Erreur lors de la suppression'); }
   };
@@ -341,6 +352,7 @@ export default function DocumentsPage() {
     if (!rejectDoc) return;
     try {
       await api.patch(`/documents/${rejectDoc.id}/reject`, { reason });
+      uiNotify('success', 'Décision enregistrée');
       setRejectDoc(null);
       load();
     } catch { alert('Erreur lors du rejet'); }
@@ -366,7 +378,7 @@ export default function DocumentsPage() {
   }).length;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+    <ModulePageFrame kind="list" error={uiLoadError}><div className="service-module-page" data-service="documents"><div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
 
         {/* ── Header ──────────────────────────────────────────────────────── */}
@@ -388,19 +400,19 @@ export default function DocumentsPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <button
+            <Button variant="ghost"
               onClick={load}
               className="p-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
             >
               <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
-            </button>
-            <button
+            </Button>
+            <Button variant="primary"
               onClick={() => setUploadOpen(true)}
               className="flex items-center gap-2 px-4 py-2.5 bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-xl transition-colors shadow-sm shadow-sky-200 dark:shadow-none"
             >
               <Upload size={16} />
               Ajouter un document
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -465,7 +477,7 @@ export default function DocumentsPage() {
         {/* ── Tableau ─────────────────────────────────────────────────────── */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
           {loading ? (
-            <KonzaLoader variant="section" label="Chargement des documents…" />
+            <ModulePageSkeleton label="Chargement des documents" />
           ) : filtered.length === 0 ? (
             <div className="py-24 text-center">
               <div className="w-16 h-16 bg-gray-50 dark:bg-gray-700 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -478,12 +490,12 @@ export default function DocumentsPage() {
                   : 'Ajoutez votre premier document'}
               </p>
               {!search && statusFilter === 'ALL' && typeFilter === 'ALL' && (
-                <button
+                <Button variant="primary"
                   onClick={() => setUploadOpen(true)}
                   className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-sky-500 text-white text-sm font-semibold rounded-xl hover:bg-sky-600 transition-colors"
                 >
                   <Upload size={14} /> Ajouter un document
-                </button>
+                </Button>
               )}
             </div>
           ) : (
@@ -533,11 +545,11 @@ export default function DocumentsPage() {
       />
 
       {viewDoc && (
-        <DocumentViewerModal
+        <div className="loan-document-protected"><DocumentViewerModal
           document={viewDoc}
           onClose={() => setViewDoc(null)}
           onDownload={handleDownload}
-        />
+        /></div>
       )}
 
       {rejectDoc && (
@@ -547,6 +559,6 @@ export default function DocumentsPage() {
           onConfirm={handleRejectConfirm}
         />
       )}
-    </div>
+    </div></div></ModulePageFrame>
   );
 }

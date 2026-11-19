@@ -7,11 +7,13 @@
 //    Présences. Pas de logique métier ici — juste la coquille.
 // ============================================================================
 
-import React from 'react';
+import React, { useEffect, useId, useRef } from 'react';
 import { X } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { FeedbackVariants } from '@/components/ui/Feedback';
+import { LegacySlideOver } from '@/components/providers/legacy-feedback';
+import '@/components/ui/feedback.css';
 
-export default function SlideOver({
+function DetailPanel({
   open, onClose, title, subtitle, children, widthClass = 'max-w-md',
 }: {
   open: boolean;
@@ -21,33 +23,26 @@ export default function SlideOver({
   children: React.ReactNode;
   widthClass?: string;
 }) {
-  return (
-    <AnimatePresence>
-      {open && (
-        <>
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="fixed inset-0 bg-black/40 z-40"
-          />
-          <motion.div
-            initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
-            transition={{ type: 'tween', duration: 0.25, ease: 'easeOut' }}
-            className={`fixed top-0 right-0 h-full w-full ${widthClass} bg-white dark:bg-gray-800 z-50 shadow-2xl overflow-y-auto`}
-          >
-            <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 p-5 flex items-start justify-between gap-3 z-10">
-              <div className="min-w-0">
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white truncate">{title}</h3>
-                {subtitle && <p className="text-sm text-gray-400 truncate">{subtitle}</p>}
-              </div>
-              <button onClick={onClose} className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 shrink-0">
-                <X size={18} />
-              </button>
-            </div>
-            <div className="p-5">{children}</div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
-  );
+  const dialog=useRef<HTMLDialogElement>(null);
+  const titleId=useId();
+  const close=useRef(onClose); close.current=onClose;
+  useEffect(() => {
+    const el=dialog.current;
+    if (!open || !el) return;
+    const previous=document.activeElement as HTMLElement|null;
+    el.showModal();
+    return () => { el.close(); if(previous?.isConnected)previous.focus(); };
+  },[open]);
+  return <dialog ref={dialog} className={`feedback-detail-panel ${widthClass}`} aria-labelledby={titleId} onCancel={event=>{event.preventDefault();close.current();}} onClick={event=>{
+    if(event.target!==event.currentTarget)return;
+    const rect=event.currentTarget.getBoundingClientRect();
+    if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)close.current();
+  }}>
+    <header><div><h2 id={titleId}>{title}</h2>{subtitle&&<p>{subtitle}</p>}</div><button type="button" className="shell-icon-btn" onClick={onClose} aria-label="Fermer le détail"><X size={19} strokeWidth={1.5}/></button></header>
+    <div className="feedback-detail-body">{children}</div>
+  </dialog>;
+}
+
+export default function SlideOver(props:React.ComponentProps<typeof DetailPanel>) {
+  return <FeedbackVariants legacy={<LegacySlideOver {...props}/>}><DetailPanel {...props}/></FeedbackVariants>;
 }

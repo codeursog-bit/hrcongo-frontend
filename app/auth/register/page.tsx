@@ -216,7 +216,7 @@
 //   };
 
 //   return (
-//     <div className="min-h-screen bg-[#050607] text-white flex flex-col items-center justify-center p-4 relative overflow-hidden">
+//     <div className="min-h-screen bg-[var(--bg)] text-white flex flex-col items-center justify-center p-4 relative overflow-hidden">
 
 //       {/* ── Fond ── */}
 //       <div className="fixed top-0 left-0 w-[600px] h-[600px] bg-emerald-500/10 rounded-full blur-[130px] pointer-events-none" />
@@ -359,9 +359,9 @@
 //                       </div>
 //                       <div className="flex -space-x-2">
 //                         {['bg-emerald-500', 'bg-emerald-600', 'bg-emerald-600'].map((c, i) => (
-//                           <div key={i} className={`w-6 h-6 rounded-full border-2 border-[#050607] ${c}`} />
+//                           <div key={i} className={`w-6 h-6 rounded-full border-2 border-[var(--bg)] ${c}`} />
 //                         ))}
-//                         <div className="w-6 h-6 rounded-full border-2 border-[#050607] bg-white/10 flex items-center justify-center text-[9px] text-gray-300 font-bold">+</div>
+//                         <div className="w-6 h-6 rounded-full border-2 border-[var(--bg)] bg-white/10 flex items-center justify-center text-[9px] text-gray-300 font-bold">+</div>
 //                       </div>
 //                     </div>
 //                   </div>
@@ -622,7 +622,7 @@
 
 // export default function RegisterPage() {
 //   return (
-//     <Suspense fallback={<div className="min-h-screen bg-[#050607]" />}>
+//     <Suspense fallback={<div className="min-h-screen bg-[var(--bg)]" />}>
 //       <RegisterForm />
 //     </Suspense>
 //   );
@@ -871,7 +871,7 @@ function RegisterForm() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050607] text-white flex flex-col items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-[var(--bg)] text-white flex flex-col items-center justify-center p-4 relative overflow-hidden">
 
       {/* ── Fond : identique au Hero de la page d'accueil ── */}
       <div className="pointer-events-none fixed inset-0 -z-10">
@@ -1005,9 +1005,9 @@ function RegisterForm() {
                       </div>
                       <div className="flex -space-x-2">
                         {['bg-emerald-500', 'bg-emerald-600', 'bg-emerald-600'].map((c, i) => (
-                          <div key={i} className={`w-6 h-6 rounded-full border-2 border-[#050607] ${c}`} />
+                          <div key={i} className={`w-6 h-6 rounded-full border-2 border-[var(--bg)] ${c}`} />
                         ))}
-                        <div className="w-6 h-6 rounded-full border-2 border-[#050607] bg-white/10 flex items-center justify-center text-[9px] text-gray-300 font-bold">+</div>
+                        <div className="w-6 h-6 rounded-full border-2 border-[var(--bg)] bg-white/10 flex items-center justify-center text-[9px] text-gray-300 font-bold">+</div>
                       </div>
                     </div>
                   </div>
@@ -1198,7 +1198,7 @@ function RegisterForm() {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full flex justify-center items-center gap-2 py-3.5 rounded-xl font-bold text-sm text-black bg-[#FAFAFA] hover:bg-white transition-all active:scale-[0.98] disabled:opacity-50"
+                    className="w-full flex justify-center items-center gap-2 py-3.5 rounded-xl font-bold text-sm text-black bg-[var(--text)] hover:bg-white transition-all active:scale-[0.98] disabled:opacity-50"
                   >
                     {isLoading
                       ? <Loader2 className="animate-spin" size={18} />
@@ -1250,7 +1250,7 @@ function RegisterForm() {
               )}
               <button
                 onClick={handleSuccess}
-                className="px-8 py-3.5 rounded-xl font-bold text-sm text-black bg-[#FAFAFA] hover:bg-white transition-all hover:scale-105 flex items-center gap-2 mx-auto"
+                className="px-8 py-3.5 rounded-xl font-bold text-sm text-black bg-[var(--text)] hover:bg-white transition-all hover:scale-105 flex items-center gap-2 mx-auto"
               >
                 {accountType === 'CABINET' ? 'Accéder à mon cabinet' : 'Créer mon entreprise'}
                 <ArrowRight size={16} />
@@ -1266,7 +1266,7 @@ function RegisterForm() {
 
 export default function RegisterPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#050607]" />}>
+    <Suspense fallback={<div className="min-h-screen bg-[var(--bg)]" />}>
       <RegisterForm />
     </Suspense>
   );

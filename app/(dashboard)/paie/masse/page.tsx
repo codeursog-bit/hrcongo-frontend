@@ -9,7 +9,8 @@ import PeriodStep from './PeriodStep';
 import SelectionStep from './SelectionStep';
 import ProcessingStep from './ProcessingStep';
 import SuccessModal from './SuccessModal';
-import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import { ModulePageFrame, ModulePageSkeleton } from '@/components/requests/ModulePageFrame';
+import { Badge, Button, Card } from '@/components/design-system/primitives';
 
 const MONTHS = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
 
@@ -250,33 +251,34 @@ export default function BatchPayrollPage() {
     }
   };
 
-  if (isLoading) return (
-    <KonzaLoader variant="page" />
-  );
+  if (isLoading) return <ModulePageSkeleton label="Chargement de la génération en masse…" />;
 
   return (
-    <div className="max-w-5xl mx-auto py-8 px-4">
+    <ModulePageFrame kind="list">
+      <div className="max-w-5xl mx-auto py-8 px-4">
       <SuccessModal show={showSuccess} results={results} processingDetails={processingDetails}
         onClose={() => setShowSuccess(false)}
         onNewBatch={() => window.location.reload()}
         onViewPayrolls={() => router.push('/paie')}
       />
 
-      <div className="flex items-center gap-4 mb-8">
-        <button onClick={() => router.back()}
-          className="p-2 bg-[var(--surface)] rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)] transition-colors">
-          <ArrowLeft size={20} />
-        </button>
+      <div className="mb-6 flex items-start gap-4">
+        <Button variant="secondary" onClick={() => router.back()} aria-label="Retour" className="shrink-0">
+          <ArrowLeft size={18} strokeWidth={1.5} />
+        </Button>
         <div>
-          <h1 className="text-2xl font-bold text-[var(--text)]">Génération Paie en Masse</h1>
-          <p className="text-sm text-gray-500">Traitement automatisé des bulletins mensuels.</p>
+          <div className="mb-1 flex flex-wrap items-center gap-2">
+            <h1 className="text-2xl font-semibold tracking-tight text-[var(--text)]">Génération de paie en masse</h1>
+            <Badge tone="info">Assistant · 3 étapes</Badge>
+          </div>
+          <p className="text-sm text-[var(--text-secondary)]">Préparez, vérifiez puis lancez les bulletins du mois.</p>
         </div>
       </div>
 
-      <div className="bg-[var(--surface)] rounded-3xl shadow-xl border border-[var(--border)] overflow-hidden flex flex-col min-h-[500px]">
+      <Card data-guide="paie-bulk-workspace" className="!p-0 overflow-hidden">
         <StepHeader currentStep={currentStep} />
 
-        <div className="flex-1 p-8 md:p-12 relative">
+        <div className="min-h-[420px] p-5 md:p-8">
           {currentStep === 1 && (
             <PeriodStep month={month} year={year} workDays={workDays}
               onMonthChange={setMonth} onYearChange={setYear} onWorkDaysChange={setWorkDays} />
@@ -304,20 +306,18 @@ export default function BatchPayrollPage() {
           )}
         </div>
 
-        <div className="p-6 border-t border-[var(--border)] bg-[var(--surface-2)] flex justify-between items-center">
-          <button disabled={currentStep === 1 || isProcessing} onClick={() => setCurrentStep(c => c - 1)}
-            className="px-6 py-3 border border-[var(--border)] rounded-xl font-bold text-[var(--text-muted)] disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:bg-[var(--surface)]">
+        <div className="flex items-center justify-between gap-3 border-t border-[var(--border)] bg-[var(--surface)] p-4 md:p-5">
+          <Button variant="secondary" disabled={currentStep === 1 || isProcessing} onClick={() => setCurrentStep(c => c - 1)}>
             Précédent
-          </button>
+          </Button>
           {currentStep < 3 && (
-            <button disabled={selectedIds.length === 0 || isLoadingEstimation} onClick={() => setCurrentStep(c => c + 1)}
-              className="px-8 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-bold shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2">
-              {isLoadingEstimation && <Loader2 size={16} className="animate-spin" />}
+            <Button disabled={selectedIds.length === 0 || isLoadingEstimation} loading={isLoadingEstimation} onClick={() => setCurrentStep(c => c + 1)}>
               Suivant
-            </button>
+            </Button>
           )}
         </div>
+      </Card>
       </div>
-    </div>
+    </ModulePageFrame>
   );
 }

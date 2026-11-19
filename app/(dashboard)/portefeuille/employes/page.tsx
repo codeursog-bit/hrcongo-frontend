@@ -1,4 +1,5 @@
 'use client';
+import { PortfolioDialog } from '@/components/portfolio/PortfolioDialog';
 
 // app/(dashboard)/portefeuille/employes/page.tsx
 
@@ -9,6 +10,7 @@ import {
 } from 'lucide-react';
 import { GlobalLoader } from '@/components/ui/GlobalLoader';
 import { api } from '@/services/api';
+import { PortfolioPageFrame as ModulePageFrame } from '@/components/portfolio/PortfolioPageFrame';
 
 interface PortfolioCompany { id: string; name: string; isActive: boolean; }
 
@@ -31,11 +33,11 @@ function CompanyPickerModal({ companies, title, onPick, onClose }: {
   onPick: (companyId: string) => void; onClose: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-sm rounded-2xl overflow-hidden z-10" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+    <PortfolioDialog onClose={onClose}>
+
+<div className="relative w-full max-w-sm rounded-2xl overflow-hidden z-10" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
         <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
-          <p className="text-sm font-bold" style={{ color: 'var(--text)' }}>{title}</p>
+          <p className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{title}</p>
           <button onClick={onClose} className="p-1 rounded-lg hover:bg-[var(--surface-2)]" style={{ color: 'var(--text-muted)' }}><X size={16} /></button>
         </div>
         <div className="max-h-80 overflow-y-auto p-2">
@@ -45,21 +47,21 @@ function CompanyPickerModal({ companies, title, onPick, onClose }: {
               onClick={() => onPick(c.id)}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors hover:bg-[var(--surface-2)]"
             >
-              <div className="w-8 h-8 rounded-lg bg-emerald-500/15 flex items-center justify-center shrink-0">
-                <Building2 size={14} className="text-emerald-500" />
+              <div className="w-8 h-8 rounded-lg bg-[var(--action)] flex items-center justify-center shrink-0">
+                <Building2 size={14} className="text-[var(--action)]" />
               </div>
               <span className="text-sm font-medium truncate" style={{ color: 'var(--text)' }}>{c.name}</span>
             </button>
           ))}
         </div>
       </div>
-    </div>
+</PortfolioDialog>
   );
 }
 
 // ─── Page principale ──────────────────────────────────────────────────────────
 
-export default function PortfolioEmployeesPage() {
+function PortfolioEmployeesPage() {
   const router = useRouter();
   const [companies, setCompanies] = useState<PortfolioCompany[]>([]);
   const [employees, setEmployees] = useState<PortfolioEmployee[]>([]);
@@ -151,16 +153,16 @@ export default function PortfolioEmployeesPage() {
       {/* ── HEADER ── */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight" style={{ color: 'var(--text)' }}>Employés</h1>
+          <h1 className="text-3xl font-semibold tracking-tight" style={{ color: 'var(--text)' }}>Employés</h1>
           <p className="mt-1 flex items-center gap-2" style={{ color: 'var(--text-muted)' }}>
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-[var(--action)] " />
             {employees.length} employé{employees.length > 1 ? 's' : ''} {companyFilter ? `chez ${companyName(companyFilter)}` : 'dans votre portefeuille'}
           </p>
         </div>
         <button
           onClick={handleAddClick}
           disabled={switching || companies.length === 0}
-          className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold transition-colors flex items-center gap-2 disabled:opacity-60"
+          className="px-5 py-2.5 rounded-xl bg-[var(--action)] hover:bg-[var(--action)] text-[var(--on-brand)] font-semibold transition-colors flex items-center gap-2 disabled:opacity-60"
         >
           {switching ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} />}
           Ajouter un employé
@@ -168,7 +170,7 @@ export default function PortfolioEmployeesPage() {
       </div>
 
       {error && (
-        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm font-medium">
+        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-[var(--portfolio-danger-soft)]  text-[var(--danger-text)]  text-sm font-medium">
           <AlertCircle size={16} className="shrink-0" />{error}
         </div>
       )}
@@ -176,16 +178,16 @@ export default function PortfolioEmployeesPage() {
       {/* ── BARRE FILTRES ── */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2  text-[var(--text-secondary)]" size={18} />
           <input
             type="text"
             placeholder="Rechercher par nom, matricule..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-[var(--surface)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+            className="w-full pl-10 pr-4 py-2.5 bg-[var(--surface)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[var(--focus)] focus:border-[var(--border)] transition-all"
             style={{ color: 'var(--text)' }}
           />
-          {searching && <Loader2 size={16} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-emerald-400 animate-spin" />}
+          {searching && <Loader2 size={16} className="absolute right-3.5 top-1/2 -translate-y-1/2  text-[var(--action)] animate-spin" />}
         </div>
         <select
           value={companyFilter}
@@ -210,16 +212,16 @@ export default function PortfolioEmployeesPage() {
         </div>
       ) : (
         <div className="rounded-2xl overflow-x-auto" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-          <div className="grid px-4 py-3" style={{ minWidth: 620, gridTemplateColumns: '1fr 160px 160px 100px', gap: 12, borderBottom: '1px solid var(--border)' }}>
+          <div className="grid px-4 py-3" style={{ minWidth: 724, gridTemplateColumns: 'minmax(220px, 1fr) 160px 160px 100px', gap: 12, borderBottom: '1px solid var(--border)' }}>
             {['Employé', 'Entreprise', 'Poste', ''].map((h, i) => (
-              <p key={i} className="text-[11px] font-bold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>{h}</p>
+              <p key={i} className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>{h}</p>
             ))}
           </div>
           {employees.map(emp => (
             <div key={emp.id} className="grid items-center px-4 py-3 transition-colors hover:bg-[var(--surface-2)]"
-              style={{ minWidth: 620, gridTemplateColumns: '1fr 160px 160px 100px', gap: 12, borderBottom: '1px solid var(--border)' }}>
+              style={{ minWidth: 724, gridTemplateColumns: 'minmax(220px, 1fr) 160px 160px 100px', gap: 12, borderBottom: '1px solid var(--border)' }}>
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-lg bg-emerald-500/15 flex items-center justify-center shrink-0 text-emerald-600 dark:text-emerald-400 text-xs font-bold">
+                <div className="w-9 h-9 rounded-lg bg-[var(--action)] flex items-center justify-center shrink-0 text-[var(--action)]  text-xs font-semibold">
                   {emp.firstName[0]}{emp.lastName[0]}
                 </div>
                 <div className="min-w-0">
@@ -232,7 +234,7 @@ export default function PortfolioEmployeesPage() {
               <button
                 onClick={() => openEmployee(emp.companyId, emp.id)}
                 disabled={switching}
-                className="flex items-center gap-1 justify-self-end text-xs font-bold text-emerald-600 dark:text-emerald-400 disabled:opacity-60"
+                className="flex items-center gap-1 justify-self-end text-xs font-semibold text-[var(--action)]  disabled:opacity-60"
               >
                 Voir <ArrowRight size={13} />
               </button>
@@ -241,5 +243,14 @@ export default function PortfolioEmployeesPage() {
         </div>
       )}
     </div>
+  );
+}
+
+
+export default function PortfolioEmployeesPageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <PortfolioEmployeesPage />
+    </ModulePageFrame>
   );
 }

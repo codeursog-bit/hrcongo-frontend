@@ -1,0 +1,252 @@
+.guide-intro {
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0 0 20px;
+}
+.guide-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface-2);
+  border-radius: var(--radius-control);
+  padding: 12px 14px;
+  color: var(--text-secondary);
+}
+.guide-search input {
+  min-width: 0;
+  width: 100%;
+  background: transparent;
+  color: var(--text);
+  border: 0;
+  outline: 0;
+  font: inherit;
+}
+.guide-search:focus-within {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+.guide-catalog {
+  display: grid;
+  gap: 8px;
+  margin: 20px 0;
+}
+.guide-catalog > button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  text-align: left;
+  padding: 18px;
+  border: 0;
+  background: var(--surface-2);
+  border-radius: var(--radius-control);
+  color: var(--text);
+  cursor: pointer;
+}
+.guide-catalog > button:hover {
+  background: var(--brand-soft);
+}
+.guide-catalog strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+}
+.guide-catalog small {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+  margin-top: 5px;
+}
+.guide-catalog > button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.guide-footnote {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+.guide-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  pointer-events: none;
+  color: var(--text);
+  font-family: inherit;
+}
+.guide-spotlight {
+  position: fixed;
+  border: 2px solid var(--action);
+  border-radius: 12px;
+  box-shadow: 0 0 0 9999px color-mix(in srgb, var(--text) 32%, transparent);
+  pointer-events: none;
+  transition:
+    top 0.22s ease,
+    left 0.22s ease,
+    width 0.22s ease,
+    height 0.22s ease;
+}
+.guide-cursor {
+  position: fixed;
+  color: var(--action);
+  fill: var(--surface);
+  pointer-events: none;
+  transition:
+    top 0.32s ease,
+    left 0.32s ease;
+  animation: guide-cursor-arrive 0.35s ease both;
+}
+.guide-bubble {
+  position: fixed;
+  box-sizing: border-box;
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 20px;
+  box-shadow: var(--shadow-card);
+  padding: 20px;
+  pointer-events: auto;
+  overflow: auto;
+  overscroll-behavior: contain;
+  outline: none;
+  animation: guide-arrive 0.18s ease;
+}
+.guide-bubble header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.guide-bubble header button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  background: var(--surface-2);
+  color: var(--text);
+  border-radius: 10px;
+  cursor: pointer;
+}
+.guide-bubble h2 {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 8px 0 12px;
+}
+.guide-bubble p {
+  font-size: 14px;
+  line-height: 1.7;
+  margin: 0 0 14px;
+}
+.guide-bubble dl {
+  margin: 0 0 16px;
+  display: grid;
+  gap: 10px;
+}
+.guide-bubble dt {
+  font-size: 13px;
+  font-weight: 600;
+}
+.guide-bubble dd {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 3px 0 0;
+}
+.guide-bubble footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.guide-bubble footer .k-button {
+  font-size: 12px;
+  padding: 8px 10px;
+  min-height: 36px;
+}
+.guide-bubble > small {
+  display: block;
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 14px;
+}
+.guide-bubble :is(button, a):focus-visible,
+.guide-catalog button:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+.guide-finished {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 1200;
+  max-width: 360px;
+  margin-left: 20px;
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 20px;
+  box-shadow: var(--shadow-card);
+  padding: 20px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.guide-finished p {
+  margin: 0 0 12px;
+}
+@keyframes guide-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes guide-cursor-arrive {
+  from {
+    opacity: 0;
+    transform: translate(-25px, -20px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .guide-layer * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+@media print {
+  .guide-layer,
+  .guide-finished {
+    display: none !important;
+  }
+}
+.guide-skip {
+  margin-top: 12px;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  color: var(--text-secondary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.guide-launcher-mobile {
+  display: none !important;
+}
+@media (max-width: 640px) {
+  .guide-launcher-desktop {
+    display: none !important;
+  }
+  .guide-launcher-mobile {
+    display: flex !important;
+  }
+}

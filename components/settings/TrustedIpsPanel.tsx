@@ -98,8 +98,8 @@ export default function TrustedIpsPanel({ companyId }: { companyId: string | nul
 
   return (
     <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
-      <h3 className="font-bold text-[var(--text)] mb-1 flex items-center gap-2">
-        <Wifi size={18} className="text-emerald-500" /> Wifi de l'entreprise (IP de confiance)
+      <h3 className="font-semibold text-[var(--text)] mb-1 flex items-center gap-2">
+        <Wifi size={18} className="text-[var(--success-text)]" /> Wifi de l'entreprise (IP de confiance)
       </h3>
       <p className="text-xs text-[var(--text-muted)] mb-4">
         Si le GPS d'un employé dit « trop loin » mais qu'il est connecté au wifi de l'entreprise, son pointage est accepté.
@@ -116,7 +116,7 @@ export default function TrustedIpsPanel({ companyId }: { companyId: string | nul
         <input value={manualIp} onChange={e => setManualIp(e.target.value)} placeholder="IP (vide = mon IP actuelle)"
           className="flex-1 p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-mono text-[var(--text)]" />
         <button type="button" onClick={add} disabled={busy}
-          className="px-4 py-3 rounded-xl bg-emerald-500 text-white font-bold flex items-center justify-center gap-2 disabled:opacity-50">
+          className="px-4 py-3 rounded-xl bg-[var(--brand)] text-[var(--on-brand)] font-semibold flex items-center justify-center gap-2 disabled:opacity-50">
           <Plus size={16} /> Ajouter
         </button>
       </div>
@@ -127,7 +127,7 @@ export default function TrustedIpsPanel({ companyId }: { companyId: string | nul
       </p>
       {myIp?.usable && (
         myIp.recognized ? (
-          <p className="text-xs text-emerald-600 flex items-center gap-1 mb-4">
+          <p className="text-xs text-[var(--success-text)] flex items-center gap-1 mb-4">
             <Check size={12} className="shrink-0" />
             Cette connexion est reconnue comme wifi de l'entreprise
             {myIp.via === 'LEARNED' ? ' (apprise automatiquement)' : ' (enregistrée)'}.
@@ -141,7 +141,7 @@ export default function TrustedIpsPanel({ companyId }: { companyId: string | nul
         )
       )}
       {myIp && !myIp.usable && (
-        <p className="text-xs text-amber-600 flex items-center gap-1 mb-4">
+        <p className="text-xs text-[var(--warning-text)] flex items-center gap-1 mb-4">
           <AlertTriangle size={12} className="shrink-0" />
           Cette adresse est privée/locale (proxy ?) : elle ne peut pas être enregistrée. Vérifiez TRUST_PROXY sur le serveur.
         </p>
@@ -149,8 +149,8 @@ export default function TrustedIpsPanel({ companyId }: { companyId: string | nul
 
       {/* 🆕 IP apprises automatiquement */}
       <div className="mb-5">
-        <h4 className="text-sm font-bold text-[var(--text)] mb-2 flex items-center gap-2">
-          <Sparkles size={15} className="text-amber-500" /> IP apprises automatiquement (fenêtre : {learnWindowLabel})
+        <h4 className="text-sm font-semibold text-[var(--text)] mb-2 flex items-center gap-2">
+          <Sparkles size={15} className="text-[var(--warning-text)]" /> IP apprises automatiquement (fenêtre : {learnWindowLabel})
         </h4>
         {learned.length === 0 ? (
           <p className="text-xs text-[var(--text-muted)]">Aucune pour l'instant — elles apparaissent après des pointages GPS réussis.</p>
@@ -158,22 +158,22 @@ export default function TrustedIpsPanel({ companyId }: { companyId: string | nul
           <div className="space-y-2">
             {learned.map(l => (
               <div key={l.ip} className="flex flex-wrap items-center gap-3 p-3 rounded-xl bg-[var(--surface-2)] border border-[var(--border)]">
-                <Wifi size={16} className={l.active ? 'text-emerald-500 shrink-0' : 'text-[var(--text-muted)] shrink-0'} />
+                <Wifi size={16} className={l.active ? 'text-[var(--success-text)] shrink-0' : 'text-[var(--text-muted)] shrink-0'} />
                 <span className="font-mono text-xs text-[var(--text)]">{fmtIp(l.ip)}</span>
                 <span className="text-xs text-[var(--text-muted)]">
                   {l.people} personne{l.people > 1 ? 's' : ''} · {fmtAgo(l.lastSeenAt)}
                 </span>
-                <span className={`text-xs font-bold ${l.blocked ? 'text-red-500' : l.active ? 'text-emerald-600' : 'text-amber-600'}`}>
+                <span className={`text-xs font-semibold ${l.blocked ? 'text-[var(--danger-text)]' : l.active ? 'text-[var(--success-text)]' : 'text-[var(--warning-text)]'}`}>
                   {l.blocked ? 'Révoquée' : l.active ? 'Acceptée' : `En observation (${l.people}/${l.quorum})`}
                 </span>
                 {!l.blocked && (
                   <div className="ml-auto flex items-center gap-1">
                     <button type="button" onClick={() => promote(l.ip)} title="Valider en permanent"
-                      className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-500/10" aria-label="Valider en permanent">
+                      className="p-1.5 rounded-lg text-[var(--success-text)] hover:bg-[var(--brand-soft)]" aria-label="Valider en permanent">
                       <Check size={16} />
                     </button>
                     <button type="button" onClick={() => revoke(l.ip)} title="Ne plus accepter"
-                      className="p-1.5 rounded-lg text-red-500 hover:bg-red-500/10" aria-label="Révoquer">
+                      className="p-1.5 rounded-lg text-[var(--danger-text)] hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]" aria-label="Révoquer">
                       <Ban size={16} />
                     </button>
                   </div>
@@ -188,17 +188,17 @@ export default function TrustedIpsPanel({ companyId }: { companyId: string | nul
         </p>
       </div>
 
-      <h4 className="text-sm font-bold text-[var(--text)] mb-2">IP enregistrées (permanentes)</h4>
+      <h4 className="text-sm font-semibold text-[var(--text)] mb-2">IP enregistrées (permanentes)</h4>
       {items.length === 0 ? (
         <p className="text-sm text-[var(--text-muted)]">Aucune IP enregistrée.</p>
       ) : (
         <div className="space-y-2">
           {items.map(i => (
             <div key={i.id} className="flex items-center gap-3 p-3 rounded-xl bg-[var(--surface-2)] border border-[var(--border)]">
-              <Wifi size={16} className="text-emerald-500 shrink-0" />
-              <span className="font-bold text-[var(--text)]">{i.label}</span>
+              <Wifi size={16} className="text-[var(--success-text)] shrink-0" />
+              <span className="font-semibold text-[var(--text)]">{i.label}</span>
               <span className="font-mono text-xs text-[var(--text-muted)]">{i.ip}</span>
-              <button type="button" onClick={() => remove(i.id)} className="ml-auto text-red-500 p-1" aria-label="Supprimer">
+              <button type="button" onClick={() => remove(i.id)} className="ml-auto text-[var(--danger-text)] p-1" aria-label="Supprimer">
                 <Trash2 size={16} />
               </button>
             </div>

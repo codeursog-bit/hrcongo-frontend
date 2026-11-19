@@ -1,4 +1,8 @@
 'use client';
+import { ModulePageFrame, ModulePageSkeleton } from '@/components/requests/ModulePageFrame';
+import { Button } from '@/components/design-system/primitives';
+import '@/components/requests/service-pages.css';
+
 
 // ============================================================================
 // 💎 PAGE PRICING - MODAL MOBILE MONEY (nouveau flow)
@@ -24,7 +28,7 @@ import { KonzaLoader } from '@/components/ui/KonzaLoader';
 // 📝 TYPES
 // ============================================================================
 const PLAN_LABELS: Record<string, string> = {
-  FREE: 'Gratuit', BASIC: 'Basic', PRO: 'Pro', ENTERPRISE: 'Enterprise',
+  FREE: 'Gratuit', STARTER:'25 employés', BASIC: '50 employés', PRO: '100 employés', ENTERPRISE: 'Plus de 100 employés',
 };
 
 // ============================================================================
@@ -38,7 +42,7 @@ function PricingContent() {
 
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
   const [upgradingPlan, setUpgradingPlan] = useState<string | null>(null);
-  const [checkoutTarget, setCheckoutTarget] = useState<{ plan: 'BASIC' | 'PRO' | 'ENTERPRISE'; billingPeriod: 'monthly' | 'yearly'; amount: number } | null>(null);
+  const [checkoutTarget, setCheckoutTarget] = useState<{ plan: 'STARTER' | 'BASIC' | 'PRO' | 'ENTERPRISE'; billingPeriod: 'monthly' | 'yearly'; amount: number } | null>(null);
 
   const router = useRouter();
 
@@ -69,7 +73,7 @@ function PricingContent() {
   // besoin d'un PaymentIntent créé d'abord via /subscriptions/upgrade
   // (flux original en 2 étapes, inchangé) avant d'ouvrir son propre modal.
   // NONE = aucun prestataire configuré côté serveur, on ne tente rien.
-  const handleUpgrade = async (plan: 'BASIC' | 'PRO' | 'ENTERPRISE') => {
+  const handleUpgrade = async (plan: 'STARTER' | 'BASIC' | 'PRO' | 'ENTERPRISE') => {
     const planData = plans?.[plan];
     const amount = billingPeriod === 'yearly' ? planData?.priceYearly : planData?.priceMonthly;
     if (!amount) {
@@ -119,12 +123,12 @@ function PricingContent() {
 
   if (isLoading) {
     return (
-      <KonzaLoader variant="page" />
+      <ModulePageSkeleton label="Chargement de l’abonnement" />
     );
   }
 
-  const planOrder   = ['FREE', 'BASIC', 'PRO', 'ENTERPRISE'];
-  const sortedPlans = Object.entries(plans || {})
+  const planOrder   = ['FREE', 'STARTER', 'BASIC', 'PRO', 'ENTERPRISE'];
+  const sortedPlans = Object.entries(plans || {}).filter(([key]) => key !== 'FREE')
     .sort(([a], [b]) => planOrder.indexOf(a) - planOrder.indexOf(b));
 
   const getPlanIcon = (planKey: string) => {
@@ -195,7 +199,7 @@ function PricingContent() {
         <div className="flex justify-center mb-12">
           <div className="glass-card p-1.5 rounded-full inline-flex">
             {(['monthly', 'yearly'] as const).map(period => (
-              <button
+              <Button variant="ghost"
                 key={period}
                 onClick={() => setBillingPeriod(period)}
                 className={`
@@ -211,7 +215,7 @@ function PricingContent() {
                     -17%
                   </span>
                 )}
-              </button>
+              </Button>
             ))}
           </div>
         </div>
@@ -230,9 +234,9 @@ function PricingContent() {
                 </p>
               )}
             </div>
-            <button onClick={handlePayQuote} className="px-4 py-2 rounded-xl bg-purple-600 text-white text-sm">
+            <Button variant="primary" onClick={handlePayQuote} className="px-4 py-2 rounded-xl bg-purple-600 text-white text-sm">
               Payer
-            </button>
+            </Button>
           </div>
         )}
 
@@ -250,6 +254,7 @@ function PricingContent() {
         )}
 
         {/* Cartes */}
+        {sortedPlans.length === 0 && <div role="status" className="glass-panel rounded-2xl p-8 text-center"><h2 className="font-semibold text-lg">Les offres ne sont pas disponibles pour le moment.</h2><p className="text-sm text-[var(--text-secondary)] mt-2">Réessayez dans un instant pour consulter les tarifs.</p><Button variant="secondary" className="mt-4" onClick={()=>window.location.reload()}>Réessayer</Button></div>}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {sortedPlans.map(([planKey, plan]: [string, any]) => {
             const isCurrentPlan = subscription?.plan === planKey;
@@ -325,9 +330,9 @@ function PricingContent() {
                   )}
                 </div>
 
-                <button
-                  onClick={() => !isFree && !isCurrentPlan && handleUpgrade(planKey as 'BASIC' | 'PRO' | 'ENTERPRISE')}
-                  disabled={isFree || isCurrentPlan || isUpgrading || !isConfigured}
+                <Button variant="ghost"
+                  onClick={() => !isFree && handleUpgrade(planKey as 'STARTER' | 'BASIC' | 'PRO' | 'ENTERPRISE')}
+                  disabled={isFree || isUpgrading || !isConfigured}
                   className={`
                     w-full py-3 px-6 rounded-lg font-bold text-sm mb-6
                     transition-all duration-300 flex items-center justify-center gap-2
@@ -346,13 +351,13 @@ function PricingContent() {
                   {isFree ? (
                     <><Star className="w-4 h-4" /> Plan gratuit</>
                   ) : isCurrentPlan ? (
-                    <><Check className="w-4 h-4" /> Plan actuel</>
+                    <><Check className="w-4 h-4" /> Renouveler</>
                   ) : isUpgrading ? (
                     <><Loader2 className="w-4 h-4 animate-spin" /> Préparation…</>
                   ) : (
                     <><Rocket className="w-4 h-4" /> Choisir ce plan</>
                   )}
-                </button>
+                </Button>
 
                 <div className="space-y-2">
                   <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-2">Inclus :</p>
@@ -365,10 +370,14 @@ function PricingContent() {
                   <div className="flex items-start gap-2 text-sm">
                     <Check className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
                     <span>
-                      {plan.limits.maxUsers === -1 ? 'Utilisateurs illimités' : `${plan.limits.maxUsers} utilisateur${plan.limits.maxUsers > 1 ? 's' : ''}`}
+                      {plan.limits.maxUsers === -1 ? 'Administrateurs illimités' : `${plan.limits.maxUsers} administrateur${plan.limits.maxUsers > 1 ? 's' : ''}`}
                     </span>
                   </div>
                   <div className="border-t border-slate-200 dark:border-slate-700 pt-2 mt-2 space-y-2">
+                    <p className="text-xs text-[var(--text-secondary)]">{plan.limits.maxLoansAdvances} prêts/avances · {plan.limits.maxPermissionTickets} tickets · {plan.limits.maxAbsenceRequests} absences par mois</p>
+                    {plan.limits.hasCNSSDeclaration&&<p className="text-sm">Déclarations CNSS</p>}
+                    {plan.limits.hasDASDeclaration&&<p className="text-sm">Déclarations DAS</p>}
+                    {plan.limits.hasAnnualPayroll&&<p className="text-sm">Bulletins annuels</p>}
                     {plan.limits.hasEmployeeImportExcel && (
                       <div className="flex items-start gap-2 text-sm">
                         <Check className="w-4 h-4 text-green-500 mt-0.5 shrink-0" /><span>Import Excel</span>
@@ -417,7 +426,7 @@ function PricingContent() {
 
       {/* Modal paiement — Moteki */}
       {checkoutTarget && activeProvider === 'MOTEKI' && (
-        <MotekiCheckoutModal
+        <div className="loan-document-protected"><MotekiCheckoutModal
           plan={checkoutTarget.plan}
           billingPeriod={checkoutTarget.billingPeriod}
           amount={checkoutTarget.amount}
@@ -425,24 +434,24 @@ function PricingContent() {
           onClose={() => setCheckoutTarget(null)}
           onError={(msg) => toast.error(msg)}
           onSuccess={() => router.push(`/success?plan=${checkoutTarget.plan}&immediate=true`)}
-        />
+        /></div>
       )}
 
       {/* Modal paiement — Chariow (redondance de Moteki) */}
       {checkoutTarget && activeProvider === 'CHARIOW' && (
-        <ChariowCheckoutModal
+        <div className="loan-document-protected"><ChariowCheckoutModal
           plan={checkoutTarget.plan}
           billingPeriod={checkoutTarget.billingPeriod}
           amount={checkoutTarget.amount}
           planLabel={PLAN_LABELS[checkoutTarget.plan] ?? checkoutTarget.plan}
           onClose={() => setCheckoutTarget(null)}
           onError={(msg) => toast.error(msg)}
-        />
+        /></div>
       )}
 
       {/* Modal paiement — YabetooPay (filet de secours, code original intact) */}
       {paymentIntent && (
-        <YabetooCheckoutModal
+        <div className="loan-document-protected"><YabetooCheckoutModal
           intent={paymentIntent}
           planLabel={PLAN_LABELS[paymentIntent.plan] ?? paymentIntent.plan}
           onClose={() => setPaymentIntent(null)}
@@ -450,7 +459,7 @@ function PricingContent() {
             toast.success('Paiement envoyé ! Votre abonnement sera activé après confirmation.');
           }}
           onError={(msg) => toast.error(msg)}
-        />
+        /></div>
       )}
     </div>
   );
@@ -458,10 +467,10 @@ function PricingContent() {
 
 export default function PricingPage() {
   return (
-    <Suspense fallback={
-      <KonzaLoader variant="page" />
+    <ModulePageFrame kind="list"><div className="service-module-page" data-service="pricing"><Suspense fallback={
+      <ModulePageSkeleton label="Chargement de l’abonnement" />
     }>
       <PricingContent />
-    </Suspense>
+    </Suspense></div></ModulePageFrame>
   );
 }

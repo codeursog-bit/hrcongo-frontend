@@ -1,4 +1,7 @@
 'use client';
+import { Button } from '@/components/design-system/primitives';
+import { useLoanPageVisuals } from '@/components/loans/LoanModuleFrame';
+import { LoanModuleFrame, LoanModuleSkeleton } from '@/components/loans/LoanModuleFrame';
 
 // ============================================================================
 // 📁 app/(dashboard)/loans/suivi-dettes/[employeeId]/page.tsx
@@ -19,7 +22,7 @@ import {
   CheckCircle2, XCircle, Ban, Wallet as WalletIcon, Pencil, Trash2, ChevronDown, ChevronUp, ChevronLeft, ChevronRight,
 } from 'lucide-react';
 import {
-  ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+  ResponsiveContainer, AreaChart, Area, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from 'recharts';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
@@ -48,6 +51,8 @@ const STATUS_CFG: Record<string, { label: string; cls: string; icon: any }> = {
 };
 
 export default function EmployeeDebtDetailPage() {
+  const {refonte,motion}=useLoanPageVisuals();
+  const [refonteError,setRefonteError]=useState('');
   const { employeeId } = useParams<{ employeeId: string }>();
   const router = useRouter();
   const { bp } = useBasePath();
@@ -85,7 +90,7 @@ export default function EmployeeDebtDetailPage() {
       loansForHistory.forEach((x: any, i: number) => { map[`loan-${x.id}`] = loanHistories[i] || []; });
       advancesForHistory.forEach((x: any, i: number) => { map[`advance-${x.id}`] = advanceHistories[i] || []; });
       setLogsByItem(map);
-    } catch (e) { console.error('Erreur fiche employé', e); }
+    } catch (e) { console.error('Erreur fiche employé', e); setRefonteError('Le chargement a échoué. Réessayez dans un instant.'); }
     finally { setIsLoading(false); }
   };
 
@@ -194,17 +199,17 @@ export default function EmployeeDebtDetailPage() {
     finally { setBusyId(null); }
   };
 
-  if (isLoading) return <KonzaLoader variant="page" />;
+  if (isLoading) return <LoanModuleSkeleton />;
 
   const initials = `${employee?.firstName?.[0] ?? ''}${employee?.lastName?.[0] ?? ''}`;
 
   return (
-    <div className="max-w-[1200px] mx-auto pb-24 space-y-6">
+    <LoanModuleFrame kind="detail" error={refonteError}><div className="max-w-[1200px] mx-auto pb-24 space-y-6">
       <FinanceSubNav userRole={userRole} />
 
-      <button onClick={() => router.push(bp('/loans/suivi-dettes'))} className="flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text)] font-semibold">
+      <Button variant="ghost" onClick={() => router.push(bp('/loans/suivi-dettes'))} className="flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text)] font-semibold">
         <ArrowLeft size={16} /> Retour au suivi des dettes
-      </button>
+      </Button>
 
       <div className="flex items-center gap-4">
         <div className="w-16 h-16 rounded-2xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-lg font-bold text-emerald-600 overflow-hidden shrink-0">
@@ -231,20 +236,20 @@ export default function EmployeeDebtDetailPage() {
             Évolution de la dette <span className="font-normal text-[var(--text-muted)]">· {trendData[0]?.mois} → {trendData[trendData.length - 1]?.mois}</span>
           </p>
           <div className="flex items-center gap-1">
-            <button onClick={() => setTrendShift(s => s - 6)} className="p-1.5 rounded-lg border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)]" aria-label="Mois précédents"><ChevronLeft size={16} /></button>
-            <button onClick={() => setTrendShift(s => s + 6)} className="p-1.5 rounded-lg border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)]" aria-label="Mois suivants"><ChevronRight size={16} /></button>
+            <Button variant="ghost" onClick={() => setTrendShift(s => s - 6)} className="p-1.5 rounded-lg border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)]" aria-label="Mois précédents"><ChevronLeft size={16} /></Button>
+            <Button variant="ghost" onClick={() => setTrendShift(s => s + 6)} className="p-1.5 rounded-lg border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)]" aria-label="Mois suivants"><ChevronRight size={16} /></Button>
           </div>
         </div>
         <ResponsiveContainer width="100%" height={240}>
-          <LineChart data={trendData}>
+          <AreaChart data={trendData}>
             <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
             <XAxis dataKey="mois" fontSize={12} />
             <YAxis fontSize={12} tickFormatter={(v) => `${Math.round(v / 1000)}k`} />
             <Tooltip formatter={(v: number) => fmt(v)} />
             <Legend />
-            <Line type="monotone" dataKey="Emprunté" stroke="#0ea5e9" strokeWidth={2.5} dot={false} />
-            <Line type="monotone" dataKey="Remboursé" stroke="#10b981" strokeWidth={2.5} dot={false} />
-          </LineChart>
+            <Area type="monotone" dataKey="Emprunté" stroke="var(--loan-chart-1, #0ea5e9)" strokeWidth={2.25} dot={false}  fill="var(--loan-gradient-1)" fillOpacity={1} animationDuration={700} isAnimationActive={motion} />
+            <Area type="monotone" dataKey="Remboursé" stroke="var(--loan-chart-2, #10b981)" strokeWidth={2.25} dot={false}  fill="var(--loan-gradient-2)" fillOpacity={1} animationDuration={700} isAnimationActive={motion} />
+          </AreaChart>
         </ResponsiveContainer>
       </div>
 
@@ -289,24 +294,24 @@ export default function EmployeeDebtDetailPage() {
                   <div className="flex items-center gap-2 shrink-0 flex-wrap">
                     <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border flex items-center gap-1 ${cfg.cls}`}><Icon size={10} /> {cfg.label}</span>
                     {canRepay && (
-                      <button onClick={() => setPayModal({ kind: r.kind, id: r.id, remaining: Number(r.remainingBalance ?? r.amount), total: Number(r.amount) })} className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg flex items-center gap-1.5">
+                      <Button variant="primary" onClick={() => setPayModal({ kind: r.kind, id: r.id, remaining: Number(r.remainingBalance ?? r.amount), total: Number(r.amount) })} className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg flex items-center gap-1.5">
                         <WalletIcon size={13} /> Confirmer un remboursement
-                      </button>
+                      </Button>
                     )}
                     {canEditThis && (
-                      <button onClick={() => setEditItem({ kind: r.kind, id: r.id, amount: Number(r.amount), monthlyRepayment: r.monthlyRepayment ? Number(r.monthlyRepayment) : undefined, deductMonth: r.deductMonth, deductYear: r.deductYear, reason: r.reason })} className="px-2.5 py-1.5 border border-[var(--border)] text-xs font-semibold rounded-lg text-[var(--text-muted)] hover:bg-[var(--surface-2)] flex items-center gap-1">
+                      <Button variant="ghost" onClick={() => setEditItem({ kind: r.kind, id: r.id, amount: Number(r.amount), monthlyRepayment: r.monthlyRepayment ? Number(r.monthlyRepayment) : undefined, deductMonth: r.deductMonth, deductYear: r.deductYear, reason: r.reason })} className="px-2.5 py-1.5 border border-[var(--border)] text-xs font-semibold rounded-lg text-[var(--text-muted)] hover:bg-[var(--surface-2)] flex items-center gap-1">
                         <Pencil size={12} /> Modifier
-                      </button>
+                      </Button>
                     )}
                     {canDeleteThis && (
-                      <button onClick={() => handleDeleteDebt(r.kind, r.id)} disabled={busyId === r.id} className="px-2.5 py-1.5 border border-[var(--border)] text-xs font-semibold rounded-lg text-red-500 hover:bg-red-50 disabled:opacity-40 flex items-center gap-1">
+                      <Button variant="ghost" onClick={() => handleDeleteDebt(r.kind, r.id)} disabled={busyId === r.id} className="px-2.5 py-1.5 border border-[var(--border)] text-xs font-semibold rounded-lg text-red-500 hover:bg-red-50 disabled:opacity-40 flex items-center gap-1">
                         {busyId === r.id ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />} Supprimer
-                      </button>
+                      </Button>
                     )}
                     {hasLogHistory && (
-                      <button onClick={() => setExpanded(s => ({ ...s, [key]: !s[key] }))} className="px-2 py-1.5 text-xs font-semibold text-emerald-600 hover:underline flex items-center gap-0.5">
+                      <Button variant="ghost" onClick={() => setExpanded(s => ({ ...s, [key]: !s[key] }))} className="px-2 py-1.5 text-xs font-semibold text-emerald-600 hover:underline flex items-center gap-0.5">
                         {logs.length} remb. {isOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-                      </button>
+                      </Button>
                     )}
                   </div>
                 </div>
@@ -323,9 +328,9 @@ export default function EmployeeDebtDetailPage() {
                           <span className="text-[10px] text-[var(--text-muted)] ml-2">{log.method === 'PAYROLL' ? '· déduit sur paie' : '· espèces'}</span>
                         </div>
                         {canManageRepayments && (
-                          <button onClick={() => handleDeleteLog(r.kind, r.id, log.id)} disabled={busyId === log.id} className="text-[var(--text-muted)] hover:text-red-600 disabled:opacity-40 shrink-0" title="Supprimer ce remboursement">
+                          <Button variant="ghost" onClick={() => handleDeleteLog(r.kind, r.id, log.id)} disabled={busyId === log.id} className="text-[var(--text-muted)] hover:text-red-600 disabled:opacity-40 shrink-0" title="Supprimer ce remboursement">
                             {busyId === log.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
-                          </button>
+                          </Button>
                         )}
                       </div>
                     ))}
@@ -351,7 +356,7 @@ export default function EmployeeDebtDetailPage() {
         onClose={() => setEditItem(null)}
         onSave={handleSaveEdit}
       />
-    </div>
+    </div></LoanModuleFrame>
   );
 }
 

@@ -15,6 +15,7 @@
 //   • Responsive mobile
 // ============================================================================
 
+import { AttendanceDialog } from '@/components/attendance/AttendanceDialog';
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   AlertCircle, Calendar, Edit3, Check, X, CheckCircle, XCircle,
@@ -103,17 +104,17 @@ function Toast({ message, type, onClose }: { message: string; type: 'success' | 
   }, [onClose]);
 
   const colors = {
-    success: 'bg-emerald-500',
-    error:   'bg-red-500',
-    info:    'bg-emerald-500',
+    success: 'bg-[var(--brand)]',
+    error:   'bg-[var(--danger)]',
+    info:    'bg-[var(--brand)]',
   };
   const icons = { success: <Check size={16} />, error: <X size={16} />, info: <Info size={16} /> };
 
   return (
-    <div className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-2xl text-white shadow-2xl shadow-black/30 ${colors[type]} animate-slide-up`}>
-      <span className="p-1 bg-white/20 rounded-lg">{icons[type]}</span>
+    <div className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-[var(--brand)] text-[var(--on-brand)] shadow-2xl  ${colors[type]} animate-slide-up`}>
+      <span className="p-1 bg-[var(--surface)] rounded-lg">{icons[type]}</span>
       <span className="font-semibold text-sm">{message}</span>
-      <button onClick={onClose} className="ml-2 opacity-70 hover:opacity-100"><X size={14} /></button>
+      <button onClick={onClose} className="ml-2 opacity-70 hover:opacity-100" aria-label="Fermer"><X size={14} /></button>
     </div>
   );
 }
@@ -135,8 +136,8 @@ function LiveTimer({ checkIn }: { checkIn: string }) {
   }, [checkIn]);
 
   return (
-    <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 font-mono text-sm font-bold">
-      <Timer size={13} className="animate-pulse" />
+    <span className="inline-flex items-center gap-1 text-[var(--warning-text)]  font-mono text-sm font-semibold">
+      <Timer size={13} className="" />
       {elapsed}
     </span>
   );
@@ -145,16 +146,16 @@ function LiveTimer({ checkIn }: { checkIn: string }) {
 // ─── Badge statut overtime ────────────────────────────────────────────────────
 function OvertimeBadge({ status }: { status: string }) {
   const config: Record<string, { label: string; class: string; icon: React.ReactNode }> = {
-    PENDING_EMPLOYEE: { label: 'En attente employé', class: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400', icon: <HelpCircle size={12} /> },
-    PENDING_APPROVAL: { label: 'En attente patron',  class: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',   icon: <Clock size={12} /> },
-    APPROVED:         { label: 'Approuvé',            class: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400', icon: <CheckCircle size={12} /> },
-    REJECTED:         { label: 'Refusé',              class: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',       icon: <XCircle size={12} /> },
+    PENDING_EMPLOYEE: { label: 'En attente employé', class: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)]  ', icon: <HelpCircle size={12} /> },
+    PENDING_APPROVAL: { label: 'En attente patron',  class: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)]  ',   icon: <Clock size={12} /> },
+    APPROVED:         { label: 'Approuvé',            class: 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)]  ', icon: <CheckCircle size={12} /> },
+    REJECTED:         { label: 'Refusé',              class: 'bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] text-[var(--danger-text)]  ',       icon: <XCircle size={12} /> },
     AUTO_CLOSED:      { label: 'Auto-clôturé',        class: 'bg-[var(--surface-2)] text-[var(--text-muted)]',      icon: <Shield size={12} /> },
   };
   const c = config[status];
   if (!c) return null;
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${c.class}`}>
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${c.class}`}>
       {c.icon}{c.label}
     </span>
   );
@@ -221,27 +222,27 @@ function CorrectionModal({
   };
 
   const kinds: { value: PresenceKind; label: string; hint: string }[] = [
-    { value: 'PRESENT', label: '✅ Présent', hint: 'avec heures' },
-    { value: 'REMOTE', label: '🏠 Télétravail', hint: 'avec heures' },
-    { value: 'ABSENT_PAID', label: '💼 Absent justifié', hint: 'payé' },
-    { value: 'ABSENT_UNPAID', label: '❌ Absent', hint: 'non payé' },
+    { value: 'PRESENT', label: ' Présent', hint: 'avec heures' },
+    { value: 'REMOTE', label: ' Télétravail', hint: 'avec heures' },
+    { value: 'ABSENT_PAID', label: ' Absent justifié', hint: 'payé' },
+    { value: 'ABSENT_UNPAID', label: ' Absent', hint: 'non payé' },
   ];
 
   const current = attendance.checkIn
     ? `${toHM(attendance.checkIn)} → ${attendance.checkOut ? toHM(attendance.checkOut) : 'en cours'}`
     : STATUS_LABEL[attendance.status] || '—';
 
-  const timeCls = 'w-full px-3 py-3 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-lg font-mono font-bold text-center focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all';
+  const timeCls = 'w-full px-3 py-3 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-lg font-mono font-semibold text-center focus:border-[var(--border)] focus:ring-2 focus:ring-[var(--focus)] transition-colors';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+    <AttendanceDialog title="Correction" onClose={onClose} busy={saving}>
+
       <div className="relative w-full sm:max-w-md bg-[var(--surface)] rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden">
         <div className="flex justify-center pt-3 pb-1 sm:hidden"><div className="w-10 h-1 bg-[var(--border)] rounded-full" /></div>
 
         <div className="px-6 py-4 border-b border-[var(--border)] flex items-start justify-between">
           <div className="min-w-0">
-            <h3 className="text-lg font-bold text-[var(--text)]">{attendance.checkIn ? 'Modifier le pointage' : 'Corriger le pointage'}</h3>
+            <h3 className="text-lg font-semibold text-[var(--text)]">{attendance.checkIn ? 'Modifier le pointage' : 'Corriger le pointage'}</h3>
             <p className="text-sm text-[var(--text-muted)] mt-0.5 truncate">
               {attendance.employee.firstName} {attendance.employee.lastName} &bull;{' '}
               {new Date(`${day}T12:00:00Z`).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
@@ -256,11 +257,11 @@ function CorrectionModal({
             {kinds.map((k) => (
               <button
                 key={k.value} type="button" role="radio" aria-checked={kind === k.value} onClick={() => setKind(k.value)}
-                className={`px-3 py-3 rounded-xl border-2 text-left transition-all ${kind === k.value
-                  ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
+                className={`px-3 py-3 rounded-xl border-2 text-left transition-colors ${kind === k.value
+                  ? 'border-[var(--border)] bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  text-[var(--success-text)] '
                   : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--text-muted)]'}`}
               >
-                <span className="block text-sm font-bold">{k.label}</span>
+                <span className="block text-sm font-semibold">{k.label}</span>
                 <span className="block text-[11px] opacity-70">{k.hint}</span>
               </button>
             ))}
@@ -270,11 +271,11 @@ function CorrectionModal({
             <div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label htmlFor="corr-in" className="block text-xs font-bold text-[var(--text-muted)] mb-1.5">Entrée <span className="text-red-500">*</span></label>
+                  <label htmlFor="corr-in" className="block text-xs font-semibold text-[var(--text-muted)] mb-1.5">Entrée <span className="text-[var(--danger-text)]">*</span></label>
                   <input id="corr-in" type="time" value={timeIn} onChange={(e) => setTimeIn(e.target.value)} className={timeCls} />
                 </div>
                 <div>
-                  <label htmlFor="corr-out" className="block text-xs font-bold text-[var(--text-muted)] mb-1.5">Sortie <span className="text-red-500">*</span></label>
+                  <label htmlFor="corr-out" className="block text-xs font-semibold text-[var(--text-muted)] mb-1.5">Sortie <span className="text-[var(--danger-text)]">*</span></label>
                   <input id="corr-out" type="time" value={timeOut} onChange={(e) => setTimeOut(e.target.value)} className={timeCls} />
                 </div>
               </div>
@@ -285,11 +286,11 @@ function CorrectionModal({
                 </label>
               )}
               {hoursError ? (
-                <p className="text-xs text-red-500 mt-2 flex items-center gap-1"><AlertCircle size={12} /> {hoursError}</p>
+                <p className="text-xs text-[var(--danger-text)] mt-2 flex items-center gap-1"><AlertCircle size={12} /> {hoursError}</p>
               ) : (
                 <p className="text-xs text-[var(--text-muted)] mt-2">
                   Durée : <b className="text-[var(--text)]">{fmtDuration(durationMin)}</b>
-                  {lateHint && <span className="text-amber-600"> · sera enregistré « En retard »</span>}
+                  {lateHint && <span className="text-[var(--warning-text)]"> · sera enregistré « En retard »</span>}
                   <span> · retard et heures sup calculés automatiquement</span>
                 </p>
               )}
@@ -297,33 +298,33 @@ function CorrectionModal({
           )}
 
           <div>
-            <label htmlFor="corr-reason" className="block text-sm font-bold text-[var(--text-muted)] mb-2">Pourquoi ? <span className="text-red-500">*</span></label>
+            <label htmlFor="corr-reason" className="block text-sm font-semibold text-[var(--text-muted)] mb-2">Pourquoi ? <span className="text-[var(--danger-text)]">*</span></label>
             <div className="grid grid-cols-2 gap-2 mb-2">
               {['Oubli de pointage confirmé', 'Certificat médical reçu', 'Mission externe validée', 'Erreur système corrigée'].map((r) => (
                 <button key={r} type="button" onClick={() => setReason(r)}
-                  className={`px-3 py-2 rounded-xl text-xs font-semibold border-2 transition-all text-left ${reason === r
-                    ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
+                  className={`px-3 py-2 rounded-xl text-xs font-semibold border-2 transition-colors text-left ${reason === r
+                    ? 'border-[var(--border)] bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  text-[var(--success-text)] '
                     : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--text-muted)]'}`}>
                   {r}
                 </button>
               ))}
             </div>
             <textarea id="corr-reason" placeholder="Ou saisissez un motif…" value={reason} onChange={(e) => setReason(e.target.value)} rows={2}
-              className="w-full px-4 py-3 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm resize-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all placeholder-[var(--text-muted)]" />
+              className="w-full px-4 py-3 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm resize-none focus:border-[var(--border)] focus:ring-2 focus:ring-[var(--focus)] transition-colors placeholder-[var(--text-muted)]" />
             <p className="text-[11px] text-[var(--text-muted)] mt-1">Enregistré avec votre nom, la date et l’heure de la modification.</p>
           </div>
         </div>
 
         <div className="px-6 py-4 border-t border-[var(--border)] flex gap-3">
-          <button onClick={onClose} className="flex-1 px-4 py-3 bg-[var(--surface-2)] hover:bg-[var(--border)] text-[var(--text-muted)] rounded-xl text-sm font-bold transition-all">Annuler</button>
+          <button onClick={onClose} className="flex-1 px-4 py-3 bg-[var(--surface-2)] hover:bg-[var(--border)] text-[var(--text-muted)] rounded-xl text-sm font-semibold transition-colors">Annuler</button>
           <button onClick={handleSave} disabled={!canSave}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl text-sm font-bold transition-colors">
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[var(--brand)] hover:bg-[var(--brand)] disabled:opacity-50 disabled:cursor-not-allowed text-[var(--on-brand)] rounded-xl text-sm font-semibold transition-colors">
             {saving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
             Enregistrer
           </button>
         </div>
       </div>
-    </div>
+    </AttendanceDialog>
   );
 }
 
@@ -357,8 +358,8 @@ function OvertimeApprovalModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+    <AttendanceDialog title="Heures supplementaires" onClose={onClose} busy={loading}>
+
 
       <div className="relative w-full sm:max-w-md bg-[var(--surface)] rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden">
         <div className="flex justify-center pt-3 pb-1 sm:hidden">
@@ -367,11 +368,11 @@ function OvertimeApprovalModal({
 
         <div className="px-6 pt-5 pb-4 border-b border-[var(--border)]">
           <div className="flex items-center gap-3 mb-1">
-            <div className="p-2.5 bg-amber-100 dark:bg-amber-900/30 rounded-xl">
-              <Zap size={20} className="text-amber-600 dark:text-amber-400" />
+            <div className="p-2.5 bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  rounded-xl">
+              <Zap size={20} className="text-[var(--warning-text)] " />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-[var(--text)]">Heures supplémentaires</h3>
+              <h3 className="text-lg font-semibold text-[var(--text)]">Heures supplémentaires</h3>
               <p className="text-sm text-[var(--text-muted)]">Demande de validation</p>
             </div>
           </div>
@@ -380,11 +381,11 @@ function OvertimeApprovalModal({
         <div className="p-6 space-y-4">
           {/* Infos employé */}
           <div className="flex items-center gap-3 p-4 bg-[var(--surface-2)] rounded-2xl">
-            <div className="w-12 h-12 rounded-xl bg-emerald-500 flex items-center justify-center text-white font-bold text-lg">
+            <div className="w-12 h-12 rounded-xl bg-[var(--brand)] flex items-center justify-center text-[var(--on-brand)] font-semibold text-lg">
               {item.employee.firstName[0]}{item.employee.lastName[0]}
             </div>
             <div>
-              <p className="font-bold text-[var(--text)]">
+              <p className="font-semibold text-[var(--text)]">
                 {item.employee.firstName} {item.employee.lastName}
               </p>
               <p className="text-xs text-[var(--text-muted)]">{item.employee.department?.name}</p>
@@ -392,15 +393,15 @@ function OvertimeApprovalModal({
           </div>
 
           {/* Détail heures */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl text-center">
-              <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
+          <div className="grid grid-cols-2 gap-3 attendance-metrics">
+            <div className="p-3 bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  rounded-xl text-center">
+              <p className="text-2xl font-semibold text-[var(--success-text)] ">
                 {item.pendingOvertimeHours.toFixed(1)}h
               </p>
-              <p className="text-xs text-emerald-700 dark:text-emerald-300 font-semibold">Heures sup déclarées</p>
+              <p className="text-xs text-[var(--success-text)]  font-semibold">Heures sup déclarées</p>
             </div>
             <div className="p-3 bg-[var(--surface-2)] rounded-xl text-center">
-              <p className="text-sm font-bold text-[var(--text-muted)]">
+              <p className="text-sm font-semibold text-[var(--text-muted)]">
                 {new Date(item.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}
               </p>
               <p className="text-xs text-[var(--text-muted)] mt-1">
@@ -411,14 +412,14 @@ function OvertimeApprovalModal({
 
           {showRejectForm ? (
             <div className="space-y-3">
-              <label className="block text-sm font-bold text-[var(--text-muted)]">
-                Motif du refus <span className="text-red-500">*</span>
+              <label className="block text-sm font-semibold text-[var(--text-muted)]">
+                Motif du refus <span className="text-[var(--danger-text)]">*</span>
               </label>
               <div className="grid grid-cols-1 gap-1.5">
                 {['Heures non autorisées à l\'avance', 'Travail non confirmé', 'Erreur de déclaration'].map(r => (
                   <button key={r} onClick={() => setRejectReason(r)}
-                    className={`px-3 py-2 rounded-xl text-xs font-semibold border-2 text-left transition-all ${
-                      rejectReason === r ? 'border-red-400 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400' : 'border-[var(--border)] text-[var(--text-muted)]'
+                    className={`px-3 py-2 rounded-xl text-xs font-semibold border-2 text-left transition-colors ${
+                      rejectReason === r ? 'border-[var(--border)] bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  text-[var(--danger-text)] ' : 'border-[var(--border)] text-[var(--text-muted)]'
                     }`}
                   >{r}</button>
                 ))}
@@ -428,15 +429,15 @@ function OvertimeApprovalModal({
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
                 rows={2}
-                className="w-full px-4 py-3 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm resize-none focus:border-red-400"
+                className="w-full px-4 py-3 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm resize-none focus:border-[var(--border)]"
               />
               <div className="flex gap-2">
                 <button onClick={() => setShowRejectForm(false)}
-                  className="flex-1 px-4 py-2.5 bg-[var(--surface-2)] rounded-xl text-sm font-bold text-[var(--text-muted)]">
+                  className="flex-1 px-4 py-2.5 bg-[var(--surface-2)] rounded-xl text-sm font-semibold text-[var(--text-muted)]">
                   Retour
                 </button>
                 <button onClick={handleReject} disabled={!rejectReason.trim() || loading}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white rounded-xl text-sm font-bold transition-all">
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--danger)] hover:bg-[var(--danger)] disabled:opacity-50 text-[var(--on-brand)] rounded-xl text-sm font-semibold transition-colors">
                   {loading ? <Loader2 size={14} className="animate-spin" /> : <ThumbsDown size={14} />}
                   Confirmer le refus
                 </button>
@@ -445,11 +446,11 @@ function OvertimeApprovalModal({
           ) : (
             <div className="flex gap-3">
               <button onClick={() => setShowRejectForm(true)}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 text-red-600 dark:text-red-400 rounded-xl text-sm font-bold transition-all">
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-[var(--border)]  bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] text-[var(--danger-text)]  rounded-xl text-sm font-semibold transition-colors">
                 <ThumbsDown size={16} /> Refuser
               </button>
               <button onClick={handleApprove} disabled={loading}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white rounded-xl text-sm font-bold transition-colors">
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[var(--brand)] hover:bg-[var(--brand)] disabled:opacity-50 text-[var(--on-brand)] rounded-xl text-sm font-semibold transition-colors">
                 {loading ? <Loader2 size={16} className="animate-spin" /> : <ThumbsUp size={16} />}
                 Approuver
               </button>
@@ -457,7 +458,7 @@ function OvertimeApprovalModal({
           )}
         </div>
       </div>
-    </div>
+    </AttendanceDialog>
   );
 }
 
@@ -588,12 +589,12 @@ export default function CorrectionsView({
       onRefresh();
       if (showHistory) fetchHistory();
       if (overtimeRecalculated === false) {
-        showToast('✅ Enregistré. Les heures sup sont déjà en validation : elles n’ont pas été recalculées.', 'info');
+        showToast(' Enregistré. Les heures sup sont déjà en validation : elles n’ont pas été recalculées.', 'info');
       } else {
-        showToast('✅ Pointage enregistré', 'success');
+        showToast(' Pointage enregistré', 'success');
       }
     } catch (err: any) {
-      showToast(`❌ ${err?.message || err?.response?.data?.message || 'Erreur lors de la correction'}`, 'error');
+      showToast(` ${err?.message || err?.response?.data?.message || 'Erreur lors de la correction'}`, 'error');
     } finally {
       setSavingId(null);
     }
@@ -619,9 +620,9 @@ export default function CorrectionsView({
       setSelectedOvertime(null);
       fetchPendingOvertimes();
       onRefresh();
-      showToast('✅ Heures supplémentaires validées', 'success');
+      showToast(' Heures supplémentaires validées', 'success');
     } catch (err: any) {
-      showToast(`❌ ${err?.response?.data?.message || 'Erreur'}`, 'error');
+      showToast(` ${err?.response?.data?.message || 'Erreur'}`, 'error');
     }
   };
 
@@ -633,7 +634,7 @@ export default function CorrectionsView({
       onRefresh();
       showToast('Heures supplémentaires refusées', 'info');
     } catch (err: any) {
-      showToast(`❌ ${err?.response?.data?.message || 'Erreur'}`, 'error');
+      showToast(` ${err?.response?.data?.message || 'Erreur'}`, 'error');
     }
   };
 
@@ -733,19 +734,19 @@ export default function CorrectionsView({
       )}
 
       {/* ── Header stats ──────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 attendance-metrics">
         {[
-          { label: 'Absences à traiter', value: absences.length, icon: <AlertCircle size={18} />, color: 'from-red-500 to-red-600', bg: 'bg-red-50 dark:bg-red-900/20', text: 'text-red-600 dark:text-red-400' },
-          ...(overtimeEnabled ? [{ label: 'HS en attente', value: pendingOvertimes.filter(o => o.overtimeStatus === 'PENDING_APPROVAL').length, icon: <Clock size={18} />, color: 'from-amber-500 to-amber-500', bg: 'bg-amber-50 dark:bg-amber-900/20', text: 'text-amber-600 dark:text-amber-400' },
-          { label: 'Réponse employé', value: pendingOvertimes.filter(o => o.overtimeStatus === 'PENDING_EMPLOYEE').length, icon: <HelpCircle size={18} />, color: 'from-amber-500 to-emerald-600', bg: 'bg-amber-50 dark:bg-amber-900/20', text: 'text-amber-600 dark:text-amber-400' }] : []),
-          { label: 'Corrections totales', value: historyLogs.length, icon: <History size={18} />, color: 'from-emerald-500 to-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-900/20', text: 'text-emerald-600 dark:text-emerald-400' },
+          { label: 'Absences à traiter', value: absences.length, icon: <AlertCircle size={18} />, color: ' ', bg: 'bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] ', text: 'text-[var(--danger-text)] ' },
+          ...(overtimeEnabled ? [{ label: 'HS en attente', value: pendingOvertimes.filter(o => o.overtimeStatus === 'PENDING_APPROVAL').length, icon: <Clock size={18} />, color: ' ', bg: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] ', text: 'text-[var(--warning-text)] ' },
+          { label: 'Réponse employé', value: pendingOvertimes.filter(o => o.overtimeStatus === 'PENDING_EMPLOYEE').length, icon: <HelpCircle size={18} />, color: ' ', bg: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] ', text: 'text-[var(--warning-text)] ' }] : []),
+          { label: 'Corrections totales', value: historyLogs.length, icon: <History size={18} />, color: ' ', bg: 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] ', text: 'text-[var(--success-text)] ' },
         ].map((stat) => (
           <div key={stat.label} className={`${stat.bg} border border-current/10 rounded-2xl p-4`}>
             <div className={`${stat.text} flex items-center gap-2 mb-2`}>
               {stat.icon}
-              <span className="text-xs font-bold uppercase tracking-wide opacity-80">{stat.label}</span>
+              <span className="text-xs font-semibold  tracking-wide opacity-80">{stat.label}</span>
             </div>
-            <p className={`text-3xl font-black ${stat.text}`}>{stat.value}</p>
+            <p className={`text-3xl font-semibold ${stat.text}`}>{stat.value}</p>
           </div>
         ))}
       </div>
@@ -756,7 +757,7 @@ export default function CorrectionsView({
         <div className="flex bg-[var(--surface-2)] rounded-xl p-1 gap-1">
           <button
             onClick={() => setActiveTab('absences')}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
               activeTab === 'absences'
                 ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm'
                 : 'text-[var(--text-muted)] hover:text-[var(--text)]'
@@ -765,12 +766,12 @@ export default function CorrectionsView({
             <AlertCircle size={14} />
             Absences
             {absences.length > 0 && (
-              <span className="px-1.5 py-0.5 bg-red-500 text-white rounded-full text-xs">{absences.length}</span>
+              <span className="px-1.5 py-0.5 bg-[var(--danger)] text-[var(--on-brand)] rounded-full text-xs">{absences.length}</span>
             )}
           </button>
           <button
             onClick={() => setActiveTab('pointages')}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
               activeTab === 'pointages'
                 ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm'
                 : 'text-[var(--text-muted)] hover:text-[var(--text)]'
@@ -782,7 +783,7 @@ export default function CorrectionsView({
           {isAdmin && overtimeEnabled && (
             <button
               onClick={() => setActiveTab('overtime')}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
                 activeTab === 'overtime'
                   ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm'
                   : 'text-[var(--text-muted)] hover:text-[var(--text)]'
@@ -791,7 +792,7 @@ export default function CorrectionsView({
               <Zap size={14} />
               Heures sup
               {pendingOvertimes.length > 0 && (
-                <span className="px-1.5 py-0.5 bg-amber-500 text-white rounded-full text-xs">{pendingOvertimes.length}</span>
+                <span className="px-1.5 py-0.5 bg-[var(--mustard)] text-[var(--on-brand)] rounded-full text-xs">{pendingOvertimes.length}</span>
               )}
             </button>
           )}
@@ -805,17 +806,17 @@ export default function CorrectionsView({
             placeholder="Rechercher un employé..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 bg-[var(--surface)] border border-[var(--border)] rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all"
+            className="w-full pl-9 pr-4 py-2.5 bg-[var(--surface)] border border-[var(--border)] rounded-xl text-sm focus:ring-2 focus:ring-[var(--focus)] focus:border-[var(--border)] transition-colors"
           />
         </div>
 
         {/* Historique */}
         <button
           onClick={() => setShowHistory(!showHistory)}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
             showHistory
-              ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30'
-              : 'bg-[var(--surface)] border border-[var(--border)] text-[var(--text-muted)] hover:border-emerald-400'
+              ? 'bg-[var(--brand)] text-[var(--on-brand)] shadow-lg '
+              : 'bg-[var(--surface)] border border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--border)]'
           }`}
         >
           <History size={16} />
@@ -825,7 +826,7 @@ export default function CorrectionsView({
         {/* Refresh */}
         <button
           onClick={() => { onRefresh(); fetchPendingOvertimes(); }}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-[var(--surface)] border border-[var(--border)] text-[var(--text-muted)] hover:border-emerald-400 transition-all"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-[var(--surface)] border border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--border)] transition-colors"
         >
           <RefreshCw size={16} />
           <span className="hidden sm:inline">Actualiser</span>
@@ -836,11 +837,11 @@ export default function CorrectionsView({
       {showHistory && (
         <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
           <div className="px-5 py-4 border-b border-[var(--border)] flex items-center justify-between">
-            <h4 className="font-bold text-[var(--text)] flex items-center gap-2">
-              <History size={18} className="text-emerald-500" />
+            <h4 className="font-semibold text-[var(--text)] flex items-center gap-2">
+              <History size={18} className="text-[var(--success-text)]" />
               Historique des modifications
             </h4>
-            {loadingHistory && <Loader2 size={16} className="animate-spin text-emerald-500" />}
+            {loadingHistory && <Loader2 size={16} className="animate-spin text-[var(--success-text)]" />}
           </div>
 
           <div className="divide-y divide-[var(--border)] max-h-80 overflow-y-auto">
@@ -852,16 +853,16 @@ export default function CorrectionsView({
               historyLogs.map((log: any, idx: number) => (
                 <div key={idx} className="px-5 py-4 hover:bg-[var(--surface-2)] transition-colors">
                   <div className="flex items-start gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-xs font-black text-emerald-600 flex-shrink-0">
+                    <div className="w-9 h-9 rounded-xl bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  flex items-center justify-center text-xs font-semibold text-[var(--success-text)] flex-shrink-0">
                       {log.modifiedBy?.firstName?.[0]}{log.modifiedBy?.lastName?.[0]}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2 mb-1">
-                        <span className="font-bold text-sm text-[var(--text)]">
+                        <span className="font-semibold text-sm text-[var(--text)]">
                           {log.employee?.firstName} {log.employee?.lastName}
                         </span>
                         <ArrowRight size={12} className="text-[var(--text-muted)]" />
-                        <span className="font-bold text-sm text-emerald-600 dark:text-emerald-400">{log.newValue}</span>
+                        <span className="font-semibold text-sm text-[var(--success-text)] ">{log.newValue}</span>
                         <span className="ml-auto text-xs text-[var(--text-muted)]">
                           {new Date(log.createdAt).toLocaleString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                         </span>
@@ -882,14 +883,14 @@ export default function CorrectionsView({
       {/* ── Contenu principal ─────────────────────────────────────────────── */}
       {activeTab === 'absences' && (
         <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          <div className="overflow-x-auto attendance-table-scroll" tabIndex={0} role="region" aria-label="Tableau défilant horizontalement">
+            <table className="w-full attendance-table">
               <thead className="bg-[var(--surface-2)]/80 border-b border-[var(--border)]">
                 <tr>
-                  <th className="px-5 py-3.5 text-left text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Employé</th>
-                  <th className="px-5 py-3.5 text-left text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Date</th>
-                  <th className="px-5 py-3.5 text-left text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider hidden sm:table-cell">Statut</th>
-                  <th className="px-5 py-3.5 text-right text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Action</th>
+                  <th className="px-5 py-3.5 text-left text-xs font-semibold text-[var(--text-muted)]  ">Employé</th>
+                  <th className="px-5 py-3.5 text-left text-xs font-semibold text-[var(--text-muted)]  ">Date</th>
+                  <th className="px-5 py-3.5 text-left text-xs font-semibold text-[var(--text-muted)]   hidden sm:table-cell">Statut</th>
+                  <th className="px-5 py-3.5 text-right text-xs font-semibold text-[var(--text-muted)]  ">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--border)]">
@@ -897,11 +898,11 @@ export default function CorrectionsView({
                   <tr>
                     <td colSpan={4} className="px-5 py-16 text-center">
                       <div className="flex flex-col items-center gap-3">
-                        <div className="p-5 bg-emerald-50 dark:bg-emerald-900/20 rounded-full">
-                          <CheckCircle size={36} className="text-emerald-500" />
+                        <div className="p-5 bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  rounded-full">
+                          <CheckCircle size={36} className="text-[var(--success-text)]" />
                         </div>
-                        <p className="text-lg font-bold text-[var(--text)]">Aucune correction nécessaire</p>
-                        <p className="text-sm text-[var(--text-muted)]">Tous les pointages sont conformes 🎉</p>
+                        <p className="text-lg font-semibold text-[var(--text)]">Aucune correction nécessaire</p>
+                        <p className="text-sm text-[var(--text-muted)]">Tous les pointages sont conformes </p>
                       </div>
                     </td>
                   </tr>
@@ -913,12 +914,12 @@ export default function CorrectionsView({
                           {att.employee.photoUrl ? (
                             <img src={att.employee.photoUrl} alt="" className="w-10 h-10 rounded-xl object-cover" />
                           ) : (
-                            <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center text-sm font-black text-white">
+                            <div className="w-10 h-10 rounded-xl bg-[var(--brand)] flex items-center justify-center text-sm font-semibold text-[var(--on-brand)]">
                               {att.employee.firstName[0]}{att.employee.lastName[0]}
                             </div>
                           )}
                           <div>
-                            <p className="font-bold text-sm text-[var(--text)]">
+                            <p className="font-semibold text-sm text-[var(--text)]">
                               {att.employee.firstName} {att.employee.lastName}
                             </p>
                             <p className="text-xs text-[var(--text-muted)]">{att.employee.department?.name}</p>
@@ -927,7 +928,7 @@ export default function CorrectionsView({
                       </td>
                       <td className="px-5 py-4">
                         <div className="flex flex-col gap-0.5">
-                          <span className="text-sm font-bold text-[var(--text)]">
+                          <span className="text-sm font-semibold text-[var(--text)]">
                             {new Date(att.date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}
                           </span>
                           <span className="text-xs text-[var(--text-muted)]">
@@ -936,7 +937,7 @@ export default function CorrectionsView({
                         </div>
                       </td>
                       <td className="px-5 py-4 hidden sm:table-cell">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl text-xs font-bold">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  text-[var(--danger-text)]  rounded-xl text-xs font-semibold">
                           <XCircle size={12} /> Absent non justifié
                         </span>
                       </td>
@@ -944,7 +945,7 @@ export default function CorrectionsView({
                         <button
                           onClick={() => setEditingAtt(att)}
                           disabled={savingId === att.id}
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all hover:-translate-y-0.5 active:translate-y-0"
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--brand)] hover:bg-[var(--brand)] disabled:opacity-50 text-[var(--on-brand)] rounded-xl text-xs font-semibold transition-colors  active:translate-y-0"
                         >
                           {savingId === att.id ? <Loader2 size={13} className="animate-spin" /> : <Edit3 size={13} />}
                           Corriger
@@ -971,15 +972,15 @@ export default function CorrectionsView({
               Sortie manquante seulement
             </label>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
+          <div className="overflow-x-auto attendance-table-scroll" tabIndex={0} role="region" aria-label="Tableau défilant horizontalement">
+            <table className="w-full text-left attendance-table">
               <thead className="bg-[var(--surface-2)]">
                 <tr>
-                  <th className="px-5 py-3 text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Employé</th>
-                  <th className="px-5 py-3 text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Date</th>
-                  <th className="px-5 py-3 text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Entrée → Sortie</th>
-                  <th className="px-5 py-3 text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider hidden md:table-cell">Origine</th>
-                  <th className="px-5 py-3 text-right text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Actions</th>
+                  <th className="px-5 py-3 text-xs font-semibold text-[var(--text-muted)]  ">Employé</th>
+                  <th className="px-5 py-3 text-xs font-semibold text-[var(--text-muted)]  ">Date</th>
+                  <th className="px-5 py-3 text-xs font-semibold text-[var(--text-muted)]  ">Entrée → Sortie</th>
+                  <th className="px-5 py-3 text-xs font-semibold text-[var(--text-muted)]   hidden md:table-cell">Origine</th>
+                  <th className="px-5 py-3 text-right text-xs font-semibold text-[var(--text-muted)]  ">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--border)]">
@@ -996,7 +997,7 @@ export default function CorrectionsView({
                     <React.Fragment key={a.id}>
                       <tr className="hover:bg-[var(--surface-2)] transition-colors">
                         <td className="px-5 py-3.5">
-                          <p className="font-bold text-sm text-[var(--text)]">{a.employee?.firstName} {a.employee?.lastName}</p>
+                          <p className="font-semibold text-sm text-[var(--text)]">{a.employee?.firstName} {a.employee?.lastName}</p>
                           <p className="text-xs text-[var(--text-muted)]">{STATUS_LABEL[a.status] || a.status}</p>
                         </td>
                         <td className="px-5 py-3.5 text-sm text-[var(--text)] capitalize">
@@ -1004,7 +1005,7 @@ export default function CorrectionsView({
                         </td>
                         <td className="px-5 py-3.5 text-sm font-mono text-[var(--text)]">
                           {toHM(a.checkIn) || '—'} → {a.checkOut ? toHM(a.checkOut) : (
-                            <span className={`font-sans text-xs font-bold ${missingOut && day < today ? 'text-amber-600' : 'text-[var(--text-muted)]'}`}>
+                            <span className={`font-sans text-xs font-semibold ${missingOut && day < today ? 'text-[var(--warning-text)]' : 'text-[var(--text-muted)]'}`}>
                               {day < today ? 'sortie manquante' : 'en cours'}
                             </span>
                           )}
@@ -1012,14 +1013,14 @@ export default function CorrectionsView({
                         <td className="px-5 py-3.5 hidden md:table-cell">
                           <div className="flex flex-wrap items-center gap-1.5">
                             {method && <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[var(--surface-2)] text-[var(--text-muted)]">{PUNCH_METHOD_LABEL[method] || method}</span>}
-                            {modified && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600">Modifié</span>}
+                            {modified && <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)]">Modifié</span>}
                           </div>
                         </td>
                         <td className="px-5 py-3.5 text-right whitespace-nowrap">
-                          <button onClick={() => toggleTrace(a.id)} className="inline-flex items-center gap-1.5 px-3 py-2 mr-2 rounded-xl text-xs font-bold border border-[var(--border)] text-[var(--text-muted)] hover:border-emerald-400 transition-all" aria-expanded={expandedId === a.id}>
+                          <button onClick={() => toggleTrace(a.id)} className="inline-flex items-center gap-1.5 px-3 py-2 mr-2 rounded-xl text-xs font-semibold border border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--border)] transition-colors" aria-expanded={expandedId === a.id}>
                             <History size={13} /> Historique
                           </button>
-                          <button onClick={() => setEditingAtt(a)} disabled={savingId === a.id} className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all">
+                          <button onClick={() => setEditingAtt(a)} disabled={savingId === a.id} className="inline-flex items-center gap-1.5 px-4 py-2 bg-[var(--brand)] hover:bg-[var(--brand)] disabled:opacity-50 text-[var(--on-brand)] rounded-xl text-xs font-semibold transition-colors">
                             {savingId === a.id ? <Loader2 size={13} className="animate-spin" /> : <Edit3 size={13} />} Modifier
                           </button>
                         </td>
@@ -1030,7 +1031,7 @@ export default function CorrectionsView({
                             {trace === 'loading' || trace === undefined ? (
                               <p className="text-xs text-[var(--text-muted)] flex items-center gap-2"><Loader2 size={13} className="animate-spin" /> Chargement…</p>
                             ) : trace === 'error' ? (
-                              <p className="text-xs text-red-500">Impossible de charger l’historique.</p>
+                              <p className="text-xs text-[var(--danger-text)]">Impossible de charger l’historique.</p>
                             ) : trace.length === 0 ? (
                               <p className="text-xs text-[var(--text-muted)]">Aucune modification : ce pointage est tel qu’enregistré à l’origine ({method ? PUNCH_METHOD_LABEL[method] || method : 'pointage'}).</p>
                             ) : (
@@ -1040,7 +1041,7 @@ export default function CorrectionsView({
                                   const who = log.modifiedBy ? `${log.modifiedBy.firstName} ${log.modifiedBy.lastName}` : 'Utilisateur inconnu';
                                   const role = ROLE_LABEL[log.actorRole || log.modifiedBy?.role] || '';
                                   return (
-                                    <li key={log.id} className="text-xs border-l-2 border-emerald-500 pl-3">
+                                    <li key={log.id} className="text-xs border-l-2 border-[var(--border)] pl-3">
                                       <p className="text-[var(--text)]">
                                         <b>{who}</b>{role && <span className="text-[var(--text-muted)]"> ({role})</span>} ·{' '}
                                         <span className="font-semibold">{ACTION_LABEL[log.action] || 'Modification'}</span> ·{' '}
@@ -1074,7 +1075,7 @@ export default function CorrectionsView({
           </div>
           {allPointages.length > visibleCount && (
             <div className="p-4 text-center border-t border-[var(--border)]">
-              <button onClick={() => setVisibleCount((n) => n + 60)} className="px-4 py-2 rounded-xl text-xs font-bold border border-[var(--border)] text-[var(--text)] hover:border-emerald-400 transition-all">
+              <button onClick={() => setVisibleCount((n) => n + 60)} className="px-4 py-2 rounded-xl text-xs font-semibold border border-[var(--border)] text-[var(--text)] hover:border-[var(--border)] transition-colors">
                 Afficher plus ({allPointages.length - visibleCount} restants)
               </button>
             </div>
@@ -1088,25 +1089,25 @@ export default function CorrectionsView({
           {filteredOvertimes.length === 0 ? (
             <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-16 text-center">
               <div className="flex flex-col items-center gap-3">
-                <div className="p-5 bg-emerald-50 dark:bg-emerald-900/20 rounded-full">
-                  <CheckCircle size={36} className="text-emerald-500" />
+                <div className="p-5 bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  rounded-full">
+                  <CheckCircle size={36} className="text-[var(--success-text)]" />
                 </div>
-                <p className="text-lg font-bold text-[var(--text)]">Aucune demande en attente</p>
+                <p className="text-lg font-semibold text-[var(--text)]">Aucune demande en attente</p>
                 <p className="text-sm text-[var(--text-muted)]">Toutes les heures supplémentaires sont traitées</p>
               </div>
             </div>
           ) : (
             filteredOvertimes.map((item) => (
               <div key={item.id}
-                className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 hover:shadow-lg hover:border-amber-300 dark:hover:border-amber-700 transition-all"
+                className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 hover:shadow-lg hover:border-[var(--border)] dark:hover:border-[var(--border)] transition-colors"
               >
                 <div className="flex items-center justify-between gap-4 flex-wrap">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-amber-500 flex items-center justify-center text-white font-black text-base">
+                    <div className="w-12 h-12 rounded-xl bg-[var(--mustard)] flex items-center justify-center text-[var(--on-brand)] font-semibold text-base">
                       {item.employee.firstName[0]}{item.employee.lastName[0]}
                     </div>
                     <div>
-                      <p className="font-bold text-[var(--text)]">
+                      <p className="font-semibold text-[var(--text)]">
                         {item.employee.firstName} {item.employee.lastName}
                       </p>
                       <p className="text-xs text-[var(--text-muted)]">{item.employee.department?.name}</p>
@@ -1114,9 +1115,9 @@ export default function CorrectionsView({
                   </div>
 
                   <div className="flex items-center gap-3 flex-wrap">
-                    <div className="text-center px-3 py-1.5 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
-                      <p className="text-xl font-black text-amber-600 dark:text-amber-400">{item.pendingOvertimeHours.toFixed(1)}h</p>
-                      <p className="text-xs text-amber-700 dark:text-amber-300">heures sup</p>
+                    <div className="text-center px-3 py-1.5 bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  rounded-xl">
+                      <p className="text-xl font-semibold text-[var(--warning-text)] ">{item.pendingOvertimeHours.toFixed(1)}h</p>
+                      <p className="text-xs text-[var(--warning-text)] ">heures sup</p>
                     </div>
 
                     <div className="text-center">
@@ -1129,7 +1130,7 @@ export default function CorrectionsView({
                     {item.overtimeStatus === 'PENDING_APPROVAL' && (
                       <button
                         onClick={() => setSelectedOvertime(item)}
-                        className="flex items-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-sm font-bold transition-all hover:-translate-y-0.5"
+                        className="flex items-center gap-2 px-4 py-2.5 bg-[var(--mustard)] hover:bg-[var(--mustard)] text-[var(--on-brand)] rounded-xl text-sm font-semibold transition-colors "
                       >
                         <Eye size={15} />
                         Traiter
@@ -1144,17 +1145,17 @@ export default function CorrectionsView({
       )}
 
       {/* ── Légende ───────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 attendance-metrics">
         {[
-          { icon: <Check size={16} className="text-white" />, bg: 'bg-emerald-500', title: 'Oubli pointage', desc: 'Présent → Payé', tag: 'PRESENT' },
-          { icon: <Shield size={16} className="text-white" />, bg: 'bg-amber-500', title: 'Justifié', desc: 'Maladie, urgence → Payé', tag: 'ABSENT_PAID' },
-          { icon: <MapPin size={16} className="text-white" />, bg: 'bg-emerald-500', title: 'Télétravail', desc: 'Distance → Payé', tag: 'REMOTE' },
-          { icon: <XCircle size={16} className="text-white" />, bg: 'bg-red-500', title: 'Non justifié', desc: 'Sans correction → Déduit', tag: 'ABSENT_UNPAID' },
+          { icon: <Check size={16} className="bg-[var(--brand)] text-[var(--on-brand)]" />, bg: 'bg-[var(--brand)]', title: 'Oubli pointage', desc: 'Présent → Payé', tag: 'PRESENT' },
+          { icon: <Shield size={16} className="bg-[var(--brand)] text-[var(--on-brand)]" />, bg: 'bg-[var(--mustard)]', title: 'Justifié', desc: 'Maladie, urgence → Payé', tag: 'ABSENT_PAID' },
+          { icon: <MapPin size={16} className="bg-[var(--brand)] text-[var(--on-brand)]" />, bg: 'bg-[var(--brand)]', title: 'Télétravail', desc: 'Distance → Payé', tag: 'REMOTE' },
+          { icon: <XCircle size={16} className="bg-[var(--brand)] text-[var(--on-brand)]" />, bg: 'bg-[var(--danger)]', title: 'Non justifié', desc: 'Sans correction → Déduit', tag: 'ABSENT_UNPAID' },
         ].map((item) => (
-          <div key={item.tag} className="flex items-start gap-3 p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)] hover:shadow-md transition-all">
+          <div key={item.tag} className="flex items-start gap-3 p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)] hover:shadow-md transition-colors">
             <div className={`p-2 ${item.bg} rounded-xl flex-shrink-0`}>{item.icon}</div>
             <div>
-              <p className="text-sm font-bold text-[var(--text)]">{item.title}</p>
+              <p className="text-sm font-semibold text-[var(--text)]">{item.title}</p>
               <p className="text-xs text-[var(--text-muted)] mt-0.5">{item.desc}</p>
             </div>
           </div>

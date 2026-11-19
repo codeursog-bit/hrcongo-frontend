@@ -29,17 +29,17 @@ export function PayrollMonthSelector({
     <div className="relative z-20">
       <button 
         onClick={onToggle}
-        className="flex items-center gap-3 bg-[var(--surface)] p-2 pr-4 rounded-2xl shadow-lg border border-[var(--border)] hover:border-emerald-500 transition-all group"
+        className="flex items-center gap-3 bg-[var(--surface)] p-2 pr-4 rounded-2xl shadow-lg border border-[var(--border)] hover:border-[var(--border)] transition-colors group"
       >
-        <div className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 p-2 rounded-xl">
+        <div className="bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  text-[var(--success-text)] p-2 rounded-xl">
           <Calendar size={20} />
         </div>
         <div className="text-left">
-          <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Période</p>
-          <div className="flex items-center gap-2 font-bold text-[var(--text)]">
+          <p className="text-xs text-[var(--text-secondary)] font-semibold uppercase tracking-wider">Période</p>
+          <div className="flex items-center gap-2 font-semibold text-[var(--text)]">
             <span className="capitalize">{selectedMonth}</span>
-            <span className="text-emerald-600 dark:text-emerald-400">{selectedYear}</span>
-            <ChevronDown size={14} className={`text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+            <span className="text-[var(--success-text)] ">{selectedYear}</span>
+            <ChevronDown size={14} className={`text-[var(--text-secondary)] transition-transform ${isOpen ? 'rotate-180' : ''}`} />
           </div>
         </div>
       </button>
@@ -58,7 +58,7 @@ export function PayrollMonthSelector({
                 <button 
                   key={y}
                   onClick={() => onYearChange(y)}
-                  className={`flex-1 py-1.5 rounded-lg text-sm font-bold transition-all ${selectedYear === y ? 'bg-[var(--surface)] shadow text-emerald-600' : 'text-[var(--text-muted)] hover:text-[var(--text)]'}`}
+                  className={`flex-1 py-1.5 rounded-lg text-sm font-semibold transition-colors ${selectedYear === y ? 'bg-[var(--surface)] shadow text-[var(--success-text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'}`}
                 >
                   {y}
                 </button>
@@ -70,7 +70,7 @@ export function PayrollMonthSelector({
                 <button 
                   key={m}
                   onClick={() => onMonthChange(m)}
-                  className={`py-2 rounded-lg text-xs font-bold transition-all ${selectedMonth === m ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'}`}
+                  className={`py-2 rounded-lg text-xs font-semibold transition-colors ${selectedMonth === m ? 'bg-[var(--brand-soft)] text-[var(--action)] shadow-lg ' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'}`}
                 >
                   {m.slice(0, 3)}.
                 </button>

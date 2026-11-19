@@ -6,7 +6,17 @@
 // se donne directement dessus (ApprovalPanel reçoit le companyId).
 
 import AvisInbox from '@/components/approvals/AvisInbox';
+import { PortfolioPageFrame as ModulePageFrame } from '@/components/portfolio/PortfolioPageFrame';
 
-export default function PortfolioAvisPage() {
+function PortfolioAvisPage() {
   return <AvisInbox />;
+}
+
+
+export default function PortfolioAvisPageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <PortfolioAvisPage />
+    </ModulePageFrame>
+  );
 }

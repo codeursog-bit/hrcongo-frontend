@@ -1,9 +1,11 @@
 'use client';
 
+import { AttendanceLoadError } from '@/components/attendance/AttendanceLoadError';
+import { AttendanceModuleFrame } from '@/components/attendance/AttendanceModuleFrame';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { 
-  Fingerprint, FileText, Activity, BarChart3, 
+import {
+  Fingerprint, FileText, Activity, BarChart3,
   CalendarIcon, Edit3, User, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { api } from '@/services/api';
@@ -19,7 +21,8 @@ import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 type TabType = 'monthly' | 'daily' | 'weekly' | 'corrections' | 'myview';
 
-export default function AttendancePage() {
+function AttendancePageContent() {
+  const [uiLoadError,setUiLoadError]=useState('');
   const { bp } = useBasePath();
   const [activeTab, setActiveTab] = useState<TabType>('daily');
   const [date, setDate] = useState(new Date());
@@ -27,7 +30,7 @@ export default function AttendancePage() {
   const [data, setData] = useState<any>(null);
   const [myAttendances, setMyAttendances] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   const [userRole, setUserRole] = useState<string>('');
   const [userDepartment, setUserDepartment] = useState<string>('');
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -46,7 +49,7 @@ export default function AttendancePage() {
 
         if (user.role === 'EMPLOYEE' && !user.canRecordAttendanceForAll) {
           setActiveTab('myview');
-          
+
           try {
             const empProfile: any = await api.get('/employees/me');
             setEmployeeProfile(empProfile);
@@ -65,7 +68,7 @@ export default function AttendancePage() {
         if (res.employee?.department?.name) {
           setUserDepartment(res.employee.department.name);
         }
-        
+
         if (res.role === 'EMPLOYEE' && !res.canRecordAttendanceForAll) {
           setActiveTab('myview');
         }
@@ -73,13 +76,13 @@ export default function AttendancePage() {
         console.error('Erreur chargement utilisateur:', e);
       }
     };
-    
+
     fetchUserInfo();
   }, []);
 
   useEffect(() => {
     if (!currentUser) return;
-    
+
     if (activeTab === 'monthly') fetchMonthlyData();
     else if (activeTab === 'corrections') fetchCorrectionsData();
     else if (activeTab === 'myview') fetchMyAttendances();
@@ -91,8 +94,10 @@ export default function AttendancePage() {
     try {
       const res: any = await api.get(`/attendance?month=${date.getMonth() + 1}&year=${date.getFullYear()}`);
       setData(res);
+      setUiLoadError('');
     } catch (e) {
       console.error('Erreur chargement données mensuelles:', e);
+      setUiLoadError('Impossible de charger les pr\u00e9sences. R\u00e9essayez.');
     } finally {
       setIsLoading(false);
     }
@@ -116,10 +121,10 @@ export default function AttendancePage() {
       setIsLoading(false);
       return;
     }
-    
+
     setIsLoading(true);
     console.log(`🔍 Chargement pointages pour ${employeeProfile.id} - ${date.getMonth() + 1}/${date.getFullYear()}`);
-    
+
     try {
       const res: any = await api.get(`/attendance/employee/${employeeProfile.id}?month=${date.getMonth() + 1}&year=${date.getFullYear()}`);
       console.log('✅ Pointages reçus:', res);
@@ -143,29 +148,29 @@ export default function AttendancePage() {
       <div className="min-h-screen pb-20 space-y-6">
         <PresenceSubNav userRole={userRole} />
 
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div>
-            <h1 className="text-3xl font-bold text-[var(--text)]">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 attendance-page-header">
+          <div className="attendance-page-heading">
+            <h1 className="text-3xl font-semibold text-[var(--text)]">
               Mes Présences
             </h1>
             <p className="text-[var(--text-muted)] text-sm">
               Votre calendrier de travail détaillé
             </p>
           </div>
-          
+
           <div className="flex items-center gap-3">
-            <Link href={bp("/presences/pointage")} className="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-3 rounded-xl font-bold flex items-center gap-2 ">
+            <Link href={bp("/presences/pointage")} className="bg-[var(--brand)] hover:bg-[var(--brand)] text-[var(--on-brand)] px-5 py-3 rounded-xl font-semibold flex items-center gap-2 ">
               <Fingerprint size={20} /> Pointeur
             </Link>
-            
+
             <div className="bg-[var(--surface)] p-1.5 rounded-xl border border-[var(--border)] flex items-center">
-              <button onClick={() => setDate(new Date(date.getFullYear(), date.getMonth() - 1))} className="p-2 hover:bg-[var(--surface-2)] rounded-lg">
+              <button onClick={() => setDate(new Date(date.getFullYear(), date.getMonth() - 1))} className="p-2 hover:bg-[var(--surface-2)] rounded-lg" aria-label="Période précédente">
                 <ChevronLeft size={18} />
               </button>
-              <span className="w-32 text-center font-bold text-sm capitalize text-[var(--text)]">
+              <span className="w-32 text-center font-semibold text-sm capitalize text-[var(--text)]">
                 {date.toLocaleString('fr-FR', { month: 'long', year: 'numeric' })}
               </span>
-              <button onClick={() => setDate(new Date(date.getFullYear(), date.getMonth() + 1))} className="p-2 hover:bg-[var(--surface-2)] rounded-lg">
+              <button onClick={() => setDate(new Date(date.getFullYear(), date.getMonth() + 1))} className="p-2 hover:bg-[var(--surface-2)] rounded-lg" aria-label="Période suivante">
                 <ChevronRight size={18} />
               </button>
             </div>
@@ -186,55 +191,49 @@ export default function AttendancePage() {
   return (
     <div className="min-h-screen pb-20 space-y-6">
       <PresenceSubNav userRole={userRole} canRecordAttendanceForAll={hasAttendanceAllPermission} />
+      <AttendanceLoadError message={uiLoadError} retry={fetchMonthlyData} />
 
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-        <div>
-          <h1 className="text-3xl font-bold text-[var(--text)]">
-            Présences Équipe
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 attendance-page-header">
+        <div className="attendance-page-heading">
+          <h1 className="text-3xl font-semibold text-[var(--text)]">
+            Présences de l’équipe
           </h1>
           <p className="text-[var(--text-muted)] text-sm">
-            Gestion complète des temps et activités
+            Consultez les pointages, repérez les écarts et préparez les corrections.
           </p>
         </div>
-        
+
         <div className="flex items-center gap-3">
-          <Link href={bp("/presences/resume")} className="bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] px-5 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-[var(--surface-2)]">
-            <FileText size={20} /> Rapports
-          </Link>
-          
-          <Link href={bp("/presences/pointage")} className="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-3 rounded-xl font-bold flex items-center gap-2 ">
+
+          <Link href={bp("/presences/pointage")} className="bg-[var(--brand)] hover:bg-[var(--brand)] text-[var(--on-brand)] px-5 py-3 rounded-xl font-semibold flex items-center gap-2 ">
             <Fingerprint size={20} /> Ma Pointeuse
           </Link>
 
-          <Link href={bp("/presences/absences")} className="bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] px-5 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-[var(--surface-2)]">
-            <FileText size={20} /> Absences
-          </Link>
-          
-          <div className="bg-[var(--surface)] p-1.5 rounded-xl border border-[var(--border)] flex items-center">
-            <button onClick={() => setDate(new Date(date.getFullYear(), date.getMonth() - 1))} className="p-2 hover:bg-[var(--surface-2)] rounded-lg">
+          {(activeTab === 'monthly' || activeTab === 'corrections') && (<div className="bg-[var(--surface)] p-1.5 rounded-xl border border-[var(--border)] flex items-center">
+            <button onClick={() => setDate(new Date(date.getFullYear(), date.getMonth() - 1))} className="p-2 hover:bg-[var(--surface-2)] rounded-lg" aria-label="Période précédente">
               <ChevronLeft size={18} />
             </button>
-            <span className="w-32 text-center font-bold text-sm capitalize text-[var(--text)]">
+            <span className="w-32 text-center font-semibold text-sm capitalize text-[var(--text)]">
               {date.toLocaleString('fr-FR', { month: 'long', year: 'numeric' })}
             </span>
-            <button onClick={() => setDate(new Date(date.getFullYear(), date.getMonth() + 1))} className="p-2 hover:bg-[var(--surface-2)] rounded-lg">
+            <button onClick={() => setDate(new Date(date.getFullYear(), date.getMonth() + 1))} className="p-2 hover:bg-[var(--surface-2)] rounded-lg" aria-label="Période suivante">
               <ChevronRight size={18} />
             </button>
-          </div>
+          </div>)}
         </div>
       </div>
 
-      <div className="bg-[var(--surface)] rounded-2xl p-2 border border-[var(--border)] flex gap-2 overflow-x-auto">
-        <button onClick={() => setActiveTab('daily')} className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'daily' ? 'bg-emerald-500 text-white ' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'}`}>
+      <div className="attendance-view-switch" role="group" aria-label="Vue des présences">
+        <button onClick={() => setActiveTab('daily')} className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-colors whitespace-nowrap ${activeTab === 'daily' ? 'bg-[var(--brand)] text-[var(--on-brand)] ' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'}`}>
           <Activity size={20} /> Journalière
         </button>
-        <button onClick={() => setActiveTab('weekly')} className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'weekly' ? 'bg-emerald-500 text-white ' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'}`}>
+        <button onClick={() => setActiveTab('weekly')} className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-colors whitespace-nowrap ${activeTab === 'weekly' ? 'bg-[var(--brand)] text-[var(--on-brand)] ' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'}`}>
           <BarChart3 size={20} /> Hebdomadaire
         </button>
-        <button onClick={() => setActiveTab('monthly')} className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'monthly' ? 'bg-emerald-500 text-white ' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'}`}>
+        <button onClick={() => setActiveTab('monthly')} className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-colors whitespace-nowrap ${activeTab === 'monthly' ? 'bg-[var(--brand)] text-[var(--on-brand)] ' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'}`}>
           <CalendarIcon size={20} /> Mensuelle
         </button>
-        <button onClick={() => setActiveTab('corrections')} className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'corrections' ? 'bg-emerald-500 text-white ' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'}`}>
+        <button onClick={() => setActiveTab('corrections')} className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-colors whitespace-nowrap ${activeTab === 'corrections' ? 'bg-[var(--brand)] text-[var(--on-brand)] ' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'}`}>
           <Edit3 size={20} /> Corrections
         </button>
       </div>
@@ -246,7 +245,7 @@ export default function AttendancePage() {
       ) : (
         <>
           {activeTab === 'daily' && (
-            <DailyView 
+            <DailyView
               selectedDate={selectedDate}
               setSelectedDate={setSelectedDate}
               userRole={userRole}
@@ -256,7 +255,7 @@ export default function AttendancePage() {
           )}
 
           {activeTab === 'weekly' && (
-            <WeeklyView 
+            <WeeklyView
               userRole={userRole}
               userDepartment={userDepartment}
               date={date}
@@ -265,7 +264,7 @@ export default function AttendancePage() {
           )}
 
           {activeTab === 'monthly' && data && (
-            <MonthlyView 
+            <MonthlyView
               data={data}
               date={date}
               setDate={setDate}
@@ -276,7 +275,7 @@ export default function AttendancePage() {
           )}
 
           {activeTab === 'corrections' && data && (
-            <CorrectionsView 
+            <CorrectionsView
               data={data}
               userRole={userRole}
               userDepartment={userDepartment}
@@ -288,4 +287,8 @@ export default function AttendancePage() {
       )}
     </div>
   );
+}
+
+export default function AttendancePage() {
+  return <AttendanceModuleFrame kind="list"><AttendancePageContent /></AttendanceModuleFrame>;
 }

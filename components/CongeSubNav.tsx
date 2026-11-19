@@ -31,6 +31,7 @@ export default function CongeSubNav({ userRole }: CongeSubNavProps) {
   const isHR = HR_ROLES.includes(userRole);
 
   const links: NavLinkDef[] = [
+    { href: '/conges/programme', label: 'Planification des départs', icon: CalendarRange, group: 'pilot' },
     ...(canManage ? [
       { href: '/conges', label: 'Vue d\u2019ensemble', icon: LayoutGrid, group: 'pilot' as const },
       { href: '/conges/planning', label: 'Suivi de congé', icon: Plane, group: 'pilot' as const },
@@ -42,7 +43,6 @@ export default function CongeSubNav({ userRole }: CongeSubNavProps) {
     ...(isHR ? [{ href: '/conges/provision', label: 'Provision', icon: HandCoins, group: 'analysis' as const }] : []),
     { href: '/conges/nouveau', label: 'Nouvelle demande', icon: Plus, group: 'action' },
     { href: '/conges/mon-espace', label: 'Mon espace', icon: UserCircle, group: 'action' },
-    { href: '/conges/programme', label: 'Programme des départs', icon: CalendarRange, group: 'action' },
   ];
 
   return <RequestModuleNav links={links} accent="emerald" />;

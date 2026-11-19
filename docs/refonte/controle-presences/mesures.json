@@ -1,0 +1,1421 @@
+{
+  "date": "2026-11-18",
+  "files": {
+    "app/(dashboard)/presences/absences/historique/page.tsx": {
+      "api": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "effects": {
+        "before": "697c95ba82d60983b1ab3a51d6b04dcedd934ca5bce0516ec374ecfbeab83977",
+        "after": "697c95ba82d60983b1ab3a51d6b04dcedd934ca5bce0516ec374ecfbeab83977"
+      },
+      "states": {
+        "before": "d6f86b6f5950622a431a59ae4d76965ccfbacc33cf4bac427981ebd42301c9a7",
+        "after": "d6f86b6f5950622a431a59ae4d76965ccfbacc33cf4bac427981ebd42301c9a7"
+      },
+      "variables": {
+        "before": "314c4f74bf150655734dc29cde913f8059f76468941a82320630b50e855d7301",
+        "after": "314c4f74bf150655734dc29cde913f8059f76468941a82320630b50e855d7301"
+      },
+      "conditions": {
+        "before": "db5bda0c50d94c1eff85bf6c03e67086aff88cc8803307d761dcf294ef37fd3e",
+        "after": "db5bda0c50d94c1eff85bf6c03e67086aff88cc8803307d761dcf294ef37fd3e"
+      },
+      "constraints": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/presences/absences/mon-espace/page.tsx": {
+      "api": {
+        "before": "c2d969ebec26e1a6072af4d97e08adb3010fa3c384ac0759d59a5f67dcd68f8b",
+        "after": "c2d969ebec26e1a6072af4d97e08adb3010fa3c384ac0759d59a5f67dcd68f8b"
+      },
+      "effects": {
+        "before": "c71ac8a948b92ceadf5755278c78b1209f7ca19493f2c293a4fa58b57f1bd311",
+        "after": "c71ac8a948b92ceadf5755278c78b1209f7ca19493f2c293a4fa58b57f1bd311"
+      },
+      "states": {
+        "before": "80441721d0a663f90b210678799c6d926690d958d10b180d4028dca7103d54d1",
+        "after": "80441721d0a663f90b210678799c6d926690d958d10b180d4028dca7103d54d1"
+      },
+      "variables": {
+        "before": "1e969dae267a8d548dd2fc09d4a12815a47e84afd291cc4728e87735eef3882c",
+        "after": "1e969dae267a8d548dd2fc09d4a12815a47e84afd291cc4728e87735eef3882c"
+      },
+      "conditions": {
+        "before": "509a6677901e1b3c8ac0b0cf3d674333a4f4e3e6d3b1e156e8e72238b57499ec",
+        "after": "509a6677901e1b3c8ac0b0cf3d674333a4f4e3e6d3b1e156e8e72238b57499ec"
+      },
+      "constraints": {
+        "before": "a21d501b294794b132d37ac2df3cd0db77e6552e10b3f3a607ace2a0144212f6",
+        "after": "a21d501b294794b132d37ac2df3cd0db77e6552e10b3f3a607ace2a0144212f6"
+      },
+      "documents": {
+        "before": "6dfd372ef515175dec1b32272e709d30025aaca3a28d0f13d44bcc4e27fa2c6c",
+        "after": "6dfd372ef515175dec1b32272e709d30025aaca3a28d0f13d44bcc4e27fa2c6c"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/presences/absences/nouveau/page.tsx": {
+      "api": {
+        "before": "964806d61bc319526b71c6ffde8a8257f8b40c500ed2ff75171b08d27c87cda1",
+        "after": "964806d61bc319526b71c6ffde8a8257f8b40c500ed2ff75171b08d27c87cda1"
+      },
+      "effects": {
+        "before": "dd236d25de762309d4636499901d1cdc51292af1646febabdd5a713143bc9f9e",
+        "after": "dd236d25de762309d4636499901d1cdc51292af1646febabdd5a713143bc9f9e"
+      },
+      "states": {
+        "before": "279018470dfa5bb6a8017296dc2bf3480046b670ac107562f94ef36f0841ea85",
+        "after": "279018470dfa5bb6a8017296dc2bf3480046b670ac107562f94ef36f0841ea85"
+      },
+      "variables": {
+        "before": "ce943f3bc55673a524e0bfd19384242f29455b8d5c6a488e7b179b308e497b41",
+        "after": "ce943f3bc55673a524e0bfd19384242f29455b8d5c6a488e7b179b308e497b41"
+      },
+      "conditions": {
+        "before": "73ba330b4f8f1d91cbba68660cc2654ca7229e2154c8e582168dd35b6fb20b02",
+        "after": "73ba330b4f8f1d91cbba68660cc2654ca7229e2154c8e582168dd35b6fb20b02"
+      },
+      "constraints": {
+        "before": "7993c6c3cd29b50157984173aed376b1949579a26aca2132ce9f200a46e2e783",
+        "after": "7993c6c3cd29b50157984173aed376b1949579a26aca2132ce9f200a46e2e783"
+      },
+      "documents": {
+        "before": "e7181fdebbcb3bb450fcac4e80b8c646717baba26edfba62201aaa1bed8464df",
+        "after": "e7181fdebbcb3bb450fcac4e80b8c646717baba26edfba62201aaa1bed8464df"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/presences/absences/page.tsx": {
+      "api": {
+        "before": "aed4682445d708348c274fd0b31dbced635085dabc8b06a736075f838b51c4dc",
+        "after": "aed4682445d708348c274fd0b31dbced635085dabc8b06a736075f838b51c4dc"
+      },
+      "effects": {
+        "before": "b58b5c3c9ba416140866fd56c38a3e9e03181cb934fe7e556178c333d5efc17f",
+        "after": "b58b5c3c9ba416140866fd56c38a3e9e03181cb934fe7e556178c333d5efc17f"
+      },
+      "states": {
+        "before": "69c9345cf7dcaf495f8c972e677dff074a020bf0f4f328034ca60cceb7f66d1b",
+        "after": "69c9345cf7dcaf495f8c972e677dff074a020bf0f4f328034ca60cceb7f66d1b"
+      },
+      "variables": {
+        "before": "6e422c6b5ee0bbcbf42b61cca684859a8cdb994dfdedc89176e05c38025d677e",
+        "after": "6e422c6b5ee0bbcbf42b61cca684859a8cdb994dfdedc89176e05c38025d677e"
+      },
+      "conditions": {
+        "before": "3c1cdadf345d340f4218bd28802cc8553dbcd5ab17738c755cde6c6b7271bf40",
+        "after": "3c1cdadf345d340f4218bd28802cc8553dbcd5ab17738c755cde6c6b7271bf40"
+      },
+      "constraints": {
+        "before": "ef4a122e21cac3f9ad00462d672bb7a2d2c275ada11afa29f863297c0c9a2278",
+        "after": "ef4a122e21cac3f9ad00462d672bb7a2d2c275ada11afa29f863297c0c9a2278"
+      },
+      "documents": {
+        "before": "e202b0acde8b68e8decc9ea8af90b98ba5f4f70e57ca254d0db5011eb068af1e",
+        "after": "e202b0acde8b68e8decc9ea8af90b98ba5f4f70e57ca254d0db5011eb068af1e"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/presences/absences/rapport/page.tsx": {
+      "api": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "effects": {
+        "before": "697c95ba82d60983b1ab3a51d6b04dcedd934ca5bce0516ec374ecfbeab83977",
+        "after": "697c95ba82d60983b1ab3a51d6b04dcedd934ca5bce0516ec374ecfbeab83977"
+      },
+      "states": {
+        "before": "d6f86b6f5950622a431a59ae4d76965ccfbacc33cf4bac427981ebd42301c9a7",
+        "after": "d6f86b6f5950622a431a59ae4d76965ccfbacc33cf4bac427981ebd42301c9a7"
+      },
+      "variables": {
+        "before": "314c4f74bf150655734dc29cde913f8059f76468941a82320630b50e855d7301",
+        "after": "314c4f74bf150655734dc29cde913f8059f76468941a82320630b50e855d7301"
+      },
+      "conditions": {
+        "before": "db5bda0c50d94c1eff85bf6c03e67086aff88cc8803307d761dcf294ef37fd3e",
+        "after": "db5bda0c50d94c1eff85bf6c03e67086aff88cc8803307d761dcf294ef37fd3e"
+      },
+      "constraints": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/presences/absences/suivi/page.tsx": {
+      "api": {
+        "before": "0fd00ecb5847fd9e06330a58db3f9f847985c3a0a71666715a27c9d6c9ee7ae3",
+        "after": "0fd00ecb5847fd9e06330a58db3f9f847985c3a0a71666715a27c9d6c9ee7ae3"
+      },
+      "effects": {
+        "before": "4ca32b6d3243cc13e666947c8b5cda845a3b3d634ed3121229330156e35ad192",
+        "after": "4ca32b6d3243cc13e666947c8b5cda845a3b3d634ed3121229330156e35ad192"
+      },
+      "states": {
+        "before": "fa02154fcbc0ec0b0486f26e0b29b88625bff4ff72f30e44746eca4b236d38be",
+        "after": "fa02154fcbc0ec0b0486f26e0b29b88625bff4ff72f30e44746eca4b236d38be"
+      },
+      "variables": {
+        "before": "3006fd9e440a5bf73a48f5125ffb56a688fdb624a8dc4eac9de0828509fa4091",
+        "after": "3006fd9e440a5bf73a48f5125ffb56a688fdb624a8dc4eac9de0828509fa4091"
+      },
+      "conditions": {
+        "before": "6a71c1588e0211e012f3389562b03009717627bb2372cdab1c2dc070bb24f145",
+        "after": "6a71c1588e0211e012f3389562b03009717627bb2372cdab1c2dc070bb24f145"
+      },
+      "constraints": {
+        "before": "7cdfb0509881077709256ea9ec0f1e1047fd215480c07a063acc959105d0f77d",
+        "after": "7cdfb0509881077709256ea9ec0f1e1047fd215480c07a063acc959105d0f77d"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/presences/CorrectionsView.tsx": {
+      "api": {
+        "before": "d593af5d5159eb5cfef8ac5e7eb4eb31f31c8f8a027fccb6937b4bbc91f6b187",
+        "after": "d593af5d5159eb5cfef8ac5e7eb4eb31f31c8f8a027fccb6937b4bbc91f6b187"
+      },
+      "effects": {
+        "before": "a9b1dbe18a5486e0bb8c6fa2d1784cc9cdfb4da76d134cf45ecc002366543613",
+        "after": "a9b1dbe18a5486e0bb8c6fa2d1784cc9cdfb4da76d134cf45ecc002366543613"
+      },
+      "states": {
+        "before": "8f1357535944fa676c18590bbb10b334cbdab2bfc3f1fea1150b9aa5d56a1356",
+        "after": "8f1357535944fa676c18590bbb10b334cbdab2bfc3f1fea1150b9aa5d56a1356"
+      },
+      "variables": {
+        "before": "ea79fbd56d3a6472167e23b65961cc4c8712a841469d82a4cc171203cbdcaef0",
+        "after": "ea79fbd56d3a6472167e23b65961cc4c8712a841469d82a4cc171203cbdcaef0"
+      },
+      "conditions": {
+        "before": "9b36e93e286fd916c2b250ab56a154b14ea38c2021927addad75a3aa6c71a906",
+        "after": "9b36e93e286fd916c2b250ab56a154b14ea38c2021927addad75a3aa6c71a906"
+      },
+      "constraints": {
+        "before": "a1e6e9668390099f3dbe319205d77a798fe97749c80a2c3ac4f2374904391418",
+        "after": "a1e6e9668390099f3dbe319205d77a798fe97749c80a2c3ac4f2374904391418"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/presences/DailyView.tsx": {
+      "api": {
+        "before": "02c4023697d310e4845510b92bfd2789d79fccce617aac019061204653a35b32",
+        "after": "02c4023697d310e4845510b92bfd2789d79fccce617aac019061204653a35b32"
+      },
+      "effects": {
+        "before": "baabb09292c1229cd001e587a8d28fad511189f4e84b60eb32ed02d67208fa89",
+        "after": "baabb09292c1229cd001e587a8d28fad511189f4e84b60eb32ed02d67208fa89"
+      },
+      "states": {
+        "before": "a0d480a32eec6fc91a0977cefcd8d5a971d9745c5107fec5166f17ce388247b9",
+        "after": "a0d480a32eec6fc91a0977cefcd8d5a971d9745c5107fec5166f17ce388247b9"
+      },
+      "variables": {
+        "before": "63de390d60b02c73c86067d06ae17b3a8c6f50a4894846107ae3f371cdd48995",
+        "after": "63de390d60b02c73c86067d06ae17b3a8c6f50a4894846107ae3f371cdd48995"
+      },
+      "conditions": {
+        "before": "f0fb187c32d08454bd28b8cb9bb0461573d8e13a3281bc2e9e9f4bb3c2525f57",
+        "after": "f0fb187c32d08454bd28b8cb9bb0461573d8e13a3281bc2e9e9f4bb3c2525f57"
+      },
+      "constraints": {
+        "before": "d171becbf8c53ea3de5181c991f22a71c2e50e781c38aa8ef127b0fea5babbca",
+        "after": "d171becbf8c53ea3de5181c991f22a71c2e50e781c38aa8ef127b0fea5babbca"
+      },
+      "documents": {
+        "before": "cbf0898c1e96b4ea73daa49850e60dd75425f5c5d80e1a1209d9a97085db45d6",
+        "after": "cbf0898c1e96b4ea73daa49850e60dd75425f5c5d80e1a1209d9a97085db45d6"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/presences/dashboard/page.tsx": {
+      "api": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "effects": {
+        "before": "9738d0a52309b4665da8935e53cf6f9b5535f319ec4a3a14a9f3b27a1dcebeaf",
+        "after": "9738d0a52309b4665da8935e53cf6f9b5535f319ec4a3a14a9f3b27a1dcebeaf"
+      },
+      "states": {
+        "before": "1ba255d9a34ab69902a22a95292dc8ce44c0eef5543da42a219d1ec241328b16",
+        "after": "1ba255d9a34ab69902a22a95292dc8ce44c0eef5543da42a219d1ec241328b16"
+      },
+      "variables": {
+        "before": "64b2bec411fc6a444ca185737be6b78afa3b4e1e09b907b12af69e276a641b48",
+        "after": "64b2bec411fc6a444ca185737be6b78afa3b4e1e09b907b12af69e276a641b48"
+      },
+      "conditions": {
+        "before": "87ce272b73075ecc0fa094c600ec9b46f3bc54f56036db75431176e5c387eb09",
+        "after": "87ce272b73075ecc0fa094c600ec9b46f3bc54f56036db75431176e5c387eb09"
+      },
+      "constraints": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/presences/ecrans/page.tsx": {
+      "api": {
+        "before": "c82a46ec82a4adf3b2f28e16a48c20b909abafbd015dbcceabfbc70b17cd2b41",
+        "after": "c82a46ec82a4adf3b2f28e16a48c20b909abafbd015dbcceabfbc70b17cd2b41"
+      },
+      "effects": {
+        "before": "cd44a24a91a4b0a2782e7bd1aa11aee16f5f45af062d33c1811686656b1b3a7a",
+        "after": "cd44a24a91a4b0a2782e7bd1aa11aee16f5f45af062d33c1811686656b1b3a7a"
+      },
+      "states": {
+        "before": "fe154544bd33ea9918ff58c0eda489977f63c4db2c68464500d0a477add467e3",
+        "after": "fe154544bd33ea9918ff58c0eda489977f63c4db2c68464500d0a477add467e3"
+      },
+      "variables": {
+        "before": "d682fe327f45ebe0ea42ba2a233cfc7e96943caa3406418f05d3e20c10606316",
+        "after": "d682fe327f45ebe0ea42ba2a233cfc7e96943caa3406418f05d3e20c10606316"
+      },
+      "conditions": {
+        "before": "d75a6a675d9d2e7c37ba33cea6df2c0c66f561ee90c4d493a6bbfd2f8da6eda2",
+        "after": "d75a6a675d9d2e7c37ba33cea6df2c0c66f561ee90c4d493a6bbfd2f8da6eda2"
+      },
+      "constraints": {
+        "before": "e29202e83dd450f19de5fec97c6365c594c95c21ec5fc5441250656d113a647d",
+        "after": "e29202e83dd450f19de5fec97c6365c594c95c21ec5fc5441250656d113a647d"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/presences/EmployeeView.tsx": {
+      "api": {
+        "before": "0f848fb27d9df3e58aaad6eb203328c2602985d48536d81e23e18b1f7bf3a4fe",
+        "after": "0f848fb27d9df3e58aaad6eb203328c2602985d48536d81e23e18b1f7bf3a4fe"
+      },
+      "effects": {
+        "before": "fc05ec53153715dcb871398a3afc5e02fcbf9361029ab6f7894406ae604b0f1c",
+        "after": "fc05ec53153715dcb871398a3afc5e02fcbf9361029ab6f7894406ae604b0f1c"
+      },
+      "states": {
+        "before": "b0ed0047930fffd3951c5b7bb9f6b3fa7d0b74379f5ef0287c3d71f2cf84410f",
+        "after": "b0ed0047930fffd3951c5b7bb9f6b3fa7d0b74379f5ef0287c3d71f2cf84410f"
+      },
+      "variables": {
+        "before": "8eef0233fc0468091448ca89813cb83cdc24f40ebdf8b42d62ac7843ba0c1a37",
+        "after": "8eef0233fc0468091448ca89813cb83cdc24f40ebdf8b42d62ac7843ba0c1a37"
+      },
+      "conditions": {
+        "before": "78216305a05826050ffe1f3e7302e99cb902ffc6e6d375804e9c3aa19a94eb79",
+        "after": "78216305a05826050ffe1f3e7302e99cb902ffc6e6d375804e9c3aa19a94eb79"
+      },
+      "constraints": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/presences/MonthlyView.tsx": {
+      "api": {
+        "before": "7e4e7583593b1b99a725cd3171ad5f3a028618fb9817ceb77345fe0d64d3d9e1",
+        "after": "7e4e7583593b1b99a725cd3171ad5f3a028618fb9817ceb77345fe0d64d3d9e1"
+      },
+      "effects": {
+        "before": "890d018f22f36a825b105a760f17a41df13daf86920b53f4524c9d7f8139938f",
+        "after": "890d018f22f36a825b105a760f17a41df13daf86920b53f4524c9d7f8139938f"
+      },
+      "states": {
+        "before": "47f3885d578d59ff534d8afe5021664e996e166934e5f4953980fb79a5892b7c",
+        "after": "47f3885d578d59ff534d8afe5021664e996e166934e5f4953980fb79a5892b7c"
+      },
+      "variables": {
+        "before": "3c22e1d7425fa61e5ed40fb76fd6b05ffa7f87cd0fcd0e0cb3921f7354b94a64",
+        "after": "3c22e1d7425fa61e5ed40fb76fd6b05ffa7f87cd0fcd0e0cb3921f7354b94a64"
+      },
+      "conditions": {
+        "before": "c4c9e79bdde763e480e70d44612cc17e0a7aa56fd18ba165ab78de8c3c31ac54",
+        "after": "c4c9e79bdde763e480e70d44612cc17e0a7aa56fd18ba165ab78de8c3c31ac54"
+      },
+      "constraints": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/presences/page.tsx": {
+      "api": {
+        "before": "f0eba5f12633693e1f4127609e9ea9f281d590b748ad7113fd35264db4a6abee",
+        "after": "f0eba5f12633693e1f4127609e9ea9f281d590b748ad7113fd35264db4a6abee"
+      },
+      "effects": {
+        "before": "c7e1510d0e216a6e032fafe4ee7bdf5e0d8ebe2a37487a77623527aec4eccf64",
+        "after": "c7e1510d0e216a6e032fafe4ee7bdf5e0d8ebe2a37487a77623527aec4eccf64"
+      },
+      "states": {
+        "before": "4d39f837592569aa859661e88622217dd561a293a8913b16dbe721644212972f",
+        "after": "4d39f837592569aa859661e88622217dd561a293a8913b16dbe721644212972f"
+      },
+      "variables": {
+        "before": "00158dfcdf9c791ea874544f57334d9779ed872b4d2174d4b0da13870fd4f3f9",
+        "after": "00158dfcdf9c791ea874544f57334d9779ed872b4d2174d4b0da13870fd4f3f9"
+      },
+      "conditions": {
+        "before": "6fab26c76e3cfe0b5e62249d26ba85447d4e46e7332490b338f7ab3ed2549caf",
+        "after": "6fab26c76e3cfe0b5e62249d26ba85447d4e46e7332490b338f7ab3ed2549caf"
+      },
+      "constraints": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/presences/permissions/historique/page.tsx": {
+      "api": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "effects": {
+        "before": "697c95ba82d60983b1ab3a51d6b04dcedd934ca5bce0516ec374ecfbeab83977",
+        "after": "697c95ba82d60983b1ab3a51d6b04dcedd934ca5bce0516ec374ecfbeab83977"
+      },
+      "states": {
+        "before": "d6f86b6f5950622a431a59ae4d76965ccfbacc33cf4bac427981ebd42301c9a7",
+        "after": "d6f86b6f5950622a431a59ae4d76965ccfbacc33cf4bac427981ebd42301c9a7"
+      },
+      "variables": {
+        "before": "314c4f74bf150655734dc29cde913f8059f76468941a82320630b50e855d7301",
+        "after": "314c4f74bf150655734dc29cde913f8059f76468941a82320630b50e855d7301"
+      },
+      "conditions": {
+        "before": "db5bda0c50d94c1eff85bf6c03e67086aff88cc8803307d761dcf294ef37fd3e",
+        "after": "db5bda0c50d94c1eff85bf6c03e67086aff88cc8803307d761dcf294ef37fd3e"
+      },
+      "constraints": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/presences/permissions/mon-espace/page.tsx": {
+      "api": {
+        "before": "54532e7736bc865af8cd3bff75d32ad5a7a4e5a9bec79027189829be4062076a",
+        "after": "54532e7736bc865af8cd3bff75d32ad5a7a4e5a9bec79027189829be4062076a"
+      },
+      "effects": {
+        "before": "2f3db2142963d5ed305b4c6ba33035d1e455fc58d1b153969c46a647458049fb",
+        "after": "2f3db2142963d5ed305b4c6ba33035d1e455fc58d1b153969c46a647458049fb"
+      },
+      "states": {
+        "before": "c3fc1a4a96046738157e27fb149efc9c4a124465748a0fe957972f0b276a5699",
+        "after": "c3fc1a4a96046738157e27fb149efc9c4a124465748a0fe957972f0b276a5699"
+      },
+      "variables": {
+        "before": "7d9b06428ba004bf0e5c5a02a716da9ab910c0e5c3c26134d799eca966983a91",
+        "after": "7d9b06428ba004bf0e5c5a02a716da9ab910c0e5c3c26134d799eca966983a91"
+      },
+      "conditions": {
+        "before": "86eab16290681617e7ad9cda90b57ef369272177c3704966efc422f537341acb",
+        "after": "86eab16290681617e7ad9cda90b57ef369272177c3704966efc422f537341acb"
+      },
+      "constraints": {
+        "before": "f716dae37fd93e03172563430a09836f2caff557ea8cc20229888ecf43a1dbf4",
+        "after": "f716dae37fd93e03172563430a09836f2caff557ea8cc20229888ecf43a1dbf4"
+      },
+      "documents": {
+        "before": "25c444f08669386da9d2e13279f2bb13912cee4a4a85ab4aa1c1c450f966e155",
+        "after": "25c444f08669386da9d2e13279f2bb13912cee4a4a85ab4aa1c1c450f966e155"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/presences/permissions/nouveau/page.tsx": {
+      "api": {
+        "before": "bba73d360c5a521e4f734cef88a204fd3dde263e709196b979d8b84e4bbc313c",
+        "after": "bba73d360c5a521e4f734cef88a204fd3dde263e709196b979d8b84e4bbc313c"
+      },
+      "effects": {
+        "before": "00846f43541fbe400642dc7ef7c9aa2c42a8ddd0ea8027d1cb2560708640d3f0",
+        "after": "00846f43541fbe400642dc7ef7c9aa2c42a8ddd0ea8027d1cb2560708640d3f0"
+      },
+      "states": {
+        "before": "399ef99a868f0a1d8bb25390a75a9dd3aa432732a3903c8c32212ab2150a871f",
+        "after": "399ef99a868f0a1d8bb25390a75a9dd3aa432732a3903c8c32212ab2150a871f"
+      },
+      "variables": {
+        "before": "135b7c5afd8d0de836a569a7e5f8437d04f6c72e891d2b2e970d99f287d499c6",
+        "after": "135b7c5afd8d0de836a569a7e5f8437d04f6c72e891d2b2e970d99f287d499c6"
+      },
+      "conditions": {
+        "before": "a5ea6df047abc160b531fdc8168ff552c774855046ef77c17123975f590f46cf",
+        "after": "a5ea6df047abc160b531fdc8168ff552c774855046ef77c17123975f590f46cf"
+      },
+      "constraints": {
+        "before": "7f553e7a1e312fd2ca6a5168420ac7a8e0442811c19d2b74c38243e629601bbc",
+        "after": "7f553e7a1e312fd2ca6a5168420ac7a8e0442811c19d2b74c38243e629601bbc"
+      },
+      "documents": {
+        "before": "57659b0a3757023a58c61f369bfee2621655cc16b7b3edd8b792164fccc6d94d",
+        "after": "57659b0a3757023a58c61f369bfee2621655cc16b7b3edd8b792164fccc6d94d"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/presences/permissions/page.tsx": {
+      "api": {
+        "before": "7c6d6ed0b3cbff05ff75c5f931179b816a0d8d1c0964fd2930a50c19e5dc7412",
+        "after": "7c6d6ed0b3cbff05ff75c5f931179b816a0d8d1c0964fd2930a50c19e5dc7412"
+      },
+      "effects": {
+        "before": "bad59fd33abcc8a0e61516c3234e97cc4f04b3d174f6d9d55a787fc8fa0ffcfc",
+        "after": "bad59fd33abcc8a0e61516c3234e97cc4f04b3d174f6d9d55a787fc8fa0ffcfc"
+      },
+      "states": {
+        "before": "c793f80afa99a220fef142615b3d5979c44a089229173b1351eba695f32794bc",
+        "after": "c793f80afa99a220fef142615b3d5979c44a089229173b1351eba695f32794bc"
+      },
+      "variables": {
+        "before": "3159ad426e9d63d0d5c1862f0ff9711f0f883a26de8ecea665fd24973746d771",
+        "after": "3159ad426e9d63d0d5c1862f0ff9711f0f883a26de8ecea665fd24973746d771"
+      },
+      "conditions": {
+        "before": "5fed57eab5c4ecd181f094b7fa49d7438d9bb4d66f2f68e351fe9a8104210134",
+        "after": "5fed57eab5c4ecd181f094b7fa49d7438d9bb4d66f2f68e351fe9a8104210134"
+      },
+      "constraints": {
+        "before": "9d9fe53e68c8a165af1077abecc18bfc3b826d09e8b5065c312bf856c4e7c717",
+        "after": "9d9fe53e68c8a165af1077abecc18bfc3b826d09e8b5065c312bf856c4e7c717"
+      },
+      "documents": {
+        "before": "f898c40b523465d8748c6fd0041f9338ecd72186b6f84764505fd98234feb15c",
+        "after": "f898c40b523465d8748c6fd0041f9338ecd72186b6f84764505fd98234feb15c"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/presences/permissions/rapport/page.tsx": {
+      "api": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "effects": {
+        "before": "697c95ba82d60983b1ab3a51d6b04dcedd934ca5bce0516ec374ecfbeab83977",
+        "after": "697c95ba82d60983b1ab3a51d6b04dcedd934ca5bce0516ec374ecfbeab83977"
+      },
+      "states": {
+        "before": "d6f86b6f5950622a431a59ae4d76965ccfbacc33cf4bac427981ebd42301c9a7",
+        "after": "d6f86b6f5950622a431a59ae4d76965ccfbacc33cf4bac427981ebd42301c9a7"
+      },
+      "variables": {
+        "before": "314c4f74bf150655734dc29cde913f8059f76468941a82320630b50e855d7301",
+        "after": "314c4f74bf150655734dc29cde913f8059f76468941a82320630b50e855d7301"
+      },
+      "conditions": {
+        "before": "db5bda0c50d94c1eff85bf6c03e67086aff88cc8803307d761dcf294ef37fd3e",
+        "after": "db5bda0c50d94c1eff85bf6c03e67086aff88cc8803307d761dcf294ef37fd3e"
+      },
+      "constraints": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/presences/permissions/suivi/page.tsx": {
+      "api": {
+        "before": "28667c6a5bbe6771f3bab4ea86fe1af47678efefb849569742b3fdf80085e676",
+        "after": "28667c6a5bbe6771f3bab4ea86fe1af47678efefb849569742b3fdf80085e676"
+      },
+      "effects": {
+        "before": "4e3ea0562bac72a81b5cd4c8faa3580841a8d112413c60db29333759b43ba940",
+        "after": "4e3ea0562bac72a81b5cd4c8faa3580841a8d112413c60db29333759b43ba940"
+      },
+      "states": {
+        "before": "d9fa1c0b92f12b7e73499f69289e1c470eeb803ae75cee7b466f4971c6df9d1e",
+        "after": "d9fa1c0b92f12b7e73499f69289e1c470eeb803ae75cee7b466f4971c6df9d1e"
+      },
+      "variables": {
+        "before": "2e9328d53dc148c3d4f14acab2394712f7850f115605a1bd8faf4b99a5ca478c",
+        "after": "2e9328d53dc148c3d4f14acab2394712f7850f115605a1bd8faf4b99a5ca478c"
+      },
+      "conditions": {
+        "before": "d880f08f38178ccfef378c30daaddd13b1055fb1c4912074295a588f8b5056ca",
+        "after": "d880f08f38178ccfef378c30daaddd13b1055fb1c4912074295a588f8b5056ca"
+      },
+      "constraints": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/presences/permissions/suivi/[employeeId]/page.tsx": {
+      "api": {
+        "before": "28667c6a5bbe6771f3bab4ea86fe1af47678efefb849569742b3fdf80085e676",
+        "after": "28667c6a5bbe6771f3bab4ea86fe1af47678efefb849569742b3fdf80085e676"
+      },
+      "effects": {
+        "before": "a876a7ded310d1bdc435103740a3acc0a9266bfd8c1a2c4ce879cffc52dadafa",
+        "after": "a876a7ded310d1bdc435103740a3acc0a9266bfd8c1a2c4ce879cffc52dadafa"
+      },
+      "states": {
+        "before": "2096b1c1311cfdb23dac31ef5988db66cf58451c30fdf3cfcc3708bf4d0704fe",
+        "after": "2096b1c1311cfdb23dac31ef5988db66cf58451c30fdf3cfcc3708bf4d0704fe"
+      },
+      "variables": {
+        "before": "db92e11a4339e79234ae7979c34a4f4761445b5e3b52146336a7f65cb70910e6",
+        "after": "db92e11a4339e79234ae7979c34a4f4761445b5e3b52146336a7f65cb70910e6"
+      },
+      "conditions": {
+        "before": "86eab16290681617e7ad9cda90b57ef369272177c3704966efc422f537341acb",
+        "after": "86eab16290681617e7ad9cda90b57ef369272177c3704966efc422f537341acb"
+      },
+      "constraints": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/presences/permissions/validations/page.tsx": {
+      "api": {
+        "before": "fa7f297700c4a62f7fbd1e710aa889c42bc5fb03ad53116648ae066f29974ded",
+        "after": "fa7f297700c4a62f7fbd1e710aa889c42bc5fb03ad53116648ae066f29974ded"
+      },
+      "effects": {
+        "before": "ca81061f916eeb34811fab5d8bff19c92168144301a55eb794ab2e3c52049dfd",
+        "after": "ca81061f916eeb34811fab5d8bff19c92168144301a55eb794ab2e3c52049dfd"
+      },
+      "states": {
+        "before": "15834afa805a922037c69541791cfe258dbc2d0bced01819d35e9ee986af9106",
+        "after": "15834afa805a922037c69541791cfe258dbc2d0bced01819d35e9ee986af9106"
+      },
+      "variables": {
+        "before": "2a7ff20573ddad3273d2726cdf2d9d9c06efa13a7163a2752f5d520c9d0f5df0",
+        "after": "2a7ff20573ddad3273d2726cdf2d9d9c06efa13a7163a2752f5d520c9d0f5df0"
+      },
+      "conditions": {
+        "before": "f69e6e627fca6988c212da5221723e5e43de7bc04808c76021d85a7272e657d1",
+        "after": "f69e6e627fca6988c212da5221723e5e43de7bc04808c76021d85a7272e657d1"
+      },
+      "constraints": {
+        "before": "95e5651c2dd2a53ca627486ab94121bc4e81fe913bfce6b2222abfee1b0f7558",
+        "after": "95e5651c2dd2a53ca627486ab94121bc4e81fe913bfce6b2222abfee1b0f7558"
+      },
+      "documents": {
+        "before": "9d7a18dc87a50dfcba5d91527d748ea7ede542db53ef61a5bd42047d379c37d6",
+        "after": "9d7a18dc87a50dfcba5d91527d748ea7ede542db53ef61a5bd42047d379c37d6"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/presences/pointage/page.tsx": {
+      "api": {
+        "before": "a72437b17edbcc212de7aa7c1fb6f54a29021b9901742b7d305bd5699cef7bce",
+        "after": "a72437b17edbcc212de7aa7c1fb6f54a29021b9901742b7d305bd5699cef7bce"
+      },
+      "effects": {
+        "before": "7a5fa3c418303b400f6cd74bafd50298082ba1f9b33ca45d6004c19144ec4729",
+        "after": "7a5fa3c418303b400f6cd74bafd50298082ba1f9b33ca45d6004c19144ec4729"
+      },
+      "states": {
+        "before": "5844ca6f3b8f8dd814bf6ac215951ebd666eb6623846f6acff2479459150d7cc",
+        "after": "5844ca6f3b8f8dd814bf6ac215951ebd666eb6623846f6acff2479459150d7cc"
+      },
+      "variables": {
+        "before": "edd6bbe3021aa7e467bec882a1ab1f05ba8122eb0afadb3bd82e266b7b77614a",
+        "after": "edd6bbe3021aa7e467bec882a1ab1f05ba8122eb0afadb3bd82e266b7b77614a"
+      },
+      "conditions": {
+        "before": "ff03b0ecfd5b7a2c20a044456043c5b2f3e8c098bbbb66bbc85e54b283de559c",
+        "after": "ff03b0ecfd5b7a2c20a044456043c5b2f3e8c098bbbb66bbc85e54b283de559c"
+      },
+      "constraints": {
+        "before": "08712acd8060f0b97a3379ec58d34fcaef8baad1332cdcbd15edc485443f5ff5",
+        "after": "08712acd8060f0b97a3379ec58d34fcaef8baad1332cdcbd15edc485443f5ff5"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/presences/pointage-manuel/page.tsx": {
+      "api": {
+        "before": "895021b9a2cb3c51e58b86919942176ea697d5b22705c55aef66d0b697530173",
+        "after": "895021b9a2cb3c51e58b86919942176ea697d5b22705c55aef66d0b697530173"
+      },
+      "effects": {
+        "before": "fd312ac7ba445f18b695e47ff1f4a0ebb7bf4c7a740543f783154d5f3b55e759",
+        "after": "fd312ac7ba445f18b695e47ff1f4a0ebb7bf4c7a740543f783154d5f3b55e759"
+      },
+      "states": {
+        "before": "c8a90c733159ab29efdb886ab0c295217522fc70dcc7c9270fb76a5e8201ec95",
+        "after": "c8a90c733159ab29efdb886ab0c295217522fc70dcc7c9270fb76a5e8201ec95"
+      },
+      "variables": {
+        "before": "20c0416450272243c7d8efc9edf047b1e9a49ce0a4c3c7f03173251ebe2e62ac",
+        "after": "20c0416450272243c7d8efc9edf047b1e9a49ce0a4c3c7f03173251ebe2e62ac"
+      },
+      "conditions": {
+        "before": "f7bb9d78df814fcf57a8fd28d4498ec1886d9d143bfe47e629ec5416dfc2c4d6",
+        "after": "f7bb9d78df814fcf57a8fd28d4498ec1886d9d143bfe47e629ec5416dfc2c4d6"
+      },
+      "constraints": {
+        "before": "c550b33f1f1a8c94c83a76dada1f88bb1284341934786d27188214d90d141b1f",
+        "after": "c550b33f1f1a8c94c83a76dada1f88bb1284341934786d27188214d90d141b1f"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/presences/resume/page.tsx": {
+      "api": {
+        "before": "84ff76ac85d9508fea43d586a5a15e94b69993284b5a758dd3dedd5b0a458fca",
+        "after": "84ff76ac85d9508fea43d586a5a15e94b69993284b5a758dd3dedd5b0a458fca"
+      },
+      "effects": {
+        "before": "aa40088cd74accc13456bd0fc7c644ea86a40d917f259af7d5726268daec6848",
+        "after": "aa40088cd74accc13456bd0fc7c644ea86a40d917f259af7d5726268daec6848"
+      },
+      "states": {
+        "before": "dcae39a27c705bb314743bc7a5a34b12267e7c09ac964a1db56b6f625c670f1a",
+        "after": "dcae39a27c705bb314743bc7a5a34b12267e7c09ac964a1db56b6f625c670f1a"
+      },
+      "variables": {
+        "before": "8780d0310bf97b112444d3f640f48d05affc8bb6d0c7c8ec5057f0ad5b149755",
+        "after": "8780d0310bf97b112444d3f640f48d05affc8bb6d0c7c8ec5057f0ad5b149755"
+      },
+      "conditions": {
+        "before": "a74c77653f5ecaf048adff578a9a40f016d3a1567c3387e3964d152c68e31879",
+        "after": "a74c77653f5ecaf048adff578a9a40f016d3a1567c3387e3964d152c68e31879"
+      },
+      "constraints": {
+        "before": "f4856b587ec71eceefe08e36ff9e372d84b9948bc0c51cf09f4c08d968e7cd54",
+        "after": "f4856b587ec71eceefe08e36ff9e372d84b9948bc0c51cf09f4c08d968e7cd54"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/presences/shifts/page.tsx": {
+      "api": {
+        "before": "edf5f67df0196bfe3e83dd303439db0eaee5495177b88b3be88471f188d7c552",
+        "after": "edf5f67df0196bfe3e83dd303439db0eaee5495177b88b3be88471f188d7c552"
+      },
+      "effects": {
+        "before": "bb25fe498536d4c023f8f57ab18b72a72eeaa1e3e03951a9b236be983098e052",
+        "after": "bb25fe498536d4c023f8f57ab18b72a72eeaa1e3e03951a9b236be983098e052"
+      },
+      "states": {
+        "before": "b0e8bc46fe67f6e62bb89f39bf27c5d779eced34811e09e3d248dc22df5217b2",
+        "after": "b0e8bc46fe67f6e62bb89f39bf27c5d779eced34811e09e3d248dc22df5217b2"
+      },
+      "variables": {
+        "before": "6b31e62fd06d5e6a0052b205f6495b51cd38b202f1ec69471942c0ffc95440f7",
+        "after": "6b31e62fd06d5e6a0052b205f6495b51cd38b202f1ec69471942c0ffc95440f7"
+      },
+      "conditions": {
+        "before": "650786922c569eed6e20f8b7dad0212c5cf97e2b77cb3cadb6729dbfbc6c2098",
+        "after": "650786922c569eed6e20f8b7dad0212c5cf97e2b77cb3cadb6729dbfbc6c2098"
+      },
+      "constraints": {
+        "before": "1496d787363a47c4411b52d6182d85405fb15b0d8161f66f7f95397f821cb2e4",
+        "after": "1496d787363a47c4411b52d6182d85405fb15b0d8161f66f7f95397f821cb2e4"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "af6ba398fda87909fc190baf605ac587c9466c4ea07f36df1cb7c776f9c31861",
+        "after": "af6ba398fda87909fc190baf605ac587c9466c4ea07f36df1cb7c776f9c31861"
+      }
+    },
+    "app/(dashboard)/presences/synchronisation/page.tsx": {
+      "api": {
+        "before": "9573e5b4d455927ac4014338dd768030d4ad3868baed8dfc8eb9687580a2a6b8",
+        "after": "9573e5b4d455927ac4014338dd768030d4ad3868baed8dfc8eb9687580a2a6b8"
+      },
+      "effects": {
+        "before": "a2a4c1610a50a66262dbfc2414586d164ed26f9d855dc7d8a854df5a8f1144de",
+        "after": "a2a4c1610a50a66262dbfc2414586d164ed26f9d855dc7d8a854df5a8f1144de"
+      },
+      "states": {
+        "before": "6557099271a8f9c8d373a265d5a6c4d1413ab10a5de1157ebe1ec29733298dbc",
+        "after": "6557099271a8f9c8d373a265d5a6c4d1413ab10a5de1157ebe1ec29733298dbc"
+      },
+      "variables": {
+        "before": "2eaeba8facdd40d68d84e62b09af2969a431ba96714f12cba1aa62c41dccdb0b",
+        "after": "2eaeba8facdd40d68d84e62b09af2969a431ba96714f12cba1aa62c41dccdb0b"
+      },
+      "conditions": {
+        "before": "40f58370dfd3321ca11814e7ed653334a05cce9f0993b67dec7cd95b9e567b9f",
+        "after": "40f58370dfd3321ca11814e7ed653334a05cce9f0993b67dec7cd95b9e567b9f"
+      },
+      "constraints": {
+        "before": "8017199ae9fccad86eaa6f360fabb7fdea64f353ad2b5833979e505e3c7adb02",
+        "after": "8017199ae9fccad86eaa6f360fabb7fdea64f353ad2b5833979e505e3c7adb02"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/presences/tablettes/page.tsx": {
+      "api": {
+        "before": "f2867f6006a134c497c1c723d23ff82cf0e2242127611b72aca6e18ec8e7ee60",
+        "after": "f2867f6006a134c497c1c723d23ff82cf0e2242127611b72aca6e18ec8e7ee60"
+      },
+      "effects": {
+        "before": "7b533627495025644a6664b8fb1b40b990f8c443a71061fac0b532a6637688ea",
+        "after": "7b533627495025644a6664b8fb1b40b990f8c443a71061fac0b532a6637688ea"
+      },
+      "states": {
+        "before": "0a38854a5c27d9c7c62577e6fc48f64a5aa880869d4a0074daca03612cf9f337",
+        "after": "0a38854a5c27d9c7c62577e6fc48f64a5aa880869d4a0074daca03612cf9f337"
+      },
+      "variables": {
+        "before": "bb992eb08e79411a9b8dbe1597a624f9451fb579e04ea6eac33c954e9b91cdd5",
+        "after": "bb992eb08e79411a9b8dbe1597a624f9451fb579e04ea6eac33c954e9b91cdd5"
+      },
+      "conditions": {
+        "before": "46dff510f662788ccf580fee2a8a70e1aae60ae87df7421423cf7e054d77f902",
+        "after": "46dff510f662788ccf580fee2a8a70e1aae60ae87df7421423cf7e054d77f902"
+      },
+      "constraints": {
+        "before": "3eb0a3d6330e5f8c40f75a9ace5b2349d1bd685b8d295e25e286e728373cf2cb",
+        "after": "3eb0a3d6330e5f8c40f75a9ace5b2349d1bd685b8d295e25e286e728373cf2cb"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "app/(dashboard)/presences/WeeklyView.tsx": {
+      "api": {
+        "before": "3340017d9fd281b99c01a3fc90cd92a1fd0c3069cb52e42dbabc740a007e092a",
+        "after": "3340017d9fd281b99c01a3fc90cd92a1fd0c3069cb52e42dbabc740a007e092a"
+      },
+      "effects": {
+        "before": "c73f1a413a7003a9bedcb5fe60a8044ff5a1cb8028bb459aaaeb3d3ccf025cf5",
+        "after": "c73f1a413a7003a9bedcb5fe60a8044ff5a1cb8028bb459aaaeb3d3ccf025cf5"
+      },
+      "states": {
+        "before": "83cd142bede133fec49ce294fbd24cc329b09d80b6327056ec744a4ff6495f1c",
+        "after": "83cd142bede133fec49ce294fbd24cc329b09d80b6327056ec744a4ff6495f1c"
+      },
+      "variables": {
+        "before": "533f8e83129ba2de7a918b5f4ec8314e43f492b2b2545d83178e1351386d26b4",
+        "after": "533f8e83129ba2de7a918b5f4ec8314e43f492b2b2545d83178e1351386d26b4"
+      },
+      "conditions": {
+        "before": "e09a4cea80104f9ac62a49648ae0b2ed7b7e70bf10031657587bb907425d1fe9",
+        "after": "e09a4cea80104f9ac62a49648ae0b2ed7b7e70bf10031657587bb907425d1fe9"
+      },
+      "constraints": {
+        "before": "bff2add2e94054ed8a23c6a05ef084ad36dd2a3a22bd632e06abc7504080fcb9",
+        "after": "bff2add2e94054ed8a23c6a05ef084ad36dd2a3a22bd632e06abc7504080fcb9"
+      },
+      "documents": {
+        "before": "253eac6d1d274af78c4ff98f9598b03213056495405216714bf4116bc0d52082",
+        "after": "253eac6d1d274af78c4ff98f9598b03213056495405216714bf4116bc0d52082"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "components/attendance/AttendanceDashboard.tsx": {
+      "api": {
+        "before": "185fd7dee0e3257ef2219bd6baf1d01b9d6f81f778cda5fb41c37cc0e1d3abbb",
+        "after": "185fd7dee0e3257ef2219bd6baf1d01b9d6f81f778cda5fb41c37cc0e1d3abbb"
+      },
+      "effects": {
+        "before": "ce7b82dd68720e6d0a1846155c7c22656f1248a046df2e3e7063b5890085f597",
+        "after": "ce7b82dd68720e6d0a1846155c7c22656f1248a046df2e3e7063b5890085f597"
+      },
+      "states": {
+        "before": "006e6837244563b73deba30505d05b335aabd52b537e56a4c14ebe872ace2dc6",
+        "after": "006e6837244563b73deba30505d05b335aabd52b537e56a4c14ebe872ace2dc6"
+      },
+      "variables": {
+        "before": "4acfefd07b75709d9feed41f1e72b0ab159695f0db53d26271f091968a876d6a",
+        "after": "4acfefd07b75709d9feed41f1e72b0ab159695f0db53d26271f091968a876d6a"
+      },
+      "conditions": {
+        "before": "bd14fd4449577fc2a49eeb1ca5caf9a642d76a2c43ae2ed8df487febd06d6417",
+        "after": "bd14fd4449577fc2a49eeb1ca5caf9a642d76a2c43ae2ed8df487febd06d6417"
+      },
+      "constraints": {
+        "before": "214708a132bf98aa92b9762447f10841c9f213fb37090bf2cfc129ca1ddb3659",
+        "after": "214708a132bf98aa92b9762447f10841c9f213fb37090bf2cfc129ca1ddb3659"
+      },
+      "documents": {
+        "before": "5d9f6181845d5f443ca53909314309e79fe4b7d8d9dc1602e2650c300511f872",
+        "after": "5d9f6181845d5f443ca53909314309e79fe4b7d8d9dc1602e2650c300511f872"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "components/absences/AbsenceCeilingBalance.tsx": {
+      "api": {
+        "before": "1aa42e5ca3bb2140bd6c08bf826a8aab3531b8257bf4d53f4c253c48c411d053",
+        "after": "1aa42e5ca3bb2140bd6c08bf826a8aab3531b8257bf4d53f4c253c48c411d053"
+      },
+      "effects": {
+        "before": "9533a51e7cbd2cbce5f66a5c597bc3fa344b2d86e2c5ca98fdfa749ccd8018c3",
+        "after": "9533a51e7cbd2cbce5f66a5c597bc3fa344b2d86e2c5ca98fdfa749ccd8018c3"
+      },
+      "states": {
+        "before": "470f5d7347a850c335881687fc09fc81a52f3242201c7ce254e439ab888a9324",
+        "after": "470f5d7347a850c335881687fc09fc81a52f3242201c7ce254e439ab888a9324"
+      },
+      "variables": {
+        "before": "467494e857bf8040db68ed2bc248cd64134e9fd2f529a3666cf1d236d30b7cb3",
+        "after": "467494e857bf8040db68ed2bc248cd64134e9fd2f529a3666cf1d236d30b7cb3"
+      },
+      "conditions": {
+        "before": "30569065f8093c05d53408afbd29549aca3f4db772fd51b0814c57ce68fa60d7",
+        "after": "30569065f8093c05d53408afbd29549aca3f4db772fd51b0814c57ce68fa60d7"
+      },
+      "constraints": {
+        "before": "86f699282553abca85b48929f9351d26aa9e236170840a7adf571a1aea0328e0",
+        "after": "86f699282553abca85b48929f9351d26aa9e236170840a7adf571a1aea0328e0"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "components/absences/absenceColors.ts": {
+      "api": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "effects": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "states": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "variables": {
+        "before": "696828475a4c3f93c5be2f232a079567de81f03f287151ed18d7f62cc26313c9",
+        "after": "696828475a4c3f93c5be2f232a079567de81f03f287151ed18d7f62cc26313c9"
+      },
+      "conditions": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "constraints": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "components/absences/AbsencesOverview.tsx": {
+      "api": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "effects": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "states": {
+        "before": "33e67a9cf99d7367c0ece269e60856c315dcfa41158f4004394a0cf73e6a5ad9",
+        "after": "33e67a9cf99d7367c0ece269e60856c315dcfa41158f4004394a0cf73e6a5ad9"
+      },
+      "variables": {
+        "before": "0ec7680e1df8b1f69a91e5bc143d8b2f9c18e6ee5c2fcec48434109b1d46d284",
+        "after": "0ec7680e1df8b1f69a91e5bc143d8b2f9c18e6ee5c2fcec48434109b1d46d284"
+      },
+      "conditions": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "constraints": {
+        "before": "b9da9880b0d2a71de26fde6e490add931e7b25d10f121dc506a011899352c07b",
+        "after": "b9da9880b0d2a71de26fde6e490add931e7b25d10f121dc506a011899352c07b"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "components/permissions/EditTimesModal.tsx": {
+      "api": {
+        "before": "9473b79643d71143ff392a8325a71882d743e23d575dcea038fc1c3eb324d065",
+        "after": "9473b79643d71143ff392a8325a71882d743e23d575dcea038fc1c3eb324d065"
+      },
+      "effects": {
+        "before": "e98b92fafe2f0092342f382cd0005d6d95728a9959c7db30873d1f2326862f5c",
+        "after": "e98b92fafe2f0092342f382cd0005d6d95728a9959c7db30873d1f2326862f5c"
+      },
+      "states": {
+        "before": "5cb62c044c60db0ba48a0c50cc4f50ac99ce9775768c1180be5ee0e3569093e1",
+        "after": "5cb62c044c60db0ba48a0c50cc4f50ac99ce9775768c1180be5ee0e3569093e1"
+      },
+      "variables": {
+        "before": "1de09a2630a16f2ab3a594ca4f096115fc1a391282855c7b1c45625a88994f0d",
+        "after": "1de09a2630a16f2ab3a594ca4f096115fc1a391282855c7b1c45625a88994f0d"
+      },
+      "conditions": {
+        "before": "c16a8a86668d44ee79149b9c7b9a9cb8f6ea6f600b26d9ac8ff01b3bbd182475",
+        "after": "c16a8a86668d44ee79149b9c7b9a9cb8f6ea6f600b26d9ac8ff01b3bbd182475"
+      },
+      "constraints": {
+        "before": "ef7b349ba9b46a686084fb1dbe2837f9a4512074451a07f1414c7d239a9da106",
+        "after": "ef7b349ba9b46a686084fb1dbe2837f9a4512074451a07f1414c7d239a9da106"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "components/permissions/PermissionReturnSummary.tsx": {
+      "api": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "effects": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "states": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "variables": {
+        "before": "5d58f33df4333063804a47cefa093d447d13ffe1e5ae4fcdeff6c39d8e2dad0a",
+        "after": "5d58f33df4333063804a47cefa093d447d13ffe1e5ae4fcdeff6c39d8e2dad0a"
+      },
+      "conditions": {
+        "before": "7ff521d1239b4f795489214df3696ff631546a12e9e8b4e6d8b53dd79be8ff6e",
+        "after": "7ff521d1239b4f795489214df3696ff631546a12e9e8b4e6d8b53dd79be8ff6e"
+      },
+      "constraints": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "components/permissions/PermissionsOverview.tsx": {
+      "api": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "effects": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "states": {
+        "before": "33e67a9cf99d7367c0ece269e60856c315dcfa41158f4004394a0cf73e6a5ad9",
+        "after": "33e67a9cf99d7367c0ece269e60856c315dcfa41158f4004394a0cf73e6a5ad9"
+      },
+      "variables": {
+        "before": "d9cac60d63ea3d37f49bece0755b18cec75e9bb02a7687ecdf7ea44b34b1859f",
+        "after": "d9cac60d63ea3d37f49bece0755b18cec75e9bb02a7687ecdf7ea44b34b1859f"
+      },
+      "conditions": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "constraints": {
+        "before": "b9da9880b0d2a71de26fde6e490add931e7b25d10f121dc506a011899352c07b",
+        "after": "b9da9880b0d2a71de26fde6e490add931e7b25d10f121dc506a011899352c07b"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "components/permissions/PermissionTimeline.tsx": {
+      "api": {
+        "before": "206676d58d0c9c3eeb0a53e8af15454860460e8c40a107c7f756c945f7cf357b",
+        "after": "206676d58d0c9c3eeb0a53e8af15454860460e8c40a107c7f756c945f7cf357b"
+      },
+      "effects": {
+        "before": "42390c2e63d15915b7612295e86597be4784c48afa1c6bc198b2b41b92012758",
+        "after": "42390c2e63d15915b7612295e86597be4784c48afa1c6bc198b2b41b92012758"
+      },
+      "states": {
+        "before": "e48aba6ace71dd7b9913a3c65cf9546fdaf3339ee9cea085a36bc4991c7dfe73",
+        "after": "e48aba6ace71dd7b9913a3c65cf9546fdaf3339ee9cea085a36bc4991c7dfe73"
+      },
+      "variables": {
+        "before": "84738b826afca40d7a0fc54697591a2d4a690b2046aa6d794b7a786c8891c6c3",
+        "after": "84738b826afca40d7a0fc54697591a2d4a690b2046aa6d794b7a786c8891c6c3"
+      },
+      "conditions": {
+        "before": "f9b7103fcc33ef265b90134e25668e68d90d761564040818a7e7a0b09a7bb81d",
+        "after": "f9b7103fcc33ef265b90134e25668e68d90d761564040818a7e7a0b09a7bb81d"
+      },
+      "constraints": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "components/permissions/ReturnValidationPanel.tsx": {
+      "api": {
+        "before": "66b0ca9fcd27fd46eafc4516eea792adc4b831fee26b285f56462cf5520e736f",
+        "after": "66b0ca9fcd27fd46eafc4516eea792adc4b831fee26b285f56462cf5520e736f"
+      },
+      "effects": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "states": {
+        "before": "6526c7430931c597be625415fc4ad8b0efdd8712a4352a707881349987dcfad0",
+        "after": "6526c7430931c597be625415fc4ad8b0efdd8712a4352a707881349987dcfad0"
+      },
+      "variables": {
+        "before": "90509b9a0a4282f34f8c316ce8069d29672faddb57a55314abf7e84e9d96e48e",
+        "after": "90509b9a0a4282f34f8c316ce8069d29672faddb57a55314abf7e84e9d96e48e"
+      },
+      "conditions": {
+        "before": "a6dba390676a6d24b288c6f65688b44e38f331e0949ef6b0320720ac9e844301",
+        "after": "a6dba390676a6d24b288c6f65688b44e38f331e0949ef6b0320720ac9e844301"
+      },
+      "constraints": {
+        "before": "ed0cf8aba57bb8585c72a761bab2b71aca4f6e43f0fd1d1955358699b694af03",
+        "after": "ed0cf8aba57bb8585c72a761bab2b71aca4f6e43f0fd1d1955358699b694af03"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "components/request-history/RequestHistoryView.tsx": {
+      "api": {
+        "before": "897e3ae0e53e3aa005fd641a4581ddd5aa54008fa38a821a1f3856b688d4a037",
+        "after": "897e3ae0e53e3aa005fd641a4581ddd5aa54008fa38a821a1f3856b688d4a037"
+      },
+      "effects": {
+        "before": "30096c9b2d9e0dd97a320d51040d05126a75bf3188408d1e28f041f841d88789",
+        "after": "30096c9b2d9e0dd97a320d51040d05126a75bf3188408d1e28f041f841d88789"
+      },
+      "states": {
+        "before": "9ec7f5cfe0957466fac42c0cd6d51154720a896344e71df8f7ae35f52ba876e9",
+        "after": "9ec7f5cfe0957466fac42c0cd6d51154720a896344e71df8f7ae35f52ba876e9"
+      },
+      "variables": {
+        "before": "90bf327d24f86e622c253c7dfa5b7d6d40dd81830b65cc0b2340c1c375ed7144",
+        "after": "90bf327d24f86e622c253c7dfa5b7d6d40dd81830b65cc0b2340c1c375ed7144"
+      },
+      "conditions": {
+        "before": "abc3e7e2af2614892d8168c48a0e9e1fc7275f99336fd2eb8e24f500eac63cdc",
+        "after": "abc3e7e2af2614892d8168c48a0e9e1fc7275f99336fd2eb8e24f500eac63cdc"
+      },
+      "constraints": {
+        "before": "6c43c1e3b6305c24f2106158ddab8e2e34e8c37d97beced846ac601531c74372",
+        "after": "6c43c1e3b6305c24f2106158ddab8e2e34e8c37d97beced846ac601531c74372"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "components/request-reports/RequestReportDashboard.tsx": {
+      "api": {
+        "before": "897e3ae0e53e3aa005fd641a4581ddd5aa54008fa38a821a1f3856b688d4a037",
+        "after": "897e3ae0e53e3aa005fd641a4581ddd5aa54008fa38a821a1f3856b688d4a037"
+      },
+      "effects": {
+        "before": "d99e42be9a458fc72603d72a100925b3ed018f180175f5df64d4e1634d2e88e9",
+        "after": "d99e42be9a458fc72603d72a100925b3ed018f180175f5df64d4e1634d2e88e9"
+      },
+      "states": {
+        "before": "d401bd92b02488321c606e29abb690f60344937783117a5c22fc03a05c7b1769",
+        "after": "d401bd92b02488321c606e29abb690f60344937783117a5c22fc03a05c7b1769"
+      },
+      "variables": {
+        "before": "01541e6a0a1e05f80fe39f2b91d513670bd16fe958d502916771729b8ef02664",
+        "after": "01541e6a0a1e05f80fe39f2b91d513670bd16fe958d502916771729b8ef02664"
+      },
+      "conditions": {
+        "before": "1dc1491872e6e7e7fbf88968da0c0f6c46fd79065b10ff70edf286e10c959868",
+        "after": "1dc1491872e6e7e7fbf88968da0c0f6c46fd79065b10ff70edf286e10c959868"
+      },
+      "constraints": {
+        "before": "d96a27c2fe300b70f77fd7db0f4a6aa8ed30cf0a691f59628ac1ea27c5987a5f",
+        "after": "d96a27c2fe300b70f77fd7db0f4a6aa8ed30cf0a691f59628ac1ea27c5987a5f"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "components/request-reports/ReportKit.tsx": {
+      "api": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "effects": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "states": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "variables": {
+        "before": "d39feff394732295ca847ae3177cacdfde009d16d23b9b31bbbfee99d144d644",
+        "after": "d39feff394732295ca847ae3177cacdfde009d16d23b9b31bbbfee99d144d644"
+      },
+      "conditions": {
+        "before": "97346f6d8de3b47c969f119fa141d6f8bab313a818b011c220ce1905a1adb644",
+        "after": "97346f6d8de3b47c969f119fa141d6f8bab313a818b011c220ce1905a1adb644"
+      },
+      "constraints": {
+        "before": "6bb18cc9b5e671cfa37489d19561df02452636e4c13dd4cf2095054debcd8c81",
+        "after": "6bb18cc9b5e671cfa37489d19561df02452636e4c13dd4cf2095054debcd8c81"
+      },
+      "documents": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "savedShiftColors": {
+        "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    }
+  },
+  "audit": {
+    "scope": {
+      "before": {
+        "palette": 1616,
+        "hex": 76,
+        "emojis": 54,
+        "gradients": 8,
+        "pulse": 13,
+        "blur": 23,
+        "coloredShadows": 3
+      },
+      "after": {
+        "palette": 0,
+        "hex": 14,
+        "emojis": 12,
+        "gradients": 0,
+        "pulse": 0,
+        "blur": 0,
+        "coloredShadows": 0
+      }
+    },
+    "global": {
+      "before": {
+        "palette": 16747,
+        "hex": 1775,
+        "emojis": 448,
+        "gradients": 251,
+        "pulse": 69,
+        "blur": 202,
+        "coloredShadows": 27
+      },
+      "after": {
+        "palette": 15131,
+        "hex": 1713,
+        "emojis": 406,
+        "gradients": 243,
+        "pulse": 56,
+        "blur": 179,
+        "coloredShadows": 24
+      }
+    }
+  },
+  "validation": {
+    "routes": 23,
+    "sourceFiles": 40,
+    "typescript": "tsc --noEmit --incremental false : exit 0",
+    "tests": [
+      "check-attendance-module.cjs",
+      "check-presence-demo.cjs",
+      "check-absence-module.cjs",
+      "check-permission-module.cjs",
+      "check-select-dialog.cjs",
+      "check-attendance-select.cjs"
+    ],
+    "visualReview": "À faire par l’utilisateur : clair/sombre, bureau/mobile, impression comparée à la production."
+  }
+}

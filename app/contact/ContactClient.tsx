@@ -25,6 +25,8 @@ interface ContactPayload {
 }
 
 interface ContactResponse {
+  trackingPath?: string;
+  emailSent?: boolean;
   success: boolean;
   message: string;
   id?:     string;
@@ -62,6 +64,7 @@ export default function ContactPage() {
   });
   const [status,  setStatus]  = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errMsg,  setErrMsg]  = useState('');
+  const [followUp,setFollowUp] = useState<ContactResponse|null>(null);
 
   const set = (field: keyof ContactPayload) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
@@ -77,7 +80,7 @@ export default function ContactPage() {
     setErrMsg('');
     try {
       // Utilise api.post de services/api.ts — credentials:include géré automatiquement
-      await api.post<ContactResponse>('/contact', {
+      const result = await api.post<ContactResponse>('/contact', {
         name:    form.name.trim(),
         email:   form.email.trim().toLowerCase(),
         company: form.company?.trim() || undefined,
@@ -85,6 +88,7 @@ export default function ContactPage() {
         subject: form.subject,
         message: form.message.trim(),
       });
+      setFollowUp(result);
       setStatus('success');
     } catch (err: any) {
       setErrMsg(err.message || 'Une erreur est survenue. Réessayez ou contactez-nous directement.');
@@ -93,6 +97,7 @@ export default function ContactPage() {
   }
 
   function reset() {
+    setFollowUp(null);
     setForm({ name:'', email:'', company:'', phone:'', subject:'', message:'' });
     setStatus('idle');
     setErrMsg('');
@@ -200,8 +205,9 @@ export default function ContactPage() {
                   <span className="text-emerald-400">{form.email}</span>.
                 </p>
                 <p className="text-xs text-slate-500 mb-8">
-                  Vous recevrez également un email de confirmation.
+                  {followUp?.emailSent ? 'Le lien privé de suivi vous a été envoyé par e-mail.' : 'Conservez le lien ci-dessous pour lire nos réponses et poursuivre la conversation.'}
                 </p>
+                {followUp?.trackingPath?.startsWith('/contact/suivi#') && <p className="mb-6"><Link href={followUp.trackingPath} className="underline">Ouvrir ma conversation privée avec le support</Link></p>}
                 <button onClick={reset}
                   className="px-5 py-2.5 bg-white/5 border border-white/10 rounded-xl text-sm text-slate-300 font-semibold hover:bg-white/10 transition-all">
                   Envoyer un autre message
@@ -212,6 +218,7 @@ export default function ContactPage() {
                 <div>
                   <h3 className="text-lg font-black text-white mb-1">Écrivez-nous</h3>
                   <p className="text-xs text-slate-500">Les champs * sont obligatoires.</p>
+                  <Link href="/assistance" className="text-xs underline">Déjà un compte ? Retrouvez vos conversations avec le support.</Link>
                 </div>
 
                 {/* Ligne 1 : Nom + Email */}

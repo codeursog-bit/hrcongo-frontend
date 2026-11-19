@@ -57,6 +57,7 @@ export const LayoutWrapper = ({ children }: { children: React.ReactNode }) => {
   const pathname  = usePathname();
   const router    = useRouter();
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
+  const [isSupport,setIsSupport] = useState(false);
   const [headerStats,  setHeaderStats]  = useState<any>(null);
   // 🆕 signaux réels (alertes + flux) et tiroir du menu sur petit écran
   const [alerts,     setAlerts]     = useState<any>(null);
@@ -89,10 +90,15 @@ export const LayoutWrapper = ({ children }: { children: React.ReactNode }) => {
       return;
     }
 
-    if (user.role !== 'SUPER_ADMIN') {
+    setIsSupport(user.role === 'SUPPORT');
+    if (user.role !== 'SUPER_ADMIN' && user.role !== 'SUPPORT') {
       setIsAuthorized(false);
       authService.logout();
       router.push('/admin/login');
+      return;
+    }
+    if (user.role === 'SUPPORT' && pathname !== '/admin/support') {
+      router.replace('/admin/support');
       return;
     }
 
@@ -111,7 +117,7 @@ export const LayoutWrapper = ({ children }: { children: React.ReactNode }) => {
   }, [pathname, router, isPublicPage]);
 
   useEffect(() => {
-    if (isAuthorized && !isPublicPage) {
+    if (isAuthorized && !isPublicPage && !isSupport) {
       loadHeaderStats();
       loadSignals();
       // Alertes + flux toutes les 60 s (onglet visible) ; chiffres de l'en-tête toutes les 5 min
@@ -119,7 +125,7 @@ export const LayoutWrapper = ({ children }: { children: React.ReactNode }) => {
       const stats   = setInterval(() => { if (!document.hidden) loadHeaderStats(); }, 300_000);
       return () => { clearInterval(signals); clearInterval(stats); };
     }
-  }, [isAuthorized, isPublicPage]);
+  }, [isAuthorized, isPublicPage, isSupport]);
 
   // Le tiroir se ferme à chaque changement de page
   useEffect(() => { setMenuOpen(false); }, [pathname]);
@@ -168,6 +174,8 @@ export const LayoutWrapper = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
+  if (!isAuthorized) return null;
+  if (isSupport) return <div style={{height:'100dvh',overflow:'auto',background:'var(--bg)',color:'var(--text)',padding:'24px'}}><header style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'24px'}}><strong>Konza · Espace support</strong><button type="button" onClick={async()=>{await authService.logout();router.replace('/auth/login');}}>Se déconnecter</button></header>{pathname==='/admin/support'?children:null}</div>;
   return (
     <div className="h-screen bg-[#0B0F19] flex flex-col">
       <Header stats={headerStats} alerts={alerts} onMenuClick={() => setMenuOpen(true)} />

@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { api } from '@/services/api';
 import { PayslipBreakdown } from '@/components/payroll/PayslipBreakdown';
+import { ModulePageFrame } from '@/components/requests/ModulePageFrame';
 
 interface Employee { id: string; firstName: string; lastName: string; baseSalary: number; }
 
@@ -56,28 +57,28 @@ const fmt = (v: number) => Math.round(v ?? 0).toLocaleString('fr-FR');
 const uid = () => Math.random().toString(36).slice(2, 9);
 
 const BonusFiscalBadge = ({ label, active, onChange, color }: { label: string; active: boolean; onChange: () => void; color: string }) => (
-  <button onClick={onChange} className={`text-[10px] font-bold px-2 py-0.5 rounded-full border transition-all cursor-pointer select-none
-    ${active ? color === 'cyan' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-600'
-      : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-600'
-    : 'bg-gray-100 dark:bg-gray-700 text-gray-400 border-gray-200 dark:border-gray-600 line-through opacity-60'}`}>
+  <button onClick={onChange} className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border transition-colors cursor-pointer select-none
+    ${active ? color === 'cyan' ? 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  text-[var(--warning-text)]  border-[var(--border)] '
+      : 'bg-[var(--brand-soft)]  text-[var(--action)]  border-[var(--border)] '
+    : 'bg-[var(--surface-2)]  text-[var(--text-secondary)] border-[var(--border)]  line-through opacity-60'}`}>
     {label}
   </button>
 );
 
 const ResultRow = ({ label, sub, value, valueColor, bold }: { label: string; sub?: string; value: string; valueColor?: string; bold?: boolean; }) => (
-  <tr className="border-b border-gray-50 dark:border-gray-700/50">
-    <td className="px-4 py-2.5 text-gray-500 dark:text-gray-400">
-      <span className={bold ? 'font-semibold text-gray-700 dark:text-gray-200 text-sm' : 'text-sm'}>{label}</span>
-      {sub && <p className="text-[10px] text-gray-400 mt-0.5 leading-tight">{sub}</p>}
+  <tr className="border-b border-[var(--border)] ">
+    <td className="px-4 py-2.5 text-[var(--text-secondary)] ">
+      <span className={bold ? 'font-semibold text-[var(--text-secondary)]  text-sm' : 'text-sm'}>{label}</span>
+      {sub && <p className="text-[10px] text-[var(--text-secondary)] mt-0.5 leading-tight">{sub}</p>}
     </td>
-    <td className={`px-4 py-2.5 text-right font-mono font-semibold text-sm ${valueColor ?? 'text-gray-700 dark:text-gray-200'}`}>{value}</td>
+    <td className={`px-4 py-2.5 text-right font-mono font-semibold text-sm ${valueColor ?? 'text-[var(--text-secondary)] '}`}>{value}</td>
   </tr>
 );
 
 const TotalRow = ({ label, value, bgClass, textClass }: { label: string; value: string; bgClass: string; textClass: string; }) => (
   <tr className={bgClass}>
-    <td className={`px-4 py-3 font-black text-sm ${textClass}`}>{label}</td>
-    <td className={`px-4 py-3 text-right font-black font-mono text-base ${textClass}`}>{value}</td>
+    <td className={`px-4 py-3 font-semibold text-sm ${textClass}`}>{label}</td>
+    <td className={`px-4 py-3 text-right font-semibold font-mono text-base ${textClass}`}>{value}</td>
   </tr>
 );
 
@@ -252,29 +253,30 @@ export default function SimulateurPage() {
   const totalChargesEmp = cnssPatTotal + tusTotal;
 
   const OtRow = ({ label, sub, value, onChange }: { label: string; sub: string; value: number; onChange: (v: number) => void }) => (
-    <div className="flex items-center gap-3 px-4 py-2.5 bg-amber-50 dark:bg-amber-900/10 rounded-xl mb-1.5">
+    <div className="flex items-center gap-3 px-4 py-2.5 bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  rounded-xl mb-1.5">
       <div className="w-14 shrink-0">
-        <span className="font-black text-amber-600 dark:text-amber-400 text-sm">{label}</span>
-        <p className="text-[10px] text-gray-400 mt-0.5 leading-tight">{sub}</p>
+        <span className="font-semibold text-[var(--warning-text)]  text-sm">{label}</span>
+        <p className="text-[10px] text-[var(--text-secondary)] mt-0.5 leading-tight">{sub}</p>
       </div>
-      <button onClick={() => onChange(Math.max(0, +(value - 0.5).toFixed(1)))} className="w-7 h-7 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 flex items-center justify-center hover:bg-gray-50 cursor-pointer"><Minus size={11} /></button>
-      <span className="w-12 text-center font-bold font-mono text-sm">{value.toFixed(1)}</span>
-      <button onClick={() => onChange(+(value + 0.5).toFixed(1))} className="w-7 h-7 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 flex items-center justify-center hover:bg-gray-50 cursor-pointer"><Plus size={11} /></button>
-      <span className="text-xs text-gray-400">h</span>
+      <button onClick={() => onChange(Math.max(0, +(value - 0.5).toFixed(1)))} className="w-7 h-7 rounded-lg border border-[var(--border)]  bg-[var(--surface)]  flex items-center justify-center hover:bg-[var(--surface-2)] cursor-pointer"><Minus size={11} /></button>
+      <span className="w-12 text-center font-semibold font-mono text-sm">{value.toFixed(1)}</span>
+      <button onClick={() => onChange(+(value + 0.5).toFixed(1))} className="w-7 h-7 rounded-lg border border-[var(--border)]  bg-[var(--surface)]  flex items-center justify-center hover:bg-[var(--surface-2)] cursor-pointer"><Plus size={11} /></button>
+      <span className="text-xs text-[var(--text-secondary)]">h</span>
     </div>
   );
 
   return (
-    <div className="max-w-[1100px] mx-auto px-4 py-6 pb-20">
+    <ModulePageFrame kind="list">
+      <div className="max-w-[1100px] mx-auto px-4 py-6 pb-20">
 
       {/* Header */}
       <div className="flex items-center gap-3 mb-5">
-        <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/25">
+        <div className="w-10 h-10 rounded-xl bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] flex items-center justify-center shadow-lg ">
           <FlaskConical size={18} color="white" />
         </div>
         <div>
-          <h1 className="text-xl font-black text-gray-900 dark:text-white">Simulateur de paie</h1>
-          <p className="text-xs text-gray-500 dark:text-gray-400">Calcul 100% backend · Conforme droit congolais · TUS 7,51% (DGI 2,025% + CNSS 5,475%)</p>
+          <h1 className="text-xl font-semibold text-[var(--text)] dark:text-[var(--on-brand)]">Simulateur de paie</h1>
+          <p className="text-xs text-[var(--text-secondary)] ">Calcul 100% backend · Conforme droit congolais · TUS 7,51% (DGI 2,025% + CNSS 5,475%)</p>
         </div>
       </div>
 
@@ -287,16 +289,16 @@ export default function SimulateurPage() {
           <button key={m.key} onClick={() => switchMode(m.key as any)}
             className={`flex-1 flex items-center gap-3 p-4 rounded-2xl border-2 transition-all cursor-pointer text-left
               ${mode === m.key
-                ? m.color === 'violet' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-amber-500 bg-amber-50 dark:bg-amber-900/20'
-                : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-300'}`}>
-            <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${mode === m.key ? m.color === 'violet' ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-400'}`}>
+                ? m.color === 'violet' ? 'border-[var(--border)] bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] ' : 'border-[var(--border)] bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] '
+                : 'border-[var(--border)]  bg-[var(--surface)]  hover:border-[var(--border)]'}`}>
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${mode === m.key ? m.color === 'violet' ? 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] text-[var(--success-text)]' : 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)]' : 'bg-[var(--surface-2)]  text-[var(--text-secondary)]'}`}>
               <m.icon size={16} />
             </div>
             <div>
-              <p className={`font-bold text-sm ${mode === m.key ? m.color === 'violet' ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-700 dark:text-amber-300' : 'text-gray-700 dark:text-gray-300'}`}>{m.label}</p>
-              <p className="text-[11px] text-gray-400">{m.sub}</p>
+              <p className={`font-semibold text-sm ${mode === m.key ? m.color === 'violet' ? 'text-[var(--success-text)] ' : 'text-[var(--warning-text)] ' : 'text-[var(--text-secondary)] '}`}>{m.label}</p>
+              <p className="text-[11px] text-[var(--text-secondary)]">{m.sub}</p>
             </div>
-            {mode === m.key && <div className={`ml-auto w-2 h-2 rounded-full ${m.color === 'violet' ? 'bg-emerald-500' : 'bg-amber-500'}`} />}
+            {mode === m.key && <div className={`ml-auto w-2 h-2 rounded-full ${m.color === 'violet' ? 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]' : 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]'}`} />}
           </button>
         ))}
       </div>
@@ -308,21 +310,21 @@ export default function SimulateurPage() {
 
           {/* Identité */}
           {mode === 'existing' ? (
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-5">
-              <div className="flex items-center gap-2 mb-3"><User size={14} className="text-emerald-500" /><h3 className="font-bold text-sm text-gray-900 dark:text-white">Employé</h3></div>
+            <div className="bg-[var(--surface)]  border border-[var(--border)]  rounded-2xl p-5">
+              <div className="flex items-center gap-2 mb-3"><User size={14} className="text-[var(--success-text)]" /><h3 className="font-semibold text-sm text-[var(--text)] dark:text-[var(--on-brand)]">Employé</h3></div>
               <div className="relative">
                 <input type="text" placeholder="Rechercher un employé..." value={empSearch}
                   onChange={e => { setEmpSearch(e.target.value); setShowDropdown(true); if (!e.target.value) setSelectedEmp(null); }}
                   onFocus={() => setShowDropdown(true)}
-                  className={`w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:ring-2 focus:ring-emerald-500/20
-                    ${selectedEmp ? 'border-emerald-300 bg-emerald-50 dark:bg-emerald-900/20' : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700'}`} />
+                  className={`w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:ring-2 focus:ring-[var(--focus)]
+                    ${selectedEmp ? 'border-[var(--border)] bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] ' : 'border-[var(--border)]  bg-[var(--surface)] '}`} />
                 {showDropdown && filteredEmps.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl overflow-hidden max-h-52 overflow-y-auto">
+                  <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-[var(--surface)]  border border-[var(--border)]  rounded-xl shadow-2xl overflow-hidden max-h-52 overflow-y-auto">
                     {filteredEmps.map(e => (
                       <button key={e.id} onMouseDown={() => handleSelectEmployee(e)}
-                        className="w-full text-left px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 flex justify-between items-center border-b border-gray-100 dark:border-gray-700/50 last:border-0 cursor-pointer">
+                        className="w-full text-left px-3 py-2.5 hover:bg-[var(--surface-2)]  flex justify-between items-center border-b border-[var(--border)]  last:border-0 cursor-pointer">
                         <span className="font-semibold text-sm">{e.firstName} {e.lastName}</span>
-                        <span className="text-xs text-gray-400 font-mono">{fmt(e.baseSalary)} F</span>
+                        <span className="text-xs text-[var(--text-secondary)] font-mono">{fmt(e.baseSalary)} F</span>
                       </button>
                     ))}
                   </div>
@@ -330,86 +332,86 @@ export default function SimulateurPage() {
               </div>
             </div>
           ) : (
-            <div className="bg-white dark:bg-gray-800 border border-amber-200 dark:border-amber-800/50 rounded-2xl p-5">
-              <div className="flex items-center gap-2 mb-3"><UserPlus size={14} className="text-amber-500" /><h3 className="font-bold text-sm text-gray-900 dark:text-white">Identité <span className="font-normal text-gray-400">(optionnel)</span></h3></div>
+            <div className="bg-[var(--surface)]  border border-[var(--border)]  rounded-2xl p-5">
+              <div className="flex items-center gap-2 mb-3"><UserPlus size={14} className="text-[var(--warning-text)]" /><h3 className="font-semibold text-sm text-[var(--text)] dark:text-[var(--on-brand)]">Identité <span className="font-normal text-[var(--text-secondary)]">(optionnel)</span></h3></div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Prénom</label>
-                  <input type="text" value={freeFirstName} placeholder="Jean" onChange={e => setFreeFirstName(e.target.value)} className="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-600 rounded-xl text-sm bg-white dark:bg-gray-700 outline-none" />
+                  <label className="block text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1.5">Prénom</label>
+                  <input type="text" value={freeFirstName} placeholder="Jean" onChange={e => setFreeFirstName(e.target.value)} className="w-full px-3 py-2.5 border border-[var(--border)]  rounded-xl text-sm bg-[var(--surface)]  outline-none" />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Nom</label>
-                  <input type="text" value={freeLastName} placeholder="Dupont" onChange={e => setFreeLastName(e.target.value)} className="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-600 rounded-xl text-sm bg-white dark:bg-gray-700 outline-none" />
+                  <label className="block text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1.5">Nom</label>
+                  <input type="text" value={freeLastName} placeholder="Dupont" onChange={e => setFreeLastName(e.target.value)} className="w-full px-3 py-2.5 border border-[var(--border)]  rounded-xl text-sm bg-[var(--surface)]  outline-none" />
                 </div>
               </div>
             </div>
           )}
 
           {/* Rémunération */}
-          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-5">
-            <div className="flex items-center gap-2 mb-3"><Calculator size={14} className="text-emerald-500" /><h3 className="font-bold text-sm text-gray-900 dark:text-white">Rémunération</h3></div>
+          <div className="bg-[var(--surface)]  border border-[var(--border)]  rounded-2xl p-5">
+            <div className="flex items-center gap-2 mb-3"><Calculator size={14} className="text-[var(--success-text)]" /><h3 className="font-semibold text-sm text-[var(--text)] dark:text-[var(--on-brand)]">Rémunération</h3></div>
             <div className="grid grid-cols-2 gap-3 mb-3">
               <div>
-                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Mois</label>
-                <select value={month} onChange={e => setMonth(Number(e.target.value))} className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-xl text-sm bg-white dark:bg-gray-700 outline-none cursor-pointer">
+                <label className="block text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1.5">Mois</label>
+                <select value={month} onChange={e => setMonth(Number(e.target.value))} className="w-full px-3 py-2 border border-[var(--border)]  rounded-xl text-sm bg-[var(--surface)]  outline-none cursor-pointer">
                   {MONTHS.map((m, i) => <option key={i} value={i+1}>{m}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Année</label>
-                <input type="number" value={year} onChange={e => setYear(Number(e.target.value))} className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-xl text-sm bg-white dark:bg-gray-700 outline-none" />
+                <label className="block text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1.5">Année</label>
+                <input type="number" value={year} onChange={e => setYear(Number(e.target.value))} className="w-full px-3 py-2 border border-[var(--border)]  rounded-xl text-sm bg-[var(--surface)]  outline-none" />
               </div>
             </div>
             <div className="mb-3">
-              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Salaire de base (FCFA)</label>
+              <label className="block text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1.5">Salaire de base (FCFA)</label>
               <input type="number" value={baseSalary} onChange={e => setBaseSalary(e.target.value)} placeholder="Ex: 500 000"
-                className="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-600 rounded-xl text-sm font-bold font-mono bg-white dark:bg-gray-700 outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400" />
+                className="w-full px-3 py-2.5 border border-[var(--border)]  rounded-xl text-sm font-semibold font-mono bg-[var(--surface)]  outline-none focus:ring-2 focus:ring-[var(--focus)] focus:border-[var(--border)]" />
               {mode === 'free' && Number(baseSalary) > 0 && Number(baseSalary) < 70400 && (
-                <p className="text-[10px] text-red-500 mt-1">⚠ En dessous du SMIG (70 400 FCFA)</p>
+                <p className="text-[10px] text-[var(--danger-text)] mt-1">⚠ En dessous du SMIG (70 400 FCFA)</p>
               )}
             </div>
             <div>
-              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Jours travaillés (sur {workDays})</label>
+              <label className="block text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1.5">Jours travaillés (sur {workDays})</label>
               <div className="flex items-center gap-2.5 mb-2">
-                <button onClick={() => setWorkedDays(d => Math.max(0, d-1))} className="w-8 h-8 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 flex items-center justify-center hover:bg-gray-50 cursor-pointer"><Minus size={12} /></button>
+                <button onClick={() => setWorkedDays(d => Math.max(0, d-1))} className="w-8 h-8 rounded-lg border border-[var(--border)]  bg-[var(--surface)]  flex items-center justify-center hover:bg-[var(--surface-2)] cursor-pointer"><Minus size={12} /></button>
                 <input type="number" min={0} max={workDays} value={workedDays} onChange={e => setWorkedDays(Math.min(workDays, Math.max(0, Number(e.target.value))))}
-                  className="w-16 text-center font-black text-lg font-mono border border-gray-200 dark:border-gray-600 rounded-xl py-1.5 bg-white dark:bg-gray-700 outline-none" />
-                <button onClick={() => setWorkedDays(d => Math.min(workDays, d+1))} className="w-8 h-8 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 flex items-center justify-center hover:bg-gray-50 cursor-pointer"><Plus size={12} /></button>
-                {absenceDays > 0 ? <span className="text-xs font-bold text-amber-500">→ {absenceDays}j absence</span> : <span className="text-xs font-bold text-emerald-500">✓ Mois complet</span>}
+                  className="w-16 text-center font-semibold text-lg font-mono border border-[var(--border)]  rounded-xl py-1.5 bg-[var(--surface)]  outline-none" />
+                <button onClick={() => setWorkedDays(d => Math.min(workDays, d+1))} className="w-8 h-8 rounded-lg border border-[var(--border)]  bg-[var(--surface)]  flex items-center justify-center hover:bg-[var(--surface-2)] cursor-pointer"><Plus size={12} /></button>
+                {absenceDays > 0 ? <span className="text-xs font-semibold text-[var(--warning-text)]">→ {absenceDays}j absence</span> : <span className="text-xs font-semibold text-[var(--success-text)]">✓ Mois complet</span>}
               </div>
-              <div className="h-1.5 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden">
-                <div className="h-full rounded-full transition-all duration-300" style={{ width: `${(workedDays / workDays) * 100}%`, background: absenceDays === 0 ? '#10b981' : '#f97316' }} />
+              <div className="h-1.5 rounded-full bg-[var(--surface-2)]  overflow-hidden">
+                <div className="h-full rounded-full transition-all duration-300" style={{ width: `${(workedDays / workDays) * 100}%`, background: absenceDays === 0 ? 'var(--green)' : 'var(--mustard)' }} />
               </div>
             </div>
           </div>
 
           {/* Mode fiscal — libre uniquement */}
           {mode === 'free' && (
-            <div className="bg-white dark:bg-gray-800 border border-amber-200 dark:border-amber-800/50 rounded-2xl p-5">
-              <div className="flex items-center gap-2 mb-3"><Percent size={14} className="text-amber-500" /><h3 className="font-bold text-sm text-gray-900 dark:text-white">Mode fiscal & cotisations</h3></div>
+            <div className="bg-[var(--surface)]  border border-[var(--border)]  rounded-2xl p-5">
+              <div className="flex items-center gap-2 mb-3"><Percent size={14} className="text-[var(--warning-text)]" /><h3 className="font-semibold text-sm text-[var(--text)] dark:text-[var(--on-brand)]">Mode fiscal & cotisations</h3></div>
               <div className="grid grid-cols-2 gap-2 mb-4">
                 <button onClick={() => setIsSubjectCnss(v => !v)}
-                  className={`flex items-center gap-2 p-3 rounded-xl border-2 transition-all cursor-pointer ${isSubjectCnss ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20' : 'border-gray-200 dark:border-gray-700'}`}>
-                  {isSubjectCnss ? <Lock size={13} className="text-emerald-600 shrink-0" /> : <Unlock size={13} className="text-gray-400 shrink-0" />}
+                  className={`flex items-center gap-2 p-3 rounded-xl border-2 transition-all cursor-pointer ${isSubjectCnss ? 'border-[var(--border)] bg-[var(--brand-soft)] ' : 'border-[var(--border)] '}`}>
+                  {isSubjectCnss ? <Lock size={13} className="text-[var(--success-text)] shrink-0" /> : <Unlock size={13} className="text-[var(--text-secondary)] shrink-0" />}
                   <div className="text-left">
-                    <p className={`text-xs font-bold ${isSubjectCnss ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-400'}`}>CNSS</p>
-                    <p className="text-[10px] text-gray-400">{isSubjectCnss ? 'Assujetti (4%)' : 'Exonéré'}</p>
+                    <p className={`text-xs font-semibold ${isSubjectCnss ? 'text-[var(--success-text)] ' : 'text-[var(--text-secondary)]'}`}>CNSS</p>
+                    <p className="text-[10px] text-[var(--text-secondary)]">{isSubjectCnss ? 'Assujetti (4%)' : 'Exonéré'}</p>
                   </div>
                 </button>
                 <button onClick={() => setIsSubjectIts(v => !v)}
-                  className={`flex items-center gap-2 p-3 rounded-xl border-2 transition-all cursor-pointer ${isSubjectIts ? 'border-amber-400 bg-amber-50 dark:bg-amber-900/20' : 'border-gray-200 dark:border-gray-700'}`}>
-                  {isSubjectIts ? <Lock size={13} className="text-amber-600 shrink-0" /> : <Unlock size={13} className="text-gray-400 shrink-0" />}
+                  className={`flex items-center gap-2 p-3 rounded-xl border-2 transition-all cursor-pointer ${isSubjectIts ? 'border-[var(--border)] bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] ' : 'border-[var(--border)] '}`}>
+                  {isSubjectIts ? <Lock size={13} className="text-[var(--warning-text)] shrink-0" /> : <Unlock size={13} className="text-[var(--text-secondary)] shrink-0" />}
                   <div className="text-left">
-                    <p className={`text-xs font-bold ${isSubjectIts ? 'text-amber-700 dark:text-amber-300' : 'text-gray-400'}`}>ITS / IRPP</p>
-                    <p className="text-[10px] text-gray-400">{isSubjectIts ? 'Assujetti' : 'Exonéré'}</p>
+                    <p className={`text-xs font-semibold ${isSubjectIts ? 'text-[var(--warning-text)] ' : 'text-[var(--text-secondary)]'}`}>ITS / IRPP</p>
+                    <p className="text-[10px] text-[var(--text-secondary)]">{isSubjectIts ? 'Assujetti' : 'Exonéré'}</p>
                   </div>
                 </button>
               </div>
               <div className="grid grid-cols-2 gap-3 mb-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Type de contrat</label>
+                  <label className="block text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1.5">Type de contrat</label>
                   <select value={contractType} onChange={e => setContractType(e.target.value)}
-                    className="w-full px-2 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-xs bg-white dark:bg-gray-700 outline-none cursor-pointer">
+                    className="w-full px-2 py-2 border border-[var(--border)]  rounded-lg text-xs bg-[var(--surface)]  outline-none cursor-pointer">
                     <option value="CDI">CDI</option>
                     <option value="CDD">CDD</option>
                     <option value="STAGE">Stage</option>
@@ -420,9 +422,9 @@ export default function SimulateurPage() {
                 </div>
                 {(contractType === 'CDI' || contractType === 'CDD') && (
                   <div>
-                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Zone TOL</label>
+                    <label className="block text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1.5">Zone TOL</label>
                     <select value={tolZone} onChange={e => setTolZone(e.target.value as any)}
-                      className="w-full px-2 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-xs bg-white dark:bg-gray-700 outline-none cursor-pointer">
+                      className="w-full px-2 py-2 border border-[var(--border)]  rounded-lg text-xs bg-[var(--surface)]  outline-none cursor-pointer">
                       <option value="VILLE">Ville — 5 000 F</option>
                       <option value="PERIPHERIE">Périphérie — 1 000 F</option>
                     </select>
@@ -430,56 +432,56 @@ export default function SimulateurPage() {
                 )}
                 {(contractType === 'CONSULTANT' || contractType === 'PRESTATAIRE') && (
                   <div>
-                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Résidence fiscale</label>
+                    <label className="block text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1.5">Résidence fiscale</label>
                     <select value={isResident ? 'R' : 'N'} onChange={e => setIsResident(e.target.value === 'R')}
-                      className="w-full px-2 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-xs bg-white dark:bg-gray-700 outline-none cursor-pointer">
+                      className="w-full px-2 py-2 border border-[var(--border)]  rounded-lg text-xs bg-[var(--surface)]  outline-none cursor-pointer">
                       <option value="R">Résident — BNC 10 %</option>
                       <option value="N">Non-résident — BNC 20 %</option>
                     </select>
                   </div>
                 )}
               </div>
-              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Mode de calcul ITS</label>
+              <label className="block text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2">Mode de calcul ITS</label>
               <div className="grid grid-cols-2 gap-2 mb-3">
                 {FISCAL_MODES.map(fm => {
                   const isActive = fiscalMode === fm.value;
-                  const ac = fm.color === 'violet' ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20' : fm.color === 'amber' ? 'border-amber-400 bg-amber-50 dark:bg-amber-900/20' : fm.color === 'cyan' ? 'border-amber-400 bg-amber-50 dark:bg-amber-900/20' : 'border-gray-400 bg-gray-50 dark:bg-gray-700';
-                  const tc = fm.color === 'violet' ? 'text-emerald-700 dark:text-emerald-300' : fm.color === 'amber' ? 'text-amber-700 dark:text-amber-300' : fm.color === 'cyan' ? 'text-amber-700 dark:text-amber-300' : 'text-gray-700 dark:text-gray-300';
+                  const ac = fm.color === 'violet' ? 'border-[var(--border)] bg-[var(--brand-soft)] ' : fm.color === 'amber' ? 'border-[var(--border)] bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] ' : fm.color === 'cyan' ? 'border-[var(--border)] bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] ' : 'border-[var(--border)] bg-[var(--surface-2)] ';
+                  const tc = fm.color === 'violet' ? 'text-[var(--success-text)] ' : fm.color === 'amber' ? 'text-[var(--warning-text)] ' : fm.color === 'cyan' ? 'text-[var(--warning-text)] ' : 'text-[var(--text-secondary)] ';
                   return (
                     <button key={fm.value} onClick={() => setFiscalMode(fm.value)}
-                      className={`p-2.5 rounded-xl border-2 text-left transition-all cursor-pointer ${isActive ? ac : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'}`}>
-                      <p className={`text-xs font-black ${isActive ? tc : 'text-gray-600 dark:text-gray-400'}`}>{fm.label}</p>
-                      <p className="text-[10px] text-gray-400">{fm.sub}</p>
+                      className={`p-2.5 rounded-xl border-2 text-left transition-all cursor-pointer ${isActive ? ac : 'border-[var(--border)]  hover:border-[var(--border)]'}`}>
+                      <p className={`text-xs font-semibold ${isActive ? tc : 'text-[var(--text-secondary)] '}`}>{fm.label}</p>
+                      <p className="text-[10px] text-[var(--text-secondary)]">{fm.sub}</p>
                     </button>
                   );
                 })}
               </div>
               {fiscalMode === 'FORFAIT' && (
-                <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-800 mt-2">
-                  <label className="block text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-2">Taux forfaitaire ITS</label>
+                <div className="p-3 bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  rounded-xl border border-[var(--border)]  mt-2">
+                  <label className="block text-[10px] font-semibold text-[var(--warning-text)]  uppercase tracking-wider mb-2">Taux forfaitaire ITS</label>
                   <div className="flex gap-2 mb-2">
                     {[{ label: '6%', value: 0.06 }, { label: '8%', value: 0.08 }, { label: '10%', value: 0.10 }].map(p => (
                       <button key={p.value} onClick={() => setForfaitRate(p.value)}
-                        className={`flex-1 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer ${forfaitRate === p.value ? 'bg-amber-500 text-white border-amber-500' : 'bg-white dark:bg-gray-700 text-gray-600 border-gray-200 hover:border-amber-300'}`}>
+                        className={`flex-1 py-1.5 rounded-lg text-xs font-semibold border transition-colors cursor-pointer ${forfaitRate === p.value ? 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)] border-[var(--border)]' : 'bg-[var(--surface)]  text-[var(--text-secondary)] border-[var(--border)] hover:border-[var(--border)]'}`}>
                         {p.label}
                       </button>
                     ))}
                   </div>
                   <div className="flex items-center gap-2">
                     <input type="number" min={1} max={40} step={0.5} value={Math.round(forfaitRate * 100 * 10) / 10} onChange={e => setForfaitRate(Number(e.target.value) / 100)}
-                      className="w-20 px-2 py-1.5 border border-amber-200 dark:border-amber-700 rounded-lg text-sm font-mono font-bold bg-white dark:bg-gray-700 text-amber-700 dark:text-amber-300 outline-none" />
-                    <span className="text-sm text-gray-500">%</span>
+                      className="w-20 px-2 py-1.5 border border-[var(--border)]  rounded-lg text-sm font-mono font-semibold bg-[var(--surface)]  text-[var(--warning-text)]  outline-none" />
+                    <span className="text-sm text-[var(--text-secondary)]">%</span>
                   </div>
                 </div>
               )}
               {fiscalMode !== 'FORFAIT' && (
-                <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-800 mt-3">
-                  <label className="block text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-2">Situation familiale (parts fiscales)</label>
+                <div className="p-3 bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  rounded-xl border border-[var(--border)]  mt-3">
+                  <label className="block text-[10px] font-semibold text-[var(--warning-text)]  uppercase tracking-wider mb-2">Situation familiale (parts fiscales)</label>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[10px] text-gray-400 mb-1">Situation</label>
+                      <label className="block text-[10px] text-[var(--text-secondary)] mb-1">Situation</label>
                       <select value={maritalStatus} onChange={e => setMaritalStatus(e.target.value as any)}
-                        className="w-full px-2 py-2 border border-amber-200 dark:border-amber-700 rounded-lg text-xs bg-white dark:bg-gray-700 outline-none cursor-pointer">
+                        className="w-full px-2 py-2 border border-[var(--border)]  rounded-lg text-xs bg-[var(--surface)]  outline-none cursor-pointer">
                         <option value="SINGLE">Célibataire</option>
                         <option value="MARRIED">Marié(e)</option>
                         <option value="DIVORCED">Divorcé(e)</option>
@@ -487,11 +489,11 @@ export default function SimulateurPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-[10px] text-gray-400 mb-1">Enfants</label>
+                      <label className="block text-[10px] text-[var(--text-secondary)] mb-1">Enfants</label>
                       <div className="flex items-center gap-1.5">
-                        <button onClick={() => setNbChildren(n => Math.max(0, n-1))} className="w-7 h-7 rounded-lg border border-amber-200 dark:border-amber-700 bg-white dark:bg-gray-700 flex items-center justify-center cursor-pointer text-amber-600"><Minus size={10} /></button>
-                        <span className="w-8 text-center font-black text-sm font-mono">{nbChildren}</span>
-                        <button onClick={() => setNbChildren(n => Math.min(10, n+1))} className="w-7 h-7 rounded-lg border border-amber-200 dark:border-amber-700 bg-white dark:bg-gray-700 flex items-center justify-center cursor-pointer text-amber-600"><Plus size={10} /></button>
+                        <button onClick={() => setNbChildren(n => Math.max(0, n-1))} className="w-7 h-7 rounded-lg border border-[var(--border)]  bg-[var(--surface)]  flex items-center justify-center cursor-pointer text-[var(--warning-text)]"><Minus size={10} /></button>
+                        <span className="w-8 text-center font-semibold text-sm font-mono">{nbChildren}</span>
+                        <button onClick={() => setNbChildren(n => Math.min(10, n+1))} className="w-7 h-7 rounded-lg border border-[var(--border)]  bg-[var(--surface)]  flex items-center justify-center cursor-pointer text-[var(--warning-text)]"><Plus size={10} /></button>
                       </div>
                     </div>
                   </div>
@@ -501,8 +503,8 @@ export default function SimulateurPage() {
           )}
 
           {/* Heures sup */}
-          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-5">
-            <div className="flex items-center gap-2 mb-3"><Clock size={14} className="text-amber-500" /><h3 className="font-bold text-sm text-gray-900 dark:text-white">Heures supplémentaires</h3><span className="ml-auto text-[10px] text-gray-400">Décret 78-360</span></div>
+          <div className="bg-[var(--surface)]  border border-[var(--border)]  rounded-2xl p-5">
+            <div className="flex items-center gap-2 mb-3"><Clock size={14} className="text-[var(--warning-text)]" /><h3 className="font-semibold text-sm text-[var(--text)] dark:text-[var(--on-brand)]">Heures supplémentaires</h3><span className="ml-auto text-[10px] text-[var(--text-secondary)]">Décret 78-360</span></div>
             <OtRow label="+10%"  sub="5 premières heures"   value={ot10}  onChange={setOt10} />
             <OtRow label="+25%"  sub="Heures suivantes"     value={ot25}  onChange={setOt25} />
             <OtRow label="+50%"  sub="Nuit / repos / férié" value={ot50}  onChange={setOt50} />
@@ -510,29 +512,29 @@ export default function SimulateurPage() {
           </div>
 
           {/* Primes */}
-          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-5">
+          <div className="bg-[var(--surface)]  border border-[var(--border)]  rounded-2xl p-5">
             <div className="flex items-center gap-2 mb-1">
-              <Gift size={14} className="text-amber-500" /><h3 className="font-bold text-sm text-gray-900 dark:text-white">Primes</h3>
-              <button onClick={addBonus} className="ml-auto flex items-center gap-1 px-2.5 py-1 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg text-xs font-bold text-amber-600 dark:text-amber-400 hover:bg-amber-100 cursor-pointer"><Plus size={10} /> Ajouter</button>
+              <Gift size={14} className="text-[var(--warning-text)]" /><h3 className="font-semibold text-sm text-[var(--text)] dark:text-[var(--on-brand)]">Primes</h3>
+              <button onClick={addBonus} className="ml-auto flex items-center gap-1 px-2.5 py-1 bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  border border-[var(--border)]  rounded-lg text-xs font-semibold text-[var(--warning-text)]  hover:bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] cursor-pointer"><Plus size={10} /> Ajouter</button>
             </div>
             {manualBonuses.length === 0 ? (
-              <p className="text-xs text-gray-400 text-center py-3">{mode === 'existing' ? 'Vide → backend utilisera les primes configurées' : 'Ajoutez les primes de votre bulletin'}</p>
+              <p className="text-xs text-[var(--text-secondary)] text-center py-3">{mode === 'existing' ? 'Vide → backend utilisera les primes configurées' : 'Ajoutez les primes de votre bulletin'}</p>
             ) : (
               <div className="space-y-2.5 mt-2">
                 {manualBonuses.map(b => (
                   <div key={b.localId} className="flex flex-col gap-1.5">
                     <div className="flex gap-2 items-center">
                       <input placeholder="Libellé" value={b.bonusType} onChange={e => updateBonus(b.localId, { bonusType: e.target.value })}
-                        className="flex-1 px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 outline-none" />
+                        className="flex-1 px-3 py-2 border border-[var(--border)]  rounded-lg text-sm bg-[var(--surface)]  outline-none" />
                       <input type="number" placeholder="Montant" value={b.amount || ''} onChange={e => updateBonus(b.localId, { amount: Number(e.target.value) })}
-                        className="w-28 px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm font-mono bg-white dark:bg-gray-700 outline-none" />
-                      <button onClick={() => setManualBonuses(prev => prev.filter(x => x.localId !== b.localId))} className="w-8 h-8 flex items-center justify-center rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 cursor-pointer"><Trash2 size={12} className="text-red-500" /></button>
+                        className="w-28 px-3 py-2 border border-[var(--border)]  rounded-lg text-sm font-mono bg-[var(--surface)]  outline-none" />
+                      <button onClick={() => setManualBonuses(prev => prev.filter(x => x.localId !== b.localId))} className="w-8 h-8 flex items-center justify-center rounded-lg border border-[var(--border)]  bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] cursor-pointer"><Trash2 size={12} className="text-[var(--danger-text)]" /></button>
                     </div>
                     <div className="flex items-center gap-2 px-1">
-                      <span className="text-[10px] text-gray-400">Fiscal :</span>
+                      <span className="text-[10px] text-[var(--text-secondary)]">Fiscal :</span>
                       <BonusFiscalBadge label="ITS"  active={b.isTaxable} onChange={() => updateBonus(b.localId, { isTaxable: !b.isTaxable })} color="cyan" />
                       <BonusFiscalBadge label="CNSS" active={b.isCnss}    onChange={() => updateBonus(b.localId, { isCnss: !b.isCnss })} color="emerald" />
-                      {!b.isTaxable && !b.isCnss && <span className="text-[10px] text-amber-500 font-semibold">→ versée au net</span>}
+                      {!b.isTaxable && !b.isCnss && <span className="text-[10px] text-[var(--warning-text)] font-semibold">→ versée au net</span>}
                     </div>
                   </div>
                 ))}
@@ -541,45 +543,45 @@ export default function SimulateurPage() {
           </div>
 
           {/* ✅ AVANCES / PRÊTS */}
-          <div className="bg-white dark:bg-gray-800 border border-red-200 dark:border-red-800/50 rounded-2xl p-5">
+          <div className="bg-[var(--surface)]  border border-[var(--border)]  rounded-2xl p-5">
             <div className="flex items-center gap-2 mb-1">
-              <CreditCard size={14} className="text-red-500" />
-              <h3 className="font-bold text-sm text-gray-900 dark:text-white">Avances & Prêts</h3>
-              <span className="text-[10px] text-gray-400 ml-1">(déduites du net)</span>
-              <button onClick={addAdvance} className="ml-auto flex items-center gap-1 px-2.5 py-1 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-100 cursor-pointer"><Plus size={10} /> Ajouter</button>
+              <CreditCard size={14} className="text-[var(--danger-text)]" />
+              <h3 className="font-semibold text-sm text-[var(--text)] dark:text-[var(--on-brand)]">Avances & Prêts</h3>
+              <span className="text-[10px] text-[var(--text-secondary)] ml-1">(déduites du net)</span>
+              <button onClick={addAdvance} className="ml-auto flex items-center gap-1 px-2.5 py-1 bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  border border-[var(--border)]  rounded-lg text-xs font-semibold text-[var(--danger-text)]  hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] cursor-pointer"><Plus size={10} /> Ajouter</button>
             </div>
             {manualAdvances.length === 0 ? (
-              <p className="text-xs text-gray-400 text-center py-3">Aucune avance · le backend utilise les avances enregistrées</p>
+              <p className="text-xs text-[var(--text-secondary)] text-center py-3">Aucune avance · le backend utilise les avances enregistrées</p>
             ) : (
               <div className="space-y-2 mt-2">
                 {manualAdvances.map(a => (
                   <div key={a.localId} className="flex gap-2 items-center">
                     <input placeholder="Libellé" value={a.label} onChange={e => updateAdvance(a.localId, { label: e.target.value })}
-                      className="flex-1 px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 outline-none" />
+                      className="flex-1 px-3 py-2 border border-[var(--border)]  rounded-lg text-sm bg-[var(--surface)]  outline-none" />
                     <input type="number" placeholder="Montant" value={a.amount || ''} onChange={e => updateAdvance(a.localId, { amount: Number(e.target.value) })}
-                      className="w-28 px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm font-mono bg-white dark:bg-gray-700 outline-none" />
-                    <button onClick={() => setManualAdvances(prev => prev.filter(x => x.localId !== a.localId))} className="w-8 h-8 flex items-center justify-center rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 cursor-pointer"><Trash2 size={12} className="text-red-500" /></button>
+                      className="w-28 px-3 py-2 border border-[var(--border)]  rounded-lg text-sm font-mono bg-[var(--surface)]  outline-none" />
+                    <button onClick={() => setManualAdvances(prev => prev.filter(x => x.localId !== a.localId))} className="w-8 h-8 flex items-center justify-center rounded-lg border border-[var(--border)]  bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] cursor-pointer"><Trash2 size={12} className="text-[var(--danger-text)]" /></button>
                   </div>
                 ))}
-                <p className="text-[10px] text-red-500 mt-1">ℹ Si le backend gère déjà ces avances, elles seront dédupliquées automatiquement</p>
+                <p className="text-[10px] text-[var(--danger-text)] mt-1">ℹ Si le backend gère déjà ces avances, elles seront dédupliquées automatiquement</p>
               </div>
             )}
           </div>
 
           {/* Erreur */}
           {error && (
-            <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
-              <AlertCircle size={14} className="text-red-500 shrink-0" />
-              <span className="text-sm text-red-600 dark:text-red-400">{error}</span>
+            <div className="flex items-center gap-2 p-3 bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  border border-[var(--border)]  rounded-xl">
+              <AlertCircle size={14} className="text-[var(--danger-text)] shrink-0" />
+              <span className="text-sm text-[var(--danger-text)] ">{error}</span>
             </div>
           )}
 
           {/* Bouton simuler */}
           <button onClick={handleSimulate} disabled={isSimulating || !canSimulate}
-            className={`w-full py-3.5 rounded-xl font-black text-sm flex items-center justify-center gap-2 transition-all duration-200
-              ${(!canSimulate || isSimulating) ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
-                : mode === 'free' ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-lg shadow-amber-500/25 cursor-pointer'
-                : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/25 cursor-pointer'}`}>
+            className={`w-full py-3.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-colors duration-200
+              ${(!canSimulate || isSimulating) ? 'bg-[var(--surface-2)]  text-[var(--text-secondary)] cursor-not-allowed'
+                : mode === 'free' ? 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] hover:bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)] shadow-lg  cursor-pointer'
+                : 'bg-[var(--brand)] hover:bg-[var(--brand)] text-[var(--on-brand)] shadow-lg  cursor-pointer'}`}>
             {isSimulating ? <><Loader2 size={16} className="animate-spin" /> Calcul en cours...</> : <><Play size={16} /> Simuler</>}
           </button>
         </div>
@@ -587,52 +589,54 @@ export default function SimulateurPage() {
         {/* ══ RÉSULTATS ════════════════════════════════════════════════════ */}
         <div>
           {!result ? (
-            <div className="bg-gray-50 dark:bg-gray-800/50 border border-dashed border-gray-200 dark:border-gray-700 rounded-2xl p-16 text-center">
-              <FlaskConical size={36} className="mx-auto text-gray-300 dark:text-gray-600 mb-3" />
-              <p className="text-sm text-gray-400">{mode === 'free' ? 'Renseignez le salaire et cliquez Simuler' : 'Sélectionnez un employé et cliquez Simuler'}</p>
+            <div className="bg-[var(--surface-2)]  border border-dashed border-[var(--border)]  rounded-2xl p-16 text-center">
+              <FlaskConical size={36} className="mx-auto text-[var(--text-secondary)]  mb-3" />
+              <p className="text-sm text-[var(--text-secondary)]">{mode === 'free' ? 'Renseignez le salaire et cliquez Simuler' : 'Sélectionnez un employé et cliquez Simuler'}</p>
             </div>
           ) : (
             <div className="space-y-4">
 
               {/* NET À PAYER */}
-              <div className="bg-gray-900 dark:bg-black rounded-2xl p-5 text-white">
+              <div className="bg-[var(--surface-2)] dark:bg-[var(--text)] rounded-2xl p-5 text-[var(--on-brand)]">
                 <div className="flex justify-between items-start mb-2">
                   <div>
-                    <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Net à payer</p>
-                    <p className="text-3xl font-black font-mono tracking-tight">{fmt(result.netSalary)}<span className="text-base font-normal text-gray-400 ml-2">FCFA</span></p>
+                    <p className="text-[10px] text-[var(--text-secondary)] uppercase tracking-widest mb-1">Net à payer</p>
+                    <p className="text-3xl font-semibold font-mono tracking-tight">{fmt(result.netSalary)}<span className="text-base font-normal text-[var(--text-secondary)] ml-2">FCFA</span></p>
                   </div>
-                  <button onClick={handleCopy} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition-colors cursor-pointer ${copied ? 'border-emerald-500 text-emerald-400 bg-emerald-500/10' : 'border-gray-700 text-gray-400 hover:border-gray-600'}`}>
+                  <button onClick={handleCopy} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors cursor-pointer ${copied ? 'border-[var(--border)] text-[var(--action)] bg-[var(--brand-soft)]' : 'border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border)]'}`}>
                     {copied ? <><Check size={12} /> Copié !</> : <><Copy size={12} /> Copier</>}
                   </button>
                 </div>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-[var(--text-secondary)]">
                   {[result.employee.firstName, result.employee.lastName].filter(Boolean).join(' ') || 'Anonyme'}{' · '}{MONTHS[result.month-1]} {result.year}{' · '}{result.daysToPay}/{result.workDays} jours
                 </p>
               </div>
 
               {/* DÉTAIL DU BULLETIN — même composant que les aperçus de paie */}
-              <PayslipBreakdown result={result} defaultOpenEmployer />
+              <div className="loan-document-protected">
+                <PayslipBreakdown result={result} defaultOpenEmployer />
+              </div>
 
               {/* DÉTAIL ITS */}
               {result.irppDetails && !result.isBncWorker && result.irppDetails.fiscalParts && (
-                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden">
+                <div className="bg-[var(--surface)]  border border-[var(--border)]  rounded-2xl overflow-hidden">
                   <button onClick={() => setShowItsDetail(d => !d)}
-                    className="w-full flex items-center justify-between px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer">
+                    className="w-full flex items-center justify-between px-4 py-3 text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider cursor-pointer">
                     <span>Détail du calcul {isForfait ? 'forfait' : isLegacyMode ? 'IRPP' : 'ITS'}</span>
                     {showItsDetail ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                   </button>
                   {showItsDetail && (
-                    <div className="px-4 pb-4 text-xs text-gray-500 space-y-1.5">
-                      {!isForfait && <p>Base imposable (brut − CNSS) : <span className="font-mono font-bold">{fmt(result.irppDetails.baseImposable)} F</span></p>}
-                      {!isForfait && <p>{abattementLabel} : <span className="font-mono font-bold">−{fmt(result.irppDetails.abattement)} F</span></p>}
-                      {!isForfait && <p>Revenu net imposable : <span className="font-mono font-bold">{fmt(result.irppDetails.revenuNetImposable)} F</span></p>}
-                      <p>Parts fiscales : <span className="font-bold">{result.irppDetails.fiscalParts}</span></p>
-                      {!isForfait && result.irppDetails.revenuParPart != null && <p>Revenu annuel par part : <span className="font-mono font-bold">{fmt(result.irppDetails.revenuParPart)} F</span></p>}
+                    <div className="px-4 pb-4 text-xs text-[var(--text-secondary)] space-y-1.5">
+                      {!isForfait && <p>Base imposable (brut − CNSS) : <span className="font-mono font-semibold">{fmt(result.irppDetails.baseImposable)} F</span></p>}
+                      {!isForfait && <p>{abattementLabel} : <span className="font-mono font-semibold">−{fmt(result.irppDetails.abattement)} F</span></p>}
+                      {!isForfait && <p>Revenu net imposable : <span className="font-mono font-semibold">{fmt(result.irppDetails.revenuNetImposable)} F</span></p>}
+                      <p>Parts fiscales : <span className="font-semibold">{result.irppDetails.fiscalParts}</span></p>
+                      {!isForfait && result.irppDetails.revenuParPart != null && <p>Revenu annuel par part : <span className="font-mono font-semibold">{fmt(result.irppDetails.revenuParPart)} F</span></p>}
                       {Array.isArray(result.irppDetails.details) && result.irppDetails.details.map((d: any, i: number) => (
-                        <p key={i} className="pl-2">{d.tranche} · {d.taux}% sur {fmt(d.base)} F = <span className="font-mono font-bold">{fmt(d.montant)} F</span></p>
+                        <p key={i} className="pl-2">{d.tranche} · {d.taux}% sur {fmt(d.base)} F = <span className="font-mono font-semibold">{fmt(d.montant)} F</span></p>
                       ))}
-                      <p>Taux effectif : <span className="font-bold">{result.irppDetails.effectiveRate}%</span></p>
-                      <p className={`font-semibold ${isForfait || isLegacyMode ? 'text-amber-500' : 'text-emerald-500'}`}>
+                      <p>Taux effectif : <span className="font-semibold">{result.irppDetails.effectiveRate}%</span></p>
+                      <p className={`font-semibold ${isForfait || isLegacyMode ? 'text-[var(--warning-text)]' : 'text-[var(--success-text)]'}`}>
                         Mode : {isForfait ? `Forfait ${Math.round((result.irppDetails.forfaitRate ?? forfaitRate) * 100)}%` : isLegacyMode ? 'IRPP legacy (avant 2026)' : 'ITS 2026'}
                       </p>
                     </div>
@@ -642,9 +646,9 @@ export default function SimulateurPage() {
 
               {/* Badge mode */}
               <div className={`text-center py-2 px-4 rounded-xl text-xs font-medium border
-                ${result.simulationMode === 'FREE_SIMULATION' ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 border-amber-200 dark:border-amber-800'
-                  : result.simulationMode === 'MANUAL_OVERRIDE' ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 border-emerald-200'
-                  : 'bg-gray-50 dark:bg-gray-800 text-gray-500 border-gray-200'}`}>
+                ${result.simulationMode === 'FREE_SIMULATION' ? 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  text-[var(--warning-text)] border-[var(--border)] '
+                  : result.simulationMode === 'MANUAL_OVERRIDE' ? 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  text-[var(--success-text)] border-[var(--border)]'
+                  : 'bg-[var(--surface-2)]  text-[var(--text-secondary)] border-[var(--border)]'}`}>
                 {result.simulationMode === 'FREE_SIMULATION' ? '🆓 Simulation libre · calcul 100% backend'
                   : result.simulationMode === 'MANUAL_OVERRIDE' ? '⚡ Valeurs manuelles · calcul 100% backend'
                   : '📊 Depuis pointage BDD · calcul 100% backend'}
@@ -654,6 +658,7 @@ export default function SimulateurPage() {
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </ModulePageFrame>
   );
 }

@@ -16,13 +16,20 @@
 
 import React, { useEffect, useState } from 'react';
 import { CalendarRange, Users, Wallet, PiggyBank, Building2, TrendingUp, TrendingDown } from 'lucide-react';
+import { useReducedMotion } from 'framer-motion';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
 import { api } from '@/services/api';
+import { Badge, Card, EmptyState, Select } from '@/components/design-system/primitives';
 
-const C = { sky: '#0EA5E9', emerald: '#10B981', violet: '#8B5CF6', rose: '#EF4444' };
+const C = {
+  sky: 'var(--brand)',
+  emerald: 'var(--green)',
+  violet: 'var(--mustard)',
+  rose: 'var(--text-secondary)',
+};
 
 const MONTHS = [
   'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
@@ -59,28 +66,30 @@ function KpiCard({ icon: Icon, label, value, sub, color, trend }: {
   icon: any; label: string; value: string; sub?: string; color: string; trend?: number | null;
 }) {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col gap-3">
+    <Card className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: color + '20' }}>
-          <Icon size={20} style={{ color }} />
-        </div>
+        <Icon size={19} strokeWidth={1.5} style={{ color }} aria-hidden="true" />
         {trend !== null && trend !== undefined && (
-          <span className={`text-xs font-bold flex items-center gap-1 ${trend >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-            {trend >= 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />} {Math.abs(trend).toFixed(1)}%
-          </span>
+          <Badge tone={trend >= 0 ? 'success' : 'danger'}>
+            <span className="flex items-center gap-1">
+              {trend >= 0 ? <TrendingUp size={12} strokeWidth={1.5} /> : <TrendingDown size={12} strokeWidth={1.5} />}
+              {Math.abs(trend).toFixed(1)}%
+            </span>
+          </Badge>
         )}
       </div>
       <div>
-        <p className="text-2xl font-black text-gray-900 dark:text-white tracking-tight">{value}</p>
-        <p className="text-xs font-bold text-gray-500 mt-0.5">{label}</p>
-        {sub && <p className="text-[11px] text-gray-400 mt-0.5">{sub}</p>}
+        <p className="text-2xl font-semibold text-[var(--text)] tracking-tight tabular-nums">{value}</p>
+        <p className="text-xs font-semibold text-[var(--text-secondary)] mt-1">{label}</p>
+        {sub && <p className="text-[11px] text-[var(--text-secondary)] mt-1">{sub}</p>}
       </div>
-    </div>
+    </Card>
   );
 }
 
 export default function YearlyEvolutionPanel({ companyId }: { companyId?: string }) {
   const currentYear = new Date().getFullYear();
+  const prefersReducedMotion = useReducedMotion();
 
   const [yearFrom, setYearFrom] = useState(currentYear);
   const [yearTo, setYearTo] = useState(currentYear);
@@ -142,59 +151,33 @@ export default function YearlyEvolutionPanel({ companyId }: { companyId?: string
   const yearOptions: number[] = [];
   for (let y = currentYear - 20; y <= currentYear + 5; y++) yearOptions.push(y);
 
+  const periodFilters = (
+    <div className="flex flex-wrap items-end gap-3">
+      <Select label="De" value={yearFrom} onChange={(e) => setYearFrom(Number(e.target.value))}>
+        {yearOptions.map((y) => <option key={y} value={y}>{y}</option>)}
+      </Select>
+      <Select label="À" value={yearTo} onChange={(e) => setYearTo(Number(e.target.value))}>
+        {yearOptions.map((y) => <option key={y} value={y}>{y}</option>)}
+      </Select>
+      <Select label="Mois" value={monthFilter ?? ''} onChange={(e) => setMonthFilter(e.target.value ? Number(e.target.value) : null)}>
+        <option value="">Année entière</option>
+        {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
+      </Select>
+    </div>
+  );
+
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-6 space-y-5">
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-xl bg-sky-100 dark:bg-sky-900/20 flex items-center justify-center">
-            <CalendarRange size={18} className="text-sky-600" />
-          </div>
-          <div>
-            <h3 className="text-sm font-black text-gray-900 dark:text-white">Évolution pluriannuelle</h3>
-            <p className="text-[11px] text-gray-400">Comparer plusieurs années — masse salariale, net, charges</p>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-bold text-gray-400 uppercase tracking-wide">De</span>
-          <select
-            value={yearFrom}
-            onChange={(e) => setYearFrom(Number(e.target.value))}
-            className="px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm font-bold text-gray-700 dark:text-white"
-          >
-            {yearOptions.map((y) => <option key={y} value={y}>{y}</option>)}
-          </select>
-          <span className="text-xs font-bold text-gray-400 uppercase tracking-wide">à</span>
-          <select
-            value={yearTo}
-            onChange={(e) => setYearTo(Number(e.target.value))}
-            className="px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm font-bold text-gray-700 dark:text-white"
-          >
-            {yearOptions.map((y) => <option key={y} value={y}>{y}</option>)}
-          </select>
-
-          <span className="text-xs font-bold text-gray-400 uppercase tracking-wide ml-2">Mois</span>
-          <select
-            value={monthFilter ?? ''}
-            onChange={(e) => setMonthFilter(e.target.value ? Number(e.target.value) : null)}
-            className="px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm font-bold text-gray-700 dark:text-white"
-          >
-            <option value="">Année entière</option>
-            {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
-          </select>
-        </div>
-      </div>
+    <Card title="Évolution pluriannuelle" action={periodFilters}>
+      <p className="text-xs text-[var(--text-secondary)] mb-5">Comparer plusieurs années — masse salariale, net et charges.</p>
 
       {loading ? (
         <KonzaLoader variant="section" />
       ) : !data || data.years.length === 0 ? (
-        <div className="py-12 text-center text-gray-400 text-sm">
-          Aucune donnée de paie sur cette plage d&apos;années.
-        </div>
+        <EmptyState title="Aucune donnée de paie sur cette plage d'années" icon={CalendarRange}>Essayez une autre période pour afficher l’évolution de la masse salariale.</EmptyState>
       ) : (
         <>
           {/* KPI de la plage — cumul sur la période + évolution début → fin */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             <KpiCard
               icon={Users}
               label="Effectif"
@@ -230,63 +213,77 @@ export default function YearlyEvolutionPanel({ companyId }: { companyId?: string
           </div>
 
           {!isSingleYear && brutEvolution !== null && (
-            <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold ${
-              brutEvolution >= 0
-                ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                : 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400'
-            }`}>
+            <div className="mt-5">
+              <Badge tone={brutEvolution >= 0 ? 'success' : 'danger'}>
               Masse salariale brute {brutEvolution >= 0 ? 'en hausse' : 'en baisse'} de {Math.abs(brutEvolution).toFixed(1)}%
               {' '}entre {first!.year} et {last!.year}
+              </Badge>
             </div>
           )}
 
-          <div className="h-72">
+          <div className="h-[300px] w-full min-w-0 mt-6">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="year" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} label={{ value: 'K FCFA', angle: -90, position: 'insideLeft', fontSize: 11 }} />
-                <Tooltip formatter={(v: number) => `${v.toLocaleString('fr-FR')} K FCFA`} />
-                <Legend />
-                <Line type="linear" dataKey="Brut" stroke={C.sky} strokeWidth={2} dot={{ r: 3 }} />
-                <Line type="linear" dataKey="Net" stroke={C.emerald} strokeWidth={2} dot={{ r: 3 }} />
-                <Line type="linear" dataKey="Charges patronales" stroke={C.violet} strokeWidth={2} dot={{ r: 3 }} />
-                <Line type="linear" dataKey="Charges salariales" stroke={C.rose} strokeWidth={2} dot={{ r: 3 }} />
+                <CartesianGrid strokeDasharray="3 6" stroke="var(--border)" vertical={false} />
+                <XAxis dataKey="year" tick={{ fontSize: 11, fill: 'var(--text-secondary)' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: 'var(--text-secondary)' }} axisLine={false} tickLine={false} label={{ value: 'K FCFA', angle: -90, position: 'insideLeft', fontSize: 11, fill: 'var(--text-secondary)' }} />
+                <Tooltip contentStyle={{ background: 'var(--surface)', border: 0, borderRadius: 'var(--radius-control)', color: 'var(--text)', boxShadow: 'var(--shadow-pop)', fontSize: 12 }} labelStyle={{ color: 'var(--text)', fontWeight: 600 }} formatter={(v: number) => `${v.toLocaleString('fr-FR')} K FCFA`} />
+                <Legend wrapperStyle={{ fontSize: 11, color: 'var(--text-secondary)' }} />
+                <Line type="monotone" dataKey="Brut" stroke={C.sky} strokeWidth={2.25} dot={false} activeDot={{ r: 4 }} isAnimationActive={prefersReducedMotion !== true} animationDuration={700} />
+                <Line type="monotone" dataKey="Net" stroke={C.emerald} strokeWidth={2.25} dot={false} activeDot={{ r: 4 }} isAnimationActive={prefersReducedMotion !== true} animationDuration={700} />
+                <Line type="monotone" dataKey="Charges patronales" stroke={C.violet} strokeWidth={2.25} dot={false} activeDot={{ r: 4 }} isAnimationActive={prefersReducedMotion !== true} animationDuration={700} />
+                <Line type="monotone" dataKey="Charges salariales" stroke={C.rose} strokeWidth={2} dot={false} activeDot={{ r: 4 }} isAnimationActive={prefersReducedMotion !== true} animationDuration={700} />
               </LineChart>
             </ResponsiveContainer>
           </div>
 
           {/* Détail chiffré par année — pratique pour comparer précisément */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          <div className="k-table-desktop overflow-x-auto mt-5">
+            <table className="k-table">
+              <caption className="k-sr-only">Détail des indicateurs de paie par année</caption>
               <thead>
-                <tr className="text-left text-[11px] uppercase text-gray-400 border-b border-gray-100 dark:border-gray-700">
-                  <th className="py-2 pr-4">Année</th>
-                  <th className="py-2 pr-4 text-right">Effectif</th>
-                  <th className="py-2 pr-4 text-right">Brut</th>
-                  <th className="py-2 pr-4 text-right">Net</th>
-                  <th className="py-2 pr-4 text-right">Charges patronales</th>
-                  <th className="py-2 pr-4 text-right">Charges salariales</th>
-                  <th className="py-2 text-right">Coût total employeur</th>
+                <tr>
+                  <th scope="col">Année</th>
+                  <th scope="col" className="text-right">Effectif</th>
+                  <th scope="col" className="text-right">Brut</th>
+                  <th scope="col" className="text-right">Net</th>
+                  <th scope="col" className="text-right">Charges patronales</th>
+                  <th scope="col" className="text-right">Charges salariales</th>
+                  <th scope="col" className="text-right">Coût total employeur</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50 dark:divide-gray-700/50">
+              <tbody>
                 {data.years.map((y) => (
                   <tr key={y.year}>
-                    <td className="py-2 pr-4 font-bold text-gray-900 dark:text-white">{y.year}</td>
-                    <td className="py-2 pr-4 text-right text-gray-500">{y.effectif}</td>
-                    <td className="py-2 pr-4 text-right text-gray-700 dark:text-gray-300">{fcfa(y.brut)}</td>
-                    <td className="py-2 pr-4 text-right text-gray-700 dark:text-gray-300">{fcfa(y.net)}</td>
-                    <td className="py-2 pr-4 text-right text-violet-600">{fcfa(y.chargesPatronales)}</td>
-                    <td className="py-2 pr-4 text-right text-rose-500">{fcfa(y.chargesSalariales)}</td>
-                    <td className="py-2 text-right font-bold text-gray-900 dark:text-white">{fcfa(y.coutTotalEmployeur)}</td>
+                    <td className="font-semibold">{y.year}</td>
+                    <td className="text-right text-[var(--text-secondary)]">{y.effectif}</td>
+                    <td className="text-right">{fcfa(y.brut)}</td>
+                    <td className="text-right">{fcfa(y.net)}</td>
+                    <td className="text-right text-[var(--mustard)]">{fcfa(y.chargesPatronales)}</td>
+                    <td className="text-right text-[var(--text-secondary)]">{fcfa(y.chargesSalariales)}</td>
+                    <td className="text-right font-semibold">{fcfa(y.coutTotalEmployeur)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+          <ul className="k-table-mobile mt-5" aria-label="Détail des indicateurs de paie par année">
+            {data.years.map((y) => (
+              <li key={y.year}>
+                <dl>
+                  <div><dt>Année</dt><dd className="font-semibold">{y.year}</dd></div>
+                  <div><dt>Effectif</dt><dd>{y.effectif}</dd></div>
+                  <div><dt>Brut</dt><dd>{fcfa(y.brut)}</dd></div>
+                  <div><dt>Net</dt><dd>{fcfa(y.net)}</dd></div>
+                  <div><dt>Charges patronales</dt><dd className="text-[var(--mustard)]">{fcfa(y.chargesPatronales)}</dd></div>
+                  <div><dt>Charges salariales</dt><dd>{fcfa(y.chargesSalariales)}</dd></div>
+                  <div><dt>Coût total employeur</dt><dd className="font-semibold">{fcfa(y.coutTotalEmployeur)}</dd></div>
+                </dl>
+              </li>
+            ))}
+          </ul>
         </>
       )}
-    </div>
+    </Card>
   );
 }

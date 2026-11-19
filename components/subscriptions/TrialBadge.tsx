@@ -121,6 +121,7 @@ export function TrialBadge() {
 
   // 💎 Plans payants (FREE, BASIC, PRO, ENTERPRISE)
   const planConfig = {
+    STARTER:{icon:null,label:'25 employés',gradient:'',bg:'bg-[var(--brand-soft)]',text:'text-[var(--action)]'},
     FREE: {
       icon: null,
       label: 'Gratuit',

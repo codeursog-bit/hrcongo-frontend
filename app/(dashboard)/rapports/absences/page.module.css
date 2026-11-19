@@ -1,0 +1,12 @@
+.page :global(.loan-module-content [class*="rounded-2xl"][class*="border"][class*="bg-white"]:not(button)),
+.page :global(.loan-module-content [class*="rounded-2xl"][class*="border"][class*="bg-gray-800"]:not(button)) {
+  background-color: var(--surface);
+  border-color: transparent;
+  box-shadow: var(--shadow-card);
+}
+
+.page :global(.loan-module-content button[class*="bg-sky-500"]),
+.page :global(.loan-module-content button[class*="bg-[var(--brand)]"]) {
+  background-color: var(--action);
+  color: var(--on-brand);
+}

@@ -1,4 +1,6 @@
 'use client';
+import { chartTheme } from '@/lib/chart-theme';
+
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -16,10 +18,10 @@ import { useBasePath } from '@/hooks/useBasePath';
 import RapportsSubNav from '@/components/RapportsSubNav';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
-const COLORS = ['#0EA5E9', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#6366F1', '#F97316', '#14B8A6'];
-const GOAL_COLORS: Record<string, string> = { NOT_STARTED: '#94A3B8', IN_PROGRESS: '#0EA5E9', COMPLETED: '#10B981', CANCELLED: '#EF4444' };
-const REVIEW_COLORS: Record<string, string> = { DRAFT: '#94A3B8', SUBMITTED: '#0EA5E9', ACKNOWLEDGED: '#10B981' };
-const TOOLTIP_STYLE = { backgroundColor: '#1f2937', color: '#fff', borderRadius: '12px', border: 'none' };
+const COLORS = chartTheme.series;
+const GOAL_COLORS: Record<string, string> = { NOT_STARTED: 'var(--text-muted)', IN_PROGRESS: 'var(--brand)', COMPLETED: 'var(--green)', CANCELLED: 'var(--danger)' };
+const REVIEW_COLORS: Record<string, string> = { DRAFT: 'var(--text-muted)', SUBMITTED: 'var(--brand)', ACKNOWLEDGED: 'var(--green)' };
+const TOOLTIP_STYLE = { backgroundColor: 'var(--surface)', color: 'var(--text)', borderRadius: '12px', border: 'none' };
 
 interface TileDef {
   key: string;
@@ -30,8 +32,9 @@ interface TileDef {
 }
 
 import PeriodSelector, { PeriodValue } from '@/components/PeriodSelector';
+import { ReportsFrame as ModulePageFrame } from '@/components/reports/ReportsFrame';
 
-export default function IndicateursRhPage() {
+function IndicateursRhPage() {
   const router = useRouter();
   const { bp } = useBasePath();
   const [workforce, setWorkforce] = useState<any>(null);
@@ -96,13 +99,13 @@ export default function IndicateursRhPage() {
       render: (big) => (
         <ResponsiveContainer width="100%" height={big ? 480 : 260}>
           <BarChart layout="vertical" data={workforce?.pyramid || []} margin={{ left: 10, right: 20 }}>
-            <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+
             <XAxis type="number" hide />
             <YAxis dataKey="label" type="category" width={80} axisLine={false} tickLine={false} />
-            <Tooltip contentStyle={TOOLTIP_STYLE} />
+            <Tooltip contentStyle={chartTheme.tooltip} />
             <Legend />
-            <Bar dataKey="male"   name="Hommes" fill="#0EA5E9" radius={[0, 8, 8, 0]} />
-            <Bar dataKey="female" name="Femmes" fill="#EC4899" radius={[0, 8, 8, 0]} />
+            <Bar isAnimationActive={false} maxBarSize={32} background={{fill:chartTheme.track,radius:8}} dataKey="male"   name="Hommes" fill="var(--brand)" radius={[0, 8, 8, 0]} />
+            <Bar isAnimationActive={false} maxBarSize={32} background={{fill:chartTheme.track,radius:8}} dataKey="female" name="Femmes" fill="var(--mustard)" radius={[0, 8, 8, 0]} />
           </BarChart>
         </ResponsiveContainer>
       ),
@@ -112,13 +115,13 @@ export default function IndicateursRhPage() {
       render: (big) => (
         <ResponsiveContainer width="100%" height={big ? 480 : 260}>
           <BarChart layout="vertical" data={workforce?.seniority || []} margin={{ left: 10, right: 20 }}>
-            <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+
             <XAxis type="number" hide />
             <YAxis dataKey="label" type="category" width={80} axisLine={false} tickLine={false} />
-            <Tooltip contentStyle={TOOLTIP_STYLE} />
+            <Tooltip contentStyle={chartTheme.tooltip} />
             <Legend />
-            <Bar dataKey="male"   name="Hommes" fill="#8B5CF6" radius={[0, 8, 8, 0]} />
-            <Bar dataKey="female" name="Femmes" fill="#F59E0B" radius={[0, 8, 8, 0]} />
+            <Bar isAnimationActive={false} maxBarSize={32} background={{fill:chartTheme.track,radius:8}} dataKey="male"   name="Hommes" fill="var(--brand)" radius={[0, 8, 8, 0]} />
+            <Bar isAnimationActive={false} maxBarSize={32} background={{fill:chartTheme.track,radius:8}} dataKey="female" name="Femmes" fill="var(--mustard)" radius={[0, 8, 8, 0]} />
           </BarChart>
         </ResponsiveContainer>
       ),
@@ -130,15 +133,15 @@ export default function IndicateursRhPage() {
           <AreaChart data={workforce?.trend || []}>
             <defs>
               <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#0EA5E9" stopOpacity={0.35} />
-                <stop offset="95%" stopColor="#0EA5E9" stopOpacity={0} />
+                <stop offset="5%" stopColor="var(--brand)" stopOpacity={0.35} />
+                <stop offset="95%" stopColor="var(--brand)" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+
             <XAxis dataKey="month" axisLine={false} tickLine={false} />
             <YAxis axisLine={false} tickLine={false} />
-            <Tooltip contentStyle={TOOLTIP_STYLE} />
-            <Area type="monotone" dataKey="total" name="Effectif" stroke="#0EA5E9" fill="url(#colorTotal)" strokeWidth={3} />
+            <Tooltip contentStyle={chartTheme.tooltip} />
+            <Area isAnimationActive={false} activeDot={{r:5,stroke:chartTheme.surface,strokeWidth:3}} type="monotone" dataKey="total" name="Effectif" stroke="var(--brand)" fill="url(#colorTotal)" strokeWidth={3} />
           </AreaChart>
         </ResponsiveContainer>
       ),
@@ -148,11 +151,11 @@ export default function IndicateursRhPage() {
       render: (big) => (
         <ResponsiveContainer width="100%" height={big ? 480 : 260}>
           <LineChart data={workforce?.turnoverDetail?.monthly || []}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+
             <XAxis dataKey="month" axisLine={false} tickLine={false} />
             <YAxis axisLine={false} tickLine={false} unit="%" />
-            <Tooltip contentStyle={TOOLTIP_STYLE} />
-            <Line type="monotone" dataKey="rate" name="Turnover" stroke="#EF4444" strokeWidth={3} dot={{ r: 3 }} />
+            <Tooltip contentStyle={chartTheme.tooltip} />
+            <Line isAnimationActive={false} activeDot={{r:5,stroke:chartTheme.surface,strokeWidth:3}} type="monotone" dataKey="rate" name="Turnover" stroke="var(--danger)" strokeWidth={3} dot={{ r: 3 }} />
           </LineChart>
         </ResponsiveContainer>
       ),
@@ -162,11 +165,11 @@ export default function IndicateursRhPage() {
       render: (big) => (
         <ResponsiveContainer width="100%" height={big ? 480 : 260}>
           <BarChart layout="vertical" data={deptRows} margin={{ left: 10, right: 20 }}>
-            <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+
             <XAxis type="number" hide />
             <YAxis dataKey="name" type="category" width={110} axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
-            <Tooltip contentStyle={TOOLTIP_STYLE} />
-            <Bar dataKey="headcount" name="Effectif" radius={[0, 8, 8, 0]}>
+            <Tooltip contentStyle={chartTheme.tooltip} />
+            <Bar isAnimationActive={false} maxBarSize={32} background={{fill:chartTheme.track,radius:8}} dataKey="headcount" name="Effectif" radius={[0, 8, 8, 0]}>
               {deptRows.map((d: any, idx: number) => <Cell key={idx} fill={d.color || COLORS[idx % COLORS.length]} />)}
             </Bar>
           </BarChart>
@@ -178,11 +181,11 @@ export default function IndicateursRhPage() {
       render: (big) => (
         <ResponsiveContainer width="100%" height={big ? 480 : 260}>
           <BarChart layout="vertical" data={deptRows} margin={{ left: 10, right: 20 }}>
-            <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+
             <XAxis type="number" hide />
             <YAxis dataKey="name" type="category" width={110} axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
-            <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any) => `${Math.round(v).toLocaleString('fr-FR')} FCFA`} />
-            <Bar dataKey="totalEmployerCost" name="Coût employeur" radius={[0, 8, 8, 0]}>
+            <Tooltip contentStyle={chartTheme.tooltip} formatter={(v: any) => `${Math.round(v).toLocaleString('fr-FR')} FCFA`} />
+            <Bar isAnimationActive={false} maxBarSize={32} background={{fill:chartTheme.track,radius:8}} dataKey="totalEmployerCost" name="Coût employeur" radius={[0, 8, 8, 0]}>
               {deptRows.map((d: any, idx: number) => <Cell key={idx} fill={d.color || COLORS[idx % COLORS.length]} />)}
             </Bar>
           </BarChart>
@@ -194,14 +197,14 @@ export default function IndicateursRhPage() {
       render: (big) => (
         <ResponsiveContainer width="100%" height={big ? 480 : 260}>
           <LineChart data={payroll?.trend || []}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+
             <XAxis dataKey="month" axisLine={false} tickLine={false} />
             <YAxis axisLine={false} tickLine={false} />
-            <Tooltip contentStyle={TOOLTIP_STYLE} />
+            <Tooltip contentStyle={chartTheme.tooltip} />
             <Legend />
-            <Line type="monotone" dataKey="brut"    name="Brut"    stroke="#0EA5E9" strokeWidth={2} dot={false} />
-            <Line type="monotone" dataKey="net"      name="Net"     stroke="#10B981" strokeWidth={2} dot={false} />
-            <Line type="monotone" dataKey="charges" name="Charges" stroke="#F59E0B" strokeWidth={2} dot={false} />
+            <Line isAnimationActive={false} activeDot={{r:5,stroke:chartTheme.surface,strokeWidth:3}} type="monotone" dataKey="brut"    name="Brut"    stroke="var(--brand)" strokeWidth={2} dot={false} />
+            <Line isAnimationActive={false} activeDot={{r:5,stroke:chartTheme.surface,strokeWidth:3}} type="monotone" dataKey="net"      name="Net"     stroke="var(--green)" strokeWidth={2} dot={false} />
+            <Line isAnimationActive={false} activeDot={{r:5,stroke:chartTheme.surface,strokeWidth:3}} type="monotone" dataKey="charges" name="Charges" stroke="var(--mustard)" strokeWidth={2} dot={false} />
           </LineChart>
         </ResponsiveContainer>
       ),
@@ -211,10 +214,10 @@ export default function IndicateursRhPage() {
       render: (big) => (
         <ResponsiveContainer width="100%" height={big ? 480 : 260}>
           <PieChart>
-            <Pie data={leaves?.distribution || []} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={big ? 90 : 50} outerRadius={big ? 160 : 90} label>
+            <Pie isAnimationActive={false} stroke="none" cornerRadius={6} data={leaves?.distribution || []} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={big ? 90 : 50} outerRadius={big ? 160 : 90} label>
               {(leaves?.distribution || []).map((d: any, idx: number) => <Cell key={idx} fill={d.color || COLORS[idx % COLORS.length]} />)}
             </Pie>
-            <Tooltip contentStyle={TOOLTIP_STYLE} />
+            <Tooltip contentStyle={chartTheme.tooltip} />
             <Legend />
           </PieChart>
         </ResponsiveContainer>
@@ -226,16 +229,16 @@ export default function IndicateursRhPage() {
         <ResponsiveContainer width="100%" height={big ? 480 : 260}>
           <AreaChart data={leaves?.seasonal || []}>
             <defs>
-              <linearGradient id="colorAnnual2" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#0EA5E9" stopOpacity={0.3} /><stop offset="95%" stopColor="#0EA5E9" stopOpacity={0} /></linearGradient>
-              <linearGradient id="colorSick2" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#EF4444" stopOpacity={0.3} /><stop offset="95%" stopColor="#EF4444" stopOpacity={0} /></linearGradient>
+              <linearGradient id="colorAnnual2" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="var(--brand)" stopOpacity={0.3} /><stop offset="95%" stopColor="var(--brand)" stopOpacity={0} /></linearGradient>
+              <linearGradient id="colorSick2" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="var(--danger)" stopOpacity={0.3} /><stop offset="95%" stopColor="var(--danger)" stopOpacity={0} /></linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+
             <XAxis dataKey="month" axisLine={false} tickLine={false} />
             <YAxis axisLine={false} tickLine={false} />
-            <Tooltip contentStyle={TOOLTIP_STYLE} />
+            <Tooltip contentStyle={chartTheme.tooltip} />
             <Legend />
-            <Area type="monotone" dataKey="Annual" name="Congé annuel" stroke="#0EA5E9" fill="url(#colorAnnual2)" strokeWidth={2} />
-            <Area type="monotone" dataKey="Sick"   name="Maladie"      stroke="#EF4444" fill="url(#colorSick2)" strokeWidth={2} />
+            <Area isAnimationActive={false} activeDot={{r:5,stroke:chartTheme.surface,strokeWidth:3}} type="monotone" dataKey="Annual" name="Congé annuel" stroke="var(--brand)" fill="url(#colorAnnual2)" strokeWidth={2} />
+            <Area isAnimationActive={false} activeDot={{r:5,stroke:chartTheme.surface,strokeWidth:3}} type="monotone" dataKey="Sick"   name="Maladie"      stroke="var(--danger)" fill="url(#colorSick2)" strokeWidth={2} />
           </AreaChart>
         </ResponsiveContainer>
       ),
@@ -245,10 +248,10 @@ export default function IndicateursRhPage() {
       render: (big) => goalData.length === 0 ? <EmptyChart label="Aucun objectif enregistré" big={big} /> : (
         <ResponsiveContainer width="100%" height={big ? 480 : 260}>
           <PieChart>
-            <Pie data={goalData} dataKey="count" nameKey="label" cx="50%" cy="50%" innerRadius={big ? 90 : 45} outerRadius={big ? 160 : 85} label>
+            <Pie isAnimationActive={false} stroke="none" cornerRadius={6} data={goalData} dataKey="count" nameKey="label" cx="50%" cy="50%" innerRadius={big ? 90 : 45} outerRadius={big ? 160 : 85} label>
               {goalData.map((g: any, idx: number) => <Cell key={idx} fill={GOAL_COLORS[g.status] || COLORS[idx % COLORS.length]} />)}
             </Pie>
-            <Tooltip contentStyle={TOOLTIP_STYLE} />
+            <Tooltip contentStyle={chartTheme.tooltip} />
             <Legend />
           </PieChart>
         </ResponsiveContainer>
@@ -259,11 +262,11 @@ export default function IndicateursRhPage() {
       render: (big) => reviewData.length === 0 ? <EmptyChart label="Aucun entretien cette année" big={big} /> : (
         <ResponsiveContainer width="100%" height={big ? 480 : 260}>
           <BarChart layout="vertical" data={reviewData} margin={{ left: 10, right: 20 }}>
-            <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+
             <XAxis type="number" hide />
             <YAxis dataKey="label" type="category" width={120} axisLine={false} tickLine={false} />
-            <Tooltip contentStyle={TOOLTIP_STYLE} />
-            <Bar dataKey="count" name="Entretiens" radius={[0, 8, 8, 0]}>
+            <Tooltip contentStyle={chartTheme.tooltip} />
+            <Bar isAnimationActive={false} maxBarSize={32} background={{fill:chartTheme.track,radius:8}} dataKey="count" name="Entretiens" radius={[0, 8, 8, 0]}>
               {reviewData.map((r: any, idx: number) => <Cell key={idx} fill={REVIEW_COLORS[r.status] || COLORS[idx % COLORS.length]} />)}
             </Bar>
           </BarChart>
@@ -275,11 +278,11 @@ export default function IndicateursRhPage() {
       render: (big) => (
         <ResponsiveContainer width="100%" height={big ? 480 : 260}>
           <BarChart data={recruitment?.candidatesTrend || []}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+
             <XAxis dataKey="month" axisLine={false} tickLine={false} />
             <YAxis axisLine={false} tickLine={false} />
-            <Tooltip contentStyle={TOOLTIP_STYLE} />
-            <Bar dataKey="count" name="Candidatures" fill="#6366F1" radius={[8, 8, 0, 0]} />
+            <Tooltip contentStyle={chartTheme.tooltip} />
+            <Bar isAnimationActive={false} maxBarSize={32} background={{fill:chartTheme.track,radius:8}} dataKey="count" name="Candidatures" fill="var(--text-secondary)" radius={[8, 8, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       ),
@@ -289,10 +292,10 @@ export default function IndicateursRhPage() {
       render: (big) => decisionData.length === 0 ? <EmptyChart label="Aucune candidature récente" big={big} /> : (
         <ResponsiveContainer width="100%" height={big ? 480 : 260}>
           <PieChart>
-            <Pie data={decisionData} dataKey="count" nameKey="label" cx="50%" cy="50%" innerRadius={big ? 90 : 50} outerRadius={big ? 160 : 90} label>
+            <Pie isAnimationActive={false} stroke="none" cornerRadius={6} data={decisionData} dataKey="count" nameKey="label" cx="50%" cy="50%" innerRadius={big ? 90 : 50} outerRadius={big ? 160 : 90} label>
               {decisionData.map((d: any, idx: number) => <Cell key={idx} fill={COLORS[idx % COLORS.length]} />)}
             </Pie>
-            <Tooltip contentStyle={TOOLTIP_STYLE} />
+            <Tooltip contentStyle={chartTheme.tooltip} />
             <Legend />
           </PieChart>
         </ResponsiveContainer>
@@ -303,11 +306,11 @@ export default function IndicateursRhPage() {
       render: (big) => offersData.length === 0 ? <EmptyChart label="Aucune offre publiée" big={big} /> : (
         <ResponsiveContainer width="100%" height={big ? 480 : 260}>
           <BarChart data={offersData}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+
             <XAxis dataKey="label" axisLine={false} tickLine={false} />
             <YAxis axisLine={false} tickLine={false} />
-            <Tooltip contentStyle={TOOLTIP_STYLE} />
-            <Bar dataKey="count" name="Offres" radius={[8, 8, 0, 0]}>
+            <Tooltip contentStyle={chartTheme.tooltip} />
+            <Bar isAnimationActive={false} maxBarSize={32} background={{fill:chartTheme.track,radius:8}} dataKey="count" name="Offres" radius={[8, 8, 0, 0]}>
               {offersData.map((o: any, idx: number) => <Cell key={idx} fill={COLORS[idx % COLORS.length]} />)}
             </Bar>
           </BarChart>
@@ -319,10 +322,10 @@ export default function IndicateursRhPage() {
       render: (big) => trainingStatusData.length === 0 ? <EmptyChart label="Aucune formation enregistrée" big={big} /> : (
         <ResponsiveContainer width="100%" height={big ? 480 : 260}>
           <PieChart>
-            <Pie data={trainingStatusData} dataKey="count" nameKey="label" cx="50%" cy="50%" innerRadius={big ? 90 : 50} outerRadius={big ? 160 : 90} label>
+            <Pie isAnimationActive={false} stroke="none" cornerRadius={6} data={trainingStatusData} dataKey="count" nameKey="label" cx="50%" cy="50%" innerRadius={big ? 90 : 50} outerRadius={big ? 160 : 90} label>
               {trainingStatusData.map((s: any, idx: number) => <Cell key={idx} fill={COLORS[idx % COLORS.length]} />)}
             </Pie>
-            <Tooltip contentStyle={TOOLTIP_STYLE} />
+            <Tooltip contentStyle={chartTheme.tooltip} />
             <Legend />
           </PieChart>
         </ResponsiveContainer>
@@ -333,11 +336,11 @@ export default function IndicateursRhPage() {
       render: (big) => (training?.byCategory || []).length === 0 ? <EmptyChart label="Aucun coût de formation enregistré" big={big} /> : (
         <ResponsiveContainer width="100%" height={big ? 480 : 260}>
           <BarChart layout="vertical" data={training?.byCategory || []} margin={{ left: 10, right: 20 }}>
-            <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+
             <XAxis type="number" hide />
             <YAxis dataKey="label" type="category" width={120} axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
-            <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any) => `${Math.round(v).toLocaleString('fr-FR')} FCFA`} />
-            <Bar dataKey="cost" name="Coût" radius={[0, 8, 8, 0]}>
+            <Tooltip contentStyle={chartTheme.tooltip} formatter={(v: any) => `${Math.round(v).toLocaleString('fr-FR')} FCFA`} />
+            <Bar isAnimationActive={false} maxBarSize={32} background={{fill:chartTheme.track,radius:8}} dataKey="cost" name="Coût" radius={[0, 8, 8, 0]}>
               {(training?.byCategory || []).map((_: any, idx: number) => <Cell key={idx} fill={COLORS[idx % COLORS.length]} />)}
             </Bar>
           </BarChart>
@@ -352,16 +355,16 @@ export default function IndicateursRhPage() {
     <div className="max-w-[1600px] mx-auto pb-20 space-y-8">
 
       {/* HEADER */}
-      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 reports-header">
         <div className="flex items-center gap-4">
           <button
             onClick={() => router.push(bp('/rapports'))}
             className="p-2 bg-[var(--surface)] rounded-xl border border-[var(--border)]"
           >
-            <ArrowLeft size={20} className="text-[var(--text-muted)]" />
+            <ArrowLeft strokeWidth={1.5} size={20} className="text-[var(--text-muted)]" />
           </button>
           <div>
-            <h1 className="text-3xl font-bold text-[var(--text)]">
+            <h1 className="text-3xl font-semibold text-[var(--text)]">
               Indicateurs RH
             </h1>
             <p className="text-[var(--text-muted)]">
@@ -379,17 +382,17 @@ export default function IndicateursRhPage() {
           <button
             key={tile.key}
             onClick={() => setExpanded(tile.key)}
-            className="group text-left bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm hover:shadow-md hover:border-[var(--brand)] transition-all"
+            className="group text-left bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm hover:shadow-md hover:border-[var(--brand)] transition-colors reports-card"
           >
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-2">
                 <tile.icon size={17} className="text-[var(--brand)]" />
                 <div>
-                  <h4 className="text-base font-bold text-[var(--text)]">{tile.title}</h4>
+                  <h4 className="text-base font-semibold text-[var(--text)]">{tile.title}</h4>
                   {tile.subtitle && <p className="text-xs text-[var(--text-muted)]">{tile.subtitle}</p>}
                 </div>
               </div>
-              <Maximize2 size={15} className="text-[var(--text-muted)] group-hover:text-[var(--brand)] transition-colors shrink-0 mt-1" />
+              <Maximize2 strokeWidth={1.5} size={15} className="text-[var(--text-muted)] group-hover:text-[var(--brand)] transition-colors shrink-0 mt-1" />
             </div>
             {tile.render(false)}
           </button>
@@ -399,22 +402,22 @@ export default function IndicateursRhPage() {
       {/* MODALE DE DÉTAIL */}
       {activeTile && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[color-mix(in_srgb,var(--surface-2)_60%,transparent)]"
           onClick={() => setExpanded(null)}
         >
           <div
-            className="bg-[var(--surface)] rounded-2xl shadow-2xl w-full max-w-4xl p-8 relative max-h-[90vh] overflow-y-auto"
+            className="bg-[var(--surface)] rounded-2xl shadow-2xl w-full max-w-4xl p-8 relative max-h-[90vh] overflow-y-auto reports-card"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={() => setExpanded(null)}
               className="absolute top-5 right-5 p-2 rounded-xl bg-[var(--surface-2)] hover:opacity-80 transition-colors"
             >
-              <X size={18} className="text-[var(--text-muted)]" />
+              <X strokeWidth={1.5} size={18} className="text-[var(--text-muted)]" />
             </button>
             <div className="flex items-center gap-2 mb-1">
               <activeTile.icon size={20} className="text-[var(--brand)]" />
-              <h3 className="text-xl font-bold text-[var(--text)]">{activeTile.title}</h3>
+              <h3 className="text-xl font-semibold text-[var(--text)]">{activeTile.title}</h3>
             </div>
             {activeTile.subtitle && <p className="text-sm text-[var(--text-muted)] mb-6">{activeTile.subtitle}</p>}
             {activeTile.render(true)}
@@ -431,5 +434,14 @@ function EmptyChart({ label, big }: { label: string; big: boolean }) {
     <div className="flex items-center justify-center text-sm text-[var(--text-muted)]" style={{ height: big ? 480 : 260 }}>
       {label}
     </div>
+  );
+}
+
+
+export default function IndicateursRhPageWithFrame() {
+  return (
+    <ModulePageFrame kind="list">
+      <IndicateursRhPage />
+    </ModulePageFrame>
   );
 }

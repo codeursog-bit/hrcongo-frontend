@@ -39,6 +39,7 @@ export const NAVIGATION_GROUPS = [
   {
     label: 'Support',
     items: [
+      { path: '/admin/support', label: 'Conversations support', icon: BookOpen },
       { path: '/admin/actions',      label: 'Actions de support', icon: Wrench      },
       { path: '/admin/push-notifications', label: 'Notifications Push', icon: Bell  },
       { path: '/admin/blog',         label: 'Blog',           icon: BookOpen        },
@@ -53,6 +54,7 @@ export const NAVIGATION_GROUPS = [
       { path: '/admin/errors',       label: 'Error Tracker',  icon: Bug             },
       { path: '/admin/users',        label: 'Admins',         icon: Users           },
       { path: '/admin/settings',     label: 'Paramètres',     icon: Settings        },
+      { path: '/admin/assistant',    label: 'Assistant Konza',icon: BookOpen        },
     ],
   },
 ];

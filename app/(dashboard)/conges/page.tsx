@@ -1,4 +1,9 @@
 'use client';
+import '@/components/leave-history/leave-workspace.css';
+import { ModuleSelect } from '@/components/ui/ModuleSelect';
+import { LeaveModuleFrame as ModulePageFrame } from '@/components/leave-history/LeaveModuleFrame';
+import { ModulePageSkeleton } from '@/components/requests/ModulePageFrame';
+import { Button } from '@/components/design-system/primitives';
 
 import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
@@ -49,13 +54,13 @@ interface ProvisionSummary {
 // ─── Config types ─────────────────────────────────────────────────────────────
 
 const TYPE_CONFIG: Record<LeaveType, { label: string; dot: string; badge: string }> = {
-  ANNUAL:       { label: 'Congés Annuels',  dot: 'bg-emerald-400', badge: 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800' },
-  SICK:         { label: 'Maladie',         dot: 'bg-red-400',     badge: 'bg-red-50 text-red-700 border-red-100 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800' },
-  MATERNITY:    { label: 'Maternité',       dot: 'bg-amber-400',   badge: 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800' },
-  PATERNITY:    { label: 'Paternité',       dot: 'bg-emerald-400', badge: 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800' },
+  ANNUAL:       { label: 'Congés Annuels',  dot: 'bg-[var(--brand)]', badge: 'bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))] text-[var(--action)] border-[var(--border)]   ' },
+  SICK:         { label: 'Maladie',         dot: 'bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]',     badge: 'bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] text-[var(--danger-text)] border-[var(--border)]   ' },
+  MATERNITY:    { label: 'Maternité',       dot: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]',   badge: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)] border-[var(--border)]   ' },
+  PATERNITY:    { label: 'Paternité',       dot: 'bg-[var(--brand)]', badge: 'bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))] text-[var(--action)] border-[var(--border)]   ' },
   UNPAID:       { label: 'Sans Solde',      dot: 'bg-[var(--text-muted)]', badge: 'bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)]' },
-  SPECIAL:      { label: 'Événement Fam.', dot: 'bg-amber-400',    badge: 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800' },
-  COMPENSATORY: { label: 'Compensatoire',  dot: 'bg-emerald-400',  badge: 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800' },
+  SPECIAL:      { label: 'Événement Fam.', dot: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]',    badge: 'bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)] border-[var(--border)]   ' },
+  COMPENSATORY: { label: 'Compensatoire',  dot: 'bg-[var(--brand)]',  badge: 'bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))] text-[var(--action)] border-[var(--border)]   ' },
 };
 
 const fmtXAF = (n: number) => new Intl.NumberFormat('fr-FR').format(Math.round(n));
@@ -65,6 +70,7 @@ const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Aoû
 // ─── Composant principal ──────────────────────────────────────────────────────
 
 export default function LeaveManagementPage() {
+  const [uiLoadError,setUiLoadError]=useState('');
   const { bp } = useBasePath();
   const [activeTab, setActiveTab]   = useState<'ACTION' | 'HISTORY'>('ACTION');
   const [leaves, setLeaves]         = useState<LeaveRequest[]>([]);
@@ -109,7 +115,7 @@ export default function LeaveManagementPage() {
         if (leavesData.status === 'fulfilled') setLeaves(leavesData.value);
         if (provData.status === 'fulfilled' && provData.value) setProvision(provData.value);
       } catch (e) {
-        console.error('Erreur chargement congés', e);
+        console.error('Erreur chargement congés', e); setUiLoadError('Le chargement a échoué. Réessayez dans un instant.');
       } finally {
         setIsLoading(false);
       }
@@ -184,20 +190,17 @@ export default function LeaveManagementPage() {
     }
   };
 
-  if (isLoading) return <GlobalLoader />;
+  if (isLoading) return <ModulePageSkeleton />;
 
   return (
-    <div className="max-w-[1600px] mx-auto pb-24 space-y-8">
+    <ModulePageFrame kind="list" error={uiLoadError}><div className="max-w-[1600px] mx-auto pb-24 space-y-8">
       <CongeSubNav userRole={userRole} />
 
       {/* ── HEADER ── */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 leave-header">
         <div>
-          <p className="text-xs font-bold tracking-[0.2em] text-[var(--text-muted)] uppercase mb-1">
-            Ressources Humaines
-          </p>
-          <h1 className="text-3xl font-bold text-[var(--text)]">
-            Gestion des Congés
+          <h1 className="text-3xl font-semibold text-[var(--text)]">
+            Demandes de congé
           </h1>
           <p className="text-[var(--text-muted)] text-sm mt-1">
             Validez les demandes · Consultez l'historique de votre périmètre
@@ -205,60 +208,7 @@ export default function LeaveManagementPage() {
         </div>
 
         {/* ── BOUTONS DE NAVIGATION ── */}
-        <div className="flex flex-wrap gap-3">
-          {/* Toujours visible */}
-          <Link
-            href={bp("/conges/mon-espace")}
-            className="px-4 py-2.5 rounded-xl border border-[var(--border)] font-semibold text-sm hover:bg-[var(--surface-2)] transition-colors flex items-center gap-2 text-[var(--text-muted)]"
-          >
-            <UserCircle size={18} /> Mon Espace
-          </Link>
-
-          <Link
-            href={bp("/conges/nouveau")}
-            className="px-4 py-2.5 rounded-xl border border-[var(--border)] font-semibold text-sm hover:bg-[var(--surface-2)] transition-colors flex items-center gap-2 text-[var(--text-muted)]"
-          >
-            <AlertCircle size={18} /> Nouvelle demande
-          </Link>
-
-          <Link
-            href={bp("/conges/calendrier")}
-            className="px-4 py-2.5 rounded-xl border border-[var(--border)] font-semibold text-sm hover:bg-[var(--surface-2)] transition-colors flex items-center gap-2 text-[var(--text-muted)]"
-          >
-            <Calendar size={18} /> Calendrier
-          </Link>
-
-          {/* RH / Admin uniquement */}
-          {isRH && (
-            <>
-              <Link
-                href={bp("/conges/soldes")}
-                className="px-4 py-2.5 rounded-xl border border-[var(--border)] font-semibold text-sm hover:bg-[var(--surface-2)] transition-colors flex items-center gap-2 text-[var(--text-muted)]"
-              >
-                <Users size={18} /> Soldes
-              </Link>
-
-              <Link
-                href={bp("/conges/provision")}
-                className={`px-4 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center gap-2 shadow-sm ${
-                  criticalCount > 0
-                    ? 'bg-red-500 hover:bg-red-600 text-white'
-                    : warningCount > 0
-                    ? 'bg-amber-500 hover:bg-amber-600 text-white'
-                    : 'bg-[var(--text)] text-[var(--bg)] hover:opacity-90'
-                }`}
-              >
-                <Wallet size={18} />
-                Provision
-                {(criticalCount + warningCount) > 0 && (
-                  <span className="bg-white/30 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
-                    {criticalCount + warningCount}
-                  </span>
-                )}
-              </Link>
-            </>
-          )}
-        </div>
+        <div className="flex flex-wrap gap-2"><Link href={bp("/conges/nouveau")} className="k-button k-button-primary"><Calendar size={18} /> Nouvelle demande</Link>{!isRH && <Link href={bp("/conges/calendrier")} className="k-button k-button-secondary"><Calendar size={18} /> Calendrier</Link>}</div>
       </div>
 
       {/* ── BANDEAU PROVISION (si alertes critiques) ── */}
@@ -266,22 +216,22 @@ export default function LeaveManagementPage() {
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-5 flex items-center justify-between gap-4"
+          className="bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  border border-[var(--border)]  rounded-2xl p-5 flex items-center justify-between gap-4"
         >
           <div className="flex items-start gap-3">
-            <AlertTriangle size={20} className="text-red-500 shrink-0 mt-0.5" />
+            <AlertTriangle size={20} className="text-[var(--danger-text)] shrink-0 mt-0.5" />
             <div>
-              <p className="font-bold text-red-800 dark:text-red-200 text-sm">
+              <p className="font-semibold text-[var(--danger-text)]  text-sm">
                 {criticalCount} employé{criticalCount > 1 ? 's' : ''} proche{criticalCount > 1 ? 's' : ''} du plafond légal de cumul (3 ans sans congé)
               </p>
-              <p className="text-xs text-red-600 dark:text-red-400 mt-0.5">
+              <p className="text-xs text-[var(--danger-text)]  mt-0.5">
                 Provision totale : <strong>{fmtXAF(provision?.totalProvision ?? 0)} F CFA</strong> · Planifiez les départs en congé pour éviter la perte de droits.
               </p>
             </div>
           </div>
           <Link
             href={bp("/conges/provision")}
-            className="shrink-0 px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold rounded-xl transition-colors flex items-center gap-2"
+            className="shrink-0 px-4 py-2 bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] text-[var(--danger-text)] text-sm font-semibold rounded-xl transition-colors flex items-center gap-2"
           >
             Voir le détail <ArrowRight size={14} />
           </Link>
@@ -293,16 +243,16 @@ export default function LeaveManagementPage() {
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl p-4 flex items-center justify-between gap-4"
+          className="bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  border border-[var(--border)]  rounded-2xl p-4 flex items-center justify-between gap-4"
         >
           <div className="flex items-center gap-3">
-            <AlertCircle size={18} className="text-amber-500 shrink-0" />
-            <p className="text-sm text-amber-700 dark:text-amber-300">
+            <AlertCircle size={18} className="text-[var(--warning-text)] shrink-0" />
+            <p className="text-sm text-[var(--warning-text)] ">
               <strong>{warningCount} employé{warningCount > 1 ? 's' : ''}</strong> n'{warningCount > 1 ? 'ont' : 'a'} pas pris de congé annuel depuis longtemps — approche du plafond légal de 3 ans.
               Provision : <strong>{fmtXAF(provision?.totalProvision ?? 0)} F CFA</strong>
             </p>
           </div>
-          <Link href={bp("/conges/provision")} className="text-sm font-semibold text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1 shrink-0">
+          <Link href={bp("/conges/provision")} className="text-sm font-semibold text-[var(--warning-text)]  hover:underline flex items-center gap-1 shrink-0">
             Détails <ArrowRight size={13} />
           </Link>
         </motion.div>
@@ -310,7 +260,7 @@ export default function LeaveManagementPage() {
 
       {/* ── TABS ── */}
       <div className="flex gap-1 bg-[var(--surface-2)] p-1 rounded-xl w-fit">
-        <button
+        <Button variant="ghost"
           onClick={() => setActiveTab('ACTION')}
           className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${
             activeTab === 'ACTION'
@@ -321,12 +271,12 @@ export default function LeaveManagementPage() {
           <AlertCircle size={16} />
           À Traiter
           {pendingLeaves.length > 0 && (
-            <span className="bg-amber-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center animate-pulse">
+            <span className="bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))] text-[var(--warning-text)] text-[10px] font-semibold w-5 h-5 rounded-full flex items-center justify-center ">
               {pendingLeaves.length}
             </span>
           )}
-        </button>
-        <button
+        </Button>
+        <Button variant="ghost"
           onClick={() => setActiveTab('HISTORY')}
           className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${
             activeTab === 'HISTORY'
@@ -336,7 +286,7 @@ export default function LeaveManagementPage() {
         >
           <FileText size={16} />
           Historique
-        </button>
+        </Button>
       </div>
 
       {/* ── CONTENU ── */}
@@ -347,22 +297,21 @@ export default function LeaveManagementPage() {
           <motion.div key="action" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="space-y-4">
             {pendingLeaves.length === 0 ? (
               <div className="text-center py-24 bg-[var(--surface)] rounded-2xl border border-[var(--border)]">
-                <div className="w-16 h-16 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))]  text-[var(--action)] rounded-full flex items-center justify-center mx-auto mb-4">
                   <CheckCircle2 size={32} />
                 </div>
-                <h3 className="text-xl font-bold text-[var(--text)] mb-1">Tout est traité !</h3>
+                <h3 className="text-xl font-semibold text-[var(--text)] mb-1">Tout est traité !</h3>
                 <p className="text-[var(--text-muted)] text-sm">Aucune demande en attente.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+              <div className="leave-pending-list">
                 {pendingLeaves.map(leave => {
                   const cfg      = TYPE_CONFIG[leave.type] ?? TYPE_CONFIG.ANNUAL;
                   const initials = `${leave.employee.firstName[0]}${leave.employee.lastName[0]}`;
                   return (
-                    <motion.div key={leave.id} layout className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-                      <div className={`h-1 w-full ${cfg.dot.replace('bg-', 'bg-').replace('-400', '-300')}`} />
+                    <motion.div key={leave.id} layout className="leave-pending-row bg-[var(--surface)] overflow-hidden">
                       <div className="p-6 flex gap-5">
-                        <div className="w-12 h-12 rounded-xl bg-[var(--surface-2)] flex items-center justify-center font-bold text-[var(--text-muted)] text-sm shrink-0">
+                        <div className="w-12 h-12 rounded-xl bg-[var(--surface-2)] flex items-center justify-center font-semibold text-[var(--text-muted)] text-sm shrink-0">
                           {leave.employee.photoUrl ? (
                             <img src={leave.employee.photoUrl} className="w-full h-full rounded-xl object-cover" alt={initials} />
                           ) : initials}
@@ -370,7 +319,7 @@ export default function LeaveManagementPage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2 mb-3">
                             <div>
-                              <p className="font-bold text-[var(--text)]">
+                              <p className="font-semibold text-[var(--text)]">
                                 {leave.employee.firstName} {leave.employee.lastName}
                               </p>
                               <p className="text-xs text-[var(--text-muted)]">
@@ -386,7 +335,7 @@ export default function LeaveManagementPage() {
                             <span className="font-mono text-xs">{new Date(leave.startDate).toLocaleDateString('fr-FR')}</span>
                             <ArrowRight size={12} className="text-[var(--text-muted)]" />
                             <span className="font-mono text-xs">{new Date(leave.endDate).toLocaleDateString('fr-FR')}</span>
-                            <span className="ml-auto font-bold text-xs text-[var(--text-muted)]">{Math.round(Number(leave.daysCount))}j ouvrés</span>
+                            <span className="ml-auto font-semibold text-xs text-[var(--text-muted)]">{Math.round(Number(leave.daysCount))}j ouvrés</span>
                           </div>
                           {leave.type === 'UNPAID' && (
                             <p className="text-xs text-[var(--text-muted)] bg-[var(--surface-2)] px-3 py-1.5 rounded-lg mb-3 flex items-center gap-1.5">
@@ -395,8 +344,8 @@ export default function LeaveManagementPage() {
                             </p>
                           )}
                           {leave.carriedFromLeaveId && (
-                            <p className="text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-lg mb-3 flex items-center gap-1.5">
-                              <Info size={12} className="text-emerald-500" />
+                            <p className="text-xs text-[var(--action)]  bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))]  px-3 py-1.5 rounded-lg mb-3 flex items-center gap-1.5">
+                              <Info size={12} className="text-[var(--action)]" />
                               Rattrapage d'un reliquat de retour anticipé — non payé, sans impact sur le solde/cycle en cours
                             </p>
                           )}
@@ -413,18 +362,18 @@ export default function LeaveManagementPage() {
                             >
                               <Eye size={16} />
                             </Link>
-                            <button
+                            <Button variant="primary"
                               onClick={() => openModal('approve', leave)}
-                              className="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold rounded-xl transition-colors flex items-center justify-center gap-1.5"
+                              className="flex-1 py-2.5 bg-[var(--brand)] hover:bg-[var(--brand)] text-[var(--on-brand)] text-sm font-semibold rounded-xl transition-colors flex items-center justify-center gap-1.5"
                             >
                               <Check size={16} /> Valider
-                            </button>
-                            <button
+                            </Button>
+                            <Button variant="ghost"
                               onClick={() => openModal('reject', leave)}
-                              className="flex-1 py-2.5 border border-[var(--border)] hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-200 hover:text-red-600 text-[var(--text-muted)] text-sm font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5"
+                              className="flex-1 py-2.5 border border-[var(--border)] hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  hover:border-[var(--border)] hover:text-[var(--danger-text)] text-[var(--text-muted)] text-sm font-semibold rounded-xl transition-colors flex items-center justify-center gap-1.5"
                             >
                               <X size={16} /> Refuser
-                            </button>
+                            </Button>
                           </div>
                         </div>
                       </div>
@@ -440,9 +389,9 @@ export default function LeaveManagementPage() {
         {activeTab === 'HISTORY' && (
           <motion.div key="history" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="space-y-4">
             {/* ── Filtres historique : période + recherche par nom ── */}
-            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-4 flex flex-wrap items-center gap-2">
+            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-4 flex flex-wrap items-center gap-2 leave-period-bar">
               <Filter size={16} className="text-[var(--text-muted)] shrink-0" />
-              <select
+              <ModuleSelect
                 value={historyMonth}
                 onChange={e => setHistoryMonth(e.target.value === 'ALL' ? 'ALL' : Number(e.target.value))}
                 className="text-sm border border-[var(--border)] bg-[var(--surface)] rounded-lg px-2 py-1.5"
@@ -451,8 +400,8 @@ export default function LeaveManagementPage() {
                 {MONTHS.map((m, i) => (
                   <option key={m} value={i + 1}>{m}</option>
                 ))}
-              </select>
-              <select
+              </ModuleSelect>
+              <ModuleSelect
                 value={historyYear}
                 onChange={e => setHistoryYear(e.target.value === 'ALL' ? 'ALL' : Number(e.target.value))}
                 className="text-sm border border-[var(--border)] bg-[var(--surface)] rounded-lg px-2 py-1.5"
@@ -461,7 +410,7 @@ export default function LeaveManagementPage() {
                 {historyYearOptions.map(y => (
                   <option key={y} value={y}>{y}</option>
                 ))}
-              </select>
+              </ModuleSelect>
               <div className="relative flex-1 min-w-[200px]">
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
                 <input
@@ -473,12 +422,12 @@ export default function LeaveManagementPage() {
                 />
               </div>
               {(historySearch || historyMonth !== 'ALL' || historyYear !== 'ALL') && (
-                <button
+                <Button variant="ghost"
                   onClick={() => { setHistorySearch(''); setHistoryMonth('ALL'); setHistoryYear('ALL'); }}
                   className="text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--text)] px-2"
                 >
                   Réinitialiser
-                </button>
+                </Button>
               )}
             </div>
 
@@ -491,11 +440,11 @@ export default function LeaveManagementPage() {
               </div>
             ) : (
               <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
-                <table className="w-full text-left">
+                <div className="leave-table-scroll" tabIndex={0} role="region" aria-label="Tableau des congés défilant horizontalement"><table data-leave-table="true" className="w-full text-left">
                   <thead className="bg-[var(--surface-2)]/40 border-b border-[var(--border)]">
                     <tr>
                       {['Employé', 'Type', 'Période', 'Durée', 'Statut'].map(h => (
-                        <th key={h} className="px-6 py-4 text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">{h}</th>
+                        <th key={h} className="px-6 py-4 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">{h}</th>
                       ))}
                       <th className="px-6 py-4" />
                     </tr>
@@ -517,7 +466,7 @@ export default function LeaveManagementPage() {
                               {cfg.label}
                             </span>
                             {leave.carriedFromLeaveId && (
-                              <span className="inline-block mt-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-1.5 py-0.5 rounded">
+                              <span className="inline-block mt-1 text-[10px] font-semibold text-[var(--action)]  bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))]  px-1.5 py-0.5 rounded">
                                 Rattrapage — non payé
                               </span>
                             )}
@@ -526,16 +475,16 @@ export default function LeaveManagementPage() {
                             {new Date(leave.startDate).toLocaleDateString('fr-FR')} → {new Date(leave.endDate).toLocaleDateString('fr-FR')}
                           </td>
                           <td className="px-6 py-4 text-center">
-                            <span className="text-sm font-bold text-[var(--text-muted)]">{Math.round(Number(leave.daysCount))}j</span>
+                            <span className="text-sm font-semibold text-[var(--text-muted)]">{Math.round(Number(leave.daysCount))}j</span>
                           </td>
                           <td className="px-6 py-4 text-center">
                             {leave.status === 'APPROVED' && (
-                              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-full border border-emerald-100">
+                              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--action)]  bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))]  px-3 py-1.5 rounded-full border border-[var(--border)]">
                                 <CheckCircle2 size={13} /> Validé
                               </span>
                             )}
                             {leave.status === 'REJECTED' && (
-                              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-600 bg-red-50 dark:bg-red-900/20 px-3 py-1.5 rounded-full border border-red-100">
+                              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--danger-text)] bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  px-3 py-1.5 rounded-full border border-[var(--border)]">
                                 <XCircle size={13} /> Refusé
                               </span>
                             )}
@@ -546,7 +495,7 @@ export default function LeaveManagementPage() {
                             )}
                           </td>
                           <td className="px-6 py-4 text-right">
-                            <Link href={bp(`/conges/${leave.id}`)} className="text-emerald-500 hover:underline text-xs font-semibold">
+                            <Link href={bp(`/conges/${leave.id}`)} className="text-[var(--action)] hover:underline text-xs font-semibold">
                               Détail →
                             </Link>
                           </td>
@@ -554,7 +503,7 @@ export default function LeaveManagementPage() {
                       );
                     })}
                   </tbody>
-                </table>
+                </table></div>
               </div>
             )}
           </motion.div>
@@ -566,7 +515,7 @@ export default function LeaveManagementPage() {
         {modalData && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[rgb(0_0_0_/.48)]  p-4"
             onClick={e => e.target === e.currentTarget && setModalData(null)}
           >
             <motion.div
@@ -574,12 +523,12 @@ export default function LeaveManagementPage() {
               className="bg-[var(--surface)] rounded-2xl p-8 max-w-md w-full shadow-2xl border border-[var(--border)]"
             >
               <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-5 ${
-                modalData.type === 'approve' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'
+                modalData.type === 'approve' ? 'bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))] text-[var(--action)]' : 'bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] text-[var(--danger-text)]'
               }`}>
                 {modalData.type === 'approve' ? <Check size={26} /> : <X size={26} />}
               </div>
 
-              <h3 className="text-xl font-bold text-[var(--text)] mb-1">
+              <h3 className="text-xl font-semibold text-[var(--text)] mb-1">
                 {modalData.type === 'approve' ? 'Valider la demande' : 'Refuser la demande'}
               </h3>
               <p className="text-sm text-[var(--text-muted)] mb-6">
@@ -606,7 +555,7 @@ export default function LeaveManagementPage() {
                     <span className="ml-2 text-xs bg-[var(--border)] text-[var(--text-muted)] px-2 py-0.5 rounded-full">Sans indemnité</span>
                   )}
                   {modalData.leave.carriedFromLeaveId && (
-                    <span className="ml-2 text-xs bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full">Rattrapage — non payé</span>
+                    <span className="ml-2 text-xs bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))]  text-[var(--action)]  px-2 py-0.5 rounded-full">Rattrapage — non payé</span>
                   )}
                 </p>
               </div>
@@ -615,17 +564,17 @@ export default function LeaveManagementPage() {
                 <div className="mb-6">
                   <label className="block text-sm font-semibold text-[var(--text-muted)] mb-2 flex items-center gap-1.5">
                     <MessageSquare size={14} />
-                    Motif du refus <span className="text-red-500">*</span>
+                    Motif du refus <span className="text-[var(--danger-text)]">*</span>
                   </label>
                   <textarea
                     value={rejectionReason}
                     onChange={e => setRejectionReason(e.target.value)}
                     placeholder="Ex: Chevauchement avec une absence, période de forte activité..."
                     rows={3}
-                    className="w-full p-3 border border-[var(--border)] rounded-xl bg-[var(--surface)] text-[var(--text)] text-sm resize-none focus:ring-2 focus:ring-red-500/20 outline-none placeholder-[var(--text-muted)]"
+                    className="w-full p-3 border border-[var(--border)] rounded-xl bg-[var(--surface)] text-[var(--text)] text-sm resize-none focus:ring-2 focus:ring-[var(--focus)] outline-none placeholder-[var(--text-muted)]"
                   />
                   {!rejectionReason.trim() && (
-                    <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                    <p className="text-xs text-[var(--danger-text)] mt-1 flex items-center gap-1">
                       <Info size={12} /> Le motif est obligatoire
                     </p>
                   )}
@@ -633,17 +582,17 @@ export default function LeaveManagementPage() {
               )}
 
               <div className="flex gap-3">
-                <button
+                <Button variant="ghost"
                   onClick={() => setModalData(null)}
                   className="flex-1 py-3 border border-[var(--border)] rounded-xl font-semibold text-sm hover:bg-[var(--surface-2)] transition-colors text-[var(--text-muted)]"
                 >
                   Annuler
-                </button>
-                <button
+                </Button>
+                <Button variant="ghost"
                   onClick={confirmAction}
                   disabled={isProcessing || (modalData.type === 'reject' && !rejectionReason.trim())}
-                  className={`flex-1 py-3 rounded-xl font-semibold text-sm text-white shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed ${
-                    modalData.type === 'approve' ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-red-500 hover:bg-red-600'
+                  className={`flex-1 py-3 rounded-xl font-semibold text-sm text-[var(--on-brand)] shadow-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed ${
+                    modalData.type === 'approve' ? 'bg-[var(--brand)] hover:bg-[var(--brand)]' : 'bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]'
                   }`}
                 >
                   {isProcessing ? (
@@ -653,7 +602,7 @@ export default function LeaveManagementPage() {
                   ) : (
                     <><X size={16} /> Refuser</>
                   )}
-                </button>
+                </Button>
               </div>
             </motion.div>
           </motion.div>
@@ -661,6 +610,6 @@ export default function LeaveManagementPage() {
       </AnimatePresence>
 
       {approvalDialog}
-    </div>
+    </div></ModulePageFrame>
   );
 }

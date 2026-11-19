@@ -20,7 +20,7 @@ import { api } from '@/services/api';
 import { useAuth } from '@/hooks/useAuth';
 
 export interface ChariowCheckoutModalProps {
-  plan: 'BASIC' | 'PRO' | 'ENTERPRISE';
+  plan: 'STARTER' | 'BASIC' | 'PRO' | 'ENTERPRISE';
   billingPeriod: 'monthly' | 'yearly';
   planLabel: string;
   amount: number;

@@ -1,383 +1,203 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+// ============================================================================
+// 📁 app/(dashboard)/recrutement/page.tsx
+// OFFRES — chaque offre avec l'état réel de son recrutement :
+//   candidats par étape, postes pourvus, ancienneté, expiration.
+//   Recherche et filtres qui fonctionnent, clôture (avec e-mail « poste pourvu »),
+//   réouverture, partage (lien, WhatsApp), accès direct au pipeline de l'offre.
+// ============================================================================
+
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { 
-  Briefcase, Users, MessageSquare, Clock, Plus, Search, 
-  MapPin, ChevronRight, BarChart3, Share2, Copy, ExternalLink, X, Check, Globe, TrendingUp, 
-  Trash2, Edit, BrainCircuit, User, Zap, Palette
-} from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Plus, Palette, Search, Share2, Pencil, Trash2, Check, Copy, MapPin, Building2, Clock, Briefcase, BrainCircuit, MessageCircle } from 'lucide-react';
+import { Badge, Button, Card, EmptyState } from '@/components/design-system/primitives';
+import { Modal, useToast } from '@/components/design-system/feedback';
+import { RecruitmentFrame as ModulePageFrame } from '@/components/recruitment/RecruitmentFrame';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 import { api } from '@/services/api';
 import { ModeSelectionModal } from './ModeSelectionModal';
-import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import { CloseJobModal } from '@/components/recruitment/RecruitmentModals';
+import { RecruitmentHeader, RecruitmentNav, errMsg, fmtDate } from '@/components/recruitment/recruitment-ui';
 
-interface JobOffer {
-  id: string;
-  title: string;
-  department: { name: string };
-  location: string;
-  type: string;
-  status: 'PUBLISHED' | 'CLOSED' | 'DRAFT';
-  processingMode: 'MANUAL' | 'AI_ASSISTED';
-  _count: { candidates: number };
+interface JobOverview {
+  id: string; title: string; status: 'PUBLISHED' | 'CLOSED' | 'DRAFT' | 'ARCHIVED'; processingMode: 'MANUAL' | 'AI_ASSISTED';
+  departmentName: string | null; location: string | null; type: string; showOnPortal: boolean;
+  createdAt: string; expirationDate: string | null; isExpired: boolean; daysOpen: number;
+  counts: { new: number; screening: number; interview: number; offer: number; hired: number; rejected: number; total: number };
+  positions: number; requisitionId: string | null;
 }
 
-export default function RecruitmentPage() {
-  const [jobs, setJobs] = useState<JobOffer[]>([]);
-  const [candidates, setCandidates] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  
-  const [shareJob, setShareJob] = useState<JobOffer | null>(null);
-  const [isCopied, setIsCopied] = useState(false);
-  
-  // État pour le modal de sélection
+const STATUS_FILTERS = [
+  { id: 'ALL', label: 'Toutes' }, { id: 'PUBLISHED', label: 'Publiées' }, { id: 'CLOSED', label: 'Clôturées' }, { id: 'DRAFT', label: 'Brouillons' },
+] as const;
+
+const STAGE_CHIPS: Array<{ key: keyof JobOverview['counts']; label: string }> = [
+  { key: 'new', label: 'À traiter' }, { key: 'screening', label: 'Présélection' },
+  { key: 'interview', label: 'Entretiens' }, { key: 'offer', label: 'Offre' }, { key: 'hired', label: 'Embauchés' },
+];
+
+export default function RecruitmentOffersPage() {
+  const notify = useToast();
+  const [jobs, setJobs] = useState<JobOverview[] | null>(null);
+  const [error, setError] = useState('');
+  const [q, setQ] = useState('');
+  const [status, setStatus] = useState<(typeof STATUS_FILTERS)[number]['id']>('ALL');
   const [showModeSelector, setShowModeSelector] = useState(false);
+  const [shareJob, setShareJob] = useState<JobOverview | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [closeJob, setCloseJob] = useState<JobOverview | null>(null);
 
-  useEffect(() => {
-    fetchData();
+  const load = useCallback(async () => {
+    try { setJobs(await api.get<JobOverview[]>('/recruitment/jobs-overview')); setError(''); }
+    catch (e) { setError(errMsg(e)); setJobs([]); }
   }, []);
+  useEffect(() => { void load(); }, [load]);
 
-  const fetchData = async () => {
-    try {
-      const [jobsData, candidatesData] = await Promise.all([
-        api.get<JobOffer[]>('/recruitment/jobs'),
-        api.get<any[]>('/recruitment/candidates')
-      ]);
-      setJobs(jobsData);
-      setCandidates(candidatesData);
-    } catch (e) {
-      console.error("Failed to load recruitment data", e);
-    } finally {
-      setIsLoading(false);
-    }
+  const visible = useMemo(() => {
+    const t = q.trim().toLowerCase();
+    return (jobs ?? []).filter((j) =>
+      (status === 'ALL' || j.status === status) &&
+      (!t || `${j.title} ${j.departmentName ?? ''} ${j.location ?? ''}`.toLowerCase().includes(t)));
+  }, [jobs, q, status]);
+
+  const handleDelete = async (job: JobOverview) => {
+    const warn = job.counts.total > 0 ? `Cette offre a ${job.counts.total} candidature(s). ` : '';
+    if (!window.confirm(`${warn}Supprimer « ${job.title} » définitivement ?`)) return;
+    try { await api.delete(`/recruitment/jobs/${job.id}`); notify('success', 'Offre supprimée'); await load(); }
+    catch (e) { notify('error', 'Suppression impossible', errMsg(e)); }
   };
 
-  const handleDeleteJob = async (jobId: string) => {
-    if (!confirm('Supprimer cette offre définitivement ?')) return;
-    try {
-      await api.delete(`/recruitment/jobs/${jobId}`);
-      setJobs(prev => prev.filter(j => j.id !== jobId));
-    } catch (e) {
-      alert("Erreur lors de la suppression");
-    }
+  const reopen = async (job: JobOverview) => {
+    try { await api.post(`/recruitment/jobs/${job.id}/reopen`, {}); notify('success', 'Offre rouverte'); await load(); }
+    catch (e) { notify('error', errMsg(e)); }
   };
 
-  const openJobsCount = jobs.filter(j => j.status === 'PUBLISHED').length;
-  const totalCandidates = jobs.reduce((acc, curr) => acc + curr._count.candidates, 0);
-  const interviewsCount = candidates.filter(c => c.status === 'INTERVIEW').length;
-  const aiJobsCount = jobs.filter(j => j.processingMode === 'AI_ASSISTED').length;
-
-  const STATS = [
-    { label: 'Postes Ouverts', value: openJobsCount.toString(), icon: Briefcase },
-    { label: 'Candidats', value: totalCandidates.toString(), icon: Users },
-    { label: 'Offres IA', value: aiJobsCount.toString(), icon: BrainCircuit },
-    { label: 'Entretiens', value: interviewsCount.toString(), icon: MessageSquare },
-  ];
-
-  const handleCopyLink = () => {
-    if (!shareJob) return;
-    const baseUrl = `${window.location.origin}/jobs/${shareJob.id}`;
-    navigator.clipboard.writeText(baseUrl);
-    setIsCopied(true);
-    setTimeout(() => setIsCopied(false), 2000);
+  const shareUrl = shareJob ? `${typeof window !== 'undefined' ? window.location.origin : ''}/jobs/${shareJob.id}` : '';
+  const copyLink = () => {
+    void navigator.clipboard.writeText(shareUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
-    <div className="max-w-[1600px] mx-auto pb-20 space-y-10 relative">
-      
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-[100px]"></div>
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-amber-500/5 rounded-full blur-[100px]"></div>
-      </div>
+    <ModulePageFrame kind="dashboard" error={error || undefined}>
+      <div className="mx-auto max-w-[1400px] space-y-6 pb-20">
+        <RecruitmentHeader
+          title="Offres d’emploi"
+          subtitle="Chaque offre avec l’état réel de son recrutement."
+          actions={
+            <>
+              <Link href="/recrutement/customize-career-page" className="k-button k-button-secondary">
+                <Palette size={18} strokeWidth={1.5} /><span className="hidden lg:inline">Page carrière</span>
+              </Link>
+              <Button data-guide="recrutement-create" onClick={() => setShowModeSelector(true)}><Plus size={18} strokeWidth={1.5} /><span>Nouvelle offre</span></Button>
+            </>
+          }
+        />
+        <RecruitmentNav />
 
-      {/* HEADER */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
-        <div>
-          <h1 className="text-4xl font-black text-[var(--text)] tracking-tight mb-2">
-            Recrutement <span className="text-emerald-500">& Talents</span>
-          </h1>
-          <p className="text-[var(--text-muted)] text-lg">Pilotez vos campagnes d'acquisition de talents.</p>
-        </div>
-        
-        <div className="flex items-center gap-4">
-          {/* BOUTON PERSONNALISATION PAGE CARRIÈRE */}
-          <Link 
-            href="/recrutement/customize-career-page" 
-            className="px-6 py-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 font-bold text-amber-500 hover:bg-amber-500/20 transition-all flex items-center gap-2"
-          >
-            <Palette size={20} />
-            <span className="hidden lg:inline">Page Carrière</span>
-          </Link>
-
-          <Link 
-            href="/recrutement/manuel/candidats" 
-            className="px-6 py-3 rounded-2xl border border-[var(--border)] font-bold text-[var(--text)] hover:bg-[var(--surface-2)] transition-all flex items-center gap-2"
-          >
-            <User size={20} className="text-[var(--text-muted)]" />
-            <span className="hidden sm:inline">Pipeline Manuel</span>
-          </Link>
-          
-          <Link 
-            href="/recrutement/ia/candidats" 
-            className="px-6 py-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 font-bold text-emerald-500 hover:bg-emerald-500/20 transition-all flex items-center gap-2"
-          >
-            <BrainCircuit size={20} />
-            <span className="hidden sm:inline">Pipeline IA</span>
-          </Link>
-
-          {/* Ouvre le modal de sélection de mode */}
-          <button 
-            onClick={() => setShowModeSelector(true)}
-            className="px-6 py-3 rounded-2xl bg-emerald-500 text-white font-bold shadow-lg shadow-emerald-500/20 hover:scale-105 transition-all flex items-center gap-2"
-          >
-            <Plus size={20} /> 
-            <span>Nouvelle Offre</span>
-          </button>
-        </div>
-      </div>
-
-      {/* STATS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
-        {STATS.map((stat, i) => (
-          <motion.div 
-            key={i} 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-            className="relative bg-[var(--surface)] backdrop-blur-xl p-6 rounded-2xl border border-[var(--border)] shadow-xl overflow-hidden group"
-          >
-            <div className="absolute inset-0 bg-[var(--brand-soft)] opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-            
-            <div className="relative z-10 flex justify-between items-start mb-4">
-              <div>
-                <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1">{stat.label}</p>
-                <h3 className="text-4xl font-black text-[var(--text)] tracking-tight">{stat.value}</h3>
-              </div>
-              <div className="p-3 rounded-2xl bg-[var(--surface-2)] text-emerald-500 shadow-inner">
-                <stat.icon size={24} />
-              </div>
+        <Card className="!p-4">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center">
+            <div className="relative min-w-0 flex-1">
+              <Search size={16} strokeWidth={1.5} aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" />
+              <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Rechercher une offre (poste, département, lieu)…"
+                aria-label="Rechercher une offre" className="w-full rounded-xl border border-[var(--border)] bg-transparent text-[var(--text)]" style={{ paddingLeft: 38 }} />
             </div>
-            
-            <div className="relative z-10 flex items-center gap-1 text-xs font-medium text-[var(--text-muted)]">
-              <TrendingUp size={14} className="text-emerald-500" />
-              <span className="text-emerald-500 font-bold">+12%</span>
-              <span>vs mois dernier</span>
+            <div className="flex flex-wrap gap-2" role="tablist" aria-label="Filtrer par statut">
+              {STATUS_FILTERS.map((s) => (
+                <button key={s.id} role="tab" aria-selected={status === s.id} onClick={() => setStatus(s.id)}
+                  className={`min-h-10 rounded-xl border px-4 text-sm font-medium transition-colors ${status === s.id ? 'border-[var(--brand)] bg-[var(--brand)] text-[var(--on-brand)]' : 'border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text)]'}`}>
+                  {s.label}
+                </button>
+              ))}
             </div>
-          </motion.div>
-        ))}
-      </div>
-
-      {/* OFFRES */}
-      <div className="bg-[var(--surface)] backdrop-blur-xl rounded-2xl border border-[var(--border)] shadow-2xl overflow-hidden relative z-10">
-        
-        <div className="p-8 border-b border-[var(--border)] flex flex-col md:flex-row justify-between items-center gap-6">
-          <h2 className="text-xl font-bold text-[var(--text)] flex items-center gap-3">
-            <Briefcase className="text-emerald-500" size={24} />
-            Offres en cours
-          </h2>
-          
-          <div className="relative w-full md:w-80 group">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Search className="text-[var(--text-muted)] group-focus-within:text-emerald-500 transition-colors" size={18} />
-            </div>
-            <input 
-              type="text" 
-              placeholder="Rechercher une offre..."
-              className="w-full pl-11 pr-4 py-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all"
-            />
           </div>
-        </div>
+        </Card>
 
-        {isLoading ? (
-          <KonzaLoader variant="section" />
+        {jobs === null ? <KonzaLoader variant="section" /> : visible.length === 0 ? (
+          <EmptyState title={jobs.length === 0 ? 'Aucune offre pour le moment' : 'Aucune offre ne correspond'} icon={Briefcase}
+            action={jobs.length === 0 ? <Button onClick={() => setShowModeSelector(true)}>Créer ma première offre</Button> : undefined}>
+            {jobs.length === 0 ? 'Créez une offre, ou partez d’une demande de recrutement validée.' : 'Modifiez la recherche ou le filtre de statut.'}
+          </EmptyState>
         ) : (
-          <div className="divide-y divide-[var(--border)]">
-            {jobs.map((job, index) => {
+          <div className="space-y-4">
+            {visible.map((job) => {
               const isAI = job.processingMode === 'AI_ASSISTED';
-              const candidatesCount = job._count.candidates;
-              
+              const expiresSoon = job.expirationDate && job.status === 'PUBLISHED' && new Date(job.expirationDate).getTime() - Date.now() < 7 * 86_400_000;
+              const active = job.counts.new + job.counts.screening + job.counts.interview;
               return (
-                <motion.div 
-                  key={job.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="p-6 md:p-8 hover:bg-[var(--surface-2)] transition-colors flex flex-col md:flex-row md:items-center justify-between gap-6 group relative"
-                >
-                  <div className={`absolute left-0 top-0 bottom-0 w-1 ${isAI ? 'bg-emerald-500' : 'bg-[var(--text-muted)]'} opacity-0 group-hover:opacity-100 transition-opacity`}></div>
+                <Card key={job.id} className="recruitment-job">
+                  <div className="recruitment-job-layout">
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-2 flex flex-wrap items-center gap-2">
+                        {isAI ? <Badge tone="info"><BrainCircuit size={12} strokeWidth={1.5} className="mr-1 inline" />IA</Badge> : <Badge tone="neutral">Manuel</Badge>}
+                        {job.status === 'PUBLISHED' && <Badge tone="success">Publiée</Badge>}
+                        {job.status === 'CLOSED' && <Badge tone="neutral">Clôturée</Badge>}
+                        {job.status === 'DRAFT' && <Badge tone="warning">Brouillon</Badge>}
+                        {job.status === 'ARCHIVED' && <Badge tone="neutral">Archivée</Badge>}
+                        {(job.isExpired || expiresSoon) && <Badge tone={job.isExpired ? 'danger' : 'warning'}>{job.isExpired ? 'Expirée' : `Expire le ${fmtDate(job.expirationDate)}`}</Badge>}
+                        {job.requisitionId && <Badge tone="info">Issue d’une demande</Badge>}
+                      </div>
+                      <h2 className="text-xl font-semibold text-[var(--text)]">{job.title}</h2>
+                      <p className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-[var(--text-secondary)]">
+                        <span className="inline-flex items-center gap-1.5"><Building2 size={14} strokeWidth={1.5} />{job.departmentName ?? 'Sans département'}</span>
+                        {job.location && <span className="inline-flex items-center gap-1.5"><MapPin size={14} strokeWidth={1.5} />{job.location}</span>}
+                        <span>{job.type}</span>
+                        <span className="inline-flex items-center gap-1.5"><Clock size={14} strokeWidth={1.5} />ouverte depuis {job.daysOpen} j</span>
+                      </p>
 
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-3">
-                      <h3 className="font-bold text-[var(--text)] text-xl">{job.title}</h3>
-                      
-                      {/* Badge Mode */}
-                      {isAI ? (
-                        <div className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 text-[10px] font-bold uppercase rounded-lg flex items-center gap-1.5">
-                          <BrainCircuit size={12}/>
-                          IA
-                        </div>
-                      ) : (
-                        <div className="px-3 py-1 bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text-muted)] text-[10px] font-bold uppercase rounded-lg flex items-center gap-1.5">
-                          <User size={12}/>
-                          Manuel
-                        </div>
-                      )}
-                      
-                      {/* Badge Statut */}
-                      {job.status === 'PUBLISHED' ? (
-                        <span className="px-2.5 py-1 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[10px] font-bold uppercase rounded-lg flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span> Public
-                        </span>
-                      ) : (
-                        <span className="px-2.5 py-1 bg-amber-500/10 text-amber-500 border border-amber-500/20 text-[10px] font-bold uppercase rounded-lg">
-                          Brouillon
-                        </span>
-                      )}
+                      <div className="recruitment-job-stages" aria-label="Candidats par étape">
+                        {STAGE_CHIPS.map((s) => (
+                          <Link key={s.key} href={`/recrutement/pipeline?job=${job.id}`}
+                            className={`rounded-xl border px-3 py-1.5 text-xs ${job.counts[s.key] > 0 ? 'border-[var(--border)] text-[var(--text)]' : 'border-transparent text-[var(--text-secondary)]'} bg-[var(--surface-2)]`}>
+                            <span className="font-semibold tabular-nums">{job.counts[s.key]}</span> {s.label}
+                          </Link>
+                        ))}
+                      </div>
+                      <p className="mt-3 text-xs text-[var(--text-secondary)]">
+                        {job.counts.total} candidature(s) · {job.counts.hired}/{job.positions} poste{job.positions > 1 ? 's' : ''} pourvu{job.counts.hired > 1 ? 's' : ''}
+                      </p>
                     </div>
-                    
-                    <div className="flex flex-wrap items-center gap-4 text-sm text-[var(--text-muted)]">
-                      <span className="flex items-center gap-1.5 bg-[var(--surface-2)] px-3 py-1 rounded-lg">
-                        <Briefcase size={14} className="text-[var(--text-muted)]"/> {job.department?.name}
-                      </span>
-                      <span className="flex items-center gap-1.5 bg-[var(--surface-2)] px-3 py-1 rounded-lg">
-                        <MapPin size={14} className="text-[var(--text-muted)]"/> {job.location}
-                      </span>
-                      <span className="flex items-center gap-1.5 bg-[var(--surface-2)] px-3 py-1 rounded-lg">
-                        <Clock size={14} className="text-[var(--text-muted)]"/> {job.type}
-                      </span>
-                      
-                      {/* Avatars Candidats */}
-                      {candidatesCount > 0 && (
-                        <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-lg">
-                          <div className="flex -space-x-2">
-                            {[...Array(Math.min(candidatesCount, 3))].map((_, i) => (
-                              <div 
-                                key={i} 
-                                className="w-6 h-6 rounded-full bg-emerald-500 border-2 border-[var(--surface)] flex items-center justify-center text-[10px] font-bold text-white"
-                              >
-                                {String.fromCharCode(65 + i)}
-                              </div>
-                            ))}
-                          </div>
-                          <span className="text-emerald-600 dark:text-emerald-400 font-bold text-xs">
-                            {candidatesCount} candidat{candidatesCount > 1 ? 's' : ''}
-                          </span>
-                        </div>
-                      )}
+
+                    <div className="recruitment-job-actions flex flex-wrap items-center gap-2">
+                      <Link href={`/recrutement/pipeline?job=${job.id}`} className="k-button k-button-primary">Voir le pipeline</Link>
+                      {job.status === 'PUBLISHED' && <Button variant="secondary" onClick={() => setCloseJob(job)}>Clôturer</Button>}
+                      {job.status === 'CLOSED' && <Button variant="secondary" onClick={() => reopen(job)}>Rouvrir</Button>}
+                      <Button variant="ghost" aria-label={`Partager ${job.title}`} onClick={() => setShareJob(job)}><Share2 size={16} strokeWidth={1.5} /></Button>
+                      <Link href={`/recrutement/offres/${job.id}/edit`} aria-label={`Modifier ${job.title}`} className="k-button k-button-ghost"><Pencil size={16} strokeWidth={1.5} /></Link>
+                      <Button variant="ghost" aria-label={`Supprimer ${job.title}`} onClick={() => handleDelete(job)}><Trash2 size={16} strokeWidth={1.5} /></Button>
                     </div>
                   </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-3">
-                    <button 
-                      onClick={() => setShareJob(job)}
-                      className="w-12 h-12 rounded-2xl border border-[var(--border)] hover:border-emerald-500/50 hover:bg-emerald-500/10 text-[var(--text-muted)] hover:text-emerald-500 transition-all flex items-center justify-center"
-                    >
-                      <Share2 size={20} />
-                    </button>
-
-                    <Link 
-                      href={`/recrutement/offres/${job.id}/edit`}
-                      className="w-12 h-12 rounded-2xl border border-[var(--border)] hover:border-emerald-500/50 hover:bg-emerald-500/10 text-[var(--text-muted)] hover:text-emerald-500 transition-all flex items-center justify-center"
-                    >
-                      <Edit size={20} />
-                    </Link>
-
-                    <button 
-                      onClick={() => handleDeleteJob(job.id)}
-                      className="w-12 h-12 rounded-2xl border border-[var(--border)] hover:border-red-500/50 hover:bg-red-500/10 text-[var(--text-muted)] hover:text-red-500 transition-all flex items-center justify-center"
-                    >
-                      <Trash2 size={20} />
-                    </button>
-
-                    <Link 
-                      href={isAI ? '/recrutement/ia/candidats' : '/recrutement/manuel/candidats'} 
-                      className="px-6 py-3 rounded-2xl bg-emerald-500 text-white font-bold shadow-lg hover:scale-105 transition-transform flex items-center gap-2"
-                    >
-                      Gérer <ChevronRight size={16} />
-                    </Link>
-                  </div>
-                </motion.div>
+                </Card>
               );
             })}
           </div>
         )}
       </div>
 
-      {/* MODAL DE SÉLECTION MODE - Utilise Portal pour éviter les conflits avec la sidebar */}
-      <ModeSelectionModal 
-        isOpen={showModeSelector} 
-        onClose={() => setShowModeSelector(false)} 
-      />
+      {showModeSelector && <ModeSelectionModal isOpen={showModeSelector} onClose={() => setShowModeSelector(false)} />}
 
-      {/* MODAL SHARE */}
-      <AnimatePresence>
-        {shareJob && (
-          <motion.div 
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4"
-            onClick={() => setShareJob(null)}
-          >
-            <motion.div 
-              initial={{ scale: 0.9 }} animate={{ scale: 1 }}
-              className="bg-[var(--surface)] rounded-2xl p-8 w-full max-w-lg shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex justify-between items-start mb-8">
-                <div>
-                  <h3 className="text-2xl font-bold text-[var(--text)] mb-1">Partager l'offre</h3>
-                  <p className="text-[var(--text-muted)]">Diffusez cette opportunité.</p>
-                </div>
-                <button onClick={() => setShareJob(null)} className="p-2 hover:bg-[var(--surface-2)] rounded-full text-[var(--text-muted)]">
-                  <X size={24}/>
-                </button>
-              </div>
+      {closeJob && (
+        <CloseJobModal job={closeJob} activeCandidates={closeJob.counts.new + closeJob.counts.screening + closeJob.counts.interview}
+          onClose={() => setCloseJob(null)} onDone={() => { setCloseJob(null); void load(); }} />
+      )}
 
-              <div className="p-6 bg-[var(--surface-2)] rounded-2xl mb-8">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className={`w-12 h-12 ${shareJob.processingMode === 'AI_ASSISTED' ? 'bg-emerald-500' : 'bg-[var(--text-muted)]'} rounded-xl flex items-center justify-center text-white`}>
-                    {shareJob.processingMode === 'AI_ASSISTED' ? <BrainCircuit size={20} /> : <User size={20}/>}
-                  </div>
-                  <div>
-                    <p className="font-bold text-[var(--text)] text-lg">{shareJob.title}</p>
-                    <p className="text-sm text-[var(--text-muted)]">{shareJob.location} • {shareJob.type}</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-3 bg-[var(--surface)] p-2 rounded-xl border border-[var(--border)]">
-                  <div className="flex-1 px-3 font-mono text-sm text-emerald-500 truncate">
-                    {`${window.location.origin}/jobs/${shareJob.id}`}
-                  </div>
-                  <button 
-                    onClick={handleCopyLink}
-                    className="p-2.5 bg-[var(--surface-2)] hover:bg-[var(--border)] rounded-lg text-[var(--text)]"
-                  >
-                    {isCopied ? <Check size={18} className="text-emerald-500"/> : <Copy size={18}/>}
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex gap-4">
-                <Link 
-                  href={`/jobs/${shareJob.id}`}
-                  target="_blank" 
-                  className="flex-1 py-4 border border-[var(--border)] hover:bg-[var(--surface-2)] rounded-2xl font-bold text-[var(--text)] flex justify-center items-center gap-2"
-                >
-                  <ExternalLink size={20} /> Voir
-                </Link>
-                <button 
-                  onClick={handleCopyLink}
-                  className="flex-1 py-4 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-2xl flex justify-center items-center gap-2"
-                >
-                  {isCopied ? 'Copié !' : 'Copier'}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-    </div>
+      {shareJob && (
+        <Modal open onClose={() => setShareJob(null)} title="Partager l’offre" actions={<Button onClick={() => setShareJob(null)}>Fermer</Button>}>
+          <div className="space-y-4">
+            <p className="text-sm text-[var(--text-secondary)]">{shareJob.title}</p>
+            <div className="flex items-center gap-2 rounded-xl border border-[var(--border)] p-2">
+              <input readOnly value={shareUrl} aria-label="Lien de l’offre" className="min-w-0 flex-1 bg-transparent text-sm text-[var(--text)]" style={{ height: 36, padding: '0 8px', border: 0 }} />
+              <Button variant="secondary" onClick={copyLink}>{copied ? <Check size={16} strokeWidth={1.5} /> : <Copy size={16} strokeWidth={1.5} />}{copied ? 'Copié' : 'Copier'}</Button>
+            </div>
+            <a className="k-button k-button-secondary" target="_blank" rel="noreferrer"
+              href={`https://wa.me/?text=${encodeURIComponent(`Nous recrutons : ${shareJob.title}. Postulez ici : ${shareUrl}`)}`}>
+              <MessageCircle size={16} strokeWidth={1.5} /> Partager sur WhatsApp
+            </a>
+          </div>
+        </Modal>
+      )}
+    </ModulePageFrame>
   );
 }

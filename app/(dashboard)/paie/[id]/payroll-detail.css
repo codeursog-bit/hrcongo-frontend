@@ -1,0 +1,51 @@
+@media screen {
+  .payroll-detail-page { min-width:0; }
+  .payroll-detail-heading { padding:8px 0 24px; display:flex; flex-direction:column; gap:20px; }
+  .payroll-detail-identity { min-width:0; display:flex; flex:1; flex-wrap:wrap; align-items:center; gap:10px 16px; }
+  .payroll-detail-identity h1 { flex:1 1 100%; font-size:clamp(24px,2.5vw,28px); line-height:1.3; letter-spacing:-.035em; font-weight:600; }
+  .payroll-detail-label { flex:1 1 100%; color:var(--text-secondary); font-size:13px; line-height:1.5; margin:0; }
+  .payroll-detail-actions { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .payroll-detail-actions > button { min-height:42px; padding:10px 16px; box-shadow:none!important; font-weight:600!important; font-size:13px!important; border-radius:var(--radius-control)!important; }
+  .payroll-detail-actions > button:focus-visible { outline:2px solid var(--focus); outline-offset:3px; }
+  .payroll-pay-summary { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:20px; margin-bottom:28px; }
+  .payroll-pay-summary > div { padding:24px; border-radius:var(--radius-card); background:var(--surface); box-shadow:var(--shadow-card); min-width:0; }
+  .payroll-pay-summary span { display:block; margin-bottom:12px; color:var(--text-secondary); font-size:13px; }
+  .payroll-pay-summary strong { display:block; color:var(--text); font-size:clamp(22px,2.5vw,30px); font-weight:600; line-height:1.3; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+  .payroll-pay-summary small { font-size:12px; font-weight:500; color:var(--text-secondary); }
+  .payroll-pay-summary .is-net { background:var(--brand-soft); box-shadow:none; }
+  .payroll-pay-summary .is-net > span { color:var(--action); }
+  .payroll-detail-layout { display:grid; grid-template-columns:minmax(0,1fr) 300px; grid-template-areas:'preview context'; gap:24px; align-items:start; }
+  .payroll-preview { grid-area:preview; min-width:0; }
+  .payroll-preview-title { margin:0 0 16px; }
+  .payroll-preview-title h2 { font-size:16px; font-weight:600; color:var(--text); }
+  .payroll-preview-title p { font-size:13px; line-height:1.6; color:var(--text-secondary); margin-top:4px; }
+  .payroll-document-viewport { overflow-x:auto; scrollbar-width:thin; max-width:100%; overscroll-behavior-x:contain; }
+  .payroll-detail-context { grid-area:context; min-width:0; }
+  .payroll-detail-context > div { border:0; box-shadow:var(--shadow-card); border-radius:var(--radius-card); }
+  .payroll-detail-context :where(h3,button) { font-weight:600; }
+  .payroll-detail-context :where(p,span) { line-height:1.6; }
+  .payroll-confirm-body { width:100%; min-width:0; }
+  .payroll-confirm-icon { display:flex; align-items:center; justify-content:center; margin-bottom:16px; background:transparent!important; }
+  .payroll-amount-lines { display:flex; flex-direction:column; gap:10px; font-size:12px; line-height:1.6; }
+  .payroll-amount-lines > div { display:flex; justify-content:space-between; gap:12px; }
+  .payroll-amount-lines dt { color:var(--text-secondary); }
+  .payroll-amount-lines dd { flex-shrink:0; font-variant-numeric:tabular-nums; color:var(--text); }
+}
+@media screen and (max-width:1100px) {
+  .payroll-detail-layout { grid-template-columns:minmax(0,1fr); grid-template-areas:'context' 'preview'; }
+  .payroll-detail-context { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; }
+  .payroll-detail-context > div { margin-top:0!important; }
+}
+@media screen and (max-width:600px) {
+  .payroll-pay-summary { grid-template-columns:minmax(0,1fr); gap:12px; }
+  .payroll-pay-summary > div { padding:18px 20px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+  .payroll-pay-summary span { margin:0; }
+  .payroll-pay-summary strong { text-align:right; font-size:24px; }
+  .payroll-detail-context { grid-template-columns:minmax(0,1fr); }
+  .payroll-detail-actions { gap:8px; }
+  .payroll-detail-actions > button { flex:1 1 140px; justify-content:center; }
+  .payroll-detail-actions > div { display:none; }
+}
+@media print {
+  .payroll-preview, .payroll-document-viewport { display:contents!important; }
+}

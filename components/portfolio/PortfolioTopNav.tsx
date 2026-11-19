@@ -1,4 +1,5 @@
 'use client';
+import { NotificationPopover, recentNotifications } from '@/components/layout/NotificationPopover';
 
 // components/portfolio/PortfolioTopNav.tsx
 // Top bar de l'espace portefeuille.
@@ -8,12 +9,11 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import {
-  Search, Bell, Menu, ChevronRight, ChevronDown, Moon, Sun, CheckCircle2,
-  Clock, AlertTriangle, Info, LogOut, User, Mail,
-} from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useTheme } from '@/components/providers/ThemeProvider';
+import { Bell, Menu, ChevronRight, ChevronDown, CheckCircle2, Clock, AlertTriangle, Info, LogOut, User, Mail } from 'lucide-react';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { ShellSearch } from '@/components/layout/ShellSearch';
+import { ThemeControl } from '@/components/layout/ThemeControl';
+import { ProfileAvatar } from '@/components/ui/ProfileAvatar';
 import { api } from '@/services/api';
 import { PushMenuItem } from '@/components/PushNotificationBanner';
 
@@ -32,6 +32,9 @@ const PAGE_LABELS: Record<string, string> = {
   rapports: 'Rapports',
   equipe: 'Équipe',
   liste: 'Liste de paie',
+  effectifs: 'Tableau de bord effectifs',
+  'presences-absences': 'Tableau de bord présences',
+  'prets-avances': 'Tableau de bord prêts',
 };
 
 interface PortfolioTopNavProps {
@@ -46,7 +49,7 @@ interface PortfolioTopNavProps {
 export default function PortfolioTopNav({ userName, userEmail, userPhotoUrl, onMenuClick }: PortfolioTopNavProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { theme, toggleTheme } = useTheme();
+  const reduceMotion = useReducedMotion();
 
   const [showNotifs, setShowNotifs] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -82,6 +85,12 @@ export default function PortfolioTopNav({ userName, userEmail, userPhotoUrl, onM
     };
   }, []);
 
+  useEffect(() => {
+    const close = (event: KeyboardEvent) => { if (event.key === 'Escape') { setShowNotifs(false); setShowProfileMenu(false); } };
+    document.addEventListener('keydown', close);
+    return () => document.removeEventListener('keydown', close);
+  }, []);
+
   const markAllRead = async () => {
     try {
       await api.patch('/notifications/read-all', {});
@@ -112,21 +121,25 @@ export default function PortfolioTopNav({ userName, userEmail, userPhotoUrl, onM
     } catch { /* silencieux */ }
   };
 
-  const getNotifIcon = (type: string) => {
+  const notifIcon = (type: string) => {
     switch (type) {
-      case 'CHECK_IN': return <Clock size={16} className="text-emerald-500" />;
-      case 'ALERT':    return <AlertTriangle size={16} className="text-red-500" />;
-      case 'LEAVE':    return <Info size={16} className="text-emerald-500" />;
-      default:         return <Info size={16} className="text-gray-500" />;
+      case 'CHECK_IN': return <Clock size={16} strokeWidth={1.5} style={{ color: 'var(--action)' }} aria-hidden="true" />;
+      case 'ALERT':    return <AlertTriangle size={16} strokeWidth={1.5} style={{ color: 'var(--danger)' }} aria-hidden="true" />;
+      case 'LEAVE':    return <Info size={16} strokeWidth={1.5} style={{ color: 'var(--action)' }} aria-hidden="true" />;
+      default:         return <Info size={16} strokeWidth={1.5} style={{ color: 'var(--text-secondary)' }} aria-hidden="true" />;
     }
+  };
+
+  const panelMotion = {
+    initial: reduceMotion ? false : { opacity: 0, y: 8, scale: 0.98 },
+    animate: { opacity: 1, y: 0, scale: 1 },
+    exit: reduceMotion ? { opacity: 0 } : { opacity: 0, y: 8, scale: 0.98 },
+    transition: { duration: reduceMotion ? 0 : 0.18 },
   };
 
   const segments = (pathname ?? '').split('/').filter(Boolean); // ['portefeuille', 'paie', 'liste']
   const current = segments[segments.length - 1];
   const title = PAGE_LABELS[current] ?? 'Mon portefeuille';
-
-  const avatarSrc = userPhotoUrl
-    || `https://ui-avatars.com/api/?name=${encodeURIComponent(userName || userEmail || 'Mon compte')}&background=random&color=fff`;
 
   const handleLogout = async () => {
     try {
@@ -141,188 +154,134 @@ export default function PortfolioTopNav({ userName, userEmail, userPhotoUrl, onM
   };
 
   return (
-    <header className="sticky top-0 z-40 print:hidden px-3 sm:px-4 pt-3">
-      <div className="px-4 sm:px-6 py-3 flex items-center justify-between rounded-2xl shadow-[0_8px_30px_-14px_rgba(15,23,42,0.18)] dark:shadow-[0_8px_30px_-14px_rgba(0,0,0,0.6)]" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+    <header className="shell-topbar sticky top-0 z-40 print:hidden px-3 sm:px-4 pt-3">
+      <div className="shell-topbar-inner" style={{ background: 'var(--surface)', border: 'none' }}>
 
-        {/* Gauche : menu & fil d'Ariane */}
-        <div className="flex items-center gap-4">
-          <button onClick={onMenuClick} className="p-2 -ml-2 md:hidden rounded-xl" style={{ color: 'var(--text-muted)' }}>
-            <Menu size={22} />
+        {/* Gauche : menu mobile et fil d'Ariane */}
+        <div className="shell-location">
+          <button type="button" aria-label="Ouvrir le menu" onClick={onMenuClick} className="shell-icon-btn md:hidden -ml-2">
+            <Menu size={22} strokeWidth={1.5} aria-hidden="true" />
           </button>
 
-          <nav className="hidden sm:flex items-center text-sm font-medium">
-            <span style={{ color: 'var(--text-muted)' }}>Portefeuille</span>
-            <ChevronRight size={14} className="mx-2" style={{ color: 'var(--text-muted)' }} />
-            <span className="font-bold" style={{ color: 'var(--text)' }}>{title}</span>
+          <nav aria-label="Fil d’Ariane" className="hidden sm:flex items-center text-sm font-medium min-w-0">
+            <span style={{ color: 'var(--text-secondary)' }}>Portefeuille</span>
+            <ChevronRight size={14} strokeWidth={1.5} className="mx-2 shrink-0" style={{ color: 'var(--text-secondary)' }} aria-hidden="true" />
+            <span className="font-semibold truncate" aria-current="page" style={{ color: 'var(--text)' }}>{title}</span>
           </nav>
+          <span className="sm:hidden font-semibold truncate" style={{ color: 'var(--text)' }}>{title}</span>
         </div>
 
-        {/* Centre : recherche (même champ que le dashboard) */}
-        <div className="hidden md:flex flex-1 max-w-md mx-8">
-          <div className="relative w-full group">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search size={16} className="text-slate-400 group-focus-within:text-emerald-500" />
-            </div>
-            <input
-              type="text"
-              className="block w-full pl-10 pr-12 py-2 rounded-full text-sm transition-all focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50"
-              style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)' }}
-              placeholder="Rechercher (Cmd+K)"
-            />
-          </div>
+        {/* Centre : recherche dans le menu du portefeuille (Ctrl/⌘ + K) */}
+        <div className="shell-topbar-search flex flex-1 items-center justify-end md:justify-center md:max-w-md md:mx-6">
+          <ShellSearch />
         </div>
 
-        {/* Droite : actions */}
-        <div className="flex items-center gap-3">
+        {/* Droite : mode, notifications, profil */}
+        <div className="shell-topbar-actions">
+          <ThemeControl compact />
 
-          <button onClick={toggleTheme} className="p-2 rounded-xl transition-colors hover:bg-black/5 dark:hover:bg-white/10" style={{ color: 'var(--text-muted)' }}>
-            {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-          </button>
-
-          {/* Notifications */}
           <div className="relative" ref={notifRef}>
             <button
-              onClick={() => setShowNotifs(!showNotifs)}
-              className={`p-2 rounded-xl transition-colors ${showNotifs ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : 'hover:bg-black/5 dark:hover:bg-white/10'}`}
-              style={!showNotifs ? { color: 'var(--text-muted)' } : {}}
+              type="button"
+              className="shell-icon-btn relative"
+              aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} non lue${unreadCount > 1 ? 's' : ''}` : 'Notifications'}
+              aria-haspopup="true"
+              aria-expanded={showNotifs}
+              onClick={() => { setShowProfileMenu(false); setShowNotifs(!showNotifs); !showNotifs && void fetchNotifications(); }}
             >
-              <div className="relative">
-                <Bell size={20} />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-slate-900 animate-pulse"></span>
-                )}
-              </div>
+              <Bell size={20} strokeWidth={1.5} aria-hidden="true" />
+              {unreadCount > 0 && <span className="shell-dot" aria-hidden="true" />}
             </button>
 
             <AnimatePresence>
               {showNotifs && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  className="fixed left-3 right-3 top-20 sm:absolute sm:left-auto sm:right-0 sm:top-full mt-0 sm:mt-3 w-auto sm:w-96 rounded-2xl shadow-xl overflow-hidden z-50 origin-top sm:origin-top-right"
-                  style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
-                >
-                  <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
-                    <h3 className="font-bold text-slate-900 dark:text-white">Notifications</h3>
-                    <button
-                      onClick={markAllRead}
-                      disabled={unreadCount === 0}
-                      className={`text-xs font-bold ${unreadCount === 0 ? 'text-slate-300 dark:text-slate-600 cursor-not-allowed' : 'text-emerald-500 hover:text-emerald-600'}`}
-                    >
-                      Tout marquer lu
-                    </button>
+                <NotificationPopover onClose={() => setShowNotifs(false)}>
+                  <div className="shell-menu-head">
+                    <div><h3 className="shell-menu-title">Notifications</h3><p className="shell-notifications-subtitle">Les 5 plus récentes</p></div>
+                    <button type="button" onClick={markAllRead} disabled={unreadCount === 0} className="shell-link-btn">Tout marquer lu</button>
                   </div>
 
-                  <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+                  <div className="shell-notifications-list custom-scrollbar">
                     {notifications.length === 0 ? (
-                      <div className="p-8 text-center text-slate-400">
-                        <Bell size={32} className="mx-auto mb-2 opacity-20" />
-                        <p className="text-sm">Aucune notification.</p>
+                      <div className="shell-menu-empty">
+                        <Bell size={28} strokeWidth={1.5} aria-hidden="true" />
+                        <p>Aucune notification.</p>
                       </div>
                     ) : (
-                      notifications.map((n) => (
-                        <div key={n.id} onClick={() => handleNotifClick(n)} className={`group p-4 border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer ${!n.read ? 'bg-emerald-50/30 dark:bg-emerald-900/10' : ''}`}>
-                          <div className="flex gap-3">
-                            <div className="mt-1 shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-800">
-                              {getNotifIcon(n.type)}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{n.title}</p>
-                              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{n.message}</p>
-                              <p className="text-[10px] text-slate-400 mt-2">{new Date(n.createdAt).toLocaleString('fr-FR')}</p>
-                            </div>
-                            <button
-                              onClick={(e) => markOneRead(n, e)}
-                              title="Marquer cette notification comme lue"
-                              className="shrink-0 self-start p-1.5 rounded-lg text-slate-300 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              <CheckCircle2 size={16} />
-                            </button>
+                      recentNotifications(notifications).map((n) => (
+                        <div
+                          key={n.id}
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => handleNotifClick(n)}
+                          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleNotifClick(n); } }}
+                          className={`shell-notif group ${!n.read ? 'is-unread' : ''}`}
+                        >
+                          <div className="shell-notif-ico">{notifIcon(n.type)}</div>
+                          <div className="flex-1 min-w-0">
+                            <p className="shell-notif-title">{n.title}</p>
+                            <p className="shell-notif-text">{n.message}</p>
+                            <p className="shell-notif-date">{new Date(n.createdAt).toLocaleString('fr-FR')}</p>
                           </div>
+                          <button type="button" onClick={(e) => markOneRead(n, e)} title="Marquer cette notification comme lue" aria-label="Marquer cette notification comme lue" onKeyDown={e=>e.stopPropagation()} className="shell-notif-check shell-icon-btn">
+                            <CheckCircle2 size={16} strokeWidth={1.5} aria-hidden="true" />
+                          </button>
                         </div>
                       ))
                     )}
                   </div>
 
-                  <div className="p-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
-                    <button
-                      onClick={() => { router.push('/notifications'); setShowNotifs(false); }}
-                      className="w-full py-2 text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 rounded-xl border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all"
-                    >
-                      Voir tout l&apos;historique
-                    </button>
-                  </div>
-                </motion.div>
+                  <div className="shell-menu-sep" />
+                  <button type="button" onClick={() => { router.push('/notifications'); setShowNotifs(false); }} className="shell-menu-item" style={{ justifyContent: 'center', fontWeight: 600 }}>
+                    Voir tout l'historique
+                  </button>
+                </NotificationPopover>
               )}
             </AnimatePresence>
           </div>
 
-          <div className="h-8 w-px bg-slate-200 dark:bg-white/10 mx-1 hidden sm:block"></div>
-
-          {/* Menu profil */}
           <div className="relative" ref={profileRef}>
             <button
+              type="button"
+              className="shell-profile-btn"
+              aria-label="Mon compte"
+              aria-haspopup="menu"
+              aria-expanded={showProfileMenu}
               onClick={() => setShowProfileMenu(!showProfileMenu)}
-              className={`flex items-center gap-3 pl-2 pr-1 py-1 rounded-xl transition-colors ${showProfileMenu ? 'bg-black/5 dark:bg-white/10' : 'hover:bg-black/5 dark:hover:bg-white/5'}`}
             >
-              <div className="hidden sm:block text-right mr-1">
-                <p className="text-sm font-bold text-slate-800 dark:text-white">{userName ?? 'Mon compte'}</p>
-                <p className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 tracking-wider">En ligne</p>
+              <div className="hidden sm:block text-right">
+                <p className="shell-profile-name">{userName ?? 'Mon compte'}</p>
+                <p className="shell-profile-status"><span aria-hidden="true" />En ligne</p>
               </div>
-              <img src={avatarSrc} alt={userName ?? 'Photo de profil'} className="h-9 w-9 rounded-xl object-cover ring-2 ring-white dark:ring-slate-800 shadow-sm" />
-              <ChevronDown size={14} className={`text-slate-400 transition-transform ${showProfileMenu ? 'rotate-180' : ''}`} />
+              <ProfileAvatar src={userPhotoUrl} name={userName || userEmail || 'Mon compte'} />
+              <ChevronDown size={14} strokeWidth={1.5} className={`transition-transform ${showProfileMenu ? 'rotate-180' : ''}`} style={{ color: 'var(--text-secondary)' }} aria-hidden="true" />
             </button>
 
             <AnimatePresence>
               {showProfileMenu && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  className="absolute right-0 top-full mt-3 w-64 rounded-2xl shadow-xl overflow-hidden z-50 origin-top-right p-2"
-                  style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
-                >
-                  <div className="p-3 border-b border-slate-100 dark:border-slate-700 mb-2">
-                    <p className="font-bold text-slate-900 dark:text-white">{userName ?? 'Mon compte'}</p>
-                    {userEmail && (
-                      <div className="flex items-center gap-2 mt-1 text-xs text-slate-500 dark:text-slate-400">
-                        <Mail size={12} />
-                        <span className="truncate">{userEmail}</span>
-                      </div>
-                    )}
-                    <div className="flex items-center gap-2 mt-1 text-xs text-emerald-500 font-bold">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Actif
-                    </div>
+                <motion.div {...panelMotion} role="menu" aria-label="Mon compte" className="shell-menu absolute right-0 top-full mt-3 w-64 origin-top-right">
+                  <div className="shell-menu-profile">
+                    <p className="shell-profile-name" style={{ textAlign: 'left' }}>{userName ?? 'Mon compte'}</p>
+                    {userEmail && <p className="shell-menu-mail"><Mail size={12} strokeWidth={1.5} aria-hidden="true" /><span className="truncate">{userEmail}</span></p>}
                   </div>
+                  <div className="shell-menu-sep" />
+                  <button type="button" role="menuitem" onClick={() => { router.push('/mon-profil'); setShowProfileMenu(false); }} className="shell-menu-item">
+                    <User size={16} strokeWidth={1.5} aria-hidden="true" />
+                    Mon profil
+                  </button>
 
-                  <div className="space-y-1">
-                    <button
-                      onClick={() => { router.push('/mon-profil'); setShowProfileMenu(false); }}
-                      className="w-full text-left px-3 py-2 text-sm rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-3 text-slate-700 dark:text-slate-300"
-                    >
-                      <User size={16} />
-                      Mon Profil
-                    </button>
+                  {/* Notifications téléphone (hors app) */}
+                  <PushMenuItem />
 
-                    {/* Notifications téléphone (hors app) */}
-                    <PushMenuItem />
-
-                    <div className="h-px bg-slate-100 dark:bg-slate-800 my-1"></div>
-
-                    <button
-                      onClick={handleLogout}
-                      className="w-full text-left px-3 py-2 text-sm rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3 text-red-600 dark:text-red-400 font-bold"
-                    >
-                      <LogOut size={16} />
-                      Déconnexion
-                    </button>
-                  </div>
+                  <div className="shell-menu-sep" />
+                  <button type="button" role="menuitem" onClick={handleLogout} className="shell-menu-item is-danger">
+                    <LogOut size={16} strokeWidth={1.5} aria-hidden="true" />
+                    Déconnexion
+                  </button>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
-
         </div>
       </div>
     </header>

@@ -60,6 +60,7 @@ export default function AdminLoginPage() {
           </div>
           <h1 className="text-3xl font-bold text-white tracking-tight">Bienvenue</h1>
           <p className="text-gray-400 mt-2 text-sm">Centre de Contrôle Super Admin</p>
+          <a href="/auth/login" className="text-sm underline">Accès agents support</a>
         </div>
 
         <div className="bg-gray-900/50 backdrop-blur-xl border border-gray-800 rounded-2xl p-8 shadow-2xl">

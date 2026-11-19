@@ -1,4 +1,6 @@
 'use client';
+import { ModuleSelect } from '@/components/ui/ModuleSelect';
+
 
 // ============================================================================
 // 📁 components/payroll-journal/ForeignPayModal.tsx
@@ -146,24 +148,24 @@ export default function ForeignPayModal({ open, onClose, journal, initialEmploye
     'w-full px-3 py-2 text-sm rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/50';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 print:hidden" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[color-mix(in_srgb,var(--surface-2)_50%,transparent)] print:hidden" onClick={onClose}>
       <div
-        className="w-full max-w-2xl max-h-[92vh] overflow-y-auto bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-2xl"
+        className="w-full max-w-2xl max-h-[92vh] overflow-y-auto bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-2xl reports-card"
         onClick={(e) => e.stopPropagation()}
       >
         {/* En-tête */}
         <div className="flex items-center justify-between p-5 border-b border-[var(--border)]">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-violet-100 dark:bg-violet-900/30">
-              <Globe2 className="w-5 h-5 text-violet-600 dark:text-violet-300" />
+            <div className="p-2.5 rounded-xl bg-[var(--brand-soft)]">
+              <Globe2 strokeWidth={1.5} className="w-5 h-5 text-[var(--action)]" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-[var(--text)]">Paie à l'étranger — expatrié</h2>
+              <h2 className="text-base font-semibold text-[var(--text)]">Paie à l'étranger — expatrié</h2>
               <p className="text-xs text-[var(--text-muted)]">{periodLabel} · montants en FCFA</p>
             </div>
           </div>
           <button onClick={onClose} className="p-2 rounded-xl hover:bg-[var(--surface-2)]">
-            <X className="w-4 h-4 text-[var(--text-muted)]" />
+            <X strokeWidth={1.5} className="w-4 h-4 text-[var(--text-muted)]" />
           </button>
         </div>
 
@@ -200,10 +202,10 @@ export default function ForeignPayModal({ open, onClose, journal, initialEmploye
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
                       <button onClick={() => editLine(f)} title="Modifier" className="p-1.5 rounded-lg hover:bg-[var(--surface-2)] text-[var(--text-muted)]">
-                        <Pencil className="w-4 h-4" />
+                        <Pencil strokeWidth={1.5} className="w-4 h-4" />
                       </button>
-                      <button onClick={() => remove(f.id)} disabled={busy} title="Supprimer" className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 text-red-500">
-                        <Trash2 className="w-4 h-4" />
+                      <button onClick={() => remove(f.id)} disabled={busy} title="Supprimer" className="p-1.5 rounded-lg hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] text-[var(--danger-text)]">
+                        <Trash2 strokeWidth={1.5} className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
@@ -222,10 +224,10 @@ export default function ForeignPayModal({ open, onClose, journal, initialEmploye
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-[var(--text-muted)] mb-1">Pays</label>
-                  <select value={country} onChange={(e) => setCountry(e.target.value)} className={input}>
+                  <ModuleSelect value={country} onChange={(e) => setCountry(e.target.value)} className={input}>
                     {COUNTRIES.map((c) => <option key={c.code} value={c.code}>{c.name} ({c.code})</option>)}
                     <option value={OTHER}>Autre pays…</option>
-                  </select>
+                  </ModuleSelect>
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-[var(--text-muted)] mb-1">Entité qui paie (optionnel)</label>
@@ -237,7 +239,7 @@ export default function ForeignPayModal({ open, onClose, journal, initialEmploye
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
                     <label className="block text-xs font-semibold text-[var(--text-muted)] mb-1">Code (2 lettres)</label>
-                    <input value={otherCode} onChange={(e) => setOtherCode(e.target.value.slice(0, 2))} placeholder="JP" className={`${input} uppercase`} />
+                    <input value={otherCode} onChange={(e) => setOtherCode(e.target.value.slice(0, 2))} placeholder="JP" className={`${input} `} />
                   </div>
                   <div className="sm:col-span-2">
                     <label className="block text-xs font-semibold text-[var(--text-muted)] mb-1">Nom du pays</label>
@@ -269,9 +271,9 @@ export default function ForeignPayModal({ open, onClose, journal, initialEmploye
           )}
 
           {error && (
-            <div className="flex items-start gap-2 p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800">
-              <AlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
-              <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+            <div className="flex items-start gap-2 p-3 rounded-xl bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] border border-[var(--border)]">
+              <AlertTriangle strokeWidth={1.5} className="w-4 h-4 text-[var(--danger-text)] shrink-0 mt-0.5" />
+              <p className="text-sm text-[var(--danger-text)]">{error}</p>
             </div>
           )}
         </div>
@@ -284,9 +286,9 @@ export default function ForeignPayModal({ open, onClose, journal, initialEmploye
           <button
             onClick={save}
             disabled={busy || !employeeId}
-            className="px-4 py-2 text-sm font-semibold rounded-xl bg-[var(--brand)] text-white shadow-md shadow-[var(--brand)]/30 disabled:opacity-50 flex items-center gap-2"
+            className="px-4 py-2 text-sm font-semibold rounded-xl bg-[var(--brand)] text-[var(--text)] shadow-md shadow-[var(--brand)]/30 disabled:opacity-50 flex items-center gap-2"
           >
-            {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            {busy ? <Loader2 strokeWidth={1.5} className="w-4 h-4 animate-spin" /> : <Save strokeWidth={1.5} className="w-4 h-4" />}
             Enregistrer
           </button>
         </div>

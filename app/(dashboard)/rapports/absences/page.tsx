@@ -1,5 +1,6 @@
 'use client';
 
+
 // ============================================================================
 // 📁 app/(dashboard)/rapports/absences/page.tsx
 // ✅ Version "Rapports" du suivi des absences — scope="all".
@@ -12,26 +13,35 @@ import { ArrowLeft } from 'lucide-react';
 import { useBasePath } from '@/hooks/useBasePath';
 import RapportsSubNav from '@/components/RapportsSubNav';
 import AbsenceAnalyticsBoard from '@/components/absence-analytics/AbsenceAnalyticsBoard';
+import { Button } from '@/components/design-system/primitives';
+import { PageHeader } from '@/components/templates';
+import { ReportsFrame as ModulePageFrame } from '@/components/reports/ReportsFrame';
+import styles from './page.module.css';
 
 export default function RapportAbsencesPage() {
   const router = useRouter();
   const { bp } = useBasePath();
 
   return (
-    <div className="max-w-[1600px] mx-auto pb-20 space-y-6">
-      <div className="flex items-center gap-4">
-        <button onClick={() => router.push(bp('/rapports'))} className="p-2 bg-[var(--surface)] rounded-xl border border-[var(--border)]">
-          <ArrowLeft size={20} className="text-[var(--text-muted)]" />
-        </button>
-        <div>
-          <h1 className="text-3xl font-bold text-[var(--text)]">Observatoire RH des absences</h1>
-          <p className="text-[var(--text-muted)]">Congés, permissions et absences injustifiées — vue consolidée pour le pilotage RH</p>
-        </div>
-      </div>
-
-      <RapportsSubNav active="/rapports/absences" />
-
-      <AbsenceAnalyticsBoard scope="all" />
-    </div>
+    <main className={styles.page}>
+      <ModulePageFrame kind="dashboard">
+        <PageHeader
+          title="Observatoire RH des absences"
+          description="Congés, permissions et absences injustifiées — vue consolidée pour le pilotage RH"
+          action={
+            <Button variant="secondary" onClick={() => router.push(bp('/rapports'))}>
+              <ArrowLeft size={17} strokeWidth={1.5} aria-hidden="true" />
+              Vue d’ensemble
+            </Button>
+          }
+          navigation={
+            <nav aria-label="Navigation des rapports">
+              <RapportsSubNav active="/rapports/absences" />
+            </nav>
+          }
+        />
+        <AbsenceAnalyticsBoard scope="all" />
+      </ModulePageFrame>
+    </main>
   );
 }

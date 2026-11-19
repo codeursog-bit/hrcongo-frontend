@@ -75,10 +75,10 @@ export default function MonthlyView({ data, date, setDate, userRole, userDepartm
 
   const StatusCell = ({ status, isToday }: { status: string; isToday: boolean }) => {
     const colors: Record<string, string> = {
-      present:           'bg-emerald-400',
-      late:              'bg-amber-400',
-      absent:            'bg-red-400',
-      remote:            'bg-emerald-300',
+      present:           'bg-[var(--brand)]',
+      late:              'bg-[var(--mustard)]',
+      absent:            'bg-[var(--danger)]',
+      remote:            'bg-[var(--brand)]',
       leave:             'bg-[var(--text-muted)]',
       holiday:           'bg-[var(--text-muted)]',
       'non-working':     'bg-[var(--border)]',
@@ -100,7 +100,7 @@ export default function MonthlyView({ data, date, setDate, userRole, userDepartm
 
     return (
       <div
-        className={`w-full h-full min-h-[32px] min-w-[24px] border-b border-r ${colors[status] ?? 'bg-[var(--surface-2)]'} ${isToday ? 'ring-2 ring-emerald-500 ring-inset' : 'border-[var(--border)]'}`}
+        className={`w-full h-full min-h-[32px] min-w-[24px] border-b border-r ${colors[status] ?? 'bg-[var(--surface-2)]'} ${isToday ? 'ring-2 ring-[var(--focus)] ring-inset' : 'border-[var(--border)]'}`}
         title={labels[status] ?? status.toUpperCase()}
       />
     );
@@ -137,13 +137,13 @@ export default function MonthlyView({ data, date, setDate, userRole, userDepartm
   return (
     <div className="space-y-4">
       {isBeforeCompanyCreation() && companyCreatedAt && (
-        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 flex items-center gap-3">
-          <div className="text-2xl">⚠️</div>
+        <div className="bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  border border-[var(--border)]  rounded-xl p-4 flex items-center gap-3">
+          <div className="text-2xl"></div>
           <div>
-            <p className="text-sm font-bold text-amber-700 dark:text-amber-300">
+            <p className="text-sm font-semibold text-[var(--warning-text)] ">
               Mois avant création de l'entreprise
             </p>
-            <p className="text-xs text-amber-600 dark:text-amber-400">
+            <p className="text-xs text-[var(--warning-text)] ">
               Votre entreprise a été créée le {companyCreatedAt.toLocaleDateString('fr-FR')}. Les données de ce mois ne sont pas disponibles.
             </p>
           </div>
@@ -151,13 +151,13 @@ export default function MonthlyView({ data, date, setDate, userRole, userDepartm
       )}
 
       {currentDay && !isBeforeCompanyCreation() && (
-        <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-4 flex items-center gap-3">
-          <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+        <div className="bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  border border-[var(--border)]  rounded-xl p-4 flex items-center gap-3">
+          <div className="w-2 h-2 bg-[var(--brand)] rounded-full " />
           <div className="flex-1">
-            <p className="text-sm text-emerald-700 dark:text-emerald-300">
-              📅 <strong>Aujourd'hui :</strong> {currentDay} {date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+            <p className="text-sm text-[var(--success-text)] ">
+               <strong>Aujourd'hui :</strong> {currentDay} {date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
             </p>
-            <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">
+            <p className="text-xs text-[var(--success-text)]  mt-1">
               Absences du jour comptabilisées à partir de {String(currentDayStart.getHours()).padStart(2, '0')}h{String(currentDayStart.getMinutes()).padStart(2, '0')} ·
               Jours ouvrables : {formatWorkDays()} ({workingDaysCount} jours ce mois-ci)
             </p>
@@ -167,13 +167,13 @@ export default function MonthlyView({ data, date, setDate, userRole, userDepartm
 
       {/* Légende */}
       <div className="bg-[var(--surface)] rounded-2xl p-4 border border-[var(--border)]">
-        <h4 className="text-sm font-bold text-[var(--text-muted)] mb-3">Légende</h4>
+        <h4 className="text-sm font-semibold text-[var(--text-muted)] mb-3">Légende</h4>
         <div className="flex flex-wrap gap-4">
           {[
-            { color: 'bg-emerald-400', label: 'Présent' },
-            { color: 'bg-amber-400',  label: 'Retard' },
-            { color: 'bg-red-400',     label: 'Absent non justifié' },
-            { color: 'bg-emerald-300',  label: 'Télétravail' },
+            { color: 'bg-[var(--brand)]', label: 'Présent' },
+            { color: 'bg-[var(--mustard)]',  label: 'Retard' },
+            { color: 'bg-[var(--danger)]',     label: 'Absent non justifié' },
+            { color: 'bg-[var(--brand)]',  label: 'Télétravail' },
             { color: 'bg-[var(--text-muted)]',     label: 'Congé' },
             { color: 'bg-[var(--text-muted)]',    label: 'Jour férié' },
             { color: 'bg-[var(--border)]', label: 'Jour non ouvrable' },
@@ -190,7 +190,7 @@ export default function MonthlyView({ data, date, setDate, userRole, userDepartm
       {/* Grille */}
       <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] overflow-hidden min-h-[600px]">
         <div className="p-4 border-b border-[var(--border)] flex items-center justify-between">
-          <h3 className="font-bold text-[var(--text)]">
+          <h3 className="font-semibold text-[var(--text)]">
             Grille mensuelle {userRole === 'MANAGER' && !canRecordAttendanceForAll ? `- ${userDepartment}` : ''}
             <span className="text-sm font-normal text-[var(--text-muted)] ml-2">
               ({workingDaysCount} jours ouvrables / {daysInMonth} jours au total)
@@ -198,14 +198,14 @@ export default function MonthlyView({ data, date, setDate, userRole, userDepartm
           </h3>
           <div className="flex items-center gap-2">
             <button onClick={() => setDate(new Date(date.getFullYear(), date.getMonth() - 1))}
-              className="p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors">
+              className="p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors" aria-label="Période précédente">
               <ChevronLeft size={18} />
             </button>
-            <span className="text-sm font-bold capitalize px-4">
+            <span className="text-sm font-semibold capitalize px-4">
               {date.toLocaleString('fr-FR', { month: 'long', year: 'numeric' })}
             </span>
             <button onClick={() => setDate(new Date(date.getFullYear(), date.getMonth() + 1))}
-              className="p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors">
+              className="p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors" aria-label="Période suivante">
               <ChevronRight size={18} />
             </button>
           </div>
@@ -221,11 +221,11 @@ export default function MonthlyView({ data, date, setDate, userRole, userDepartm
             <p className="text-sm">Aucun employé à afficher.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: '#10B981 transparent' }}>
+          <div className="overflow-x-auto attendance-table-scroll" style={{ scrollbarWidth: 'thin', scrollbarColor: 'var(--brand) transparent' }} tabIndex={0} role="region" aria-label="Tableau défilant horizontalement">
             <div className="inline-block min-w-full align-middle">
               {/* En-tête jours */}
               <div className="border-b border-[var(--border)] flex">
-                <div className="sticky left-0 z-20 w-48 shrink-0 bg-[var(--surface-2)] p-3 font-bold text-xs uppercase border-r border-[var(--border)] text-[var(--text-muted)]">
+                <div className="sticky left-0 z-20 w-48 shrink-0 bg-[var(--surface-2)] p-3 font-semibold text-xs  border-r border-[var(--border)] text-[var(--text-muted)]">
                   Employé
                 </div>
                 {daysArray.map(d => {
@@ -239,25 +239,25 @@ export default function MonthlyView({ data, date, setDate, userRole, userDepartm
                   return (
                     <div key={d} className={`w-10 shrink-0 text-center p-2 border-r ${
                       isToday
-                        ? 'bg-emerald-100 dark:bg-emerald-900/50'
+                        ? 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] '
                         : !isWorking
                         ? 'bg-[var(--border)]'
                         : isFuture || isBeforeCompanyCreation()
                         ? 'bg-[var(--surface-2)]'
                         : 'bg-[var(--surface-2)]'
                     }`}>
-                      <div className={`text-[10px] font-bold ${
-                        isToday ? 'text-emerald-600 dark:text-emerald-400'
+                      <div className={`text-[10px] font-semibold ${
+                        isToday ? 'text-[var(--success-text)] '
                         : !isWorking ? 'text-[var(--text-muted)]'
                         : 'text-[var(--text-muted)]'
                       }`}>{dayName}</div>
-                      <div className={`text-xs font-bold ${
-                        isToday ? 'text-emerald-600 dark:text-emerald-400'
+                      <div className={`text-xs font-semibold ${
+                        isToday ? 'text-[var(--success-text)] '
                         : !isWorking ? 'text-[var(--text-muted)]'
                         : isFuture || isBeforeCompanyCreation() ? 'text-[var(--text-muted)]'
                         : 'text-[var(--text-muted)]'
                       }`}>{d}</div>
-                      {isToday && <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full mx-auto mt-0.5" />}
+                      {isToday && <div className="w-1.5 h-1.5 bg-[var(--brand)] rounded-full mx-auto mt-0.5" />}
                     </div>
                   );
                 })}
@@ -268,11 +268,11 @@ export default function MonthlyView({ data, date, setDate, userRole, userDepartm
                 {filteredEmployees.map((emp: any) => (
                   <div key={emp.id} className="flex hover:bg-[var(--surface-2)] transition-colors">
                     <div className="sticky left-0 z-10 w-48 shrink-0 bg-[var(--surface)] p-3 border-r flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-[var(--surface-2)] flex items-center justify-center text-xs font-bold text-[var(--text-muted)]">
+                      <div className="w-8 h-8 rounded-full bg-[var(--surface-2)] flex items-center justify-center text-xs font-semibold text-[var(--text-muted)]">
                         {emp.firstName?.[0] ?? '?'}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-bold truncate text-[var(--text)]">
+                        <p className="text-sm font-semibold truncate text-[var(--text)]">
                           {emp.firstName} {emp.lastName}
                         </p>
                         <p className="text-[10px] text-[var(--text-muted)] truncate">{emp.department?.name || '-'}</p>

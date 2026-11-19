@@ -10,12 +10,12 @@
 // ============================================================================
 
 import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ClipboardCheck, UserCircle, Rocket, GraduationCap, Route, Target, ListChecks } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useBasePath } from '@/hooks/useBasePath';
 import { MANAGE_ROLES, getStoredUser } from './sheet-types';
+import ModuleNav from '@/components/requests/ModuleNav';
 
 interface Item {
   href: string;
@@ -71,27 +71,13 @@ export default function PerformanceNav() {
   const active = items.find(isActive);
 
   return (
-    <nav aria-label="Navigation performance" className="print:hidden space-y-2">
-      <div className="flex items-center gap-2 overflow-x-auto pb-1">
-        {items.map(it => {
-          const on = it === active;
-          return (
-            <Link
-              key={it.href}
-              href={bp(it.href)}
-              aria-current={on ? 'page' : undefined}
-              className={`whitespace-nowrap px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors min-h-[44px] ${
-                on
-                  ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/20'
-                  : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
-              }`}
-            >
-              <it.Icon size={16} /> {it.label}
-            </Link>
-          );
-        })}
-      </div>
-      {active && <p className="text-sm text-gray-500 dark:text-gray-400 px-1">{active.desc}</p>}
-    </nav>
+    <div className="print:hidden">
+      <ModuleNav
+        tight={!!active}
+        ariaLabel="Navigation performance"
+        items={items.map(it => ({ href: bp(it.href), label: it.label, icon: it.Icon, active: it === active }))}
+      />
+      {active && <p className="module-nav-desc">{active.desc}</p>}
+    </div>
   );
 }

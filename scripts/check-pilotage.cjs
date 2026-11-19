@@ -1,0 +1,35 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const Module = require('node:module');
+const ts = require('typescript');
+const root = path.resolve(__dirname, '..');
+const originalResolve = Module._resolveFilename;
+Module._resolveFilename = function(name, parent, ...args) { return originalResolve.call(this, name.startsWith('@/') ? path.join(root, name.slice(2)) : name, parent, ...args); };
+for (const ext of ['.ts', '.tsx']) require.extensions[ext] = (module, file) => module._compile(ts.transpileModule(fs.readFileSync(file, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true } }).outputText, file);
+require.extensions['.css'] = () => {};
+const React = require('react');
+const { renderToStaticMarkup } = require('react-dom/server');
+const { PilotageDashboard, PilotageSkeleton } = require('../components/dashboard/PilotageDashboard.tsx');
+const { createDemoStore, demoResponse } = require('../lib/demo/transport.ts');
+async function main() {
+  const store = createDemoStore();
+  const get = async endpoint => demoResponse(new URL('http://test.local' + endpoint), 'GET', {}, store, 'ADMIN').json();
+  const stats = await get('/dashboard/summary'), charts = await get('/dashboard/charts');
+  const props = { userName: 'Laure', monthLabel: 'Novembre 2026', stats, charts, pendingTotal: stats.pendingRequestsTotal, leavesThisMonth: stats.leavesThisMonth, totalPretAvanceMois: stats.totalPretAvanceMois, deptCount: charts.deptDistribution.length };
+  const before = JSON.stringify(props);
+  const render = p => renderToStaticMarkup(React.createElement(PilotageDashboard, p));
+  const html = render(props), compact = html.replace(/[\u00a0\u202f ]/g, '');
+  for (const label of ['Total employés', 'Masse salariale', 'Taux de présence', 'Demandes en attente', 'Départs en congé', 'Prêts et avances', 'Départements', 'Derniers bulletins', 'Activité récente', 'Raccourcis']) assert.ok(html.includes(label), label);
+  for (const number of ['1455000', String(stats.totalPretAvanceMois), '340000', '570000', '380000']) assert.ok(compact.includes(number), 'backend value missing: ' + number);
+  for (const href of ['/employes/nouveau', '/paie/nouveau', '/conges', '/rapports', '/paie', '/demandes']) assert.ok(html.includes(`href="${href}"`), href);
+  assert.equal(JSON.stringify(props), before, 'presentation must not mutate backend data');
+  const empty = render({ ...props, stats: {}, charts: {}, pendingTotal: 0, leavesThisMonth: 0, totalPretAvanceMois: 0, deptCount: 0 });
+  assert.ok(empty.includes('Les premiers bulletins arriveront ici')); assert.ok(empty.includes('Votre fil d’activité est à jour'));
+  const partial = render({ ...props, stats: { recentPayrolls: [{ id: 'missing-name', employee: { firstName: null, lastName: null }, netSalary: 123456 }] }, charts: {} });
+  assert.ok(partial.includes('Employé')); assert.ok(!partial.includes('NaN')); assert.ok(!partial.includes('Invalid Date'));
+  const error = render({ ...props, error: 'Échec du chargement' }); assert.ok(error.includes('role="alert"')); assert.ok(error.includes('Réessayer')); assert.ok(!error.includes('1 455 000'));
+  assert.ok(renderToStaticMarkup(React.createElement(PilotageSkeleton)).includes('role="status"'));
+  console.log('Pilotage vérifié : valeurs backend conservées, 7 indicateurs, raccourcis, données intactes, états vide/erreur/chargement et champs manquants.');
+}
+main().catch(error => { console.error(error); process.exitCode = 1; });
