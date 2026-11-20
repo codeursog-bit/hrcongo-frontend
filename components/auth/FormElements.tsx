@@ -1,14 +1,25 @@
 // ============================================================================
 // 📁 components/auth/FormElements.tsx
-// Primitives de formulaire partagées par login / register / forgot / reset.
-// Un seul endroit à modifier pour que les 4 pages restent visuellement
-// identiques : bordures ultra-fines, focus émeraude, micro-interactions.
+// Primitives de formulaire partagées par toutes les pages auth.
+// Un seul endroit à modifier pour que login / register / forgot / reset /
+// invitations restent identiques et alignés sur le design system de l'app.
+// Styles : components/auth/auth.css (tokens uniquement).
 // ============================================================================
 'use client';
 
-import React, { forwardRef, useState } from 'react';
+import React, { forwardRef, useEffect, useId, useState } from 'react';
 import { AlertCircle, CheckCircle2, Eye, EyeOff, Loader2, type LucideIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import './auth.css';
+
+// ── Message d'erreur sous un champ ───────────────────────────────────────────
+function FieldError({ id, children }: { id?: string; children: React.ReactNode }) {
+  return (
+    <p id={id} className="au-error" role="alert">
+      <AlertCircle size={13} /> {children}
+    </p>
+  );
+}
 
 // ── Champ texte avec icône ───────────────────────────────────────────────────
 interface TextFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -18,43 +29,31 @@ interface TextFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
-  ({ icon: Icon, error, label, className = '', ...props }, ref) => {
+  ({ icon: Icon, error, label, className = '', id, ...props }, ref) => {
+    const generated = useId();
+    const fieldId = id || generated;
     return (
       <div>
-        {label && <label className="mb-1.5 block text-[13px] font-medium text-[var(--text)]">{label}</label>}
-        <div className="group relative">
-          {Icon && (
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-              <Icon
-                size={16}
-                className={`transition-colors ${error ? 'text-red-400' : 'text-[var(--text-secondary)] group-focus-within:text-[#10B981]'}`}
-              />
-            </div>
-          )}
+        {label && <label htmlFor={fieldId} className="au-label">{label}</label>}
+        <div className={`au-input-wrap ${Icon ? 'au-has-icon' : ''} ${error ? 'au-invalid' : ''}`}>
+          {Icon && <span className="au-input-icon"><Icon size={17} /></span>}
           <input
             ref={ref}
             {...props}
-            className={`auth-input block w-full rounded-xl border bg-white/[0.03] py-3 text-[14px] text-[var(--text)] placeholder-[var(--text-secondary)] outline-none transition-all focus:bg-white/[0.05] ${
-              Icon ? 'pl-10 pr-3.5' : 'px-3.5'
-            } ${
-              error
-                ? 'border-red-500/50 focus:border-red-500/70 focus:ring-1 focus:ring-red-500/20'
-                : 'border-white/[0.08] focus:border-[#10B981]/50 focus:ring-1 focus:ring-[#10B981]/20'
-            } ${className}`}
+            id={fieldId}
+            aria-invalid={!!error}
+            aria-describedby={error ? `${fieldId}-error` : undefined}
+            className={`au-input ${className}`}
           />
         </div>
-        {error && (
-          <p className="mt-1.5 flex items-center gap-1.5 text-[12px] text-red-400">
-            <AlertCircle size={12} className="shrink-0" /> {error}
-          </p>
-        )}
+        {error && <FieldError id={`${fieldId}-error`}>{error}</FieldError>}
       </div>
     );
   }
 );
 TextField.displayName = 'TextField';
 
-// ── Champ mot de passe (avec toggle visibilité) ──────────────────────────────
+// ── Champ mot de passe (avec bouton afficher / masquer) ──────────────────────
 interface PasswordFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
   icon?: LucideIcon;
   error?: string;
@@ -62,54 +61,43 @@ interface PasswordFieldProps extends React.InputHTMLAttributes<HTMLInputElement>
 }
 
 export const PasswordField = forwardRef<HTMLInputElement, PasswordFieldProps>(
-  ({ icon: Icon, error, label, className = '', ...props }, ref) => {
+  ({ icon: Icon, error, label, className = '', id, ...props }, ref) => {
     const [visible, setVisible] = useState(false);
+    const generated = useId();
+    const fieldId = id || generated;
     return (
       <div>
-        {label && <label className="mb-1.5 block text-[13px] font-medium text-[var(--text)]">{label}</label>}
-        <div className="group relative">
-          {Icon && (
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-              <Icon
-                size={16}
-                className={`transition-colors ${error ? 'text-red-400' : 'text-[var(--text-secondary)] group-focus-within:text-[#10B981]'}`}
-              />
-            </div>
-          )}
+        {label && <label htmlFor={fieldId} className="au-label">{label}</label>}
+        <div className={`au-input-wrap au-has-toggle ${Icon ? 'au-has-icon' : ''} ${error ? 'au-invalid' : ''}`}>
+          {Icon && <span className="au-input-icon"><Icon size={17} /></span>}
           <input
             ref={ref}
             {...props}
+            id={fieldId}
             type={visible ? 'text' : 'password'}
-            className={`auth-input block w-full rounded-xl border bg-white/[0.03] py-3 pr-11 text-[14px] text-[var(--text)] placeholder-[var(--text-secondary)] outline-none transition-all focus:bg-white/[0.05] ${
-              Icon ? 'pl-10' : 'pl-3.5'
-            } ${
-              error
-                ? 'border-red-500/50 focus:border-red-500/70 focus:ring-1 focus:ring-red-500/20'
-                : 'border-white/[0.08] focus:border-[#10B981]/50 focus:ring-1 focus:ring-[#10B981]/20'
-            } ${className}`}
+            aria-invalid={!!error}
+            aria-describedby={error ? `${fieldId}-error` : undefined}
+            className={`au-input ${className}`}
           />
           <button
             type="button"
             tabIndex={-1}
             onClick={() => setVisible((v) => !v)}
-            className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-[var(--text-secondary)] transition-colors hover:text-[var(--text)]"
+            className="au-eye"
             aria-label={visible ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+            aria-pressed={visible}
           >
-            {visible ? <EyeOff size={16} /> : <Eye size={16} />}
+            {visible ? <EyeOff size={17} /> : <Eye size={17} />}
           </button>
         </div>
-        {error && (
-          <p className="mt-1.5 flex items-center gap-1.5 text-[12px] text-red-400">
-            <AlertCircle size={12} className="shrink-0" /> {error}
-          </p>
-        )}
+        {error && <FieldError id={`${fieldId}-error`}>{error}</FieldError>}
       </div>
     );
   }
 );
 PasswordField.displayName = 'PasswordField';
 
-// ── Bouton principal (identique au CTA "Démarrer gratuitement" de la landing) ─
+// ── Bouton principal ─────────────────────────────────────────────────────────
 export function PrimaryButton({
   children,
   loading,
@@ -120,101 +108,154 @@ export function PrimaryButton({
     <button
       {...props}
       disabled={loading || props.disabled}
-      className={`flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--text)] py-3.5 text-[14px] font-medium text-black transition-all hover:bg-white active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 ${className}`}
+      aria-busy={loading || undefined}
+      className={`au-btn au-btn-primary ${className}`}
     >
-      {loading ? <Loader2 size={17} className="animate-spin" /> : children}
+      {loading ? <Loader2 size={18} className="au-spin" aria-label="Chargement" /> : children}
     </button>
   );
 }
 
-// ── Bouton secondaire (bordure fine, fond transparent) ───────────────────────
+// ── Bouton secondaire ────────────────────────────────────────────────────────
 export function SecondaryButton({
   children,
   className = '',
   ...props
 }: React.ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
-    <button
-      {...props}
-      className={`flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] py-3.5 text-[14px] font-medium text-[var(--text)] transition-colors hover:border-white/20 hover:bg-white/[0.06] disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
-    >
+    <button {...props} className={`au-btn au-btn-secondary ${className}`}>
       {children}
     </button>
   );
 }
 
-// ── Bannière d'erreur serveur ─────────────────────────────────────────────────
+// ── Bannière d'erreur serveur ────────────────────────────────────────────────
 export function ErrorBanner({ children }: { children: React.ReactNode }) {
   return (
     <AnimatePresence>
       <motion.div
+        role="alert"
         initial={{ opacity: 0, height: 0 }}
         animate={{ opacity: 1, height: 'auto' }}
         exit={{ opacity: 0, height: 0 }}
-        className="flex items-start gap-2.5 overflow-hidden rounded-xl border border-red-500/25 bg-red-500/[0.08] px-3.5 py-3 text-[13px] text-red-300"
+        style={{ overflow: 'hidden' }}
       >
-        <AlertCircle size={15} className="mt-0.5 shrink-0 text-red-400" />
-        <span>{children}</span>
+        <div className="au-banner au-banner-error">
+          <AlertCircle size={16} />
+          <span>{children}</span>
+        </div>
       </motion.div>
     </AnimatePresence>
   );
 }
 
-// ── Bannière d'info neutre (ex: parrainage) ───────────────────────────────────
+// ── Bannière d'info neutre (ex : parrainage) ─────────────────────────────────
 export function InfoBanner({ children }: { children: React.ReactNode }) {
+  return <div className="au-banner au-banner-info">{children}</div>;
+}
+
+// ── Bannière d'avertissement (ex : changement de mot de passe obligatoire) ───
+export function WarningBanner({ title, children }: { title?: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-start gap-2.5 rounded-xl border border-[#10B981]/25 bg-[#10B981]/[0.08] px-3.5 py-3 text-[13px] text-[#8EE0C0]">
-      {children}
+    <div className="au-banner au-banner-warning">
+      <AlertCircle size={17} />
+      <div>
+        {title && <strong>{title}</strong>}
+        {children}
+      </div>
     </div>
   );
 }
 
-// ── Critère de mot de passe (checklist) ───────────────────────────────────────
+// ── Critère de mot de passe (checklist) ──────────────────────────────────────
 export function Criteria({ met, text }: { met: boolean; text: string }) {
   return (
-    <div className="flex items-center gap-2 text-[12px]">
-      {met ? (
-        <CheckCircle2 size={13} className="shrink-0 text-[#10B981]" />
-      ) : (
-        <div className="h-[13px] w-[13px] shrink-0 rounded-full border border-white/15" />
-      )}
-      <span className={met ? 'text-[var(--text)]' : 'text-[var(--text-secondary)]'}>{text}</span>
+    <div className={`au-crit ${met ? 'is-met' : ''}`}>
+      {met ? <CheckCircle2 size={14} className="shrink-0" /> : <span className="au-crit-dot" />}
+      <span>{text}</span>
     </div>
   );
 }
 
-// ── Barre de force du mot de passe ────────────────────────────────────────────
+// ── Barre de force du mot de passe ───────────────────────────────────────────
 const STRENGTH_LABELS = ['', 'Faible', 'Moyen', 'Bon', 'Excellent'];
-const STRENGTH_COLORS = ['', '#EF4444', '#F59E0B', '#EAB308', '#10B981'];
+const STRENGTH_BARS = ['', 'var(--danger)', 'var(--accent-2)', 'var(--lime)', 'var(--green)'];
+const STRENGTH_TEXT = ['', 'var(--danger-text)', 'var(--warning-text)', 'var(--warning-text)', 'var(--success-text)'];
 
 export function PasswordStrength({ score }: { score: number }) {
   if (score === 0) return null;
   return (
-    <div className="mt-2.5 flex items-center gap-3">
-      <div className="flex h-1 flex-1 gap-1 overflow-hidden rounded-full bg-white/[0.08]">
+    <div className="au-strength" aria-live="polite">
+      <div className="au-strength-bars">
         {[1, 2, 3, 4].map((i) => (
-          <div
-            key={i}
-            className="h-full flex-1 rounded-full transition-colors duration-300"
-            style={{ backgroundColor: i <= score ? STRENGTH_COLORS[score] : 'transparent' }}
-          />
+          <i key={i} style={i <= score ? { backgroundColor: STRENGTH_BARS[score] } : undefined} />
         ))}
       </div>
-      <span className="text-[11px] font-medium" style={{ color: STRENGTH_COLORS[score] }}>
+      <span className="au-strength-label" style={{ color: STRENGTH_TEXT[score] }}>
         {STRENGTH_LABELS[score]}
       </span>
     </div>
   );
 }
 
-// ── Séparateur "ou" ────────────────────────────────────────────────────────────
+// ── Séparateur « ou » ────────────────────────────────────────────────────────
 export function Divider({ children }: { children?: React.ReactNode }) {
-  if (!children) return <div className="border-t border-white/[0.08]" />;
+  if (!children) return <div className="au-divider-plain" />;
+  return <div className="au-divider">{children}</div>;
+}
+
+// ── Fenêtre modale (2FA, changement de mot de passe…) ────────────────────────
+// Panneau flottant sur ordinateur, « bottom sheet » sur mobile.
+// onClose (optionnel) : appelé avec la touche Échap.
+export function AuthModal({
+  open,
+  onClose,
+  labelledBy,
+  children,
+}: {
+  open: boolean;
+  onClose?: () => void;
+  labelledBy?: string;
+  children: React.ReactNode;
+}) {
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose?.();
+    };
+    window.addEventListener('keydown', onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [open, onClose]);
+
   return (
-    <div className="flex items-center gap-3">
-      <div className="h-px flex-1 bg-white/[0.08]" />
-      <span className="text-[12px] text-[var(--text-secondary)]">{children}</span>
-      <div className="h-px flex-1 bg-white/[0.08]" />
-    </div>
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          className="au-overlay"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={labelledBy}
+            className="au-modal"
+            initial={{ opacity: 0, y: 28, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.98 }}
+            transition={{ duration: 0.28, ease: [0.2, 0.8, 0.2, 1] }}
+          >
+            {children}
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

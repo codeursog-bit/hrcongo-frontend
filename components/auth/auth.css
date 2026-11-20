@@ -1,0 +1,296 @@
+/* ============================================================================
+   components/auth/auth.css
+   Pages d'authentification Konza RH — même système que l'app :
+   tokens (--bg, --surface, --brand, --action…), rayons 20/14, ombres douces,
+   thème clair / sombre automatique. Aucune couleur codée en dur, sauf le
+   panneau de marque (volontairement sombre dans les deux thèmes).
+   Classes préfixées « au- » pour ne rien casser ailleurs.
+   ============================================================================ */
+
+.au-root { position: relative; min-height: 100vh; min-height: 100dvh; background: var(--bg); color: var(--text);
+  font-family: var(--font-jakarta), var(--font-inter), system-ui, sans-serif; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+.au-split { display: grid; grid-template-columns: minmax(0, 1fr); }
+/* Ordinateur : la page tient dans l'écran, sans scroll. Si l'écran est vraiment très court,
+   seule la colonne du formulaire défile, jamais la page. */
+@media (min-width: 1024px) {
+  .au-split { grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr); height: 100vh; height: 100dvh; min-height: 0; overflow: hidden; }
+  .au-split .au-main { height: 100%; min-height: 0; overflow-y: auto; }
+}
+@media (min-width: 1024px) and (max-height: 760px) {
+  .au-split .au-main { padding-top: 18px; padding-bottom: 20px; }
+  .au-split .au-heading { margin-bottom: 20px; }
+  .au-split .au-stack { gap: 14px; }
+  .au-split .au-foot { margin-top: 20px; padding-top: 16px; }
+  .au-split .au-input.au-input, .au-split .au-btn { min-height: 46px; }
+}
+
+/* ── Colonne formulaire ─────────────────────────────────────────────────── */
+.au-main { position: relative; display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; padding: 22px 22px 36px; }
+@media (min-width: 640px) { .au-main { padding: 28px 40px 44px; } }
+/* Fine barre aux couleurs du logo (mobile : remplace le panneau de marque) */
+.au-main::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 3px; background: linear-gradient(90deg, var(--brand), var(--lime) 55%, var(--accent-2)); }
+@media (min-width: 1024px) { .au-split .au-main::before { display: none; } }
+
+.au-topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 44px; }
+@media (min-width: 1024px) { .au-split .au-topbar-logo { display: none; } .au-split .au-topbar { justify-content: flex-end; } }
+.au-logo { display: inline-flex; align-items: center; }
+.au-logo img { height: 40px; width: auto; display: block; }
+.au-logo .au-logo-dark { display: none; }
+.dark .au-logo .au-logo-light { display: none; }
+.dark .au-logo .au-logo-dark { display: block; }
+.au-home { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 500;
+  color: var(--text-secondary); background: var(--surface-2); text-decoration: none; transition: background .2s, color .2s; }
+.au-home:hover { color: var(--text); background: var(--brand-soft); }
+.au-home svg { transition: transform .2s; }
+.au-home:hover svg { transform: translateX(-2px); }
+
+.au-form { margin: auto; width: 100%; max-width: 420px; padding: 28px 0 8px; }
+.au-centered .au-form { max-width: 440px; }
+.au-form > * { animation: au-rise .7s cubic-bezier(.2, .7, .2, 1) both; }
+.au-form > *:nth-child(2) { animation-delay: .08s; }
+.au-form > *:nth-child(3) { animation-delay: .16s; }
+.au-form > *:nth-child(4) { animation-delay: .24s; }
+@keyframes au-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+/* Variante centrée (pages sans panneau de marque) */
+.au-centered::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 380px; pointer-events: none;
+  background: radial-gradient(560px 260px at 50% 0, var(--brand-soft), transparent); }
+.au-centered .au-main { align-items: center; }
+.au-centered .au-heading { text-align: center; }
+.au-centered .au-card { background: var(--surface); border-radius: var(--radius-card); box-shadow: var(--shadow-card); padding: 32px; }
+@media (max-width: 480px) { .au-centered .au-card { padding: 24px 20px; } }
+
+/* ── Titres ─────────────────────────────────────────────────────────────── */
+.au-heading { margin-bottom: 28px; }
+.au-eyebrow { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 16px; padding: 6px 12px; border-radius: 999px;
+  background: var(--brand-soft); color: var(--text); font-size: 12px; font-weight: 600; }
+.au-eyebrow::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--brand); }
+.au-title { margin: 0; font-size: clamp(26px, 3.2vw, 32px); font-weight: 700; line-height: 1.15; letter-spacing: -.025em; color: var(--text); }
+.au-title-sm { font-size: 22px; letter-spacing: -.02em; }
+.au-desc { margin: 10px 0 0; font-size: 14.5px; line-height: 1.65; color: var(--text-secondary); }
+.au-card { width: 100%; }
+
+/* ── Champs ─────────────────────────────────────────────────────────────── */
+.au-stack { display: grid; gap: 18px; }
+.au-stack-sm { display: grid; gap: 12px; }
+.au-row-end { display: flex; justify-content: flex-end; margin-top: -6px; }
+.au-label { display: block; margin-bottom: 8px; font-size: 13px; font-weight: 600; color: var(--text); }
+.au-input-wrap { position: relative; }
+.au-input-icon { position: absolute; inset: 0 auto 0 0; display: flex; align-items: center; padding-left: 15px; color: var(--text-secondary); pointer-events: none; transition: color .2s; }
+.au-input-wrap:focus-within .au-input-icon { color: var(--brand-strong); }
+.au-input.au-input { display: block; width: 100%; min-height: 50px; padding: 13px 15px; border-radius: var(--radius-control); border: 1.5px solid transparent;
+  background-color: var(--surface-2); color: var(--text); font: inherit; font-size: 15px; outline: none; transition: box-shadow .2s, border-color .2s, background-color .2s; }
+.au-input.au-input::placeholder { color: var(--text-secondary); opacity: .75; }
+.au-input.au-input:focus { border-color: color-mix(in srgb, var(--brand) 70%, transparent); box-shadow: 0 0 0 4px var(--brand-soft); background-color: var(--surface); }
+.au-input.au-input:disabled { opacity: .6; cursor: not-allowed; }
+.au-has-icon .au-input.au-input { padding-left: 44px; }
+.au-has-toggle .au-input.au-input { padding-right: 48px; }
+.au-invalid .au-input.au-input { border-color: var(--danger-text); }
+.au-invalid .au-input.au-input:focus { box-shadow: 0 0 0 4px color-mix(in srgb, var(--danger) 14%, transparent); }
+.au-input.au-input:-webkit-autofill { -webkit-box-shadow: 0 0 0 40px var(--surface-2) inset !important; -webkit-text-fill-color: var(--text) !important; caret-color: var(--text); }
+.au-eye { position: absolute; inset: 0 0 0 auto; display: flex; align-items: center; padding: 0 14px; border: 0; background: none; color: var(--text-secondary);
+  cursor: pointer; border-radius: 0 var(--radius-control) var(--radius-control) 0; transition: color .2s; }
+.au-eye:hover { color: var(--text); }
+.au-error { display: flex; align-items: center; gap: 6px; margin: 8px 0 0; font-size: 12.5px; color: var(--danger-text); }
+.au-error svg { flex-shrink: 0; }
+
+/* Code 2FA */
+.au-input.au-otp { text-align: center; text-indent: .45em; font-family: var(--font-mono), monospace; font-size: 28px; letter-spacing: .45em; min-height: 68px; padding: 16px 8px; }
+.au-otp-hint { margin: 10px 0 0; text-align: center; font-size: 12.5px; color: var(--text-secondary); }
+
+/* ── Boutons ────────────────────────────────────────────────────────────── */
+.au-btn { position: relative; overflow: hidden; display: flex; width: 100%; align-items: center; justify-content: center; gap: 9px; min-height: 50px;
+  padding: 13px 20px; border: 0; border-radius: var(--radius-control); font: inherit; font-size: 14.5px; font-weight: 600; text-decoration: none; cursor: pointer;
+  transition: transform .2s, filter .2s, background-color .2s, box-shadow .2s; }
+.au-btn:active:not(:disabled) { transform: translateY(1px); }
+.au-btn:disabled { opacity: .55; cursor: not-allowed; }
+.au-btn:focus-visible, .au-link:focus-visible, .au-home:focus-visible, .au-eye:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+.au-btn-primary { background: var(--action); color: var(--on-brand); box-shadow: 0 10px 24px -12px color-mix(in srgb, var(--action) 85%, transparent); }
+.au-btn-primary:hover:not(:disabled) { filter: brightness(1.07); transform: translateY(-1px); box-shadow: 0 16px 30px -14px color-mix(in srgb, var(--action) 90%, transparent); }
+/* Reflet qui traverse le bouton au survol */
+.au-btn-primary::after { content: ''; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%; transform: skewX(-18deg);
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .28), transparent); transition: left .75s ease; pointer-events: none; }
+.au-btn-primary:hover:not(:disabled)::after { left: 135%; }
+.au-btn .au-arrow { transition: transform .25s; }
+.au-btn:hover:not(:disabled) .au-arrow { transform: translateX(3px); }
+.au-btn-secondary { background: var(--surface-2); color: var(--text); }
+.au-btn-secondary:hover:not(:disabled) { background: var(--brand-soft); }
+.au-spin { animation: au-spin-fast .8s linear infinite; }
+@keyframes au-spin-fast { to { transform: rotate(360deg); } }
+
+/* ── Liens, pied de page ────────────────────────────────────────────────── */
+.au-link { color: var(--text); font-weight: 600; text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--brand) 60%, transparent); text-underline-offset: 4px; transition: text-decoration-color .2s; }
+.au-link:hover { text-decoration-color: var(--brand); }
+.au-link-muted { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; color: var(--text-secondary); text-decoration: none; transition: color .2s; }
+.au-link-muted:hover { color: var(--text); }
+.au-foot { margin-top: 28px; padding-top: 22px; border-top: 1px solid var(--border); text-align: center; font-size: 14px; color: var(--text-secondary); }
+.au-center { text-align: center; }
+
+/* ── Bannières, pastilles ───────────────────────────────────────────────── */
+.au-banner { display: flex; gap: 10px; align-items: flex-start; padding: 13px 15px; border-radius: var(--radius-control); font-size: 13.5px; line-height: 1.55; }
+.au-banner svg { flex-shrink: 0; margin-top: 2px; }
+.au-banner-error { background: color-mix(in srgb, var(--danger) 10%, transparent); color: var(--danger-text); }
+.au-banner-info { background: var(--brand-soft); color: var(--text); }
+.au-banner-warning { background: color-mix(in srgb, var(--mustard) 15%, transparent); color: var(--warning-text); }
+.au-banner-warning strong { display: block; margin-bottom: 2px; }
+.au-mb { margin-bottom: 18px; }
+.au-tile { display: flex; width: 56px; height: 56px; align-items: center; justify-content: center; margin-bottom: 22px; border-radius: 18px; background: var(--brand-soft); color: var(--brand-strong); }
+.au-tile.is-success { background: color-mix(in srgb, var(--green) 14%, transparent); color: var(--success-text); }
+.au-tile.is-danger { background: color-mix(in srgb, var(--danger) 11%, transparent); color: var(--danger-text); }
+.au-tile-sm { width: 48px; height: 48px; margin-bottom: 0; border-radius: 15px; flex-shrink: 0; }
+.au-ok { display: flex; align-items: center; gap: 6px; margin: 8px 0 0; font-size: 12.5px; color: var(--success-text); }
+
+/* Critères de mot de passe */
+.au-crit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; margin-top: 14px; }
+.au-crit { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-secondary); transition: color .2s; }
+.au-crit.is-met { color: var(--text); }
+.au-crit.is-met svg { color: var(--success-text); }
+.au-crit-dot { width: 14px; height: 14px; flex-shrink: 0; border-radius: 50%; border: 1.5px solid var(--text-secondary); opacity: .45; }
+.au-strength { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+.au-strength-bars { display: flex; flex: 1; gap: 4px; height: 5px; }
+.au-strength-bars i { flex: 1; border-radius: 999px; background: var(--surface-2); transition: background-color .3s; }
+.au-strength-label { font-size: 12px; font-weight: 600; }
+.au-divider { display: flex; align-items: center; gap: 12px; font-size: 12.5px; color: var(--text-secondary); }
+.au-divider::before, .au-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.au-divider-plain { height: 1px; background: var(--border); }
+
+/* ── Fenêtres (2FA, mot de passe) ───────────────────────────────────────── */
+.au-overlay { position: fixed; inset: 0; z-index: 100; display: flex; align-items: flex-end; justify-content: center; background: rgba(10, 10, 10, .55);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); overflow-y: auto; }
+@media (min-width: 640px) { .au-overlay { align-items: center; padding: 24px; } }
+.au-modal { width: 100%; max-width: 460px; max-height: 96dvh; overflow-y: auto; background: var(--surface); color: var(--text);
+  font-family: var(--font-jakarta), var(--font-inter), system-ui, sans-serif; border-radius: 26px 26px 0 0; box-shadow: var(--shadow-pop); padding: 26px 22px 28px; }
+@media (min-width: 640px) { .au-modal { border-radius: 24px; padding: 32px; } }
+.au-modal-head { display: flex; gap: 14px; align-items: center; margin-bottom: 20px; }
+.au-modal-title { margin: 0; font-size: 19px; font-weight: 700; letter-spacing: -.02em; }
+.au-modal-sub { margin: 3px 0 0; font-size: 13px; color: var(--text-secondary); }
+.au-actions { display: flex; gap: 12px; margin-top: 22px; }
+.au-actions > * { flex: 1; }
+@media (max-width: 480px) { .au-actions { flex-direction: column-reverse; } }
+
+/* ── Panneau de marque (colonne de gauche) ──────────────────────────────── */
+.au-panel { display: none; position: relative; isolation: isolate; overflow: hidden; background: #121212; color: #F2F2F2;
+  padding: clamp(24px, 5vh, 44px) clamp(32px, 4vw, 56px); }
+@media (min-width: 1024px) { .au-panel { display: flex; flex-direction: column; height: 100%; min-height: 0; } }
+/* Un seul dégradé chaud, discret. Plus de grille de points ni d'orbites. */
+.au-panel::before { content: ''; position: absolute; inset: 0; z-index: -1;
+  background: radial-gradient(70% 55% at 88% 0%, rgba(247, 135, 75, .16), transparent 70%); }
+.au-panel .au-logo img { height: 44px; }
+.au-panel-body { flex: 1; min-height: 0; display: flex; flex-direction: column; width: 100%; max-width: 580px; margin-top: clamp(16px, 4vh, 36px); }
+
+/* Messages qui défilent : tous empilés dans la même case, donc la hauteur ne saute pas */
+.au-slides { display: grid; flex: none; }
+.au-slide { grid-area: 1 / 1; opacity: 0; transform: translateY(8px); pointer-events: none; transition: opacity .5s ease, transform .5s ease; }
+.au-slide.is-active { opacity: 1; transform: none; pointer-events: auto; }
+.au-panel-title { margin: 0; font-size: clamp(30px, min(3.3vw, 5.4vh), 46px); font-weight: 700; line-height: 1.1; letter-spacing: -.03em; }
+.au-panel-title em { font-style: normal; color: #FF9A62; }
+.au-panel-sub { margin: 14px 0 0; max-width: 460px; font-size: 15.5px; line-height: 1.65; color: rgba(242, 242, 242, .66); }
+.au-dots { display: flex; gap: 8px; margin-top: clamp(14px, 2.5vh, 22px); }
+.au-dot { position: relative; width: 24px; height: 3px; padding: 0; border: 0; border-radius: 2px; background: rgba(255, 255, 255, .22); cursor: pointer; transition: background-color .3s, width .3s; }
+.au-dot::before { content: ''; position: absolute; inset: -10px -3px; }
+.au-dot.is-active { width: 36px; background: #FF9A62; }
+.au-dot:focus-visible { outline: 2px solid #FF9A62; outline-offset: 4px; }
+
+/* Emplacement des captures : prend tout l'espace restant de la colonne */
+.au-stage { position: relative; flex: 1; min-height: 0; margin-top: clamp(16px, 3.5vh, 32px); }
+.au-shot { position: absolute; margin: 0; display: flex; flex-direction: column; overflow: hidden; border-radius: 12px; background: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, .11); box-shadow: 0 26px 50px -26px rgba(0, 0, 0, .8); }
+.au-shot-dash { left: 0; top: 0; width: 82%; height: 86%; z-index: 1; }
+.au-shot-bull { right: 0; bottom: 0; width: 38%; height: 88%; z-index: 2; }
+.au-shot-bar { flex: none; padding: 8px 12px; font-size: 11.5px; font-weight: 600; color: rgba(242, 242, 242, .72); background: #222; border-bottom: 1px solid rgba(255, 255, 255, .08); }
+.au-shot-body { position: relative; flex: 1; min-height: 0; }
+.au-shot-body img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top left; background: #fff; opacity: 0; transition: opacity .4s; }
+.au-shot.is-ok .au-shot-body img { opacity: 1; }
+.au-shot-bull .au-shot-body img { object-position: top center; }
+.au-shot-empty { position: absolute; inset: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center;
+  border: 1px dashed rgba(255, 255, 255, .2); border-radius: 8px; font-size: 12px; color: rgba(242, 242, 242, .55); }
+.au-shot-empty code { font-family: var(--font-mono), monospace; font-size: 10.5px; color: #FF9A62; word-break: break-all; padding: 0 8px; }
+
+/* Phrase du bas : empilées dans la même case, une seule visible à la fois */
+.au-tagline { display: grid; margin-top: clamp(12px, 2.5vh, 20px); padding-left: 14px; border-left: 2px solid #FF9A62; }
+.au-tag { grid-area: 1 / 1; margin: 0; align-self: center; font-size: 15px; line-height: 1.55; color: rgba(242, 242, 242, .82); pointer-events: none; }
+/* Les mots arrivent un par un (délai croissant) ; à la sortie, ils s'effacent d'un coup */
+.au-w { display: inline-block; opacity: 0; transform: translateY(8px); transition: opacity .25s ease, transform .25s ease; }
+.au-tag.is-active .au-w { opacity: 1; transform: none; transition: opacity .5s ease var(--wd, 0ms), transform .5s ease var(--wd, 0ms); }
+
+/* ── Inscription : choix du profil, retour, pastille ───────────────────── */
+.au-choices { display: grid; gap: 12px; }
+.au-choice { display: flex; align-items: center; gap: 16px; width: 100%; padding: 16px 18px; border: 1.5px solid transparent; border-radius: var(--radius-card);
+  background: var(--surface-2); color: var(--text); font: inherit; text-align: left; cursor: pointer; transition: border-color .2s, background-color .2s; }
+.au-choice:hover { border-color: color-mix(in srgb, var(--brand) 70%, transparent); background: var(--surface); }
+.au-choice:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+.au-choice .au-tile { margin: 0; }
+.au-choice b { display: block; font-size: 15px; font-weight: 650; }
+.au-choice small { display: block; margin-top: 3px; font-size: 13px; line-height: 1.5; color: var(--text-secondary); }
+.au-choice .au-arrow-end { margin-left: auto; flex-shrink: 0; color: var(--text-secondary); transition: transform .25s; }
+.au-choice:hover .au-arrow-end { transform: translateX(3px); }
+.au-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 420px) { .au-row-2 { grid-template-columns: 1fr; } }
+.au-stepbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.au-back { display: inline-flex; align-items: center; gap: 6px; padding: 0; border: 0; background: none; font: inherit; font-size: 13px; font-weight: 500; color: var(--text-secondary); cursor: pointer; transition: color .2s; }
+.au-back:hover { color: var(--text); }
+.au-back:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+.au-pill { padding: 5px 12px; border-radius: 999px; background: var(--brand-soft); font-size: 12px; font-weight: 600; color: var(--text); }
+.au-note { margin: 0; text-align: center; font-size: 12.5px; color: var(--text-secondary); }
+.au-hint { margin: 8px 0 0; font-size: 12.5px; color: var(--text-secondary); }
+.au-hint code { font-family: var(--font-mono), monospace; color: var(--text); }
+
+/* ── Panneau personnalisé (invitation cabinet) ─────────────────────────── */
+.au-panel-custom { justify-content: center; }
+.au-invite { max-width: 460px; }
+.au-invite-mark { display: inline-flex; align-items: center; justify-content: center; margin-bottom: 28px; }
+.au-invite-mark.is-logo { padding: 16px 20px; border-radius: 18px; background: #fff; }
+.au-invite-mark.is-logo img { display: block; height: 56px; width: auto; max-width: 240px; object-fit: contain; }
+.au-invite-mark.is-icon { width: 72px; height: 72px; border-radius: 20px; color: #fff; }
+.au-invite-mark.is-konza img { display: block; height: 52px; width: auto; }
+.au-invite-title { margin: 0; font-size: clamp(30px, min(3.3vw, 5.4vh), 44px); font-weight: 700; line-height: 1.1; letter-spacing: -.03em; }
+.au-invite-sub { margin: 14px 0 0; font-size: 16px; line-height: 1.65; color: rgba(242, 242, 242, .68); }
+.au-invite-badge { display: inline-flex; align-items: center; gap: 8px; margin-top: 26px; padding: 9px 14px; border-radius: 12px; border: 1px solid; font-size: 13.5px; font-weight: 600; }
+
+/* ── Invitations : compte invité ─────────────────────────────────────────── */
+.au-guest { display: flex; flex-direction: column; gap: 2px; margin: 0 0 20px; padding: 12px 14px; border-radius: var(--radius-control); background: var(--surface-2); }
+.au-guest small { font-size: 11.5px; font-weight: 600; color: var(--text-secondary); }
+.au-guest span { font-size: 14px; font-weight: 600; color: var(--text); word-break: break-all; }
+
+/* ── Création d'entreprise : étapes, cases, récapitulatif ───────────────── */
+.au-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 26px; }
+.au-step { display: grid; gap: 8px; padding: 0; border: 0; background: none; font: inherit; font-size: 12px; font-weight: 600; text-align: left; color: var(--text-secondary); }
+.au-step i { display: block; height: 3px; border-radius: 2px; background: var(--surface-2); transition: background-color .3s; }
+.au-step.is-done, .au-step.is-current { color: var(--text); }
+.au-step.is-done i, .au-step.is-current i { background: var(--brand); }
+button.au-step { cursor: pointer; }
+button.au-step:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }
+@media (max-width: 480px) { .au-step span { display: none; } }
+.au-check { display: flex; align-items: flex-start; gap: 14px; padding: 14px 16px; border-radius: var(--radius-control); background: var(--surface-2); cursor: pointer; transition: background-color .2s; }
+.au-check:hover { background: var(--brand-soft); }
+.au-check input { width: 18px; height: 18px; margin-top: 2px; flex-shrink: 0; accent-color: var(--brand); }
+.au-check b { display: block; font-size: 14px; font-weight: 600; }
+.au-check small { display: block; margin-top: 2px; font-size: 12.5px; line-height: 1.5; color: var(--text-secondary); }
+.au-subtitle { margin: 6px 0 0; font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+.au-recap { padding: 2px 16px; border-radius: var(--radius-control); background: var(--surface-2); }
+.au-recap > div { display: flex; justify-content: space-between; gap: 16px; padding: 11px 0; font-size: 13.5px; border-bottom: 1px solid var(--border); }
+.au-recap > div:last-child { border-bottom: 0; }
+.au-recap span { color: var(--text-secondary); }
+.au-recap b { font-weight: 600; text-align: right; }
+.au-next { margin: 0 0 24px; padding: 2px 16px; list-style: none; border-radius: var(--radius-control); background: var(--surface-2); text-align: left; }
+.au-next li { display: flex; align-items: center; gap: 14px; padding: 13px 0; border-bottom: 1px solid var(--border); }
+.au-next li:last-child { border-bottom: 0; }
+.au-next em { display: flex; width: 26px; height: 26px; flex-shrink: 0; align-items: center; justify-content: center; border-radius: 50%; background: var(--brand-soft); font-style: normal; font-size: 12px; font-weight: 700; }
+.au-next b { display: block; font-size: 14px; font-weight: 600; }
+.au-next small { display: block; font-size: 12.5px; color: var(--text-secondary); }
+/* Titre aligné à gauche dans la variante centrée (assistant de création) */
+.au-centered .au-card.au-left .au-heading { text-align: left; }
+/* Grille des conventions : 2 colonnes dans la largeur de l'assistant */
+.au-conv > .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 560px) { .au-conv > .grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* Chargement (Suspense) */
+.au-loading { display: flex; align-items: center; justify-content: center; }
+.au-spinner { width: 30px; height: 30px; border-radius: 50%; border: 3px solid var(--brand-soft); border-top-color: var(--brand); animation: au-spin-fast .8s linear infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .au-form > * { animation: none !important; }
+  .au-slide, .au-w, .au-dot, .au-shot-body img { transition: none !important; }
+  .au-btn, .au-input.au-input, .au-btn-primary::after { transition: none !important; }
+  .au-btn-primary::after { display: none; }
+}

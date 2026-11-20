@@ -27,7 +27,9 @@ async function adminFetch<T>(
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: `Erreur ${res.status}` }));
-    throw new Error(err.message || `Erreur ${res.status}`);
+    const e: any = new Error(err.message || `Erreur ${res.status}`);
+    if (Array.isArray(err.errors)) e.errors = err.errors;
+    throw e;
   }
 
   return res.json();

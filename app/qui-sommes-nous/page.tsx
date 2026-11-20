@@ -1,212 +1,229 @@
 // ============================================================================
-// 📁 app/qui-sommes-nous/page.tsx — Konza RH · Page À propos (statique)
+// 📁 app/qui-sommes-nous/page.tsx — Konza RH · À propos
+// Même esprit que l'accueil. Photo du fondateur : déposer le fichier
+//    public/about/fondateur.jpg   (portrait, 4:5 environ)
 // ============================================================================
 'use client';
-import React, { useState, useEffect, useRef } from 'react';
+
+import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Navbar } from '@/components/landing/Navbar';
 import { Footer } from '@/components/landing/Footer';
 
-const C = {
-  bg:'#050607',card:'#0B0C0F',cardHov:'#111317',
-  border:'rgba(255,255,255,0.07)',
-  cyan:'#10B981',blue:'#059669',purple:'#64748B',
-  green:'#10B981',orange:'#F59E0B',pink:'#EC4899',
-  red:'#EF4444',
-  text:'#F8FAFC',muted:'#64748B',sub:'#94A3B8',
-};
+const ACCENT = '#FF9A62';
+const FOUNDER_PHOTO = '/about/fondateur.jpg';
 
-function Blob({color,style}:{color:string;style:React.CSSProperties}){return<div style={{position:'absolute',borderRadius:'50%',filter:'blur(120px)',opacity:0.1,pointerEvents:'none',background:color,...style}}/>;}
-
-function useReveal(){
-  const ref=useRef<HTMLDivElement>(null);
-  const [v,setV]=useState(false);
-  useEffect(()=>{
-    const el=ref.current;if(!el)return;
-    const obs=new IntersectionObserver(([e])=>{if(e.isIntersecting)setV(true)},{threshold:0.08});
-    obs.observe(el);return()=>obs.disconnect();
-  },[]);
-  return{ref,visible:v};
-}
-
-function Reveal({children,delay=0}:{children:React.ReactNode;delay?:number}){
-  const{ref,visible}=useReveal();
-  return<div ref={ref} style={{opacity:visible?1:0,transform:visible?'none':'translateY(28px)',transition:`opacity 0.6s ease ${delay}ms,transform 0.6s ease ${delay}ms`}}>{children}</div>;
-}
-
-const TEAM=[
-  {name:'Nathan BONDOMA SOGOYA',role:'Fondateur & Dev Full-Stack',bio:'Développeur Next.js fullstack de Pointe-Noire. Concepteur de l\'architecture complète de Konza RH — du schéma PostgreSQL jusqu\'à l\'interface finale.',img:'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=75',tags:['Next.js 14','PostgreSQL','Prisma','TypeScript'],color:C.cyan},
-  {name:'Pôle Juridique & Fiscal',role:'Conformité & Droit du travail',bio:'Experts du droit du travail congolais et de la fiscalité locale. Garants de la conformité CGI, CNSS et Code du Travail à chaque révision légale.',img:'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=400&q=75',tags:['Code du Travail','CGI 2025','CNSS','Fiscalité'],color:C.green},
-  {name:'Équipe Support',role:'Accompagnement & Formation terrain',bio:'Notre équipe forme vos DRH à Pointe-Noire et Brazzaville, assure la migration de vos données et reste disponible pour chaque question.',img:'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=400&q=75',tags:['Formation','Migration data','Support','Terrain'],color:C.purple},
+const VALUES = [
+  {
+    title: 'Le Congo d’abord',
+    desc: 'Nous sommes à Pointe-Noire. Les coupures internet, les délais CNSS, les particularités du CGI congolais : nous les connaissons. Konza RH est conçu pour ici, pas adapté depuis l’étranger.',
+  },
+  {
+    title: 'Des calculs fiables',
+    desc: 'Les calculs suivent les textes en vigueur, et les barèmes sont mis à jour à chaque révision légale. Notre objectif : zéro surprise fiscale.',
+  },
+  {
+    title: 'Vos données vous appartiennent',
+    desc: 'Chiffrement TLS 1.3, serveurs sécurisés, journal d’audit complet. Vos données de paie ne sont jamais revendues ni partagées.',
+  },
+  {
+    title: 'Simplicité avant tout',
+    desc: 'Une DRH qui ouvre Konza RH doit pouvoir lancer une paie sans formation. Si ce n’est pas évident, on redessine. La complexité reste dans le moteur, pas dans l’interface.',
+  },
 ];
 
-const VALUES=[
-  {icon:'🇨🇬',title:'Congo d\'abord',desc:'Nous sommes de Pointe-Noire. Les coupures internet, les délais CNSS, les spécificités du CGI congolais — on les connaît. Konza RH est conçu pour ici, pas adapté depuis l\'étranger.'},
-  {icon:'⚖️',title:'Conformité sans compromis',desc:'Chaque calcul est vérifié contre les textes légaux en vigueur. On met à jour les barèmes avant l\'entrée en application. Zéro surprise fiscale, zéro redressement.'},
-  {icon:'🔒',title:'Vos données vous appartiennent',desc:'Chiffrement TLS 1.3, serveurs sécurisés, audit log complet. Vos données de paie ne sont jamais revendues ni partagées. Nous respectons votre confidentialité.'},
-  {icon:'🚀',title:'Simplicité radicale',desc:'Une DRH qui ouvre Konza RH doit pouvoir lancer une paie sans formation. Si ce n\'est pas évident, on redesigne. La complexité reste dans le moteur, pas dans l\'interface.'},
+const SUPPORT = [
+  {
+    title: 'Veille juridique et fiscale',
+    desc: 'Suivi du droit du travail congolais, du CGI et des règles CNSS, pour que les barèmes restent à jour à chaque révision légale.',
+  },
+  {
+    title: 'Formation et migration',
+    desc: 'Formation de vos équipes RH à Pointe-Noire et Brazzaville, reprise de vos données existantes et support en français.',
+  },
 ];
 
-const TIMELINE=[
-  {year:'2023',title:'Naissance du projet',desc:'Constat : aucun logiciel RH ne gère correctement la fiscalité congolaise. Développement démarré à Pointe-Noire.',color:C.cyan},
-  {year:'2024',title:'Première bêta',desc:'5 entreprises pilotes. 312 bulletins générés lors de la première clôture. Zéro erreur de calcul CNSS/IRPP.',color:C.blue},
-  {year:'2025',title:'Lancement officiel',desc:'50+ entreprises actives, 2 000+ employés gérés. Conformité CGI 2025-2026 certifiée. Expansion vers Brazzaville.',color:C.green},
-  {year:'2026',title:'Vision Afrique Centrale',desc:'Extension prévue au Gabon, Cameroun et RDC avec adaptation aux législations locales.',color:C.purple},
-];
+// ─── Photo du fondateur (cadre vide tant que le fichier n'existe pas) ────────
+function FounderPhoto() {
+  const [status, setStatus] = useState<'pending' | 'ok' | 'error'>('pending');
+  const ref = useRef<HTMLImageElement>(null);
 
-export default function AboutPage(){
-  return(
-    <div style={{background:C.bg,minHeight:'100vh',fontFamily:"system-ui,-apple-system,'Segoe UI',sans-serif",color:C.text,overflowX:'hidden'}}>
-      <Navbar/>
+  useEffect(() => {
+    const img = ref.current;
+    if (img && img.complete) setStatus(img.naturalWidth > 0 ? 'ok' : 'error');
+  }, []);
 
-      {/* HERO */}
-      <section style={{position:'relative',padding:'160px 32px 90px',textAlign:'center',overflow:'hidden',zIndex:1}}>
-        <Blob color={C.cyan} style={{width:700,height:400,top:-150,left:'50%',transform:'translateX(-50%)'}}/>
-        <div style={{maxWidth:780,margin:'0 auto',position:'relative'}}>
-          <Chip>// Qui sommes-nous</Chip>
-          <h1 style={{fontSize:'clamp(36px,6vw,68px)',fontWeight:900,letterSpacing:'-0.04em',lineHeight:1.05,margin:'20px 0 22px'}}>
-            Fabriqué à Pointe-Noire.<br/>
-            <span style={{color:'#fff'}}>Pour le Congo entier.</span>
-          </h1>
-          <p style={{fontSize:19,color:C.sub,lineHeight:1.75,maxWidth:600,margin:'0 auto'}}>
-            Konza RH est né d'un constat simple :{' '}
-            <strong style={{color:C.text}}>aucun logiciel RH sur le marché ne gère correctement la fiscalité congolaise.</strong>{' '}
-            On a décidé de construire celui qui manquait.
-          </p>
+  return (
+    <div className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl border border-white/10 bg-[#1a1a1a]">
+      {status !== 'ok' && (
+        <div className="absolute inset-3 flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-white/20 text-center text-[13px] text-white/55">
+          <span>Photo à ajouter</span>
+          <code className="px-3 font-mono text-[11px]" style={{ color: ACCENT }}>public{FOUNDER_PHOTO}</code>
         </div>
-      </section>
-
-      {/* HISTOIRE + TIMELINE */}
-      <section style={{position:'relative',zIndex:1,borderTop:`1px solid ${C.border}`}}>
-        <div style={{maxWidth:1280,margin:'0 auto',padding:'90px 32px',display:'grid',gridTemplateColumns:'1fr 1fr',gap:72,alignItems:'center'}} className="ab-grid">
-          <Reveal>
-            <Chip>// Notre histoire</Chip>
-            <h2 style={{fontSize:'clamp(26px,3.5vw,42px)',fontWeight:900,letterSpacing:'-0.03em',lineHeight:1.15,margin:'18px 0 24px'}}>
-              Le problème qu'on a vécu<br/>avant de le résoudre
-            </h2>
-            <div style={{display:'flex',flexDirection:'column',gap:16}}>
-              {['En travaillant avec des entreprises locales, le constat était toujours le même : les DRH passaient 3 à 5 jours par mois sur la paie — Excel, calculatrice, CNSS à la main. Les erreurs coûtaient cher. Les redressements fiscaux aussi.','Les solutions internationales ? Sans connaissance du CGI congolais, sans intégration CNSS, sans quotient familial. Et souvent inutilisables avec une connexion 3G.','Konza RH a été conçu de zéro, à Pointe-Noire, avec une obsession : que la paie soit juste, conforme et rapide — sans être ingénieur pour l\'utiliser.'].map((t,i)=>(
-                <p key={i} style={{fontSize:14.5,color:C.sub,lineHeight:1.8}}>{t}</p>
-              ))}
-            </div>
-          </Reveal>
-          <Reveal delay={100}>
-            <div style={{display:'flex',flexDirection:'column',gap:14}}>
-              {TIMELINE.map((m,i)=>(
-                <div key={i} style={{display:'flex',gap:18,background:C.card,border:`1px solid ${C.border}`,borderRadius:14,padding:'18px 20px',alignItems:'flex-start'}}>
-                  <div style={{minWidth:52,fontSize:13,fontWeight:900,color:m.color,fontFamily:'ui-monospace,monospace',paddingTop:2}}>{m.year}</div>
-                  <div>
-                    <div style={{fontSize:14,fontWeight:800,color:C.text,marginBottom:5}}>{m.title}</div>
-                    <div style={{fontSize:13,color:C.sub,lineHeight:1.65}}>{m.desc}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* VALEURS */}
-      <section style={{position:'relative',zIndex:1,borderTop:`1px solid ${C.border}`,background:'rgba(16,185,129,0.015)'}}>
-        <Blob color={C.purple} style={{width:500,height:500,bottom:-100,right:-100}}/>
-        <div style={{maxWidth:1280,margin:'0 auto',padding:'90px 32px'}}>
-          <Reveal><div style={{textAlign:'center',marginBottom:52}}><Chip>// Nos valeurs</Chip><h2 style={{fontSize:'clamp(26px,4vw,44px)',fontWeight:900,letterSpacing:'-0.03em',lineHeight:1.1,marginTop:18}}>Ce qui guide chaque décision</h2></div></Reveal>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:20}} className="val-grid">
-            {VALUES.map((v,i)=>(
-              <Reveal key={v.title} delay={i*60}><ValCard {...v}/></Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ÉQUIPE */}
-      <section style={{position:'relative',zIndex:1,borderTop:`1px solid ${C.border}`}}>
-        <div style={{maxWidth:1280,margin:'0 auto',padding:'90px 32px'}}>
-          <Reveal>
-            <div style={{textAlign:'center',marginBottom:52}}>
-              <Chip>// L'équipe</Chip>
-              <h2 style={{fontSize:'clamp(26px,4vw,44px)',fontWeight:900,letterSpacing:'-0.03em',lineHeight:1.1,margin:'18px 0 12px'}}>Les personnes derrière Konza RH</h2>
-              <p style={{fontSize:16,color:C.sub,maxWidth:480,margin:'0 auto'}}>Une petite équipe, une grande obsession : que la paie au Congo soit enfin simple et juste.</p>
-            </div>
-          </Reveal>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:22}} className="team-grid">
-            {TEAM.map((m,i)=><Reveal key={m.name} delay={i*80}><TeamCard {...m}/></Reveal>)}
-          </div>
-        </div>
-      </section>
-
-      {/* STATS */}
-      <section style={{position:'relative',zIndex:1,borderTop:`1px solid ${C.border}`,background:'rgba(16,185,129,0.02)'}}>
-        <div style={{maxWidth:1280,margin:'0 auto',padding:'72px 32px'}}>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:20}} className="stats-grid">
-            {[{val:'50+',label:'Entreprises actives',c:C.cyan},{val:'2 000+',label:'Employés gérés',c:C.blue},{val:'< 3 min',label:'Pour 500 bulletins',c:C.green},{val:'100 %',label:'Conformité CGI',c:C.purple}].map(s=>(
-              <Reveal key={s.label}>
-                <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:16,padding:'30px 18px',textAlign:'center'}}>
-                  <div style={{fontSize:38,fontWeight:900,color:s.c,letterSpacing:'-0.04em',lineHeight:1,fontFamily:'system-ui,sans-serif',marginBottom:10}}>{s.val}</div>
-                  <div style={{fontSize:13,color:C.muted}}>{s.label}</div>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section style={{position:'relative',zIndex:1,borderTop:`1px solid ${C.border}`,padding:'90px 32px',textAlign:'center',overflow:'hidden'}}>
-        <Blob color={C.cyan} style={{width:500,height:500,top:'50%',left:'50%',transform:'translate(-50%,-50%)'}}/>
-        <div style={{maxWidth:600,margin:'0 auto',position:'relative'}}>
-          <h2 style={{fontSize:'clamp(26px,4vw,42px)',fontWeight:900,letterSpacing:'-0.03em',lineHeight:1.15,marginBottom:18}}>Prêt à rejoindre l'aventure Konza RH ?</h2>
-          <p style={{fontSize:17,color:C.sub,marginBottom:34,lineHeight:1.7}}>30 jours d'essai gratuit. Configuration en 30 minutes. Support en français, par des Congolais.</p>
-          <div style={{display:'flex',justifyContent:'center',gap:14,flexWrap:'wrap'}}>
-            <GradBtn href="/auth/register">Démarrer gratuitement</GradBtn>
-            <GhostBtn href="/contact">Nous contacter</GhostBtn>
-          </div>
-        </div>
-      </section>
-
-      <Footer/>
-      <Styles extra={`.ab-grid,.team-grid{@media(max-width:900px){grid-template-columns:1fr!important}}.val-grid,.stats-grid{@media(max-width:700px){grid-template-columns:1fr!important}}`}/>
+      )}
+      {status !== 'error' && (
+        <img
+          ref={ref}
+          src={FOUNDER_PHOTO}
+          alt="Nathan Bondoma Sogoya, fondateur de Konza RH"
+          onLoad={() => setStatus('ok')}
+          onError={() => setStatus('error')}
+          className={`absolute inset-0 h-full w-full object-cover object-top transition-opacity duration-300 ${
+            status === 'ok' ? 'opacity-100' : 'opacity-0'
+          }`}
+        />
+      )}
     </div>
   );
 }
 
-// ── Sub-components ────────────────────────────────────────────────────────────
-function Chip({children}:{children:React.ReactNode}){
-  return<div style={{display:'inline-flex',alignItems:'center',gap:8,padding:'6px 16px',background:'rgba(16,185,129,0.08)',border:'1px solid rgba(16,185,129,0.2)',borderRadius:99,fontSize:12,fontWeight:700,color:C.cyan,letterSpacing:'0.08em',textTransform:'uppercase' as const}}>{children}</div>;
-}
-function GradBtn({href,children}:{href:string;children:React.ReactNode}){
-  return<Link href={href} style={{display:'inline-flex',alignItems:'center',gap:8,background:'#FAFAFA',color:'#000',textDecoration:'none',fontWeight:600,fontSize:15,padding:'14px 30px',borderRadius:12}}>{children}<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></Link>;
-}
-function GhostBtn({href,children}:{href:string;children:React.ReactNode}){
-  return<Link href={href} style={{display:'inline-flex',alignItems:'center',gap:8,background:'transparent',color:C.text,textDecoration:'none',fontWeight:700,fontSize:15,padding:'14px 24px',borderRadius:12,border:`1px solid ${C.border}`}}>{children}</Link>;
-}
-function ValCard({icon,title,desc}:{icon:string;title:string;desc:string}){
-  const[h,sH]=useState(false);
-  return<div onMouseEnter={()=>sH(true)} onMouseLeave={()=>sH(false)} style={{background:h?C.cardHov:C.card,border:`1px solid ${h?'rgba(16,185,129,0.3)':C.border}`,borderRadius:16,padding:'30px',transition:'all 0.25s ease',transform:h?'translateY(-4px)':'none'}}>
-    <div style={{fontSize:30,marginBottom:14}}>{icon}</div>
-    <h3 style={{fontSize:17,fontWeight:800,color:C.text,marginBottom:10,letterSpacing:'-0.02em'}}>{title}</h3>
-    <p style={{fontSize:14,color:C.sub,lineHeight:1.75}}>{desc}</p>
-  </div>;
-}
-function TeamCard({name,role,bio,img,tags,color}:{name:string;role:string;bio:string;img:string;tags:string[];color:string}){
-  const[h,sH]=useState(false);
-  return<div onMouseEnter={()=>sH(true)} onMouseLeave={()=>sH(false)} style={{background:h?C.cardHov:C.card,border:`1px solid ${h?color+'40':C.border}`,borderRadius:18,overflow:'hidden',transition:'all 0.25s ease',transform:h?'translateY(-5px)':'none'}}>
-    <div style={{height:190,position:'relative',overflow:'hidden'}}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={img} alt={name} style={{width:'100%',height:'100%',objectFit:'cover',filter:'brightness(0.6) saturate(0.7)',transition:'transform 0.4s',transform:h?'scale(1.06)':'scale(1)'}}/>
-      <div style={{position:'absolute',inset:0,background:`linear-gradient(to bottom,transparent 40%,${C.card}F0)`}}/>
-      <div style={{position:'absolute',inset:0,background:color+'18',opacity:h?1:0,transition:'opacity 0.3s'}}/>
+function Eyebrow({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="mb-4 text-[13px] font-semibold uppercase tracking-[0.12em]" style={{ color: ACCENT }}>
+      {children}
     </div>
-    <div style={{padding:'22px 22px 26px'}}>
-      <div style={{fontSize:15,fontWeight:800,color:C.text,marginBottom:3}}>{name}</div>
-      <div style={{fontSize:12.5,color,fontWeight:700,marginBottom:12}}>{role}</div>
-      <p style={{fontSize:13,color:C.sub,lineHeight:1.7,marginBottom:14}}>{bio}</p>
-      <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
-        {tags.map(t=><span key={t} style={{fontSize:11,fontWeight:600,color,background:color+'15',border:`1px solid ${color}25`,padding:'3px 9px',borderRadius:7}}>{t}</span>)}
-      </div>
-    </div>
-  </div>;
+  );
 }
-function Styles({extra=''}:{extra?:string}){
-  return<style>{`*{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}::-webkit-scrollbar{width:6px;background:#050607}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:3px}@media(max-width:900px){.ab-grid,.team-grid{grid-template-columns:1fr!important}}@media(max-width:700px){.val-grid,.stats-grid{grid-template-columns:1fr!important}}${extra}`}</style>;
+
+function IconArrow() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+      <path d="M5 12h14M12 5l7 7-7 7" />
+    </svg>
+  );
+}
+
+export default function AboutPage() {
+  return (
+    <div className="min-h-screen overflow-x-hidden bg-[#050607] font-sans text-[#F2F2F2]">
+      <Navbar />
+
+      {/* ── Titre ── */}
+      <section className="relative px-6 pb-20 pt-36 text-center">
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{ background: 'radial-gradient(55% 60% at 50% 0%, rgba(247,135,75,.12), transparent 70%)' }}
+        />
+        <div className="relative mx-auto max-w-3xl">
+          <Eyebrow>Qui sommes-nous</Eyebrow>
+          <h1 className="text-[40px] font-bold leading-[1.05] tracking-[-0.03em] sm:text-[62px]">
+            Fabriqué à Pointe-Noire.
+            <br />
+            <span style={{ color: ACCENT }}>Pour le Congo entier.</span>
+          </h1>
+          <p className="mx-auto mt-6 max-w-xl text-[18px] leading-relaxed text-[#9a9a9a]">
+            Konza RH est né d’un constat simple : les logiciels RH existants ne sont pas pensés pour la fiscalité
+            congolaise. On a décidé de construire celui qui manquait.
+          </p>
+        </div>
+      </section>
+
+      {/* ── Histoire + fondateur ── */}
+      <section className="border-t border-white/[0.06] px-6 py-24">
+        <div className="mx-auto grid max-w-6xl items-center gap-14 lg:grid-cols-[1.2fr_0.8fr] lg:gap-20">
+          <div>
+            <Eyebrow>Notre histoire</Eyebrow>
+            <h2 className="text-[30px] font-semibold leading-[1.15] tracking-[-0.02em] sm:text-[40px]">
+              Le problème qu’on a vécu avant de le résoudre
+            </h2>
+            <div className="mt-8 flex flex-col gap-5 text-[16px] leading-[1.8] text-[#9a9a9a]">
+              <p>
+                En travaillant avec des entreprises locales, le constat était toujours le même : les DRH passaient
+                plusieurs jours par mois sur la paie, entre Excel, calculatrice et CNSS à la main. Les erreurs coûtaient
+                cher, les redressements fiscaux aussi.
+              </p>
+              <p>
+                Les solutions internationales ? Sans connaissance du CGI congolais, sans intégration CNSS, sans quotient
+                familial. Et souvent inutilisables avec une connexion 3G.
+              </p>
+              <p>
+                Konza RH a été conçu de zéro, à Pointe-Noire, avec une obsession : que la paie soit juste, rapide et
+                simple, sans être ingénieur pour l’utiliser.
+              </p>
+            </div>
+          </div>
+
+          <div className="mx-auto w-full max-w-[360px]">
+            <FounderPhoto />
+            <div className="mt-5">
+              <div className="text-[17px] font-semibold">Nathan Bondoma Sogoya</div>
+              <div className="mt-0.5 text-[14px] font-medium" style={{ color: ACCENT }}>Fondateur et développeur full-stack</div>
+              <p className="mt-3 text-[14px] leading-relaxed text-[#9a9a9a]">
+                Développeur basé à Pointe-Noire, concepteur de Konza RH de la base de données jusqu’à l’interface.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Valeurs ── */}
+      <section className="border-t border-white/[0.06] px-6 py-24">
+        <div className="mx-auto max-w-6xl">
+          <Eyebrow>Nos valeurs</Eyebrow>
+          <h2 className="max-w-xl text-[30px] font-semibold leading-[1.15] tracking-[-0.02em] sm:text-[40px]">
+            Ce qui guide chaque décision
+          </h2>
+          <div className="mt-14 grid gap-x-12 gap-y-10 sm:grid-cols-2">
+            {VALUES.map((v, i) => (
+              <div key={v.title} className="border-t border-white/10 pt-6">
+                <div className="mb-3 font-mono text-[12px]" style={{ color: ACCENT }}>{String(i + 1).padStart(2, '0')}</div>
+                <h3 className="mb-2.5 text-[19px] font-semibold">{v.title}</h3>
+                <p className="text-[15px] leading-relaxed text-[#9a9a9a]">{v.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Accompagnement ── */}
+      <section className="border-t border-white/[0.06] px-6 py-24">
+        <div className="mx-auto max-w-6xl">
+          <Eyebrow>Accompagnement</Eyebrow>
+          <h2 className="max-w-xl text-[30px] font-semibold leading-[1.15] tracking-[-0.02em] sm:text-[40px]">
+            Pas seulement un logiciel
+          </h2>
+          <div className="mt-12 grid gap-px overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.08] sm:grid-cols-2">
+            {SUPPORT.map((s) => (
+              <div key={s.title} className="bg-[#0c0c0d] p-8">
+                <h3 className="mb-2.5 text-[18px] font-semibold">{s.title}</h3>
+                <p className="text-[15px] leading-relaxed text-[#9a9a9a]">{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Appel final ── */}
+      <section className="relative overflow-hidden border-t border-white/[0.06] px-6 py-24 text-center">
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{ background: 'radial-gradient(50% 60% at 50% 100%, rgba(247,135,75,.12), transparent 70%)' }}
+        />
+        <div className="relative mx-auto max-w-xl">
+          <h2 className="text-[30px] font-bold leading-[1.15] tracking-[-0.025em] sm:text-[42px]">
+            Prêt à essayer <span style={{ color: ACCENT }}>Konza RH</span> ?
+          </h2>
+          <p className="mt-4 text-[17px] leading-relaxed text-[#9a9a9a]">
+            30 jours d’essai gratuit, sans carte bancaire. Support en français.
+          </p>
+          <div className="mt-9 flex flex-wrap justify-center gap-4">
+            <Link
+              href="/auth/register"
+              className="flex items-center gap-2 rounded-xl bg-[#FAFAFA] px-8 py-3.5 text-[15px] font-semibold text-black transition-colors hover:bg-white"
+            >
+              Démarrer gratuitement <IconArrow />
+            </Link>
+            <Link
+              href="/contact"
+              className="rounded-xl border border-white/10 px-8 py-3.5 text-[15px] font-semibold text-[#F2F2F2] transition-colors hover:border-white/25 hover:bg-white/[0.04]"
+            >
+              Nous contacter
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <Footer />
+    </div>
+  );
 }

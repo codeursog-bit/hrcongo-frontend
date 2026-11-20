@@ -1,123 +1,53 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+// ============================================================================
+// 📁 app/companies/create/page.tsx
+// Création de l'entreprise : 4 étapes (identité, contact, convention, fiscalité)
+// sur la coquille commune des pages auth (AuthShell « centered »).
+// Logique inchangée : même validation, même payload POST /companies, code
+// affilié, recheckCompany(), redirection vers /dashboard.
+// ============================================================================
+
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import {
-  Building2, MapPin, Save, ArrowLeft, ArrowRight,
-  Loader2, AlertCircle, ShieldCheck, Check, Landmark,
-  HardHat, ShoppingCart, Factory, Flame, Truck,
-  Utensils, Leaf, Wifi, HeartPulse, GraduationCap,
-  Award, BookOpen, Sparkles, PartyPopper, Rocket,
-  Phone, Mail,
+  ArrowLeft, ArrowRight, Building2, Check, Mail, MapPin, Phone,
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import ReactConfetti from 'react-confetti';
 import { api } from '@/services/api';
+import { useLegalParams } from '@/hooks/useLegalParams';
 import { useCompanyReminder } from '@/components/providers/CompanyReminderProvider';
-import { ConventionPicker, getConventionCatalogEntry } from '@/components/conventions/ConventionPicker'; // 🆕
+import { ConventionPicker, getConventionCatalogEntry } from '@/components/conventions/ConventionPicker';
+import { AuthShell, AuthCard, AuthHeading } from '@/components/auth/AuthShell';
+import { TextField, PrimaryButton, SecondaryButton, ErrorBanner, InfoBanner } from '@/components/auth/FormElements';
 
-// ─────────────────────────────────────────────────────────
-// CONVENTIONS
-// ─────────────────────────────────────────────────────────
-// 🆕 Remplacé par le catalogue partagé (lib/conventions/conventions-catalog.ts)
-// — les anciens codes ci-dessus (TRANSPORTS, HYDROCARBURES, BANQUES,
-// AGRICULTURE, TELECOMMUNICATIONS, SANTE, EDUCATION) n'existaient dans AUCUN
-// registre backend : les choisir ne déclenchait jamais rien côté serveur.
-
-// ─────────────────────────────────────────────────────────
-// STEPS
-// ─────────────────────────────────────────────────────────
 const STEPS = [
-  { id: 1, label: 'Identité',   icon: Building2,  color: 'brand', encouragement: "Commençons par les bases", emoji: "🏢" },
-  { id: 2, label: 'Contact',    icon: MapPin,      color: 'brand', encouragement: "Presque à mi-chemin !",    emoji: "📍" },
-  { id: 3, label: 'Convention', icon: BookOpen,    color: 'brand', encouragement: "Excellent progrès !",      emoji: "📋" },
-  { id: 4, label: 'Fiscalité',  icon: ShieldCheck, color: 'brand', encouragement: "Dernière étape, on y est !", emoji: "🎯" },
+  { id: 1, label: 'Identité',   title: 'Identité de l’entreprise',  desc: 'Informations légales et secteur d’activité.' },
+  { id: 2, label: 'Contact',    title: 'Localisation et contact',   desc: 'Adresse et coordonnées de votre entreprise.' },
+  { id: 3, label: 'Convention', title: 'Convention collective',     desc: 'Catégories et salaires minimums (facultatif).' },
+  { id: 4, label: 'Fiscalité',  title: 'Configuration fiscale',     desc: 'Régime fiscal et valeurs par défaut pour les employés.' },
 ];
 
-// Une seule couleur d'accent sur tout le parcours — cohérent avec le reste de l'app.
-const COLOR_MAP: Record<string, {
-  ring: string; bg: string; bgLight: string; text: string; border: string;
-  grad: string; glow: string; gradLight: string;
-}> = {
-  brand: { ring: 'focus:ring-emerald-500/30', bg: 'bg-emerald-500', bgLight: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/50', grad: 'from-emerald-500 to-emerald-400', glow: 'shadow-emerald-500/30', gradLight: 'from-emerald-500/20 to-emerald-400/10' },
-};
-
-// ─────────────────────────────────────────────────────────
-// COMPOSANT CHAMP — dark glassmorphism
-// ─────────────────────────────────────────────────────────
-function Field({
-  label, name, value, onChange, placeholder, required, mono,
-  type = 'text', hint, colorKey = 'brand', icon: Icon,
-}: {
-  label: string; name: string; value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  placeholder: string; required?: boolean; mono?: boolean;
-  type?: string; hint?: string; colorKey?: string;
-  icon?: React.ElementType;
-}) {
-  const [focused, setFocused] = useState(false);
-  const col = COLOR_MAP[colorKey];
-
-  return (
-    <div>
-      <label className="block text-xs font-bold mb-1.5 text-gray-400 uppercase tracking-wide">
-        {label} {required && <span className="text-red-400 normal-case">*</span>}
-      </label>
-      <div className={`relative rounded-xl transition-all duration-200 ${focused ? `ring-2 ${col.ring}` : ''}`}>
-        {Icon && (
-          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-            <Icon size={15} className={focused ? col.text : 'text-gray-600'} style={{ transition: 'color 0.2s' }} />
-          </div>
-        )}
-        <input
-          type={type}
-          name={name}
-          value={value}
-          onChange={onChange}
-          placeholder={placeholder}
-          required={required}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          className={`w-full py-3 ${Icon ? 'pl-10 pr-4' : 'px-4'} bg-white/5 border ${
-            focused ? col.border : 'border-white/10'
-          } rounded-xl outline-none transition-all text-sm text-white placeholder-gray-600 ${mono ? 'font-mono' : ''}`}
-        />
-      </div>
-      {hint && <p className="mt-1 text-[11px] text-gray-600">{hint}</p>}
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────
-// PAGE PRINCIPALE
-// ─────────────────────────────────────────────────────────
 export default function CreateCompanyPage() {
   const router = useRouter();
   const { recheckCompany } = useCompanyReminder();
-  const [step, setStep]                   = useState(1);
-  const [direction, setDirection]         = useState(1);
-  const [isSubmitting, setIsSubmitting]   = useState(false);
-  const [isSuccess, setIsSuccess]         = useState(false);
-  const [errorMsg, setErrorMsg]           = useState('');
-  const [confettiActive, setConfettiActive] = useState(false);
-  const [windowSize, setWindowSize]       = useState({ width: 0, height: 0 });
+  // Taux CNSS patronal total en vigueur (pension + famille + accidents), en %, piloté par le super administrateur
+  const legal = useLegalParams();
+  const employerPct = +((legal.cnss.employerPensionRate + legal.cnss.employerFamilyRate + legal.cnss.employerAccidentRate) * 100).toFixed(3);
+  const employerPctLabel = String(employerPct).replace('.', ',');
+  const employeePctLabel = String(+(legal.cnss.salarialRate * 100).toFixed(3)).replace('.', ',');
+  const [step, setStep]                 = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess]       = useState(false);
+  const [errorMsg, setErrorMsg]         = useState('');
   const [selectedConvention, setSelectedConvention] = useState('');
   const [createdCompanyName, setCreatedCompanyName] = useState('');
 
   const [form, setForm] = useState({
     legalName: '', tradeName: '', rccmNumber: '', cnssNumber: '', taxNumber: '', industry: '',
     address: '', city: '', phone: '', email: '',
-    appliesCnssEmployer: true, cnssEmployerRate: 20.28,
+    appliesCnssEmployer: true,
     defaultAppliesIrpp: true, defaultAppliesCnss: true,
   });
-
-  useEffect(() => {
-    const update = () => setWindowSize({ width: window.innerWidth, height: window.innerHeight });
-    update();
-    window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
-  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -126,18 +56,17 @@ export default function CreateCompanyPage() {
 
   const goTo = (next: number) => {
     setErrorMsg('');
-    setDirection(next > step ? 1 : -1);
     setStep(next);
   };
 
   const validateStep = (): string | null => {
     if (step === 1) {
-      if (!form.legalName.trim()) return "Le nom légal est requis.";
-      if (!form.rccmNumber.trim()) return "Le numéro RCCM est requis.";
+      if (!form.legalName.trim()) return 'Le nom légal est requis.';
+      if (!form.rccmNumber.trim()) return 'Le numéro RCCM est requis.';
     }
     if (step === 2) {
-      if (!form.address.trim() || !form.city.trim()) return "L'adresse et la ville sont requises.";
-      if (!form.phone.trim() || !form.email.trim()) return "Téléphone et email sont requis.";
+      if (!form.address.trim() || !form.city.trim()) return 'L’adresse et la ville sont requises.';
+      if (!form.phone.trim() || !form.email.trim()) return 'Téléphone et email sont requis.';
     }
     return null;
   };
@@ -167,7 +96,7 @@ export default function CreateCompanyPage() {
         industry: form.industry || 'Autre',
         collectiveAgreement: selectedConvention || undefined,
         appliesCnssEmployer: form.appliesCnssEmployer,
-        cnssEmployerRate: form.appliesCnssEmployer ? Number(form.cnssEmployerRate) : 0,
+        cnssEmployerRate: form.appliesCnssEmployer ? employerPct : 0,
         defaultAppliesIrpp: form.defaultAppliesIrpp,
         defaultAppliesCnss: form.defaultAppliesCnss,
         affiliateCode,
@@ -175,590 +104,166 @@ export default function CreateCompanyPage() {
       localStorage.removeItem('affiliate_ref');
       setCreatedCompanyName(form.tradeName || form.legalName);
       setIsSuccess(true);
-      setConfettiActive(true);
       await recheckCompany();
-      setTimeout(() => setConfettiActive(false), 6000);
     } catch (err: any) {
-      setErrorMsg(err.message || "Une erreur est survenue.");
+      setErrorMsg(err.message || 'Une erreur est survenue.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const currentStep = STEPS[step - 1];
-  const progress = (step / 4) * 100;
-  const col = COLOR_MAP[currentStep.color];
+  const current = STEPS[step - 1];
+  const conventionLabel = selectedConvention
+    ? (getConventionCatalogEntry(selectedConvention)?.label || selectedConvention)
+    : '';
 
-  // ── ÉCRAN SUCCÈS ────────────────────────────────────────
+  // ── Succès ──────────────────────────────────────────────────────────────────
   if (isSuccess) {
     return (
-      <>
-        {confettiActive && (
-          <ReactConfetti
-            width={windowSize.width}
-            height={windowSize.height}
-            recycle={false}
-            numberOfPieces={400}
-            colors={['#10B981', '#34D399', '#F59E0B', '#FBBF24']}
-          />
-        )}
-        <div className="min-h-screen bg-[#050607] flex items-center justify-center p-4 relative overflow-hidden">
-          {/* Fond : identique au Hero de la page d'accueil */}
-          <div className="pointer-events-none fixed inset-0 -z-10">
-            <div className="absolute -right-40 -top-40 h-[600px] w-[600px] rounded-full bg-white/[0.04] blur-[130px]" />
-            <div className="absolute -left-40 bottom-0 h-[500px] w-[500px] rounded-full bg-[#10B981]/[0.06] blur-[130px]" />
-          </div>
+      <AuthShell variant="centered">
+        <AuthCard className="au-center">
+          <div className="au-tile is-success" style={{ margin: '0 auto 22px' }}><Check size={26} strokeWidth={2.4} /></div>
+          <AuthHeading title="Entreprise créée" description={<strong>{createdCompanyName}</strong>} />
 
-          <motion.div
-            initial={{ scale: 0.85, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: 'spring', duration: 0.7, bounce: 0.35 }}
-            className="max-w-md w-full text-center"
-          >
-            {/* Logo */}
-            <div className="flex justify-center mb-8">
-              <div className="relative w-40 h-12">
-                <Image src="/logos/konza_logo_h_color.png" alt="Konza" fill className="object-contain" />
-              </div>
-            </div>
+          <ol className="au-next">
+            {[
+              { t: 'Ajoutez vos premiers employés',          s: 'Importez un fichier ou saisissez-les un par un' },
+              { t: 'Vérifiez votre convention collective',   s: 'Catégories et salaires minimums' },
+              { t: 'Générez vos premiers bulletins de paie', s: 'En quelques clics' },
+            ].map((item, i) => (
+              <li key={item.t}>
+                <em>{i + 1}</em>
+                <span><b>{item.t}</b><small>{item.s}</small></span>
+              </li>
+            ))}
+          </ol>
 
-            {/* Icône */}
-            <motion.div
-              initial={{ scale: 0, rotate: -20 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ delay: 0.2, type: 'spring', bounce: 0.45 }}
-              className="relative w-28 h-28 mx-auto mb-6"
-            >
-              <motion.div
-                className="absolute inset-0 rounded-3xl bg-emerald-500/40 blur-xl"
-                animate={{ scale: [1, 1.25, 1], opacity: [0.5, 0.15, 0.5] }}
-                transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
-              />
-              <div className="relative w-28 h-28 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-emerald-500/30">
-                <PartyPopper size={52} className="text-white" />
-              </div>
-            </motion.div>
-
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.35 }}
-              className="text-4xl font-black text-white mb-2"
-            >
-              Félicitations ! 🎉
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.42 }}
-              className="text-gray-400 mb-2 text-sm"
-            >
-              Votre entreprise a été créée avec succès
-            </motion.p>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.48 }}
-              className="text-2xl font-bold text-white mb-8"
-            >
-              {createdCompanyName}
-            </motion.p>
-
-            {/* Prochaines étapes */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.55 }}
-              className="bg-white/5 border border-white/10 rounded-2xl p-5 mb-6 text-left"
-            >
-              <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-4">Prochaines étapes</p>
-              {[
-                { icon: '👤', text: 'Créez vos premiers employés',           sub: 'Importez ou ajoutez manuellement' },
-                { icon: '📋', text: 'Configurez vos conventions collectives', sub: 'Catégories & salaires minimums' },
-                { icon: '💰', text: 'Générez vos premiers bulletins de paie', sub: 'En quelques clics seulement' },
-              ].map((item, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.65 + i * 0.1 }}
-                  className="flex items-center gap-3 py-3 border-b border-white/5 last:border-0"
-                >
-                  <span className="text-xl shrink-0">{item.icon}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-white">{item.text}</p>
-                    <p className="text-xs text-gray-500">{item.sub}</p>
-                  </div>
-                  <div className="w-5 h-5 bg-emerald-500/20 rounded-full flex items-center justify-center shrink-0">
-                    <Check size={10} className="text-emerald-400" />
-                  </div>
-                </motion.div>
-              ))}
-            </motion.div>
-
-            <motion.button
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.9 }}
-              onClick={() => router.push('/dashboard')}
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              className="w-full py-4 bg-[#FAFAFA] hover:bg-white text-black font-bold rounded-2xl flex items-center justify-center gap-2 transition-all text-base"
-            >
-              <Rocket size={20} /> Accéder au tableau de bord
-            </motion.button>
-          </motion.div>
-        </div>
-      </>
+          <PrimaryButton type="button" onClick={() => router.push('/dashboard')}>
+            Accéder au tableau de bord <ArrowRight size={17} className="au-arrow" />
+          </PrimaryButton>
+        </AuthCard>
+      </AuthShell>
     );
   }
 
-  // ── VARIANTS STEPS ──────────────────────────────────────
-  const variants = {
-    enter:  (dir: number) => ({ x: dir > 0 ? 28 : -28, opacity: 0, scale: 0.985 }),
-    center: { x: 0, opacity: 1, scale: 1 },
-    exit:   (dir: number) => ({ x: dir > 0 ? -28 : 28, opacity: 0, scale: 0.985 }),
-  };
-  const EASE_PREMIUM = [0.22, 1, 0.36, 1] as const; // expo-out — sensation "premium", jamais de rebond excessif
-
-  const fieldStagger = {
-    hidden: {},
-    show: { transition: { staggerChildren: 0.05, delayChildren: 0.05 } },
-  };
-  const fieldItem = {
-    hidden: { opacity: 0, y: 10 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.32, ease: EASE_PREMIUM } },
-  };
-
-  // ── RENDU PRINCIPAL ─────────────────────────────────────
+  // ── Assistant ───────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-[#050607] text-white py-8 px-4 relative overflow-hidden">
+    <AuthShell variant="centered" maxWidth={640}>
+      <AuthCard className="au-left">
+        <div className="au-steps" role="list" aria-label="Étapes">
+          {STEPS.map((s) => {
+            const state = step > s.id ? 'is-done' : step === s.id ? 'is-current' : '';
+            const inner = (<><i /><span>{s.label}</span></>);
+            return step > s.id ? (
+              <button key={s.id} type="button" role="listitem" className={`au-step ${state}`} onClick={() => goTo(s.id)}>{inner}</button>
+            ) : (
+              <div key={s.id} role="listitem" className={`au-step ${state}`} aria-current={step === s.id ? 'step' : undefined}>{inner}</div>
+            );
+          })}
+        </div>
 
-      {/* ── Fond : identique au Hero de la page d'accueil ── */}
-      <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className="absolute -right-40 -top-40 h-[600px] w-[600px] rounded-full bg-white/[0.04] blur-[130px]" />
-        <div className="absolute -left-40 bottom-0 h-[500px] w-[500px] rounded-full bg-[#10B981]/[0.06] blur-[130px]" />
-      </div>
+        <AuthHeading eyebrow={`Étape ${step} sur 4`} title={current.title} description={current.desc} />
 
-      <div className="max-w-2xl mx-auto relative z-10">
+        {errorMsg && <div className="au-mb"><ErrorBanner>{errorMsg}</ErrorBanner></div>}
 
-        {/* ── HEADER ── */}
-        <motion.div
-          initial={{ opacity: 0, y: -16 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-4 mb-10"
-        >
-          <button
-            onClick={() => router.back()}
-            className="p-2.5 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors"
-          >
-            <ArrowLeft size={18} className="text-gray-400" />
-          </button>
-          <div className="flex-1">
-            {/* Logo */}
-            <div className="relative w-28 h-8 mb-1">
-              <Image src="/logos/konza_logo_h_color.png" alt="Konza" fill className="object-contain object-left" />
+        {/* ═══ 1 : identité ═══ */}
+        {step === 1 && (
+          <div className="au-stack">
+            <TextField label="Nom légal *" name="legalName" value={form.legalName} onChange={handleChange}
+              icon={Building2} placeholder="Ex : SARL INNOVATION TECH CONGO" />
+            <div className="au-row-2">
+              <TextField label="Nom commercial" name="tradeName" value={form.tradeName} onChange={handleChange} placeholder="Ex : InnoTech" />
+              <TextField label="Secteur d’activité" name="industry" value={form.industry} onChange={handleChange} placeholder="Ex : Commerce" />
             </div>
-            <p className="text-xs text-gray-500">Configuration de votre espace RH</p>
-          </div>
-        </motion.div>
-
-        {/* ── STEPPER ── */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="mb-8"
-        >
-          {/* Barre de progression */}
-          <div className="h-1 bg-white/5 rounded-full overflow-hidden mb-6">
-            <motion.div
-              className={`h-full bg-gradient-to-r ${col.grad}`}
-              initial={false}
-              animate={{ width: `${progress}%` }}
-              transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
-            />
-          </div>
-
-          {/* Steps */}
-          <div className="flex items-start justify-between">
-            {STEPS.map((s) => {
-              const Icon = s.icon;
-              const c = COLOR_MAP[s.color];
-              const isDone    = step > s.id;
-              const isCurrent = step === s.id;
-              return (
-                <button
-                  key={s.id}
-                  onClick={() => { if (s.id < step) goTo(s.id); }}
-                  disabled={s.id > step}
-                  className="flex flex-col items-center gap-2 disabled:cursor-not-allowed group"
-                >
-                  <motion.div
-                    animate={{ scale: isCurrent ? 1.12 : 1 }}
-                    whileHover={isDone ? { scale: 1.08 } : undefined}
-                    whileTap={isDone ? { scale: 0.95 } : undefined}
-                    transition={{ type: 'spring', stiffness: 320, damping: 20 }}
-                    className={`relative w-11 h-11 rounded-2xl flex items-center justify-center transition-all duration-300 ${
-                      isDone
-                        ? 'bg-emerald-500 shadow-lg shadow-emerald-500/30'
-                        : isCurrent
-                        ? `${c.bgLight} border ${c.border} shadow-lg ${c.glow}`
-                        : 'bg-white/5 border border-white/10'
-                    }`}
-                  >
-                    {isDone
-                      ? <Check size={18} className="text-white" />
-                      : <Icon size={18} className={isCurrent ? c.text : 'text-gray-600'} />
-                    }
-                    {isCurrent && (
-                      <motion.div
-                        className={`absolute inset-0 rounded-2xl ${c.bgLight} border ${c.border}`}
-                        animate={{ scale: [1, 1.3, 1], opacity: [0.5, 0, 0.5] }}
-                        transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-                      />
-                    )}
-                  </motion.div>
-                  <span className={`text-[11px] font-bold hidden sm:block transition-colors ${
-                    isCurrent ? 'text-white' : isDone ? 'text-emerald-400' : 'text-gray-600'
-                  }`}>
-                    {s.label}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </motion.div>
-
-        {/* ── BADGE ENCOURAGEMENT ── */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={`enc-${step}`}
-            initial={{ opacity: 0, y: -6, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 6, scale: 0.97 }}
-            transition={{ duration: 0.2 }}
-            className="mb-5"
-          >
-            <div className={`inline-flex items-center gap-2.5 px-4 py-2 rounded-full text-sm font-semibold bg-white/5 border border-white/10 backdrop-blur-sm`}>
-              <Sparkles size={13} className={col.text} />
-              <span className="text-gray-300">{currentStep.encouragement}</span>
-              <span className="text-gray-600 text-xs">·</span>
-              <span className="text-gray-500 text-xs">Étape {step}/4</span>
+            <div className="au-row-2">
+              <TextField label="N° RCCM *" name="rccmNumber" value={form.rccmNumber} onChange={handleChange} placeholder="CG-BZV-01-2024-B12-00123" />
+              <TextField label="N° CNSS employeur" name="cnssNumber" value={form.cnssNumber} onChange={handleChange} placeholder="Facultatif" />
             </div>
-          </motion.div>
-        </AnimatePresence>
+            <TextField label="N° fiscal (NIU)" name="taxNumber" value={form.taxNumber} onChange={handleChange} placeholder="Facultatif" />
+          </div>
+        )}
 
-        {/* ── CONTENU STEP ── */}
-        <AnimatePresence mode="wait" custom={direction}>
-          <motion.div
-            key={step}
-            custom={direction}
-            variants={variants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            transition={{ duration: 0.38, ease: EASE_PREMIUM }}
-          >
+        {/* ═══ 2 : contact ═══ */}
+        {step === 2 && (
+          <div className="au-stack">
+            <TextField label="Adresse complète *" name="address" value={form.address} onChange={handleChange}
+              icon={MapPin} placeholder="Ex : 123 avenue de l’Indépendance" autoComplete="street-address" />
+            <div className="au-row-2">
+              <TextField label="Ville *" name="city" value={form.city} onChange={handleChange} placeholder="Brazzaville, Pointe-Noire…" />
+              <TextField label="Téléphone *" name="phone" value={form.phone} onChange={handleChange}
+                icon={Phone} type="tel" placeholder="+242 06 123 45 67" autoComplete="tel" />
+            </div>
+            <TextField label="Email de contact *" name="email" value={form.email} onChange={handleChange}
+              icon={Mail} type="email" placeholder="contact@entreprise.cg" autoComplete="email" />
+          </div>
+        )}
 
-            {/* ═══ STEP 1 : IDENTITÉ ═══ */}
-            {step === 1 && (
-              <div className="bg-white/[0.04] backdrop-blur-sm border border-white/10 rounded-2xl p-6 md:p-8 space-y-5 shadow-2xl">
-                <div className="flex items-center gap-3 pb-4 border-b border-white/8">
-                  <div className="w-10 h-10 bg-emerald-500/15 border border-emerald-500/30 rounded-xl flex items-center justify-center">
-                    <Building2 size={19} className="text-emerald-400" />
-                  </div>
-                  <div>
-                    <h2 className="text-base font-bold text-white">Identité de l'entreprise</h2>
-                    <p className="text-xs text-gray-500">Informations légales et secteur d'activité</p>
-                  </div>
-                </div>
-                <motion.div
-                  variants={fieldStagger}
-                  initial="hidden"
-                  animate="show"
-                  className="grid grid-cols-1 md:grid-cols-2 gap-4"
-                >
-                  <motion.div variants={fieldItem} className="md:col-span-2">
-                    <Field label="Nom Légal" name="legalName" value={form.legalName} onChange={handleChange}
-                      placeholder="Ex: SARL INNOVATION TECH CONGO" required colorKey="brand" icon={Building2} />
-                  </motion.div>
-                  <motion.div variants={fieldItem}>
-                    <Field label="Nom Commercial" name="tradeName" value={form.tradeName} onChange={handleChange}
-                      placeholder="Ex: InnoTech" colorKey="brand" />
-                  </motion.div>
-                  <motion.div variants={fieldItem}>
-                    <Field label="Secteur d'Activité" name="industry" value={form.industry} onChange={handleChange}
-                      placeholder="Ex: Technologie, Commerce..." colorKey="brand" />
-                  </motion.div>
-                  <motion.div variants={fieldItem}>
-                    <Field label="N° RCCM" name="rccmNumber" value={form.rccmNumber} onChange={handleChange}
-                      placeholder="CG-BZV-01-2024-B12-00123" required colorKey="brand" mono />
-                  </motion.div>
-                  <motion.div variants={fieldItem}>
-                    <Field label="N° CNSS Employeur" name="cnssNumber" value={form.cnssNumber} onChange={handleChange}
-                      placeholder="123456789" mono colorKey="brand" hint="Optionnel" />
-                  </motion.div>
-                  <motion.div variants={fieldItem} className="md:col-span-2">
-                    <Field label="N° Fiscal — NIU" name="taxNumber" value={form.taxNumber} onChange={handleChange}
-                      placeholder="M092500001234" mono colorKey="brand" hint="Optionnel" />
-                  </motion.div>
-                </motion.div>
-              </div>
+        {/* ═══ 3 : convention ═══ */}
+        {step === 3 && (
+          <div className="au-stack-sm">
+            <div className="au-conv">
+              <ConventionPicker selected={selectedConvention} onSelect={setSelectedConvention} variant="light" />
+            </div>
+            {selectedConvention ? (
+              <InfoBanner>
+                Convention {conventionLabel} sélectionnée. Les catégories professionnelles et les salaires minimums seront disponibles pour vos employés.
+              </InfoBanner>
+            ) : (
+              <p className="au-hint">Sans convention, les catégories ne sont pas pré-remplies. Vous pourrez en choisir une plus tard dans les paramètres.</p>
             )}
+          </div>
+        )}
 
-            {/* ═══ STEP 2 : CONTACT ═══ */}
-            {step === 2 && (
-              <div className="bg-white/[0.04] backdrop-blur-sm border border-white/10 rounded-2xl p-6 md:p-8 space-y-5 shadow-2xl">
-                <div className="flex items-center gap-3 pb-4 border-b border-white/8">
-                  <div className="w-10 h-10 bg-emerald-500/15 border border-emerald-500/30 rounded-xl flex items-center justify-center">
-                    <MapPin size={19} className="text-emerald-400" />
-                  </div>
-                  <div>
-                    <h2 className="text-base font-bold text-white">Localisation & Contact</h2>
-                    <p className="text-xs text-gray-500">Adresse et coordonnées de votre entreprise</p>
-                  </div>
-                </div>
-                <motion.div
-                  variants={fieldStagger}
-                  initial="hidden"
-                  animate="show"
-                  className="grid grid-cols-1 md:grid-cols-2 gap-4"
-                >
-                  <motion.div variants={fieldItem} className="md:col-span-2">
-                    <Field label="Adresse Complète" name="address" value={form.address} onChange={handleChange}
-                      placeholder="Ex: 123 Avenue de l'Indépendance" required colorKey="brand" icon={MapPin} />
-                  </motion.div>
-                  <motion.div variants={fieldItem}>
-                    <Field label="Ville" name="city" value={form.city} onChange={handleChange}
-                      placeholder="Brazzaville, Pointe-Noire..." required colorKey="brand" />
-                  </motion.div>
-                  <motion.div variants={fieldItem}>
-                    <Field label="Téléphone" name="phone" value={form.phone} onChange={handleChange}
-                      placeholder="+242 06 123 45 67" required colorKey="brand" icon={Phone} />
-                  </motion.div>
-                  <motion.div variants={fieldItem} className="md:col-span-2">
-                    <Field label="Email de Contact" name="email" value={form.email} onChange={handleChange}
-                      placeholder="contact@entreprise.cg" required type="email" colorKey="brand" icon={Mail} />
-                  </motion.div>
-                </motion.div>
-              </div>
-            )}
+        {/* ═══ 4 : fiscalité ═══ */}
+        {step === 4 && (
+          <div className="au-stack-sm">
+            <label className="au-check">
+              <input type="checkbox" name="appliesCnssEmployer" checked={form.appliesCnssEmployer} onChange={handleChange} />
+              <span>
+                <b>L’entreprise paie la CNSS patronale</b>
+                <small>
+                  Charges patronales calculées sur les bulletins de paie
+                  {form.appliesCnssEmployer && <> · taux de {employerPctLabel} % en vigueur</>}
+                </small>
+              </span>
+            </label>
 
-            {/* ═══ STEP 3 : CONVENTION ═══ */}
-            {step === 3 && (
-              <div className="bg-white/[0.04] backdrop-blur-sm border border-white/10 rounded-2xl p-6 md:p-8 space-y-5 shadow-2xl">
-                <div className="flex items-center gap-3 pb-4 border-b border-white/8">
-                  <div className="w-10 h-10 bg-emerald-500/15 border border-emerald-500/30 rounded-xl flex items-center justify-center">
-                    <BookOpen size={19} className="text-emerald-400" />
-                  </div>
-                  <div>
-                    <h2 className="text-base font-bold text-white">Convention Collective</h2>
-                    <p className="text-xs text-gray-500">Catégories et salaires minimums <span className="italic text-gray-600">(optionnel)</span></p>
-                  </div>
-                </div>
+            <p className="au-subtitle">Valeurs par défaut pour les nouveaux employés</p>
+            <label className="au-check">
+              <input type="checkbox" name="defaultAppliesIrpp" checked={form.defaultAppliesIrpp} onChange={handleChange} />
+              <span><b>IRPP / ITS</b><small>Impôt sur le revenu</small></span>
+            </label>
+            <label className="au-check">
+              <input type="checkbox" name="defaultAppliesCnss" checked={form.defaultAppliesCnss} onChange={handleChange} />
+              <span><b>CNSS salariale ({employeePctLabel} %)</b><small>Cotisation sociale de l’employé</small></span>
+            </label>
 
-                <ConventionPicker
-                  selected={selectedConvention}
-                  onSelect={setSelectedConvention}
-                  variant="dark"
-                />
+            <p className="au-subtitle">Récapitulatif</p>
+            <div className="au-recap">
+              <div><span>Entreprise</span><b>{form.tradeName || form.legalName || '—'}</b></div>
+              <div><span>Ville</span><b>{form.city || '—'}</b></div>
+              <div><span>Convention</span><b>{conventionLabel || 'Aucune'}</b></div>
+              <div><span>CNSS patronale</span><b>{form.appliesCnssEmployer ? `${employerPctLabel} %` : 'Non applicable'}</b></div>
+            </div>
+          </div>
+        )}
 
-                <AnimatePresence>
-                  {selectedConvention && getConventionCatalogEntry(selectedConvention) && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="overflow-hidden"
-                    >
-                      <div className="mt-3 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-start gap-3">
-                        <Award size={15} className="text-emerald-400 mt-0.5 shrink-0" />
-                        <div>
-                          <p className="text-sm font-bold text-emerald-200">
-                            Convention {getConventionCatalogEntry(selectedConvention)?.label} sélectionnée ✓
-                          </p>
-                          <p className="text-xs text-emerald-400/70 mt-0.5">
-                            Les catégories professionnelles et salaires minimums seront disponibles pour vos employés.
-                          </p>
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {!selectedConvention && (
-                  <div className="mt-3 p-3 bg-white/[0.02] border border-white/8 rounded-xl">
-                    <p className="text-xs text-gray-600 flex items-center gap-2">
-                      <AlertCircle size={12} className="shrink-0" />
-                      Sans convention, les catégories ne seront pas pré-remplies. Modifiable plus tard.
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* ═══ STEP 4 : FISCALITÉ ═══ */}
-            {step === 4 && (
-              <div className="bg-white/[0.04] backdrop-blur-sm border border-white/10 rounded-2xl p-6 md:p-8 space-y-5 shadow-2xl">
-                <div className="flex items-center gap-3 pb-4 border-b border-white/8">
-                  <div className="w-10 h-10 bg-emerald-500/15 border border-emerald-500/30 rounded-xl flex items-center justify-center">
-                    <ShieldCheck size={19} className="text-emerald-400" />
-                  </div>
-                  <div>
-                    <h2 className="text-base font-bold text-white">Configuration Fiscale</h2>
-                    <p className="text-xs text-gray-500">Régime fiscal et défauts pour les employés</p>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  {/* CNSS PATRONALE */}
-                  <label className="flex items-start gap-4 cursor-pointer p-4 bg-white/[0.03] border border-white/10 hover:border-emerald-500/30 hover:bg-emerald-500/5 rounded-xl transition-all group">
-                    <input
-                      type="checkbox" name="appliesCnssEmployer" checked={form.appliesCnssEmployer}
-                      onChange={handleChange}
-                      className="w-5 h-5 rounded border-gray-600 bg-white/10 text-emerald-500 focus:ring-emerald-500 mt-0.5 shrink-0 accent-emerald-500"
-                    />
-                    <div>
-                      <span className="font-bold text-white text-sm block group-hover:text-emerald-400 transition-colors">
-                        L'entreprise paie la CNSS patronale
-                      </span>
-                      <p className="text-xs text-gray-500 mt-0.5">Charges patronales calculées sur les bulletins de paie</p>
-                    </div>
-                  </label>
-
-                  <AnimatePresence>
-                    {form.appliesCnssEmployer && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="overflow-hidden"
-                      >
-                        <div className="ml-9 p-4 bg-emerald-500/8 border border-emerald-500/25 rounded-xl">
-                          <label className="block text-[11px] font-bold text-emerald-400 mb-2 uppercase tracking-wide">Taux CNSS Patronale (Fixé par décret)</label>
-                          <div className="flex items-center gap-3">
-                            <input
-                              type="number" name="cnssEmployerRate" min="0" max="50" step="0.5"
-                              value={20.28} readOnly disabled
-                              className="w-24 p-2.5 bg-white/5 border border-emerald-500/30 rounded-xl font-mono font-bold text-emerald-400 outline-none text-sm cursor-not-allowed opacity-80"
-                            />
-                            <span className="text-xl font-bold text-gray-500">%</span>
-                            <p className="text-xs text-gray-500">Taux proposé : <strong className="text-emerald-400">20,28%</strong> (Légal Congo) · Fixe</p>
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-
-                  <div className="border-t border-white/8 pt-4">
-                    <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-3">Défauts pour les nouveaux employés</p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {[
-                        { name: 'defaultAppliesIrpp', checked: form.defaultAppliesIrpp, label: 'IRPP / ITS', sub: 'Impôt sur le revenu' },
-                        { name: 'defaultAppliesCnss', checked: form.defaultAppliesCnss, label: 'CNSS salariale (4%)', sub: 'Cotisation sociale employé' },
-                      ].map((item) => (
-                        <label
-                          key={item.name}
-                          className="flex items-center gap-3 cursor-pointer p-4 bg-white/[0.03] border border-white/10 hover:border-emerald-500/30 hover:bg-emerald-500/5 rounded-xl transition-all group"
-                        >
-                          <input
-                            type="checkbox" name={item.name} checked={item.checked}
-                            onChange={handleChange}
-                            className="w-5 h-5 rounded border-gray-600 bg-white/10 text-emerald-500 focus:ring-emerald-500 shrink-0 accent-emerald-500"
-                          />
-                          <div>
-                            <span className="text-sm font-bold text-white block group-hover:text-emerald-400 transition-colors">{item.label}</span>
-                            <p className="text-xs text-gray-500">{item.sub}</p>
-                          </div>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* RÉCAP */}
-                  <div className="p-4 bg-gradient-to-br from-white/[0.03] to-white/[0.01] border border-white/10 rounded-xl">
-                    <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                      <Check size={11} className="text-emerald-400" /> Récapitulatif
-                    </p>
-                    <div className="space-y-2">
-                      {[
-                        { label: 'Entreprise',      val: form.tradeName || form.legalName || '—' },
-                        { label: 'Ville',           val: form.city || '—' },
-                        { label: 'Convention',      val: selectedConvention ? (getConventionCatalogEntry(selectedConvention)?.label || selectedConvention) : 'Aucune' },
-                        { label: 'CNSS patronale',  val: form.appliesCnssEmployer ? `${form.cnssEmployerRate}%` : 'Non applicable' },
-                      ].map(({ label, val }) => (
-                        <div key={label} className="flex justify-between items-center py-1 border-b border-white/5 last:border-0">
-                          <span className="text-xs text-gray-500">{label}</span>
-                          <span className="text-xs font-semibold text-white">{val}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-          </motion.div>
-        </AnimatePresence>
-
-        {/* ── ERREUR ── */}
-        <AnimatePresence>
-          {errorMsg && (
-            <motion.div
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="mt-4 p-3 rounded-xl bg-red-500/10 border border-red-500/25 text-red-300 text-sm flex items-center gap-2"
-            >
-              <AlertCircle size={15} className="shrink-0" /> {errorMsg}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* ── NAVIGATION ── */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="flex items-center justify-between mt-6"
-        >
-          <button
-            type="button"
-            onClick={() => step > 1 ? goTo(step - 1) : router.back()}
-            className="px-5 py-2.5 bg-white/5 border border-white/10 text-gray-400 font-semibold rounded-xl hover:bg-white/10 hover:text-white transition-all flex items-center gap-2 text-sm"
-          >
-            <ArrowLeft size={15} /> {step === 1 ? 'Annuler' : 'Précédent'}
-          </button>
+        <div className="au-actions">
+          <SecondaryButton type="button" onClick={() => (step > 1 ? goTo(step - 1) : router.back())}>
+            <ArrowLeft size={16} /> {step === 1 ? 'Annuler' : 'Précédent'}
+          </SecondaryButton>
 
           {step < 4 ? (
-            <motion.button
-              type="button"
-              onClick={handleNext}
-              whileHover={{ scale: 1.04 }}
-              whileTap={{ scale: 0.97 }}
-              className="px-7 py-2.5 bg-[#FAFAFA] hover:bg-white text-black font-bold rounded-xl flex items-center gap-2 text-sm transition-all"
-            >
-              Suivant <ArrowRight size={15} />
-            </motion.button>
+            <PrimaryButton type="button" onClick={handleNext}>
+              Suivant <ArrowRight size={17} className="au-arrow" />
+            </PrimaryButton>
           ) : (
-            <motion.button
-              type="button"
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              whileHover={{ scale: 1.04 }}
-              whileTap={{ scale: 0.97 }}
-              className="px-8 py-2.5 bg-[#FAFAFA] hover:bg-white text-black font-bold rounded-xl flex items-center gap-2 disabled:opacity-50 text-sm transition-all"
-            >
-              {isSubmitting
-                ? <><Loader2 className="animate-spin" size={16} /> Création en cours...</>
-                : <><Save size={16} /> Créer l'entreprise</>
-              }
-            </motion.button>
+            <PrimaryButton type="button" onClick={handleSubmit} loading={isSubmitting}>
+              Créer l’entreprise <ArrowRight size={17} className="au-arrow" />
+            </PrimaryButton>
           )}
-        </motion.div>
-
-      </div>
-    </div>
+        </div>
+      </AuthCard>
+    </AuthShell>
   );
 }

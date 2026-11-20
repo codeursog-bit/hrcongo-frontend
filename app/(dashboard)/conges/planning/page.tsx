@@ -1,8 +1,5 @@
 'use client';
-import { DocumentReader } from '@/components/ui/DocumentReader';
-import '@/components/leave-history/leave-workspace.css';
-import { LeaveModuleFrame as ModulePageFrame } from '@/components/leave-history/LeaveModuleFrame';
-import { ModulePageSkeleton } from '@/components/requests/ModulePageFrame';
+import { ModulePageFrame, ModulePageSkeleton } from '@/components/requests/ModulePageFrame';
 import { Button } from '@/components/design-system/primitives';
 
 // ============================================================================
@@ -20,6 +17,7 @@ import {
 import { api } from '@/services/api';
 import CongeSubNav from '@/components/CongeSubNav';
 import LeavePlanningPrintable from '@/components/LeavePlanningPrintable';
+import LeaveCalcBreakdown from '@/components/leave-overview/LeaveCalcBreakdown';
 import { printLeaveDocument, downloadLeaveDocumentPDF } from '@/lib/leave-print';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
@@ -113,10 +111,10 @@ export default function LeavePlanningPage() {
     <ModulePageFrame kind="list" error={uiLoadError}><div className="max-w-[1500px] mx-auto pb-24 space-y-6">
       <CongeSubNav userRole={userRole} />
 
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 leave-header">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold tracking-[0.2em] text-[var(--text-muted)] uppercase mb-1">Congés</p>
-          <h1 className="text-3xl font-semibold text-[var(--text)]">Planning des départs</h1>
+          <p className="text-xs font-bold tracking-[0.2em] text-[var(--text-muted)] uppercase mb-1">Congés</p>
+          <h1 className="text-3xl font-bold text-[var(--text)]">Planning des départs</h1>
         </div>
 
         <div className="flex items-center gap-2">
@@ -152,7 +150,7 @@ export default function LeavePlanningPage() {
           {company?.documentTemplate === 'ORCA' && (
             <Button variant="ghost"
               onClick={() => window.open(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/leaves/planning/document.xlsx?month=${cursor.month}&year=${cursor.year}`, '_blank')}
-              className="flex items-center gap-2 px-4 py-2.5 bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))]  border border-[var(--border)]  text-[var(--action)]  rounded-xl text-sm font-semibold hover:bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))] "
+              className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 rounded-xl text-sm font-bold hover:bg-emerald-100 dark:hover:bg-emerald-900/40"
               title="Télécharger le fichier Excel original rempli (2 onglets : départs + à payer)"
             >
               <Download size={15} /> Excel (.xlsx)
@@ -167,23 +165,23 @@ export default function LeavePlanningPage() {
         <>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5 flex items-center gap-3">
-              <div className="w-11 h-11 rounded-xl bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))]  text-[var(--action)] flex items-center justify-center"><Users size={20} /></div>
-              <div><p className="text-2xl font-semibold text-[var(--text)]">{stats.count}</p><p className="text-xs text-[var(--text-muted)]">Employés en congé ce mois</p></div>
+              <div className="w-11 h-11 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 flex items-center justify-center"><Users size={20} /></div>
+              <div><p className="text-2xl font-bold text-[var(--text)]">{stats.count}</p><p className="text-xs text-[var(--text-muted)]">Employés en congé ce mois</p></div>
             </div>
             <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5 flex items-center gap-3">
-              <div className="w-11 h-11 rounded-xl bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  text-[var(--warning-text)] flex items-center justify-center"><Plane size={20} /></div>
-              <div><p className="text-2xl font-semibold text-[var(--text)]">{stats.totalDays}</p><p className="text-xs text-[var(--text-muted)]">Jours ouvrables cumulés</p></div>
+              <div className="w-11 h-11 rounded-xl bg-amber-100 dark:bg-amber-900/30 text-amber-600 flex items-center justify-center"><Plane size={20} /></div>
+              <div><p className="text-2xl font-bold text-[var(--text)]">{stats.totalDays}</p><p className="text-xs text-[var(--text-muted)]">Jours ouvrables cumulés</p></div>
             </div>
             <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5 flex items-center gap-3">
-              <div className="w-11 h-11 rounded-xl bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))]  text-[var(--action)] flex items-center justify-center"><Wallet size={20} /></div>
-              <div><p className="text-2xl font-semibold text-[var(--text)]">{Math.round(stats.totalIndemnity).toLocaleString('fr-FR')}</p><p className="text-xs text-[var(--text-muted)]">FCFA d&apos;indemnités estimées</p></div>
+              <div className="w-11 h-11 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 flex items-center justify-center"><Wallet size={20} /></div>
+              <div><p className="text-2xl font-bold text-[var(--text)]">{Math.round(stats.totalIndemnity).toLocaleString('fr-FR')}</p><p className="text-xs text-[var(--text-muted)]">FCFA d&apos;indemnités estimées</p></div>
             </div>
           </div>
 
           {/* 🆕 Graphiques RH — tendance annuelle + répartition par département */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div className="lg:col-span-2 bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
-              <p className="text-sm font-semibold text-[var(--text)] mb-4">Jours de congé posés par mois — {cursor.year}</p>
+              <p className="text-sm font-bold text-[var(--text)] mb-4">Jours de congé posés par mois — {cursor.year}</p>
               {yearlyTrend.every(m => m.totalDays === 0) ? (
                 <p className="text-sm text-[var(--text-muted)] py-8 text-center">Aucun congé posé sur {cursor.year}.</p>
               ) : (
@@ -197,11 +195,11 @@ export default function LeavePlanningPage() {
                         <div className="w-full flex items-end h-32 relative">
                           <div
                             title={`${m.totalDays}j — ${m.count} congé(s)`}
-                            className={`w-full rounded-t-md transition-all ${isCurrent ? 'bg-[var(--brand)]' : 'bg-[color-mix(in_srgb,var(--brand)_12%,var(--surface))]  group-hover:bg-[var(--brand)] '}`}
+                            className={`w-full rounded-t-md transition-all ${isCurrent ? 'bg-emerald-500' : 'bg-emerald-200 dark:bg-emerald-800 group-hover:bg-emerald-300 dark:group-hover:bg-emerald-700'}`}
                             style={{ height: `${Math.max(heightPct, m.totalDays > 0 ? 4 : 0)}%` }}
                           />
                         </div>
-                        <span className={`text-[10px] font-semibold ${isCurrent ? 'text-[var(--action)]' : 'text-[var(--text-muted)]'}`}>{MONTHS[m.month - 1].slice(0, 3)}</span>
+                        <span className={`text-[10px] font-semibold ${isCurrent ? 'text-emerald-600' : 'text-[var(--text-muted)]'}`}>{MONTHS[m.month - 1].slice(0, 3)}</span>
                       </div>
                     );
                   })}
@@ -210,7 +208,7 @@ export default function LeavePlanningPage() {
             </div>
 
             <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
-              <p className="text-sm font-semibold text-[var(--text)] mb-4">Répartition par département — {monthLabel}</p>
+              <p className="text-sm font-bold text-[var(--text)] mb-4">Répartition par département — {monthLabel}</p>
               {deptBreakdown.length === 0 ? (
                 <p className="text-sm text-[var(--text-muted)] py-8 text-center">Aucun département ce mois-ci.</p>
               ) : (
@@ -224,7 +222,7 @@ export default function LeavePlanningPage() {
                           <span className="text-[var(--text-muted)] shrink-0 ml-2">{d.days}j</span>
                         </div>
                         <div className="h-2 bg-[var(--border)] rounded-full overflow-hidden">
-                          <div className="h-full bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  rounded-full" style={{ width: `${(d.days / max) * 100}%` }} />
+                          <div className="h-full bg-amber-400 dark:bg-amber-600 rounded-full" style={{ width: `${(d.days / max) * 100}%` }} />
                         </div>
                       </div>
                     );
@@ -234,9 +232,14 @@ export default function LeavePlanningPage() {
             </div>
           </div>
 
-          <DocumentReader landscape title="Suivi des congés">
+          <div className="bg-[var(--surface-2)] rounded-2xl p-4 overflow-auto border border-[var(--border)]">
+            <div className="scale-[0.75] origin-top-left" style={{ width: '133%' }}>
               <LeavePlanningPrintable id={REPORT_ID} company={company || {}} monthLabel={monthLabel} rows={rows} mode={mode} />
-          </DocumentReader>
+            </div>
+          </div>
+
+          {/* 🆕 Congé à payer : mois pris comme intervalle de calcul, bien visibles */}
+          {mode === 'payable' && <LeaveCalcBreakdown rows={rows} />}
         </>
       )}
     </div></ModulePageFrame>

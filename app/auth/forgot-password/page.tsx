@@ -1,6 +1,6 @@
 // =============================================================================
 // FICHIER : app/auth/forgot-password/page.tsx
-// REFONTE : même système visuel que /auth/login et /auth/register.
+// REFONTE : même design que l'app et que /auth/login (AuthShell + tokens).
 // LOGIQUE : inchangée — message neutre systématique après envoi (sécurité).
 // =============================================================================
 
@@ -9,7 +9,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { Mail, ArrowLeft, MailCheck } from 'lucide-react';
 import { api } from '@/services/api';
 import { AuthShell, AuthCard, AuthHeading } from '@/components/auth/AuthShell';
 import { TextField, PrimaryButton, SecondaryButton } from '@/components/auth/FormElements';
@@ -41,92 +41,83 @@ export default function ForgotPasswordPage() {
 
   return (
     <AuthShell>
-      <div className="w-full max-w-[400px]">
-        <AnimatePresence mode="wait">
-          {!sent ? (
-            <motion.div
-              key="form"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -16 }}
-              transition={{ duration: 0.2 }}
-            >
-              <AuthHeading
-                title="Mot de passe oublié ?"
-                description="Entrez votre adresse email, nous vous enverrons un lien de réinitialisation."
-              />
-              <AuthCard>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <TextField
-                    icon={Mail}
-                    type="email"
-                    label="Adresse email"
-                    value={email}
-                    onChange={(e) => { setEmail(e.target.value); setError(''); }}
-                    placeholder="vous@entreprise.cg"
-                    autoFocus
-                    autoComplete="email"
-                    error={error}
-                  />
+      <AnimatePresence mode="wait">
+        {!sent ? (
+          <motion.div
+            key="form"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.2 }}
+          >
+            <AuthHeading
+              title="Mot de passe oublié ?"
+              description="Entrez votre adresse email, nous vous enverrons un lien de réinitialisation."
+            />
+            <AuthCard>
+              <form onSubmit={handleSubmit} className="au-stack" noValidate>
+                <TextField
+                  icon={Mail}
+                  type="email"
+                  label="Adresse email"
+                  value={email}
+                  onChange={(e) => { setEmail(e.target.value); setError(''); }}
+                  placeholder="vous@entreprise.cg"
+                  autoFocus
+                  autoComplete="email"
+                  error={error}
+                />
 
-                  <PrimaryButton type="submit" loading={isLoading}>
-                    Envoyer le lien de réinitialisation
-                  </PrimaryButton>
-                </form>
+                <PrimaryButton type="submit" loading={isLoading}>
+                  Envoyer le lien de réinitialisation
+                </PrimaryButton>
+              </form>
 
-                <div className="mt-6 text-center">
-                  <Link
-                    href="/auth/login"
-                    className="inline-flex items-center gap-1.5 text-[13px] text-[var(--text-secondary)] transition-colors hover:text-[var(--text)]"
-                  >
-                    <ArrowLeft size={13} /> Retour à la connexion
-                  </Link>
-                </div>
-              </AuthCard>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="sent"
-              initial={{ opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.25 }}
-            >
-              <AuthCard className="text-center">
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: 'spring', stiffness: 220, delay: 0.1 }}
-                  className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-[#10B981]/30 bg-[#10B981]/[0.12]"
-                >
-                  <CheckCircle2 size={26} className="text-[#10B981]" />
-                </motion.div>
-                <h2 className="mb-3 text-[19px] font-semibold text-[var(--text)]">Vérifiez votre boîte mail</h2>
-                <p className="mb-1.5 text-[13.5px] leading-relaxed text-[var(--text-secondary)]">
-                  Si un compte est associé à{' '}
-                  <span className="font-medium text-[var(--text)]">{email}</span>, vous recevrez un lien de
-                  réinitialisation.
-                </p>
-                <p className="mb-7 text-[12.5px] text-[var(--text-secondary)]">
-                  Le lien est valable <span className="text-[var(--text-secondary)]">30 minutes</span>. Pensez à vérifier vos
-                  spams.
-                </p>
+              <div className="au-foot">
+                <Link href="/auth/login" className="au-link-muted">
+                  <ArrowLeft size={14} /> Retour à la connexion
+                </Link>
+              </div>
+            </AuthCard>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="sent"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25 }}
+          >
+            <AuthCard>
+              <motion.div
+                initial={{ scale: 0.4, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: 'spring', stiffness: 220, damping: 16, delay: 0.1 }}
+                className="au-tile is-success"
+              >
+                <MailCheck size={26} />
+              </motion.div>
 
-                <div className="space-y-3">
-                  <SecondaryButton onClick={() => { setSent(false); setEmail(''); }}>
-                    Essayer avec un autre email
-                  </SecondaryButton>
-                  <Link
-                    href="/auth/login"
-                    className="block w-full rounded-xl bg-white/[0.03] px-4 py-3 text-center text-[13.5px] font-medium text-[var(--text)] transition-colors hover:bg-white/[0.06]"
-                  >
-                    Retour à la connexion
-                  </Link>
-                </div>
-              </AuthCard>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+              <h1 className="au-title au-title-sm">Vérifiez votre boîte mail</h1>
+              <p className="au-desc">
+                Si un compte est associé à <strong style={{ color: 'var(--text)' }}>{email}</strong>, vous recevrez un
+                lien de réinitialisation.
+              </p>
+              <p className="au-desc" style={{ marginTop: 8, fontSize: 13 }}>
+                Le lien est valable 30 minutes. Pensez à vérifier vos spams.
+              </p>
+
+              <div className="au-stack-sm" style={{ marginTop: 28 }}>
+                <SecondaryButton onClick={() => { setSent(false); setEmail(''); }}>
+                  Essayer avec un autre email
+                </SecondaryButton>
+                <Link href="/auth/login" className="au-link-muted" style={{ justifyContent: 'center', padding: '8px 0' }}>
+                  <ArrowLeft size={14} /> Retour à la connexion
+                </Link>
+              </div>
+            </AuthCard>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </AuthShell>
   );
 }

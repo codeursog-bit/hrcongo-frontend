@@ -20,8 +20,8 @@ export function Footer() {
               />
             </Link>
             <p className="mb-6 max-w-[300px] text-[14px] leading-relaxed text-[#8B8F98]">
-              La première plateforme RH conçue pour le marché congolais. Paie
-              conforme, pointage GPS, recrutement — tout en un.
+              Plateforme RH conçue pour les entreprises congolaises. Paie
+              pointage GPS, recrutement et contrats : tout en un.
             </p>
             <div className="flex flex-col gap-2.5">
               {[
@@ -30,7 +30,7 @@ export function Footer() {
                 { icon: '⌖', text: 'Pointe-Noire, Congo-Brazzaville', href: null },
               ].map((item, i) => (
                 <div key={i} className="flex items-center gap-2.5">
-                  <span className="text-[13px] text-[#10B981]">{item.icon}</span>
+                  <span className="text-[13px] text-[#FF9A62]">{item.icon}</span>
                   {item.href ? (
                     <a
                       href={item.href}
@@ -87,7 +87,7 @@ export function Footer() {
                 />
                 <button
                   type="submit"
-                  className="rounded-lg bg-[#10B981] px-3.5 py-2 text-[13px] font-medium text-black transition-colors hover:bg-[#34D399]"
+                  className="rounded-lg bg-[#FF9A62] px-3.5 py-2 text-[13px] font-medium text-black transition-colors hover:bg-[#FFB27F]"
                 >
                   OK
                 </button>
@@ -106,7 +106,7 @@ export function Footer() {
               <a
                 key={sn}
                 href="#"
-                className="text-[13px] text-[#5A5E66] transition-colors hover:text-[#10B981]"
+                className="text-[13px] text-[#5A5E66] transition-colors hover:text-[#FF9A62]"
               >
                 {sn}
               </a>

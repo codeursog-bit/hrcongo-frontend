@@ -1,5 +1,14 @@
 'use client';
 
+// ============================================================================
+// 📁 app/tarifs/TarifsClient.tsx
+// Même esprit que l'accueil : fond sombre, un seul accent orange, pas d'effets.
+// Les offres, les prix et les fonctionnalités viennent du catalogue
+// (usePlans + buildPublicPlans) : rien n'est écrit en dur dans les cartes,
+// et le tableau de comparaison est construit à partir de ces mêmes données,
+// donc il ne peut pas se contredire.
+// ============================================================================
+
 import React from 'react';
 import Link from 'next/link';
 import { Navbar } from '@/components/landing/Navbar';
@@ -7,750 +16,362 @@ import { Footer } from '@/components/landing/Footer';
 import { usePlans } from '@/hooks/useSubscription';
 import { buildPublicPlans, publicPlanAmount, type PublicPricingPlan as Plan } from '@/lib/public-pricing';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+const ACCENT = '#FF9A62';
+const PHONE_DISPLAY = '+242 06 413 36 93';
+const PHONE_HREF = 'tel:+242064133693';
+const MAX_HIGHLIGHTS = 7; // fonctionnalités listées dans une carte (le reste est dans le tableau)
 
-type Feature = {
-  label: string;
-  included: boolean | 'partial';
-  note?: string;
-};
-
-function IconCheck({ color }: { color: string }) {
+function IconCheck() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
-      <circle cx="12" cy="12" r="11" fill={color} fillOpacity="0.15" />
-      <path d="M7 12.5l3.5 3.5 6.5-7" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0">
+      <path d="M5 12.5l4.5 4.5L19 7" />
     </svg>
   );
 }
 
-function IconPartial() {
+function IconArrow() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
-      <circle cx="12" cy="12" r="11" fill="#F59E0B" fillOpacity="0.15" />
-      <path d="M8 12h8" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" />
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+      <path d="M5 12h14M12 5l7 7-7 7" />
     </svg>
   );
 }
 
-function IconX() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
-      <circle cx="12" cy="12" r="11" fill="rgba(148,163,184,0.08)" />
-      <path d="M9 9l6 6M15 9l-6 6" stroke="rgba(100,116,139,0.5)" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-// ─── Carte plan ───────────────────────────────────────────────────────────────
-
-function PlanCard({ plan, annual }: { plan: Plan; annual: boolean }) {
-  const displayPrice = publicPlanAmount(plan, annual);
+// ─── Carte d'une offre ───────────────────────────────────────────────────────
+function PlanCard({ plan, annual, withTable }: { plan: Plan; annual: boolean; withTable: boolean }) {
+  const price = publicPlanAmount(plan, annual);
+  const included = plan.features.filter((f) => f.included === true);
+  const shown = included.slice(0, MAX_HIGHLIGHTS);
+  const rest = included.length - shown.length;
 
   return (
     <div
-      style={{
-        background: plan.color,
-        border: plan.popular
-          ? `2px solid ${plan.accent}`
-          : '1px solid rgba(255,255,255,0.08)',
-        borderRadius: 20,
-        padding: '28px 24px',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'relative',
-        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-      }}
-      onMouseEnter={e => {
-        (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-4px)';
-        (e.currentTarget as HTMLDivElement).style.boxShadow = `0 20px 60px -10px ${plan.accent}40`;
-      }}
-      onMouseLeave={e => {
-        (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)';
-        (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
-      }}
+      className={`relative flex flex-col rounded-2xl border bg-[#0c0c0d] p-7 transition-colors ${
+        plan.popular ? 'border-[#FF9A62]' : 'border-white/[0.08] hover:border-white/[0.18]'
+      }`}
     >
-      {/* Badge populaire */}
       {plan.popular && (
-        <div style={{
-          position: 'absolute',
-          top: -14,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          background: 'linear-gradient(135deg, #10B981, #059669)',
-          color: '#fff',
-          fontSize: 11,
-          fontWeight: 700,
-          padding: '4px 16px',
-          borderRadius: 20,
-          letterSpacing: '0.06em',
-          whiteSpace: 'nowrap',
-          boxShadow: '0 4px 16px rgba(16,185,129,0.4)',
-        }}>
-          ⭐ RECOMMANDÉ
-        </div>
+        <span className="absolute -top-3 left-7 rounded-full bg-[#FF9A62] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-black">
+          Recommandé
+        </span>
       )}
 
-      {/* Header */}
-      <div style={{ marginBottom: 20 }}>
-        <div style={{
-          display: 'inline-block',
-          fontSize: 11,
-          fontWeight: 700,
-          color: plan.textAccent,
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase',
-          marginBottom: 8,
-          padding: '3px 10px',
-          background: `${plan.textAccent}18`,
-          borderRadius: 6,
-        }}>
-          {plan.name}
-        </div>
-        <p style={{ color: '#64748B', fontSize: 13, margin: '4px 0 16px', lineHeight: 1.4 }}>
-          {plan.tagline}
-        </p>
+      <h3 className="text-[18px] font-semibold text-[#F2F2F2]">{plan.name}</h3>
+      <p className="mt-2 text-[13.5px] leading-snug text-[#9a9a9a] xl:min-h-[110px]">{plan.tagline}</p>
 
-        {/* Prix */}
-        {displayPrice !== null ? (
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-            <span style={{
-              fontSize: 42,
-              fontWeight: 800,
-              color: '#fff',
-              letterSpacing: '-0.04em',
-              fontFamily: "'DM Sans', system-ui, sans-serif",
-              lineHeight: 1,
-            }}>
-              {displayPrice.toLocaleString('fr-FR')}
+      <div className="mt-6">
+        {price !== null ? (
+          <div className="flex flex-wrap items-baseline gap-x-2">
+            <span className="text-[38px] font-bold leading-none tracking-[-0.03em] text-[#F2F2F2]">
+              {price.toLocaleString('fr-FR')}
             </span>
-            <span style={{ color: '#64748B', fontSize: 14 }}>{plan.currency}/{annual ? 'an' : 'mois'}</span>
+            <span className="text-[14px] text-[#9a9a9a]">
+              {plan.currency} / {annual ? 'an' : 'mois'}
+            </span>
           </div>
         ) : (
-          <div style={{
-            fontSize: 28,
-            fontWeight: 800,
-            color: plan.textAccent,
-            fontFamily: "'DM Sans', system-ui, sans-serif",
-            lineHeight: 1,
-          }}>
-            Tarif non configuré
-          </div>
+          <div className="text-[28px] font-bold leading-none text-[#F2F2F2]">Sur devis</div>
         )}
-
-
-
-        <p style={{ color: '#475569', fontSize: 12, marginTop: 8, lineHeight: 1.5 }}>
-          {plan.priceNote}
-        </p>
+        <p className="mt-2 text-[12.5px] text-[#6f6f6f]">{plan.priceNote}</p>
       </div>
 
-      {/* Employés / Users */}
-      <div style={{
-        background: 'rgba(255,255,255,0.04)',
-        border: '1px solid rgba(255,255,255,0.06)',
-        borderRadius: 10,
-        padding: '10px 14px',
-        marginBottom: 20,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke={plan.textAccent} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          <span style={{ color: '#CBD5E1', fontSize: 12, fontWeight: 500 }}>{plan.employees}</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="8" r="4" stroke={plan.textAccent} strokeWidth="1.5" />
-            <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke={plan.textAccent} strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
-          <span style={{ color: '#64748B', fontSize: 12 }}>{plan.users}</span>
-        </div>
+      {/* Le nom de l'offre est déjà le palier d'effectif (« Jusqu’à 25 employés ») : on ne le répète pas */}
+      <div className="my-6 space-y-1.5 border-y border-white/[0.08] py-4 text-[13.5px]">
+        {plan.employees !== plan.name && <div className="text-[#d6d6d6]">{plan.employees}</div>}
+        <div className="text-[#d6d6d6]">{plan.users}</div>
       </div>
 
-      {/* Features */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 9, marginBottom: 24 }}>
-        {plan.features.map((f, i) => (
-          <div key={i} style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            opacity: f.included === false ? 0.4 : 1,
-          }}>
-            {f.included === true
-              ? <IconCheck color={plan.textAccent} />
-              : f.included === 'partial'
-              ? <IconPartial />
-              : <IconX />
-            }
-            <span style={{
-              fontSize: 13,
-              color: f.included === false ? '#475569' : '#CBD5E1',
-              flex: 1,
-            }}>
-              {f.label}
-              {f.note && (
-                <span style={{
-                  marginLeft: 6,
-                  fontSize: 11,
-                  color: f.included === true ? plan.textAccent : '#64748B',
-                  background: f.included === true ? `${plan.textAccent}15` : 'rgba(255,255,255,0.04)',
-                  padding: '1px 6px',
-                  borderRadius: 4,
-                }}>
-                  {f.note}
-                </span>
-              )}
-            </span>
-          </div>
+      <ul className="mb-6 flex flex-1 flex-col gap-2.5">
+        {shown.map((f) => (
+          <li key={f.label} className="flex items-start gap-2.5 text-[13.5px] leading-snug text-[#d6d6d6]">
+            <IconCheck />
+            {f.label}
+          </li>
         ))}
-      </div>
+        {rest > 0 && withTable && (
+          <li className="pl-[26px] text-[13px]">
+            <a href="#comparaison" className="text-[#9a9a9a] underline-offset-4 hover:text-[#F2F2F2] hover:underline">
+              + {rest} autre{rest > 1 ? 's' : ''} dans la comparaison
+            </a>
+          </li>
+        )}
+      </ul>
 
-      {/* CTA */}
       <Link
         href={plan.ctaHref}
-        style={{
-          display: 'block',
-          textAlign: 'center',
-          padding: '13px 20px',
-          borderRadius: 12,
-          fontSize: 14,
-          fontWeight: 700,
-          textDecoration: 'none',
-          transition: 'all 0.2s ease',
-          ...(plan.popular
-            ? {
-                background: '#FAFAFA',
-                color: '#000',
-              }
-            : plan.id === 'enterprise'
-            ? {
-                background: 'rgba(100,116,139,0.15)',
-                color: '#94A3B8',
-                border: '1px solid rgba(100,116,139,0.3)',
-              }
-            : plan.id === 'starter'
-            ? {
-                background: 'rgba(255,255,255,0.07)',
-                color: '#94A3B8',
-                border: '1px solid rgba(255,255,255,0.1)',
-              }
-            : {
-                background: 'rgba(16,185,129,0.12)',
-                color: '#10B981',
-                border: '1px solid rgba(16,185,129,0.25)',
-              }
-          ),
-        }}
-        onMouseEnter={e => {
-          if (!plan.popular) {
-            (e.currentTarget as HTMLAnchorElement).style.opacity = '0.85';
-            (e.currentTarget as HTMLAnchorElement).style.transform = 'scale(1.02)';
-          } else {
-            (e.currentTarget as HTMLAnchorElement).style.transform = 'scale(1.03)';
-          }
-        }}
-        onMouseLeave={e => {
-          (e.currentTarget as HTMLAnchorElement).style.opacity = '1';
-          (e.currentTarget as HTMLAnchorElement).style.transform = 'scale(1)';
-        }}
+        className={`flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-[14px] font-semibold transition-colors ${
+          plan.popular
+            ? 'bg-[#FAFAFA] text-black hover:bg-white'
+            : 'border border-white/10 text-[#F2F2F2] hover:border-white/25 hover:bg-white/[0.04]'
+        }`}
       >
         {plan.cta}
-        {plan.id !== 'enterprise' && (
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginLeft: 6, verticalAlign: 'middle' }}>
-            <path d="M5 12h14M12 5l7 7-7 7" />
-          </svg>
-        )}
+        {plan.id !== 'enterprise' && <IconArrow />}
       </Link>
     </div>
   );
 }
 
-// ─── FAQ ──────────────────────────────────────────────────────────────────────
+// ─── Tableau de comparaison (construit à partir du catalogue) ───────────────
+function ComparisonTable({ plans }: { plans: Plan[] }) {
+  // Lignes = fonctionnalités oui/non. Les limites chiffrées (« 5 prêts / mois »,
+  // « illimités ») varient d'une offre à l'autre : elles restent dans les cartes.
+  const rows = React.useMemo(() => {
+    const labels: string[] = [];
+    plans.forEach((p) =>
+      p.features.forEach((f) => {
+        if (!/\d|illimité/i.test(f.label) && !labels.includes(f.label)) labels.push(f.label);
+      }),
+    );
+    return labels;
+  }, [plans]);
 
-const faqs = [
+  if (rows.length === 0) return null;
+
+  return (
+    <section id="comparaison" className="border-t border-white/[0.06] px-6 py-20">
+      <div className="mx-auto max-w-5xl">
+        <h2 className="text-[30px] font-semibold tracking-[-0.02em] text-[#F2F2F2] sm:text-[36px]">
+          Comparer les offres
+        </h2>
+        <p className="mt-3 text-[16px] text-[#9a9a9a]">Toutes les fonctionnalités, offre par offre.</p>
+
+        <div className="mt-10 overflow-x-auto rounded-2xl border border-white/[0.08]">
+          <table className="w-full min-w-[640px] border-collapse text-[14px]">
+            <thead>
+              <tr className="border-b border-white/[0.08] bg-[#0c0c0d]">
+                <th className="px-5 py-4 text-left text-[13px] font-medium text-[#6f6f6f]">Fonctionnalité</th>
+                {plans.map((p) => (
+                  <th
+                    key={p.id}
+                    className="px-4 py-4 text-center text-[13px] font-semibold"
+                    style={{ color: p.popular ? ACCENT : '#d6d6d6' }}
+                  >
+                    {p.name}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((label) => (
+                <tr key={label} className="border-b border-white/[0.05] last:border-0">
+                  <td className="px-5 py-3 text-[#d6d6d6]">{label}</td>
+                  {plans.map((p) => {
+                    const on = p.features.find((f) => f.label === label)?.included === true;
+                    return (
+                      <td key={p.id} className="px-4 py-3 text-center">
+                        {on ? (
+                          <span aria-label="Inclus" className="font-semibold" style={{ color: ACCENT }}>✓</span>
+                        ) : (
+                          <span aria-label="Non inclus" className="text-white/20">–</span>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── FAQ ─────────────────────────────────────────────────────────────────────
+const FAQS = [
   {
-    q: 'Que se passe-t-il si mon entreprise dépasse la limite de son forfait ?',
-    a: 'Les limites de chaque forfait figurent dans les offres ci-dessus. Choisissez un forfait adapté à votre effectif ou contactez-nous pour étudier vos besoins.',
+    q: 'Que se passe-t-il si mon entreprise dépasse la limite de son offre ?',
+    a: 'Chaque offre correspond à un nombre maximum d’employés actifs. Si votre effectif dépasse ce palier, passez à l’offre supérieure ou contactez-nous pour étudier vos besoins.',
   },
   {
-    q: 'Qu\'est-ce que la gestion des impayés inclut ?',
-    a: 'Le module impayés (plan Pro) détecte automatiquement les bulletins générés mais non payés, calcule les jours de retard, envoie des alertes progressives (info → avertissement → urgent) et vous permet de marquer les paiements partiels ou complets.',
+    q: 'Comment fonctionne l’essai gratuit ?',
+    a: 'Chaque nouveau compte bénéficie de 30 jours d’essai gratuit, sans carte bancaire, avec l’accès de l’offre Pro. À la fin de l’essai, vous choisissez l’offre adaptée à votre effectif.',
+  },
+  {
+    q: 'Quelle offre choisir ?',
+    a: 'Le nom de chaque offre indique l’effectif maximum : jusqu’à 25, 50 ou 100 employés, et plus de 100 employés. Prenez celle qui couvre votre effectif actuel avec un peu de marge. Le tableau de comparaison détaille ce que chaque offre inclut.',
   },
   {
     q: 'La rupture de contrat génère-t-elle le solde de tout compte ?',
-    a: "Oui. Le module (plan Pro & Enterprise) calcule automatiquement l'indemnité de licenciement, l'indemnité compensatrice de préavis, les congés non pris, et génère le document de solde de tout compte conforme au Code du Travail Congo.",
+    a: 'Oui. Konza RH calcule l’indemnité de licenciement, l’indemnité compensatrice de préavis et les congés non pris, puis génère le document de solde de tout compte selon le Code du Travail du Congo.',
   },
   {
     q: 'Comment fonctionne le système de shifts ?',
-    a: 'Vous créez des shifts (Matin, Soir, Nuit, Garde…) avec leurs horaires, puis les assignez aux employés par date précise ou par planning récurrent (lundi→vendredi). Le pointage GPS se cale automatiquement sur le shift assigné.',
+    a: 'Vous créez des shifts (Matin, Soir, Nuit, Garde…) avec leurs horaires, puis vous les assignez aux employés par date précise ou par planning récurrent (lundi au vendredi). Le pointage GPS se cale automatiquement sur le shift assigné.',
   },
   {
     q: 'Peut-on payer par Mobile Money ?',
-    a: 'Oui, nous acceptons MTN Mobile Money et Airtel Money. Le paiement par virement bancaire est aussi disponible pour les plans annuels et Enterprise.',
-  },
-  {
-    q: 'Le plan Starter est-il vraiment gratuit pour toujours ?',
-    a: "Oui. Le Starter reste gratuit sans limite de temps pour 1 admin et 2 employés. C'est votre chance de tester l'outil sans engagement. Quand vous grandissez, vous passez au Business en un clic.",
+    a: 'Oui, nous acceptons MTN Mobile Money et Airtel Money. Le virement bancaire est aussi disponible pour les plans annuels et Enterprise.',
   },
 ];
 
-function FAQ() {
+function FaqList() {
   const [open, setOpen] = React.useState<number | null>(null);
   return (
-    <div style={{ maxWidth: 760, margin: '0 auto' }}>
-      {faqs.map((f, i) => (
-        <div
-          key={i}
-          style={{
-            borderBottom: '1px solid rgba(255,255,255,0.06)',
-            overflow: 'hidden',
-          }}
-        >
-          <button
-            onClick={() => setOpen(open === i ? null : i)}
-            style={{
-              width: '100%',
-              background: 'none',
-              border: 'none',
-              textAlign: 'left',
-              padding: '20px 0',
-              cursor: 'pointer',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              gap: 16,
-            }}
-          >
-            <span style={{ color: '#E2E8F0', fontSize: 15, fontWeight: 500, lineHeight: 1.4 }}>
-              {f.q}
-            </span>
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#10B981"
-              strokeWidth="2"
-              style={{
-                flexShrink: 0,
-                transform: open === i ? 'rotate(180deg)' : 'rotate(0deg)',
-                transition: 'transform 0.25s ease',
-              }}
+    <div className="mx-auto max-w-3xl">
+      {FAQS.map((f, i) => {
+        const isOpen = open === i;
+        return (
+          <div key={f.q} className="border-t border-white/10 last:border-b">
+            <button
+              type="button"
+              onClick={() => setOpen(isOpen ? null : i)}
+              aria-expanded={isOpen}
+              className="flex w-full items-center justify-between gap-4 py-5 text-left"
             >
-              <path d="M6 9l6 6 6-6" />
-            </svg>
-          </button>
-          <div style={{
-            maxHeight: open === i ? 200 : 0,
-            overflow: 'hidden',
-            transition: 'max-height 0.3s ease',
-          }}>
-            <p style={{
-              color: '#64748B',
-              fontSize: 14,
-              lineHeight: 1.7,
-              paddingBottom: 20,
-              margin: 0,
-            }}>
-              {f.a}
-            </p>
+              <span className="text-[16px] font-medium leading-snug text-[#F2F2F2]">{f.q}</span>
+              <svg
+                width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2.5"
+                className={`shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-45' : ''}`}
+              >
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+            </button>
+            {isOpen && <p className="pb-6 pr-8 text-[14.5px] leading-relaxed text-[#9a9a9a]">{f.a}</p>}
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
 
-// ─── Page principale ──────────────────────────────────────────────────────────
-
+// ─── Page ────────────────────────────────────────────────────────────────────
 export default function PricingPage() {
   const [annual, setAnnual] = React.useState(false);
   const { plans: catalog, isLoading, error, refetch } = usePlans();
   const plans = buildPublicPlans(catalog || {});
 
   return (
-    <main style={{
-      minHeight: '100vh',
-      background: '#050607',
-      fontFamily: "'DM Sans', system-ui, sans-serif",
-      paddingTop: 80,
-      position: 'relative',
-      overflowX: 'hidden',
-    }}>
-      <div style={{ position:'fixed', top:-160, right:-160, width:600, height:600, borderRadius:'50%',
-        background:'rgba(255,255,255,0.04)', filter:'blur(130px)', pointerEvents:'none', zIndex:0 }}/>
-      <div style={{ position:'fixed', left:-160, bottom:0, width:500, height:500, borderRadius:'50%',
-        background:'rgba(212,165,72,0.06)', filter:'blur(130px)', pointerEvents:'none', zIndex:0 }}/>
-
+    <main className="min-h-screen overflow-x-hidden bg-[#050607] font-sans text-[#F2F2F2]">
       <Navbar />
 
-      {/* ── Hero ── */}
-      <section style={{ textAlign: 'center', padding: '64px 24px 48px', position: 'relative', zIndex: 1 }}>
-        {/* Glow décoratif */}
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: 600,
-          height: 300,
-          background: 'radial-gradient(ellipse, rgba(16,185,129,0.12) 0%, transparent 70%)',
-          pointerEvents: 'none',
-        }} />
-
-        <div style={{
-          display: 'inline-block',
-          fontSize: 12,
-          fontWeight: 700,
-          color: '#10B981',
-          letterSpacing: '0.12em',
-          textTransform: 'uppercase',
-          marginBottom: 20,
-          padding: '6px 16px',
-          background: 'rgba(16,185,129,0.1)',
-          borderRadius: 20,
-          border: '1px solid rgba(16,185,129,0.2)',
-        }}>
-          Tarifs simples & transparents
-        </div>
-
-        <h1 style={{
-          fontSize: 'clamp(32px, 6vw, 58px)',
-          fontWeight: 800,
-          color: '#fff',
-          letterSpacing: '-0.04em',
-          lineHeight: 1.1,
-          marginBottom: 16,
-        }}>
-          Choisissez votre plan<br />
-          <span style={{
-            color: '#fff',
-          }}>
-            HRCongo
-          </span>
-        </h1>
-
-        <p style={{
-          color: '#64748B',
-          fontSize: 18,
-          maxWidth: 520,
-          margin: '0 auto 36px',
-          lineHeight: 1.6,
-        }}>
-          Paie conforme Congo, pointage GPS, recrutement IA — tout en un.
-          Payez uniquement pour ce que vous utilisez.
-        </p>
-
-        {/* Toggle mensuel / annuel */}
-        <div style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 14,
-          background: 'rgba(255,255,255,0.05)',
-          border: '1px solid rgba(255,255,255,0.08)',
-          borderRadius: 50,
-          padding: '6px 6px 6px 18px',
-        }}>
-          <span style={{ color: annual ? '#475569' : '#E2E8F0', fontSize: 14, fontWeight: 500, transition: 'color 0.2s' }}>
-            Mensuel
-          </span>
-          <button
-            onClick={() => setAnnual(!annual)}
-            style={{
-              width: 48,
-              height: 26,
-              background: annual ? 'linear-gradient(135deg, #10B981, #059669)' : 'rgba(255,255,255,0.1)',
-              borderRadius: 13,
-              border: 'none',
-              cursor: 'pointer',
-              position: 'relative',
-              transition: 'background 0.3s ease',
-              flexShrink: 0,
-            }}
-            aria-label="Basculer paiement annuel"
-          >
-            <div style={{
-              position: 'absolute',
-              top: 3,
-              left: annual ? 25 : 3,
-              width: 20,
-              height: 20,
-              background: '#fff',
-              borderRadius: '50%',
-              transition: 'left 0.3s ease',
-              boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
-            }} />
-          </button>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            paddingRight: 12,
-          }}>
-            <span style={{ color: annual ? '#E2E8F0' : '#475569', fontSize: 14, fontWeight: 500, transition: 'color 0.2s' }}>
-              Annuel
-            </span>
-            <span style={{
-              fontSize: 11,
-              fontWeight: 700,
-              color: '#10B981',
-              background: 'rgba(16,185,129,0.12)',
-              padding: '2px 8px',
-              borderRadius: 10,
-              opacity: annual ? 1 : 0.5,
-              transition: 'opacity 0.2s',
-            }}>
-
-              Facturation annuelle
-            </span>
+      {/* ── Titre ── */}
+      <section className="relative px-6 pb-12 pt-36 text-center">
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{ background: 'radial-gradient(55% 60% at 50% 0%, rgba(247,135,75,.12), transparent 70%)' }}
+        />
+        <div className="relative mx-auto max-w-2xl">
+          <div className="mb-4 text-[13px] font-semibold uppercase tracking-[0.12em]" style={{ color: ACCENT }}>
+            Tarifs
           </div>
-        </div>
-      </section>
-
-      {/* ── Grille des plans ── */}
-      <section style={{ padding: '0 24px 80px', maxWidth: 1320, margin: '0 auto' }}>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-          gap: 20,
-          alignItems: 'start',
-        }}>
-          {isLoading && <p role="status" style={{ color: '#CBD5E1' }}>Chargement des tarifs…</p>}
-          {error && <div role="alert" style={{ color: '#CBD5E1' }}>Les tarifs sont momentanément indisponibles. <button onClick={() => refetch()}>Réessayer</button></div>}
-          {!isLoading && !error && plans.map(plan => (
-            <PlanCard key={plan.id} plan={plan} annual={annual} />
-          ))}
-        </div>
-
-        {/* Durée de l’essai PRO */}
-        <p style={{
-          textAlign: 'center',
-          color: '#334155',
-          fontSize: 14,
-          marginTop: 28,
-        }}>
-          30 jours d'essai gratuit PRO · Sans carte bancaire · Résiliation sans engagement
-        </p>
-      </section>
-
-      {/* ── Comparaison modules clés ── */}
-      <section style={{
-        padding: '64px 24px',
-        background: 'rgba(255,255,255,0.02)',
-        borderTop: '1px solid rgba(255,255,255,0.05)',
-        borderBottom: '1px solid rgba(255,255,255,0.05)',
-      }}>
-        <div style={{ maxWidth: 900, margin: '0 auto' }}>
-          <h2 style={{
-            textAlign: 'center',
-            fontSize: 28,
-            fontWeight: 800,
-            color: '#fff',
-            letterSpacing: '-0.03em',
-            marginBottom: 8,
-          }}>
-            Comparaison des modules avancés
-          </h2>
-          <p style={{ textAlign: 'center', color: '#64748B', fontSize: 14, marginBottom: 40 }}>
-            Les fonctionnalités qui font la différence au quotidien
+          <h1 className="text-[38px] font-bold leading-[1.08] tracking-[-0.03em] sm:text-[54px]">
+            Des tarifs simples et <span style={{ color: ACCENT }}>transparents</span>
+          </h1>
+          <p className="mx-auto mt-5 max-w-lg text-[18px] leading-relaxed text-[#9a9a9a]">
+            Paie, pointage GPS, congés et recrutement dans un seul outil. Choisissez l’offre qui correspond à votre
+            effectif.
           </p>
 
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-              <thead>
-                <tr>
-                  <th style={{ textAlign: 'left', padding: '12px 16px', color: '#475569', fontWeight: 500, fontSize: 12, borderBottom: '1px solid rgba(255,255,255,0.06)', minWidth: 200 }}>
-                    Fonctionnalité
-                  </th>
-                  {['Starter', 'Business', 'Pro', 'Enterprise'].map((n, i) => (
-                    <th key={n} style={{
-                      textAlign: 'center',
-                      padding: '12px 16px',
-                      color: i === 2 ? '#10B981' : '#64748B',
-                      fontWeight: i === 2 ? 700 : 500,
-                      fontSize: 12,
-                      borderBottom: '1px solid rgba(255,255,255,0.06)',
-                    }}>
-                      {n}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  ['Calcul paie IRPP/CNSS/TUS', false, true, true, true],
-                  ['Bulletins PDF', false, true, true, true],
-                  ['Pointage GPS', false, true, true, true],
-                  ['Pointage GPS multi-sites', false, false, true, true],
-                  ['Gestion des contrats', false, true, true, true],
-                  ['Rupture de contrat & STC', false, false, true, true],
-                  ['Gestion des impayés', false, false, true, true],
-                  ['Shifts & plannings', false, false, true, true],
-                  ['Recrutement IA + scoring CV', false, 'partial', true, true],
-                  ['Prêts & avances', false, true, true, true],
-                  ['Déclarations CNSS export', false, false, true, true],
-                  ['Convention collective auto', false, false, true, true],
-                  ['Performance & OKR', false, false, true, true],
-                  ['Formation & onboarding', false, false, true, true],
-                  ['Plan social (PSE)', false, false, false, true],
-                  ['API & intégrations', false, false, false, true],
-                ].map(([label, ...cols], ri) => (
-                  <tr key={ri} style={{ background: ri % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)' }}>
-                    <td style={{ padding: '11px 16px', color: '#94A3B8', fontSize: 13 }}>{label}</td>
-                    {cols.map((c, ci) => (
-                      <td key={ci} style={{ textAlign: 'center', padding: '11px 16px' }}>
-                        {c === true
-                          ? <span style={{ color: ci === 2 ? '#10B981' : '#10B981', fontSize: 16 }}>✓</span>
-                          : c === 'partial'
-                          ? <span style={{ color: '#F59E0B', fontSize: 11 }}>Manuel</span>
-                          : <span style={{ color: 'rgba(100,116,139,0.3)', fontSize: 14 }}>–</span>
-                        }
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          {/* Mensuel / annuel */}
+          <div
+            role="group"
+            aria-label="Période de facturation"
+            className="mt-9 inline-flex rounded-full border border-white/10 bg-white/[0.03] p-1"
+          >
+            {[
+              { label: 'Mensuel', value: false },
+              { label: 'Annuel', value: true },
+            ].map((opt) => (
+              <button
+                key={opt.label}
+                type="button"
+                onClick={() => setAnnual(opt.value)}
+                aria-pressed={annual === opt.value}
+                className={`rounded-full px-6 py-2 text-[14px] font-medium transition-colors ${
+                  annual === opt.value ? 'bg-[#FAFAFA] text-black' : 'text-[#9a9a9a] hover:text-[#F2F2F2]'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ── Bloc Enterprise / Devis ── */}
-      <section style={{ padding: '80px 24px' }}>
-        <div style={{
-          maxWidth: 860,
-          margin: '0 auto',
-          background: 'linear-gradient(135deg, rgba(100,116,139,0.08), rgba(16,185,129,0.08))',
-          border: '1px solid rgba(100,116,139,0.2)',
-          borderRadius: 24,
-          padding: 'clamp(32px, 5vw, 56px)',
-          display: 'grid',
-          gridTemplateColumns: '1fr auto',
-          gap: 32,
-          alignItems: 'center',
-        }}
-        className="enterprise-bloc"
-        >
+      {/* ── Offres ── */}
+      <section className="mx-auto max-w-6xl px-6 pb-20">
+        {isLoading && (
+          <p role="status" className="text-center text-[#9a9a9a]">Chargement des tarifs…</p>
+        )}
+        {error && (
+          <div role="alert" className="text-center text-[#9a9a9a]">
+            Les tarifs sont momentanément indisponibles.{' '}
+            <button type="button" onClick={() => refetch()} className="underline underline-offset-4 hover:text-[#F2F2F2]">
+              Réessayer
+            </button>
+          </div>
+        )}
+        {!isLoading && !error && (
+          <div className="grid items-stretch gap-5 pt-3 sm:grid-cols-2 xl:grid-cols-4">
+            {plans.map((plan) => (
+              <PlanCard key={plan.id} plan={plan} annual={annual} withTable={plans.length > 1} />
+            ))}
+          </div>
+        )}
+        <p className="mt-8 text-center text-[14px] text-[#6f6f6f]">
+          30 jours d’essai gratuit · Sans carte bancaire · Résiliation sans engagement
+        </p>
+      </section>
+
+      {!isLoading && !error && plans.length > 1 && <ComparisonTable plans={plans} />}
+
+      {/* ── Sur devis ── */}
+      <section className="border-t border-white/[0.06] px-6 py-20">
+        <div className="mx-auto grid max-w-4xl gap-8 rounded-2xl border border-white/[0.08] bg-[#0c0c0d] p-8 sm:p-12 md:grid-cols-[1fr_auto] md:items-center">
           <div>
-            <div style={{
-              fontSize: 11,
-              fontWeight: 700,
-              color: '#94A3B8',
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              marginBottom: 12,
-            }}>
+            <div className="mb-3 text-[13px] font-semibold uppercase tracking-[0.12em]" style={{ color: ACCENT }}>
               Besoin spécifique
             </div>
-            <h3 style={{
-              fontSize: 26,
-              fontWeight: 800,
-              color: '#fff',
-              letterSpacing: '-0.03em',
-              marginBottom: 12,
-            }}>
-              Sur devis<br />Parlons de vos besoins.
+            <h3 className="text-[26px] font-semibold leading-tight tracking-[-0.02em] sm:text-[30px]">
+              Sur devis. Parlons de vos besoins.
             </h3>
-            <p style={{ color: '#64748B', fontSize: 14, lineHeight: 1.7, marginBottom: 0 }}>
-              Une étude personnalisée selon vos besoins et votre effectif.
-              Le devis est établi par notre équipe ; aucun tarif personnalisé n’est appliqué sans validation.
+            <p className="mt-3 max-w-md text-[14.5px] leading-relaxed text-[#9a9a9a]">
+              Une étude personnalisée selon vos besoins et votre effectif. Le devis est établi par notre équipe ;
+              aucun tarif personnalisé n’est appliqué sans validation.
             </p>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, flexShrink: 0 }}>
-            <Link href="/contact" style={{
-              display: 'block',
-              textAlign: 'center',
-              padding: '14px 28px',
-              background: '#FAFAFA',
-              color: '#000',
-              textDecoration: 'none',
-              borderRadius: 12,
-              fontSize: 14,
-              fontWeight: 500,
-              whiteSpace: 'nowrap',
-            }}>
+          <div className="flex flex-col gap-3">
+            <Link
+              href="/contact"
+              className="whitespace-nowrap rounded-xl bg-[#FAFAFA] px-7 py-3.5 text-center text-[14px] font-semibold text-black transition-colors hover:bg-white"
+            >
               Demander un devis
             </Link>
-            <a href="tel:+242053079107" style={{
-              display: 'block',
-              textAlign: 'center',
-              padding: '12px 28px',
-              background: 'rgba(255,255,255,0.05)',
-              color: '#94A3B8',
-              textDecoration: 'none',
-              borderRadius: 12,
-              fontSize: 13,
-              fontWeight: 500,
-              border: '1px solid rgba(255,255,255,0.08)',
-              whiteSpace: 'nowrap',
-            }}>
-              📞 +242 06 413 36 93
+            <a
+              href={PHONE_HREF}
+              className="whitespace-nowrap rounded-xl border border-white/10 px-7 py-3 text-center text-[14px] font-medium text-[#d6d6d6] transition-colors hover:border-white/25 hover:bg-white/[0.04]"
+            >
+              {PHONE_DISPLAY}
             </a>
           </div>
         </div>
       </section>
 
       {/* ── FAQ ── */}
-      <section style={{ padding: '0 24px 80px' }}>
-        <h2 style={{
-          textAlign: 'center',
-          fontSize: 28,
-          fontWeight: 800,
-          color: '#fff',
-          letterSpacing: '-0.03em',
-          marginBottom: 48,
-        }}>
+      <section className="border-t border-white/[0.06] px-6 py-20">
+        <h2 className="mb-12 text-center text-[30px] font-semibold tracking-[-0.02em] sm:text-[36px]">
           Questions fréquentes
         </h2>
-        <FAQ />
+        <FaqList />
       </section>
 
-      {/* ── CTA final ── */}
-      <section style={{
-        padding: '64px 24px 96px',
-        textAlign: 'center',
-        borderTop: '1px solid rgba(255,255,255,0.05)',
-      }}>
-        <h2 style={{
-          fontSize: 'clamp(24px, 4vw, 38px)',
-          fontWeight: 800,
-          color: '#fff',
-          letterSpacing: '-0.03em',
-          marginBottom: 12,
-        }}>
-          Prêt à moderniser vos RH ?
+      {/* ── Appel final ── */}
+      <section className="border-t border-white/[0.06] px-6 py-24 text-center">
+        <h2 className="text-[30px] font-bold tracking-[-0.025em] sm:text-[42px]">
+          Prêt à moderniser vos <span style={{ color: ACCENT }}>RH</span> ?
         </h2>
-        <p style={{ color: '#64748B', fontSize: 16, marginBottom: 32 }}>
+        <p className="mx-auto mt-4 max-w-md text-[17px] text-[#9a9a9a]">
           Commencez gratuitement. Aucune carte bancaire requise.
         </p>
-        <Link href="/auth/register" style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 8,
-          padding: '15px 36px',
-          background: '#FAFAFA',
-          color: '#000',
-          textDecoration: 'none',
-          borderRadius: 14,
-          fontSize: 16,
-          fontWeight: 500,
-        }}>
-          Démarrer gratuitement
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <path d="M5 12h14M12 5l7 7-7 7" />
-          </svg>
+        <Link
+          href="/auth/register"
+          className="mt-9 inline-flex items-center gap-2.5 rounded-xl bg-[#FAFAFA] px-9 py-4 text-[16px] font-semibold text-black transition-colors hover:bg-white"
+        >
+          Démarrer gratuitement <IconArrow />
         </Link>
       </section>
-
-      <style>{`
-        @media (max-width: 768px) {
-          .enterprise-bloc {
-            grid-template-columns: 1fr !important;
-          }
-        }
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&display=swap');
-      `}</style>
 
       <Footer />
     </main>

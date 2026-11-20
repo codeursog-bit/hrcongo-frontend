@@ -1,7 +1,9 @@
 // =============================================================================
 // FICHIER : app/auth/login/page.tsx
-// CHANGES : ajout gestion 2FA (modal code TOTP + trusted device cookie)
-//           + codes de secours, logo Konza, layout amélioré
+// REFONTE : même design que l'app (tokens, orange Konza, thème clair / sombre),
+//           panneau de marque animé via <AuthShell>.
+// LOGIQUE : inchangée — 2FA (code TOTP + codes de secours + trusted device),
+//           changement de mot de passe obligatoire, redirections.
 // FIX     : tempToken2fa stocké dans useRef pour éviter la perte lors des
 //           re-renders déclenchés par les providers globaux (CompanyReminder…)
 // =============================================================================
@@ -10,19 +12,27 @@
 
 import React, { useState, useRef, Suspense } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import {
-  Mail, Lock, ArrowRight, Loader2, CheckCircle2,
-  AlertCircle, Eye, EyeOff, Home, Shield, Smartphone, Key,
-} from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Mail, Lock, ArrowRight, Loader2, Shield, Smartphone } from 'lucide-react';
 import { api } from '@/services/api';
 import { authService } from '@/lib/services/authService';
 import { getRedirectUrl } from '@/lib/redirectAfterLogin';
+import { AuthShell, AuthHeading } from '@/components/auth/AuthShell';
+import {
+  TextField,
+  PasswordField,
+  PrimaryButton,
+  SecondaryButton,
+  ErrorBanner,
+  InfoBanner,
+  WarningBanner,
+  Criteria,
+  PasswordStrength,
+  AuthModal,
+} from '@/components/auth/FormElements';
 
 // =============================================================================
 // TYPES
@@ -83,48 +93,6 @@ type LoginFormValues      = z.infer<typeof loginSchema>;
 type PasswordChangeValues = z.infer<typeof passwordChangeSchema>;
 
 // =============================================================================
-// COMPOSANT : Particules flottantes (identique à la page d'inscription)
-// =============================================================================
-
-function FloatingDots() {
-  return (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
-      {Array.from({ length: 18 }).map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute rounded-full"
-          style={{
-            width: `${Math.random() * 4 + 1}px`,
-            height: `${Math.random() * 4 + 1}px`,
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            background: i % 2 === 0 ? 'rgba(16,185,129,0.4)' : 'rgba(245,158,11,0.4)',
-          }}
-          animate={{ y: [0, -30, 0], opacity: [0.2, 0.6, 0.2] }}
-          transition={{ duration: Math.random() * 4 + 4, repeat: Infinity, delay: Math.random() * 4, ease: 'easeInOut' }}
-        />
-      ))}
-    </div>
-  );
-}
-
-// =============================================================================
-// COMPOSANT : Critère mot de passe
-// =============================================================================
-
-function PasswordCriteria({ met, text }: { met: boolean; text: string }) {
-  return (
-    <div className="flex items-center gap-2 text-xs">
-      {met
-        ? <CheckCircle2 className="text-green-400 shrink-0" size={14} />
-        : <div className="w-3.5 h-3.5 rounded-full border border-gray-600 shrink-0" />
-      }
-      <span className={met ? 'text-green-400' : 'text-gray-500'}>{text}</span>
-    </div>
-  );
-}
-
-// =============================================================================
 // COMPOSANT : Modal 2FA (code TOTP ou code de secours)
 // =============================================================================
 
@@ -166,112 +134,66 @@ function TwoFAModal({ isOpen, tempToken2fa, onSuccess, onCancel }: TwoFAModalPro
     setCode(val);
   };
 
-  if (!isOpen) return null;
-
   return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-0 sm:p-4">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="bg-gradient-to-br from-gray-900 to-black border-t sm:border border-emerald-500/20 rounded-t-3xl sm:rounded-3xl shadow-2xl shadow-emerald-500/10 w-full sm:max-w-md"
-        >
-          <div className="p-6 sm:p-8">
-            {/* Header */}
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-3 bg-gradient-to-br from-emerald-500/20 to-emerald-700/20 rounded-2xl shrink-0">
-                <Smartphone className="text-emerald-400" size={28} />
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-white">Vérification en 2 étapes</h3>
-                <p className="text-xs text-gray-400 mt-0.5">Ouvrez votre application d'authentification</p>
-              </div>
-            </div>
-
-            {/* Instructions */}
-            <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-4 mb-6 space-y-3">
-              <div className="flex items-start gap-2">
-                <Smartphone size={15} className="text-emerald-400 shrink-0 mt-0.5" />
-                <p className="text-sm text-emerald-200">
-                  Entrez le code à <span className="font-bold text-emerald-400">6 chiffres</span> affiché
-                  dans Google Authenticator, Authy ou Aegis.
-                  Le code change toutes les <span className="font-bold">30 secondes</span>.
-                </p>
-              </div>
-
-              {/* Séparateur */}
-              <div className="border-t border-white/5 pt-3 flex items-start gap-2">
-                <Key size={14} className="text-amber-400 shrink-0 mt-0.5" />
-                <p className="text-xs text-amber-200/70">
-                  <span className="font-bold text-amber-400">Téléphone perdu ?</span> Entrez
-                  l'un de vos <span className="font-bold">8 codes de secours</span> (format <code className="font-mono bg-white/5 px-1 rounded">A3F2B1C4</code>)
-                  dans le même champ ci-dessous.
-                </p>
-              </div>
-            </div>
-
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 flex items-start gap-2"
-              >
-                <AlertCircle className="text-red-400 shrink-0 mt-0.5" size={16} />
-                <p className="text-sm text-red-300">{error}</p>
-              </motion.div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Champ code OTP / code de secours */}
-              <div>
-                <label className="block text-sm font-bold text-gray-300 mb-2">
-                  Code d'authentification
-                </label>
-                <input
-                  type="text"
-                  autoComplete="one-time-code"
-                  value={code}
-                  onChange={handleCodeChange}
-                  placeholder="000000"
-                  autoFocus
-                  className="auth-input w-full text-center text-3xl font-mono tracking-[0.5em] py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
-                />
-                <p className="text-xs text-gray-500 text-center mt-2">
-                  Code TOTP (6 chiffres) ou code de secours (8 caractères)
-                </p>
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={onCancel}
-                  disabled={isSubmitting}
-                  className="flex-1 py-3 border border-white/10 rounded-xl font-bold text-sm text-gray-300 hover:bg-white/5 transition-all disabled:opacity-50"
-                >
-                  Annuler
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting || code.length < 6}
-                  className="flex-1 py-3 bg-[var(--text)] hover:bg-white rounded-xl font-bold text-sm text-black transition-all disabled:opacity-40 flex items-center justify-center gap-2"
-                >
-                  {isSubmitting
-                    ? <Loader2 className="animate-spin" size={18} />
-                    : <><Shield size={16} /> Vérifier</>
-                  }
-                </button>
-              </div>
-            </form>
-          </div>
-        </motion.div>
+    <AuthModal open={isOpen} onClose={isSubmitting ? undefined : onCancel} labelledBy="twofa-title">
+      <div className="au-modal-head">
+        <div className="au-tile au-tile-sm"><Smartphone size={24} /></div>
+        <div>
+          <h3 id="twofa-title" className="au-modal-title">Vérification en 2 étapes</h3>
+          <p className="au-modal-sub">Ouvrez votre application d&apos;authentification</p>
+        </div>
       </div>
-    </AnimatePresence>
+
+      <div className="au-stack-sm">
+        <InfoBanner>
+          <Smartphone size={16} style={{ flexShrink: 0, marginTop: 2 }} />
+          <span>
+            Entrez le code à <strong>6 chiffres</strong> affiché dans Google Authenticator, Authy ou Aegis.
+            Il change toutes les <strong>30 secondes</strong>.
+          </span>
+        </InfoBanner>
+
+        <WarningBanner title="Téléphone perdu ?">
+          <span style={{ fontSize: 13 }}>
+            Entrez l&apos;un de vos <strong>8 codes de secours</strong> (format <code>A3F2B1C4</code>) dans le même champ.
+          </span>
+        </WarningBanner>
+
+        {error && <ErrorBanner>{error}</ErrorBanner>}
+      </div>
+
+      <form onSubmit={handleSubmit}>
+        <div style={{ marginTop: 20 }}>
+          <label htmlFor="twofa-code" className="au-label">Code d&apos;authentification</label>
+          <input
+            id="twofa-code"
+            type="text"
+            autoComplete="one-time-code"
+            inputMode="text"
+            value={code}
+            onChange={handleCodeChange}
+            placeholder="000000"
+            autoFocus
+            className="au-input au-otp"
+          />
+          <p className="au-otp-hint">Code TOTP (6 chiffres) ou code de secours (8 caractères)</p>
+        </div>
+
+        <div className="au-actions">
+          <SecondaryButton type="button" onClick={onCancel} disabled={isSubmitting}>
+            Annuler
+          </SecondaryButton>
+          <PrimaryButton type="submit" loading={isSubmitting} disabled={code.length < 6}>
+            <Shield size={16} /> Vérifier
+          </PrimaryButton>
+        </div>
+      </form>
+    </AuthModal>
   );
 }
 
 // =============================================================================
-// COMPOSANT : Modal changement mot de passe
+// COMPOSANT : Modal changement mot de passe obligatoire
 // =============================================================================
 
 interface ChangePasswordModalProps {
@@ -283,10 +205,8 @@ interface ChangePasswordModalProps {
 }
 
 function ChangePasswordModal({ isOpen, tempToken, userInfo, onSuccess, onCancel }: ChangePasswordModalProps) {
-  const [isSubmitting, setIsSubmitting]               = useState(false);
-  const [showNewPassword, setShowNewPassword]         = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [error, setError]                             = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError]               = useState('');
 
   const { register, handleSubmit, formState: { errors }, watch } = useForm<PasswordChangeValues>({
     resolver: zodResolver(passwordChangeSchema),
@@ -295,20 +215,11 @@ function ChangePasswordModal({ isOpen, tempToken, userInfo, onSuccess, onCancel 
 
   const newPassword = watch('newPassword', '');
 
-  const getPasswordStrength = (p: string) => {
-    if (!p) return { strength: 0, label: '', color: '' };
-    let s = 0;
-    if (p.length >= 8)   s += 25;
-    if (/[A-Z]/.test(p)) s += 25;
-    if (/[a-z]/.test(p)) s += 25;
-    if (/[0-9]/.test(p)) s += 25;
-    if (s <= 25) return { strength: s,   label: 'Faible',    color: 'bg-red-500' };
-    if (s <= 50) return { strength: s,   label: 'Moyen',     color: 'bg-orange-500' };
-    if (s <= 75) return { strength: s,   label: 'Bon',       color: 'bg-yellow-500' };
-    return              { strength: 100, label: 'Excellent', color: 'bg-green-500' };
-  };
-
-  const passwordStrength = getPasswordStrength(newPassword);
+  const has8   = newPassword.length >= 8;
+  const hasUpp = /[A-Z]/.test(newPassword);
+  const hasLow = /[a-z]/.test(newPassword);
+  const hasNum = /[0-9]/.test(newPassword);
+  const score  = [has8, hasUpp, hasLow, hasNum].filter(Boolean).length;
 
   const onSubmit = async (data: PasswordChangeValues) => {
     setIsSubmitting(true);
@@ -327,110 +238,63 @@ function ChangePasswordModal({ isOpen, tempToken, userInfo, onSuccess, onCancel 
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-0 sm:p-4 overflow-y-auto">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="bg-gradient-to-br from-gray-900 to-black border-t sm:border border-emerald-500/20 rounded-t-3xl sm:rounded-3xl shadow-2xl shadow-emerald-500/10 w-full sm:max-w-md max-h-[95vh] overflow-y-auto"
-        >
-          <div className="p-5 sm:p-8">
-            <div className="flex items-center gap-3 sm:gap-4 mb-5 sm:mb-6">
-              <div className="p-2.5 sm:p-3 bg-gradient-to-br from-emerald-500/20 to-emerald-700/20 rounded-xl sm:rounded-2xl shrink-0">
-                <Shield className="text-emerald-400" size={28} />
-              </div>
-              <div className="min-w-0">
-                <h3 className="text-xl sm:text-2xl font-bold text-white truncate">Sécurisez votre compte</h3>
-                <p className="text-xs sm:text-sm text-gray-400 truncate">Bienvenue {userInfo.firstName} !</p>
-              </div>
-            </div>
-
-            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-3 sm:p-4 mb-5 sm:mb-6 flex gap-2 sm:gap-3">
-              <AlertCircle className="text-yellow-400 shrink-0 mt-0.5" size={18} />
-              <div className="text-xs sm:text-sm text-yellow-200 min-w-0">
-                <p className="font-bold mb-1">Premier changement obligatoire</p>
-                <p className="text-yellow-300/80">Pour votre sécurité, vous devez créer un nouveau mot de passe avant d'accéder à votre espace.</p>
-              </div>
-            </div>
-
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 flex items-start gap-2"
-              >
-                <AlertCircle className="text-red-400 shrink-0 mt-0.5" size={16} />
-                <p className="text-xs sm:text-sm text-red-300">{error}</p>
-              </motion.div>
-            )}
-
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-5">
-              <div>
-                <label className="block text-xs sm:text-sm font-bold text-gray-300 mb-2">Nouveau mot de passe</label>
-                <div className="relative">
-                  <Lock className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
-                  <input
-                    {...register('newPassword')}
-                    type={showNewPassword ? 'text' : 'password'}
-                    className={`auth-input w-full pl-10 sm:pl-12 pr-11 sm:pr-12 py-2.5 sm:py-3 text-sm sm:text-base bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all ${errors.newPassword ? 'border-red-500/50 focus:ring-red-500/20' : 'border-white/10 focus:ring-emerald-500/50'}`}
-                    placeholder="Minimum 8 caractères"
-                  />
-                  <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors">
-                    {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-                {newPassword && (
-                  <div className="mt-2">
-                    <div className="flex justify-between text-xs mb-1">
-                      <span className="text-gray-400">Force du mot de passe</span>
-                      <span className={`font-bold ${passwordStrength.strength === 100 ? 'text-green-400' : 'text-gray-400'}`}>{passwordStrength.label}</span>
-                    </div>
-                    <div className="h-1.5 sm:h-2 bg-gray-800 rounded-full overflow-hidden">
-                      <motion.div initial={{ width: 0 }} animate={{ width: `${passwordStrength.strength}%` }} className={`h-full ${passwordStrength.color} transition-all duration-300`} />
-                    </div>
-                  </div>
-                )}
-                {errors.newPassword && <p className="mt-1 text-xs text-red-400">{errors.newPassword.message}</p>}
-                <div className="mt-3 space-y-1">
-                  <PasswordCriteria met={newPassword.length >= 8} text="Au moins 8 caractères" />
-                  <PasswordCriteria met={/[A-Z]/.test(newPassword)} text="Une majuscule" />
-                  <PasswordCriteria met={/[a-z]/.test(newPassword)} text="Une minuscule" />
-                  <PasswordCriteria met={/[0-9]/.test(newPassword)} text="Un chiffre" />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs sm:text-sm font-bold text-gray-300 mb-2">Confirmer le mot de passe</label>
-                <div className="relative">
-                  <Lock className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
-                  <input
-                    {...register('confirmPassword')}
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    className={`auth-input w-full pl-10 sm:pl-12 pr-11 sm:pr-12 py-2.5 sm:py-3 text-sm sm:text-base bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all ${errors.confirmPassword ? 'border-red-500/50 focus:ring-red-500/20' : 'border-white/10 focus:ring-emerald-500/50'}`}
-                    placeholder="Retapez votre mot de passe"
-                  />
-                  <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors">
-                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-                {errors.confirmPassword && <p className="mt-1 text-xs text-red-400">{errors.confirmPassword.message}</p>}
-              </div>
-
-              <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2 sm:pt-4">
-                <button type="button" onClick={onCancel} disabled={isSubmitting} className="flex-1 py-2.5 sm:py-3 border border-white/10 rounded-xl font-bold text-sm text-gray-300 hover:bg-white/5 transition-all disabled:opacity-50">Annuler</button>
-                <button type="submit" disabled={isSubmitting} className="flex-1 py-2.5 sm:py-3 bg-[var(--text)] hover:bg-white rounded-xl font-bold text-sm text-black transition-all disabled:opacity-50 flex items-center justify-center gap-2">
-                  {isSubmitting ? <Loader2 className="animate-spin" size={18} /> : <><CheckCircle2 size={18} />Valider</>}
-                </button>
-              </div>
-            </form>
-          </div>
-        </motion.div>
+    <AuthModal open={isOpen} onClose={isSubmitting ? undefined : onCancel} labelledBy="chgpwd-title">
+      <div className="au-modal-head">
+        <div className="au-tile au-tile-sm"><Shield size={24} /></div>
+        <div style={{ minWidth: 0 }}>
+          <h3 id="chgpwd-title" className="au-modal-title">Sécurisez votre compte</h3>
+          <p className="au-modal-sub">Bienvenue {userInfo.firstName} !</p>
+        </div>
       </div>
-    </AnimatePresence>
+
+      <div className="au-stack-sm">
+        <WarningBanner title="Premier changement obligatoire">
+          <span style={{ fontSize: 13 }}>
+            Pour votre sécurité, créez un nouveau mot de passe avant d&apos;accéder à votre espace.
+          </span>
+        </WarningBanner>
+        {error && <ErrorBanner>{error}</ErrorBanner>}
+      </div>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="au-stack" style={{ marginTop: 20 }}>
+        <div>
+          <PasswordField
+            {...register('newPassword')}
+            icon={Lock}
+            label="Nouveau mot de passe"
+            placeholder="Minimum 8 caractères"
+            autoComplete="new-password"
+            error={errors.newPassword?.message}
+          />
+          <PasswordStrength score={score} />
+          <div className="au-crit-grid">
+            <Criteria met={has8}   text="8 caractères minimum" />
+            <Criteria met={hasUpp} text="Une majuscule" />
+            <Criteria met={hasLow} text="Une minuscule" />
+            <Criteria met={hasNum} text="Un chiffre" />
+          </div>
+        </div>
+
+        <PasswordField
+          {...register('confirmPassword')}
+          icon={Lock}
+          label="Confirmer le mot de passe"
+          placeholder="Retapez votre mot de passe"
+          autoComplete="new-password"
+          error={errors.confirmPassword?.message}
+        />
+
+        <div className="au-actions" style={{ marginTop: 4 }}>
+          <SecondaryButton type="button" onClick={onCancel} disabled={isSubmitting}>
+            Annuler
+          </SecondaryButton>
+          <PrimaryButton type="submit" loading={isSubmitting}>
+            Valider
+          </PrimaryButton>
+        </div>
+      </form>
+    </AuthModal>
   );
 }
 
@@ -444,7 +308,6 @@ function LoginContent() {
   const callbackUrl  = searchParams.get('callbackUrl');
 
   const [isLoading, setIsLoading]                 = useState(false);
-  const [showPassword, setShowPassword]           = useState(false);
   const [serverError, setServerError]             = useState('');
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [show2FAModal, setShow2FAModal]           = useState(false);
@@ -474,7 +337,7 @@ function LoginContent() {
       });
 
       if (response.user?.role === 'SUPER_ADMIN') {
-        setServerError('⚠️ Les Super Admins doivent se connecter via /admin/login');
+        setServerError('Les Super Admins doivent se connecter via /admin/login');
         authService.logout();
         return;
       }
@@ -503,15 +366,15 @@ function LoginContent() {
     } catch (error: any) {
       const msg = error.message?.toLowerCase() || '';
       if (msg.includes('incorrect') || msg.includes('invalid'))
-        setServerError('❌ Email/téléphone ou mot de passe incorrect');
+        setServerError('Email/téléphone ou mot de passe incorrect');
       else if (msg.includes('désactivé') || msg.includes('disabled'))
-        setServerError('🚫 Votre compte a été désactivé. Contactez votre administrateur.');
+        setServerError('Votre compte a été désactivé. Contactez votre administrateur.');
       else if (msg.includes('verrouillé') || msg.includes('locked'))
-        setServerError(`🔒 ${error.message}`);
+        setServerError(error.message);
       else if (msg.includes('réseau') || msg.includes('network'))
-        setServerError('🌐 Erreur de connexion. Vérifiez votre internet.');
+        setServerError('Erreur de connexion. Vérifiez votre internet.');
       else
-        setServerError(error.message || '⚠️ Une erreur est survenue. Réessayez.');
+        setServerError(error.message || 'Une erreur est survenue. Réessayez.');
     } finally {
       setIsLoading(false);
     }
@@ -529,187 +392,54 @@ function LoginContent() {
   };
 
   return (
-    <div className="flex min-h-screen min-h-[100dvh] w-full bg-[var(--bg)] text-white font-sans overflow-x-hidden">
-
-      {/* ── Fond : identique au Hero de la page d'accueil, avec l'ondulation ── */}
-      <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className="absolute -right-40 -top-40 h-[600px] w-[600px] rounded-full bg-white/[0.04] blur-[130px] animate-pulse" />
-        <div
-          className="absolute -left-40 bottom-0 h-[500px] w-[500px] rounded-full bg-[#10B981]/[0.06] blur-[130px] animate-pulse"
-          style={{ animationDelay: '1s' }}
+    <>
+      <AuthShell>
+        <AuthHeading
+          title="Bon retour parmi nous"
+          description="Connectez-vous pour accéder à votre espace Konza RH."
         />
-      </div>
-      <div
-        className="pointer-events-none fixed inset-0 -z-10 opacity-[0.05]"
-        style={{
-          backgroundImage:
-            'linear-gradient(to right, #fff 1px, transparent 1px), linear-gradient(to bottom, #fff 1px, transparent 1px)',
-          backgroundSize: '48px 48px',
-        }}
-      />
-      <FloatingDots />
 
-      {/* ── Panneau gauche (desktop) ── */}
-      <div className="hidden lg:flex lg:w-1/2 relative items-center justify-center p-12 z-10">
-        <div className="relative z-10 text-center max-w-lg">
-          {/* Logo Konza — visible, bien dimensionné */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="mb-10 flex justify-center"
-          >
-            <div className="relative w-72 h-24">
-              <Image
-                src="/logos/konza_logo_h_color.png"
-                alt="Konza"
-                fill
-                className="object-contain drop-shadow-[0_0_32px_rgba(16,185,129,0.35)]"
-                priority
+        <div>
+          {serverError && <div className="au-mb"><ErrorBanner>{serverError}</ErrorBanner></div>}
+
+          <form className="au-stack" onSubmit={handleSubmit(onSubmit)} noValidate>
+            <TextField
+              {...register('email')}
+              icon={Mail}
+              label="Email ou téléphone"
+              type="text"
+              autoComplete="username"
+              placeholder="admin@konza-rh.cg ou 06 xxx xx xx"
+              error={errors.email?.message}
+            />
+
+            <div>
+              <PasswordField
+                {...register('password')}
+                icon={Lock}
+                label="Mot de passe"
+                autoComplete="current-password"
+                placeholder="••••••••"
+                error={errors.password?.message}
               />
-            </div>
-          </motion.div>
-
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="text-6xl font-extrabold text-white mb-6 tracking-tight leading-tight"
-          >
-            Le Futur de la <br />
-            Gestion RH
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="text-xl text-gray-400 leading-relaxed"
-          >
-            Connectez-vous à l'écosystème le plus avancé pour les entreprises congolaises.
-          </motion.p>
-        </div>
-      </div>
-
-      {/* ── Panneau droit : formulaire ── */}
-      <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 md:px-8 lg:px-20 xl:px-24 py-6 sm:py-8 md:py-12 relative z-10 min-h-screen min-h-[100dvh]">
-
-        {/* Bouton accueil */}
-        <div className="absolute top-4 sm:top-6 right-4 sm:right-6 z-20">
-          <Link
-            href="/"
-            className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 transition-colors text-xs sm:text-sm font-bold"
-          >
-            <Home size={14} className="sm:w-4 sm:h-4" />
-            <span className="hidden xs:inline">Accueil</span>
-          </Link>
-        </div>
-
-        <div className="w-full max-w-md mx-auto">
-
-          {/* Logo mobile */}
-          <div className="lg:hidden mb-6 sm:mb-8 flex justify-center">
-            <div className="relative w-52 h-16 sm:w-64 sm:h-20">
-              <Image
-                src="/logos/konza_logo_h_color.png"
-                alt="Konza"
-                fill
-                className="object-contain drop-shadow-[0_0_20px_rgba(16,185,129,0.3)]"
-                priority
-              />
-            </div>
-          </div>
-
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
-            <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Connexion</h2>
-            <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-gray-400">Heureux de vous revoir.</p>
-
-            <AnimatePresence>
-              {serverError && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="mt-4 sm:mt-6 p-3 sm:p-4 rounded-xl bg-red-500/10 border border-red-500/30 flex items-start gap-2 sm:gap-3"
-                >
-                  <AlertCircle className="text-red-400 shrink-0 mt-0.5" size={16} />
-                  <p className="text-xs sm:text-sm text-red-300 font-medium">{serverError}</p>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <form className="mt-6 sm:mt-8 space-y-4 sm:space-y-5" onSubmit={handleSubmit(onSubmit)}>
-              <div>
-                <label className="block text-xs sm:text-sm font-bold text-gray-300 mb-1.5">Email ou téléphone</label>
-                <div className="relative group">
-                  <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none">
-                    <Mail className={`h-4 w-4 sm:h-5 sm:w-5 transition-colors ${errors.email ? 'text-red-400' : 'text-gray-500 group-focus-within:text-emerald-400'}`} />
-                  </div>
-                  <input
-                    {...register('email')}
-                    type="text"
-                    autoComplete="username"
-                    className={`auth-input block w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3.5 text-sm sm:text-base bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-1 transition-all ${errors.email ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20' : 'border-white/10 focus:border-emerald-500/50 focus:ring-emerald-500/50'}`}
-                    placeholder="admin@konza-rh.cg ou 06 xxx xx xx"
-                  />
-                </div>
-                {errors.email && <p className="mt-1 text-xs text-red-400">{errors.email.message}</p>}
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-xs sm:text-sm font-bold text-gray-300">Mot de passe</label>
-                </div>
-                <div className="relative group">
-                  <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none">
-                    <Lock className={`h-4 w-4 sm:h-5 sm:w-5 transition-colors ${errors.password ? 'text-red-400' : 'text-gray-500 group-focus-within:text-emerald-400'}`} />
-                  </div>
-                  <input
-                    {...register('password')}
-                    type={showPassword ? 'text' : 'password'}
-                    className={`auth-input block w-full pl-10 sm:pl-12 pr-11 sm:pr-12 py-2.5 sm:py-3.5 text-sm sm:text-base bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-1 transition-all ${errors.password ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20' : 'border-white/10 focus:border-emerald-500/50 focus:ring-emerald-500/50'}`}
-                    placeholder="••••••••"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3 sm:pr-4 flex items-center text-gray-500 hover:text-white transition-colors"
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-                {errors.password && <p className="mt-1 text-xs text-red-400">{errors.password.message}</p>}
-              </div>
-
-              <div className="flex justify-end -mt-1">
-                <Link href="/auth/forgot-password" className="text-xs text-gray-400 hover:text-emerald-400 transition-colors">
+              <div className="au-row-end" style={{ marginTop: 10 }}>
+                <Link href="/auth/forgot-password" className="au-link-muted">
                   Mot de passe oublié ?
                 </Link>
               </div>
-
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full flex justify-center items-center gap-2 py-3 sm:py-4 px-4 rounded-xl text-sm font-bold text-black bg-[var(--text)] hover:bg-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[var(--bg)] focus:ring-white/40 disabled:opacity-70 disabled:cursor-not-allowed transition-all transform active:scale-[0.98]"
-              >
-                {isLoading
-                  ? <Loader2 className="animate-spin" size={18} />
-                  : <>Se connecter <ArrowRight size={16} className="sm:w-[18px] sm:h-[18px]" /></>
-                }
-              </button>
-            </form>
-
-            <div className="mt-6 sm:mt-8 pt-5 sm:pt-6 border-t border-white/10 text-center">
-              <p className="text-xs sm:text-sm text-gray-400">
-                Nouveau ici ?{' '}
-                <Link href="/auth/register" className="font-bold text-emerald-400 hover:text-white transition-colors">
-                  Créer un compte
-                </Link>
-              </p>
             </div>
-          </motion.div>
+
+            <PrimaryButton type="submit" loading={isLoading}>
+              Se connecter <ArrowRight size={17} className="au-arrow" />
+            </PrimaryButton>
+          </form>
+
+          <div className="au-foot">
+            Nouveau ici ?{' '}
+            <Link href="/auth/register" className="au-link">Créer un compte</Link>
+          </div>
         </div>
-      </div>
+      </AuthShell>
 
       {/* Modal 2FA — ✅ FIX : tempToken2fa lu depuis la ref, jamais vide */}
       <TwoFAModal
@@ -731,7 +461,7 @@ function LoginContent() {
         onSuccess={handlePasswordChangeSuccess}
         onCancel={() => { setShowPasswordModal(false); setTempToken(''); setUserInfo({ firstName: '', lastName: '' }); }}
       />
-    </div>
+    </>
   );
 }
 
@@ -742,8 +472,8 @@ function LoginContent() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="flex min-h-screen w-full bg-[var(--bg)] items-center justify-center">
-        <Loader2 className="animate-spin text-emerald-400" size={32} />
+      <div className="au-root au-loading">
+        <Loader2 className="au-spin" size={30} style={{ color: 'var(--brand)' }} aria-label="Chargement" />
       </div>
     }>
       <LoginContent />

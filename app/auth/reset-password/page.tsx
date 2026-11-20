@@ -1,7 +1,6 @@
 // =============================================================================
 // FICHIER : app/auth/reset-password/page.tsx
-// REFONTE : même système visuel que /auth/login, /auth/register et
-//           /auth/forgot-password.
+// REFONTE : même design que l'app et que /auth/login (AuthShell + tokens).
 // LOGIQUE : inchangée — validation de token, critères de mot de passe,
 //           redirection automatique vers /auth/login après succès.
 // =============================================================================
@@ -12,7 +11,7 @@ import React, { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Lock, Loader2, ShieldCheck, XCircle, CheckCircle2 } from 'lucide-react';
+import { Lock, Loader2, ShieldCheck, XCircle, CheckCircle2, ArrowRight } from 'lucide-react';
 import { api } from '@/services/api';
 import { AuthShell, AuthCard, AuthHeading } from '@/components/auth/AuthShell';
 import { PasswordField, PrimaryButton, ErrorBanner, Criteria, PasswordStrength } from '@/components/auth/FormElements';
@@ -23,11 +22,11 @@ function ResetPasswordContent() {
   const searchParams = useSearchParams();
   const token        = searchParams.get('token') ?? '';
 
-  const [password, setPassword]       = useState('');
-  const [confirm, setConfirm]         = useState('');
-  const [isLoading, setIsLoading]     = useState(false);
-  const [error, setError]             = useState('');
-  const [success, setSuccess]         = useState(false);
+  const [password, setPassword]   = useState('');
+  const [confirm, setConfirm]     = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError]         = useState('');
+  const [success, setSuccess]     = useState(false);
 
   const has8   = password.length >= 8;
   const hasUpp = /[A-Z]/.test(password);
@@ -59,102 +58,92 @@ function ResetPasswordContent() {
   // Token absent → message clair
   if (!token) {
     return (
-      <AuthCard className="text-center">
-        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-red-500/25 bg-red-500/[0.08]">
-          <XCircle size={26} className="text-red-400" />
+      <AuthCard>
+        <div className="au-tile is-danger"><XCircle size={26} /></div>
+        <h1 className="au-title au-title-sm">Lien invalide</h1>
+        <p className="au-desc">Ce lien de réinitialisation est invalide ou a expiré.</p>
+        <div style={{ marginTop: 28 }}>
+          <Link href="/auth/forgot-password" className="au-btn au-btn-primary">
+            Refaire une demande <ArrowRight size={17} className="au-arrow" />
+          </Link>
         </div>
-        <h2 className="mb-2 text-[19px] font-semibold text-[var(--text)]">Lien invalide</h2>
-        <p className="mb-6 text-[13.5px] text-[var(--text-secondary)]">Ce lien de réinitialisation est invalide ou a expiré.</p>
-        <Link
-          href="/auth/forgot-password"
-          className="inline-block rounded-xl border border-[#10B981]/25 bg-[#10B981]/[0.1] px-6 py-3 text-[13.5px] font-semibold text-[#10B981] transition-colors hover:bg-[#10B981]/[0.16]"
-        >
-          Refaire une demande
-        </Link>
       </AuthCard>
     );
   }
 
   if (success) {
     return (
-      <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}>
-        <AuthCard className="text-center">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', stiffness: 220, delay: 0.1 }}
-            className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-[#10B981]/30 bg-[#10B981]/[0.12]"
-          >
-            <ShieldCheck size={26} className="text-[#10B981]" />
-          </motion.div>
-          <h2 className="mb-2 text-[19px] font-semibold text-[var(--text)]">Mot de passe réinitialisé</h2>
-          <p className="mb-1 text-[13.5px] text-[var(--text-secondary)]">Votre mot de passe a été modifié avec succès.</p>
-          <p className="mb-6 text-[12.5px] text-[var(--text-secondary)]">Redirection vers la connexion dans 3 secondes…</p>
-          <Link
-            href="/auth/login"
-            className="inline-block rounded-xl bg-[var(--text)] px-6 py-3 text-[13.5px] font-medium text-black transition-colors hover:bg-white"
-          >
-            Se connecter maintenant
+      <AuthCard>
+        <motion.div
+          initial={{ scale: 0.4, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: 'spring', stiffness: 220, damping: 16, delay: 0.1 }}
+          className="au-tile is-success"
+        >
+          <ShieldCheck size={26} />
+        </motion.div>
+        <h1 className="au-title au-title-sm">Mot de passe réinitialisé</h1>
+        <p className="au-desc">Votre mot de passe a été modifié avec succès.</p>
+        <p className="au-desc" style={{ marginTop: 6, fontSize: 13 }}>Redirection vers la connexion dans 3 secondes…</p>
+        <div style={{ marginTop: 28 }}>
+          <Link href="/auth/login" className="au-btn au-btn-primary">
+            Se connecter maintenant <ArrowRight size={17} className="au-arrow" />
           </Link>
-        </AuthCard>
-      </motion.div>
+        </div>
+      </AuthCard>
     );
   }
 
   return (
-    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
-      <AuthCard>
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <PasswordField
-              icon={Lock}
-              label="Nouveau mot de passe"
-              value={password}
-              onChange={(e) => { setPassword(e.target.value); setError(''); }}
-              placeholder="Au moins 8 caractères"
-              autoFocus
-            />
-            <PasswordStrength score={score} />
-            {password && (
-              <div className="mt-3 grid grid-cols-2 gap-y-1.5">
-                <Criteria met={has8}   text="8 caractères minimum" />
-                <Criteria met={hasUpp} text="1 majuscule" />
-                <Criteria met={hasLow} text="1 minuscule" />
-                <Criteria met={hasNum} text="1 chiffre" />
-              </div>
-            )}
-          </div>
-
-          <div>
-            <PasswordField
-              icon={Lock}
-              label="Confirmer le mot de passe"
-              value={confirm}
-              onChange={(e) => { setConfirm(e.target.value); setError(''); }}
-              placeholder="Répétez le mot de passe"
-              error={confirm && password !== confirm ? 'Les mots de passe ne correspondent pas' : undefined}
-            />
-            {confirm && password === confirm && allMet && (
-              <p className="mt-1.5 flex items-center gap-1.5 text-[12px] text-[#10B981]">
-                <CheckCircle2 size={12} /> Les mots de passe correspondent
-              </p>
-            )}
-          </div>
-
-          {error && <ErrorBanner>{error}</ErrorBanner>}
-
-          <PrimaryButton type="submit" loading={isLoading} disabled={!allMet || password !== confirm}>
-            Réinitialiser le mot de passe
-          </PrimaryButton>
-        </form>
-
-        <div className="mt-6 text-center">
-          <Link href="/auth/login" className="text-[13px] text-[var(--text-secondary)] transition-colors hover:text-[var(--text)]">
-            Retour à la connexion
-          </Link>
+    <AuthCard>
+      <form onSubmit={handleSubmit} className="au-stack" noValidate>
+        <div>
+          <PasswordField
+            icon={Lock}
+            label="Nouveau mot de passe"
+            value={password}
+            onChange={(e) => { setPassword(e.target.value); setError(''); }}
+            placeholder="Au moins 8 caractères"
+            autoComplete="new-password"
+            autoFocus
+          />
+          <PasswordStrength score={score} />
+          {password && (
+            <div className="au-crit-grid">
+              <Criteria met={has8}   text="8 caractères minimum" />
+              <Criteria met={hasUpp} text="1 majuscule" />
+              <Criteria met={hasLow} text="1 minuscule" />
+              <Criteria met={hasNum} text="1 chiffre" />
+            </div>
+          )}
         </div>
-      </AuthCard>
-    </motion.div>
+
+        <div>
+          <PasswordField
+            icon={Lock}
+            label="Confirmer le mot de passe"
+            value={confirm}
+            onChange={(e) => { setConfirm(e.target.value); setError(''); }}
+            placeholder="Répétez le mot de passe"
+            autoComplete="new-password"
+            error={confirm && password !== confirm ? 'Les mots de passe ne correspondent pas' : undefined}
+          />
+          {confirm && password === confirm && allMet && (
+            <p className="au-ok"><CheckCircle2 size={13} /> Les mots de passe correspondent</p>
+          )}
+        </div>
+
+        {error && <ErrorBanner>{error}</ErrorBanner>}
+
+        <PrimaryButton type="submit" loading={isLoading} disabled={!allMet || password !== confirm}>
+          Réinitialiser le mot de passe
+        </PrimaryButton>
+      </form>
+
+      <div className="au-foot">
+        <Link href="/auth/login" className="au-link-muted">Retour à la connexion</Link>
+      </div>
+    </AuthCard>
   );
 }
 
@@ -162,16 +151,14 @@ function ResetPasswordContent() {
 export default function ResetPasswordPage() {
   return (
     <AuthShell>
-      <div className="w-full max-w-[400px]">
-        <AuthHeading title="Nouveau mot de passe" description="Choisissez un mot de passe sécurisé pour votre compte." />
-        <Suspense fallback={
-          <div className="flex h-40 items-center justify-center">
-            <Loader2 className="animate-spin text-[#10B981]" size={28} />
-          </div>
-        }>
-          <ResetPasswordContent />
-        </Suspense>
-      </div>
+      <AuthHeading title="Nouveau mot de passe" description="Choisissez un mot de passe sécurisé pour votre compte." />
+      <Suspense fallback={
+        <div className="au-loading" style={{ height: 160 }}>
+          <Loader2 className="au-spin" size={28} style={{ color: 'var(--brand)' }} aria-label="Chargement" />
+        </div>
+      }>
+        <ResetPasswordContent />
+      </Suspense>
     </AuthShell>
   );
 }

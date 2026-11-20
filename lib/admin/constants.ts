@@ -4,7 +4,7 @@
 import {
   LayoutDashboard, Building2, BarChart2, CreditCard, Bug,
   Terminal, Users, Settings, Link2, BookOpen, Repeat, ScrollText, Radio, Layers, Bell, HardDrive, Wallet,
-  UserCog, Receipt, Wrench, Landmark,
+  UserCog, Receipt, Wrench, Landmark, Scale,
 } from 'lucide-react';
 
 // Navigation regroupée par métier (la barre latérale affiche un titre par groupe)
@@ -54,6 +54,7 @@ export const NAVIGATION_GROUPS = [
       { path: '/admin/errors',       label: 'Error Tracker',  icon: Bug             },
       { path: '/admin/users',        label: 'Admins',         icon: Users           },
       { path: '/admin/settings',     label: 'Paramètres',     icon: Settings        },
+      { path: '/admin/parametres-legaux', label: 'Paramètres légaux', icon: Scale     },
       { path: '/admin/assistant',    label: 'Assistant Konza',icon: BookOpen        },
     ],
   },

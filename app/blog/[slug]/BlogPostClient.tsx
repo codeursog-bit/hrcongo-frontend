@@ -13,14 +13,6 @@
 // ============================================================================
 'use client';
 
-// Ce fichier est juste un re-export de ton composant existant app/blog/[slug]/page.tsx
-// en le transformant pour accepter des props (initialPost) depuis le Server Component.
-// Tu colles ici le corps de ton BlogPostPage existant, en remplaçant :
-//   const params = useParams(); const slug = params?.slug as string;
-// par les props :
-//   export default function BlogPostClient({ slug, initialPost }: Props)
-// Et tu utilises initialPost pour pré-remplir le state (évite le premier fetch côté client)
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -43,23 +35,7 @@ type Post = {
 type TocEntry = { id: string; text: string; level: 2 | 3 };
 
 // ── Constantes ────────────────────────────────────────────────────────────────
-const C = {
-  bg:'#050607', card:'#0B0C0F',
-  border:'rgba(255,255,255,0.07)',
-  cyan:'#10B981', blue:'#059669', purple:'#64748B',
-  green:'#10B981', pink:'#EC4899',
-  text:'#F8FAFC', muted:'#64748B', sub:'#94A3B8',
-};
-
-const CAT_COLOR: Record<string, { bg: string; c: string }> = {
-  ANNONCE:      { bg:'rgba(245,158,11,0.12)',  c:'#F59E0B' },
-  PAIE:         { bg:'rgba(45,212,191,0.12)',   c:'#2DD4BF' },
-  DROIT_TRAVAIL:{ bg:'rgba(100,116,139,0.12)',  c:'#64748B' },
-  RECRUTEMENT:  { bg:'rgba(16,185,129,0.12)',  c:'#10B981' },
-  FORMATION:    { bg:'rgba(5,150,105,0.12)',  c:'#059669' },
-  TEMOIGNAGE:   { bg:'rgba(236,72,153,0.12)', c:'#EC4899' },
-  GENERAL:      { bg:'rgba(100,116,139,0.12)', c:'#94A3B8' },
-};
+const ACCENT = '#FF9A62';
 
 const CAT_LABEL: Record<string, string> = {
   ANNONCE:'Annonce', PAIE:'Paie & Fiscalité', DROIT_TRAVAIL:'Droit du travail',
@@ -394,19 +370,18 @@ export default function BlogPostClient({ slug, initialPost }: Props) {
   }
 
   if (loading) return (
-    <div style={{ background: C.bg, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui,sans-serif' }}>
+    <div className="min-h-screen bg-[#050607] font-sans text-[#F2F2F2]">
       <Navbar />
-      <p style={{ color: C.muted, zIndex: 1 }}>Chargement...</p>
+      <p role="status" className="flex min-h-screen items-center justify-center text-[#9a9a9a]">Chargement…</p>
     </div>
   );
 
   if (error || !post) return (
-    <div style={{ background: C.bg, minHeight: '100vh', fontFamily: 'system-ui,sans-serif', color: C.text }}>
+    <div className="min-h-screen bg-[#050607] font-sans text-[#F2F2F2]">
       <Navbar />
-      <div style={{ maxWidth: 640, margin: '160px auto 0', padding: '0 32px', textAlign: 'center', zIndex: 1, position: 'relative' }}>
-        <div style={{ fontSize: 56, marginBottom: 20 }}>📭</div>
-        <h1 style={{ fontSize: 28, fontWeight: 800, color: C.text, marginBottom: 12 }}>{error || 'Article introuvable'}</h1>
-        <Link href="/blog" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: '#FAFAFA', color: '#000', textDecoration: 'none', fontWeight: 500, fontSize: 14, padding: '11px 22px', borderRadius: 10 }}>
+      <div className="mx-auto max-w-xl px-6 pt-44 text-center">
+        <h1 className="mb-5 text-[30px] font-semibold">{error || 'Article introuvable'}</h1>
+        <Link href="/blog" className="inline-flex rounded-xl bg-[#FAFAFA] px-6 py-3 text-[14px] font-semibold text-black transition-colors hover:bg-white">
           ← Retour au blog
         </Link>
       </div>
@@ -414,7 +389,6 @@ export default function BlogPostClient({ slug, initialPost }: Props) {
     </div>
   );
 
-  const cc     = CAT_COLOR[post.category] || CAT_COLOR.GENERAL;
   const isSA   = post.author.role === 'SUPER_ADMIN';
   const author = isSA ? 'Konza RH' : `${post.author.firstName} ${post.author.lastName}`;
   const role   = ROLE_LABEL[post.author.role] || post.author.role;
@@ -424,238 +398,222 @@ export default function BlogPostClient({ slug, initialPost }: Props) {
     ? new Date(post.updatedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
     : null;
 
+  const cardCls = 'rounded-xl border border-white/[0.08] bg-[#0c0c0d] p-5';
+  const labelCls = 'mb-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#6f6f6f]';
+
   return (
-    <div style={{ background: C.bg, minHeight: '100vh', fontFamily: "system-ui,-apple-system,'Segoe UI',sans-serif", color: C.text, position: 'relative', overflowX: 'hidden' }}>
-      <div style={{ position:'fixed', top:-160, right:-160, width:600, height:600, borderRadius:'50%',
-        background:'rgba(255,255,255,0.04)', filter:'blur(130px)', pointerEvents:'none', zIndex:0 }}/>
-      <div style={{ position:'fixed', left:-160, bottom:0, width:500, height:500, borderRadius:'50%',
-        background:'rgba(212,165,72,0.06)', filter:'blur(130px)', pointerEvents:'none', zIndex:0 }}/>
+    <div className="min-h-screen overflow-x-hidden bg-[#050607] font-sans text-[#F2F2F2]">
       <Navbar />
 
-      <section style={{ padding: '130px 32px 0', position: 'relative', zIndex: 1 }}>
-        <div style={{ maxWidth: 840, margin: '0 auto' }}>
-
-          {/* Breadcrumb SEO-friendly */}
-          <nav aria-label="breadcrumb" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, fontSize: 13 }}>
-            <Link href="/" style={{ color: C.muted, textDecoration: 'none' }}>Accueil</Link>
-            <span style={{ color: C.border }}>›</span>
-            <Link href="/blog" style={{ color: C.muted, textDecoration: 'none' }}>Blog RH</Link>
-            <span style={{ color: C.border }}>›</span>
-            <span style={{ color: C.sub, maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{post.title}</span>
+      {/* ── En-tête de l'article ── */}
+      <header className="px-6 pt-32">
+        <div className="mx-auto max-w-5xl">
+          <nav aria-label="Fil d’Ariane" className="mb-7 flex items-center gap-2 text-[13px] text-[#6f6f6f]">
+            <Link href="/" className="transition-colors hover:text-[#F2F2F2]">Accueil</Link>
+            <span aria-hidden>›</span>
+            <Link href="/blog" className="transition-colors hover:text-[#F2F2F2]">Blog RH</Link>
+            <span aria-hidden>›</span>
+            <span className="max-w-[280px] truncate text-[#9a9a9a]">{post.title}</span>
           </nav>
 
-          {/* Catégorie */}
-          <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: cc.c, background: cc.bg, border: `1px solid ${cc.c}30`, padding: '4px 12px', borderRadius: 99 }}>
+          <div className="mb-5 flex flex-wrap items-center gap-3 text-[12.5px]">
+            <span className="font-semibold uppercase tracking-[0.1em]" style={{ color: ACCENT }}>
               {CAT_LABEL[post.category] || post.category}
             </span>
-            {isSA && <span style={{ fontSize: 12, fontWeight: 800, color: '#fff', background: 'linear-gradient(135deg,#10B981,#059669)', padding: '4px 12px', borderRadius: 99 }}>Officiel Konza RH</span>}
+            {isSA && <span className="rounded-full border border-white/15 px-2.5 py-0.5 text-[12px] text-[#d6d6d6]">Officiel Konza RH</span>}
           </div>
 
-          {/* H1 — balise la plus importante SEO */}
-          <h1 style={{ fontSize: 'clamp(28px,5vw,48px)', fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.1, color: C.text, marginBottom: 20 }}>
-            {post.title}
-          </h1>
+          <h1 className="max-w-3xl text-[32px] font-bold leading-[1.1] tracking-[-0.03em] sm:text-[46px]">{post.title}</h1>
 
-          {/* Excerpt en italique */}
           {post.excerpt && (
-            <p style={{ fontSize: 18, color: C.sub, lineHeight: 1.7, marginBottom: 24, fontStyle: 'italic', borderLeft: `3px solid ${cc.c}`, paddingLeft: 16 }}>
+            <p className="mt-6 max-w-3xl border-l-2 pl-4 text-[18px] leading-relaxed text-[#b5b5b5]" style={{ borderColor: ACCENT }}>
               {post.excerpt}
             </p>
           )}
 
-          {/* Meta auteur + actions */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16, paddingBottom: 28, borderBottom: `1px solid ${C.border}` }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ width: 40, height: 40, borderRadius: '50%', background: `linear-gradient(135deg,${isSA ? C.cyan : C.blue},${isSA ? C.blue : C.purple})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, color: '#fff' }}>
+          <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-b border-white/[0.08] pb-7">
+            <div className="flex items-center gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-[14px] font-semibold">
                 {isSA ? 'K' : author[0]}
-              </div>
+              </span>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{author}</div>
-                <div style={{ fontSize: 12, color: C.muted }}>
+                <div className="text-[14px] font-semibold">{author}</div>
+                <div className="text-[12.5px] text-[#9a9a9a]">
                   {role}{company && !isSA ? ` · ${company}` : ''} · <time dateTime={post.publishedAt}>{date}</time>
-                  {updated && <> · <span title={`Mis à jour le ${updated}`}>mis à jour {updated}</span></>}
+                  {updated && <> · <span title={`Mis à jour le ${updated}`}>mis à jour le {updated}</span></>}
                   {' · '}{readingTime} min de lecture
                 </div>
               </div>
             </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={handleLike} style={{ display: 'flex', alignItems: 'center', gap: 6, background: liked ? 'rgba(236,72,153,0.1)' : 'rgba(255,255,255,0.05)', border: `1px solid ${liked ? C.pink + '40' : C.border}`, borderRadius: 9, padding: '8px 14px', cursor: 'pointer', color: liked ? C.pink : C.muted, fontSize: 13, fontWeight: 600, fontFamily: 'inherit' }}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill={liked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" /></svg>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleLike}
+                aria-pressed={liked}
+                className="flex items-center gap-2 rounded-lg border border-white/10 px-4 py-2 text-[13.5px] font-medium transition-colors hover:border-white/25"
+                style={{ color: liked ? ACCENT : '#9a9a9a' }}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill={liked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                </svg>
                 {likes}
               </button>
-              <button onClick={share} style={{ display: 'flex', alignItems: 'center', gap: 6, background: copied ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.05)', border: `1px solid ${copied ? C.green + '40' : C.border}`, borderRadius: 9, padding: '8px 14px', cursor: 'pointer', color: copied ? C.green : C.muted, fontSize: 13, fontWeight: 600, fontFamily: 'inherit' }}>
-                {copied ? '✓ Copié !' : 'Partager'}
+              <button
+                type="button"
+                onClick={share}
+                className="rounded-lg border border-white/10 px-4 py-2 text-[13.5px] font-medium transition-colors hover:border-white/25"
+                style={{ color: copied ? ACCENT : '#9a9a9a' }}
+              >
+                {copied ? 'Lien copié' : 'Partager'}
               </button>
             </div>
           </div>
         </div>
-      </section>
+      </header>
 
-      {/* Cover image */}
+      {/* ── Image de couverture ── */}
       {post.coverImage && (
-        <section style={{ position: 'relative', zIndex: 1, padding: '32px 32px 0' }}>
-          <div style={{ maxWidth: 840, margin: '0 auto', borderRadius: 16, overflow: 'hidden', border: `1px solid ${C.border}` }}>
-            <img src={post.coverImage} alt={post.title} style={{ width: '100%', height: 'auto', maxHeight: 440, objectFit: 'cover', display: 'block' }} />
+        <div className="px-6 pt-8">
+          <div className="mx-auto max-w-5xl overflow-hidden rounded-2xl border border-white/[0.08]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={post.coverImage} alt={post.title} className="block max-h-[460px] w-full object-cover" />
           </div>
-        </section>
+        </div>
       )}
 
-      {/* Contenu article */}
-      <section style={{ position: 'relative', zIndex: 1, padding: '40px 32px 80px' }}>
-        <div style={{ maxWidth: 840, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 220px', gap: 48, alignItems: 'start' }} className="article-layout">
-          <article
-            ref={articleRef}
-            className="article-content"
-            dangerouslySetInnerHTML={{ __html: contentHtml }}
-          />
+      {/* ── Contenu ── */}
+      <main className="px-6 pb-24 pt-10">
+        <div className="mx-auto grid max-w-5xl gap-12 lg:grid-cols-[minmax(0,1fr)_240px]">
+          <article ref={articleRef} className="article-content" dangerouslySetInnerHTML={{ __html: contentHtml }} />
 
-          {/* Sidebar sticky */}
-          <aside style={{ position: 'sticky', top: 100, display: 'flex', flexDirection: 'column', gap: 20 }} className="article-sidebar">
+          <aside className="hidden lg:block">
+            <div className="sticky top-24 flex flex-col gap-5">
+              {toc.length > 1 && (
+                <nav aria-label="Sommaire" className={cardCls}>
+                  <p className={labelCls}>Sommaire</p>
+                  <div className="flex flex-col">
+                    {toc.map((t) => {
+                      const on = activeId === t.id;
+                      return (
+                        <a
+                          key={t.id}
+                          href={`#${t.id}`}
+                          className={`border-l-2 py-1.5 text-[13px] leading-snug transition-colors ${t.level === 3 ? 'pl-6' : 'pl-3'} ${
+                            on ? 'border-[#FF9A62] font-semibold text-[#FF9A62]' : 'border-transparent text-[#9a9a9a] hover:text-[#F2F2F2]'
+                          }`}
+                        >
+                          {t.text}
+                        </a>
+                      );
+                    })}
+                  </div>
+                </nav>
+              )}
 
-            {/* Sommaire — nouveau, suit la section active au scroll */}
-            {toc.length > 1 && (
-              <nav aria-label="Sommaire" style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: 20 }}>
-                <p style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 14 }}>Sommaire</p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  {toc.map(t => (
-                    <a
-                      key={t.id}
-                      href={`#${t.id}`}
-                      style={{
-                        fontSize: 12.5,
-                        lineHeight: 1.5,
-                        padding: t.level === 3 ? '5px 0 5px 14px' : '5px 0',
-                        color: activeId === t.id ? cc.c : C.sub,
-                        fontWeight: activeId === t.id ? 700 : 500,
-                        borderLeft: `2px solid ${activeId === t.id ? cc.c : 'transparent'}`,
-                        paddingLeft: t.level === 3 ? 14 : 10,
-                        textDecoration: 'none',
-                        transition: 'color .15s, border-color .15s',
-                      }}
-                    >
-                      {t.text}
-                    </a>
-                  ))}
-                </div>
-              </nav>
-            )}
-
-            <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: 20 }}>
-              <p style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 14 }}>Auteur</p>
-              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                <div style={{ width: 38, height: 38, borderRadius: '50%', background: `linear-gradient(135deg,${isSA ? C.cyan : C.blue},${isSA ? C.blue : C.purple})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: '#fff' }}>
-                  {isSA ? 'K' : author[0]}
-                </div>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{author}</div>
-                  <div style={{ fontSize: 11, color: C.muted }}>{role}</div>
+              <div className={cardCls}>
+                <p className={labelCls}>Auteur</p>
+                <div className="flex items-center gap-3">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-[13px] font-semibold">
+                    {isSA ? 'K' : author[0]}
+                  </span>
+                  <div>
+                    <div className="text-[13.5px] font-semibold">{author}</div>
+                    <div className="text-[12px] text-[#9a9a9a]">{role}</div>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {related.length > 0 && (
-              <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: 20 }}>
-                <p style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 14 }}>Articles liés</p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {related.map(r => (
-                    <Link key={r.id} href={`/blog/${r.slug}`} style={{ textDecoration: 'none' }}>
-                      <div style={{ padding: 10, borderRadius: 9 }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: C.text, lineHeight: 1.35, marginBottom: 4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{r.title}</div>
-                        <div style={{ fontSize: 11, color: C.muted }}>{new Date(r.publishedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</div>
-                      </div>
-                    </Link>
-                  ))}
+              {related.length > 0 && (
+                <div className={cardCls}>
+                  <p className={labelCls}>Articles liés</p>
+                  <div className="flex flex-col gap-4">
+                    {related.map((r) => (
+                      <Link key={r.id} href={`/blog/${r.slug}`} className="group block">
+                        <div
+                          className="mb-1 text-[13.5px] font-semibold leading-snug transition-colors group-hover:text-[#FF9A62]"
+                          style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
+                        >
+                          {r.title}
+                        </div>
+                        <div className="text-[12px] text-[#6f6f6f]">
+                          {new Date(r.publishedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* CTA konza dans la sidebar */}
-            <div style={{ background: 'linear-gradient(135deg,rgba(71,85,105,0.15),rgba(100,116,139,0.1))', border: '1px solid rgba(71,85,105,0.2)', borderRadius: 14, padding: 18 }}>
-              <p style={{ fontSize: 12, fontWeight: 800, color: C.text, marginBottom: 6 }}>Gérez la paie de votre entreprise</p>
-              <p style={{ fontSize: 11, color: C.sub, lineHeight: 1.5, marginBottom: 12 }}>Bulletins PDF, CNSS, CAMU, congés — conforme droit congolais.</p>
-              <Link href="/auth/register"
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: 'linear-gradient(135deg,#475569,#64748B)', color: '#fff', textDecoration: 'none', fontWeight: 700, fontSize: 12, padding: '8px 14px', borderRadius: 9 }}>
-                Essayer Konza →
+              <div className={cardCls}>
+                <p className="mb-1.5 text-[13.5px] font-semibold">Gérez la paie de votre entreprise</p>
+                <p className="mb-4 text-[12.5px] leading-relaxed text-[#9a9a9a]">Bulletins PDF, CNSS, CAMU, congés, selon le droit congolais.</p>
+                <Link href="/auth/register" className="block rounded-lg bg-[#FAFAFA] px-4 py-2.5 text-center text-[13px] font-semibold text-black transition-colors hover:bg-white">
+                  Essayer Konza RH
+                </Link>
+              </div>
+
+              <Link href="/blog" className="rounded-lg border border-white/10 px-4 py-2.5 text-center text-[13px] font-medium text-[#9a9a9a] transition-colors hover:border-white/25 hover:text-[#F2F2F2]">
+                ← Retour au blog
               </Link>
             </div>
-
-            <Link href="/blog" style={{ display: 'flex', alignItems: 'center', gap: 7, color: C.muted, textDecoration: 'none', fontSize: 13, fontWeight: 600, padding: 10, borderRadius: 9, border: `1px solid ${C.border}`, justifyContent: 'center' }}>
-              ← Retour au blog
-            </Link>
           </aside>
         </div>
-      </section>
+
+        {/* Mobile : la barre latérale est masquée, on garde l'essentiel en bas */}
+        <div className="mx-auto mt-12 flex max-w-5xl flex-col gap-4 lg:hidden">
+          <div className={cardCls}>
+            <p className="mb-1.5 text-[14px] font-semibold">Gérez la paie de votre entreprise</p>
+            <p className="mb-4 text-[13px] text-[#9a9a9a]">Bulletins PDF, CNSS, CAMU, congés, selon le droit congolais.</p>
+            <Link href="/auth/register" className="inline-block rounded-lg bg-[#FAFAFA] px-5 py-2.5 text-[13.5px] font-semibold text-black">
+              Essayer Konza RH
+            </Link>
+          </div>
+          <Link href="/blog" className="text-center text-[14px] text-[#9a9a9a] hover:text-[#F2F2F2]">← Retour au blog</Link>
+        </div>
+      </main>
 
       <Footer />
-      <style>{`
-        *{box-sizing:border-box;margin:0;padding:0}
-        html{scroll-behavior:smooth}
-        ::-webkit-scrollbar{width:6px;background:#050607}
-        ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:3px}
 
-        /* ── Typographie du corps d'article ─────────────────────────────── */
-        .article-content{font-size:16px;color:${C.sub};line-height:1.85}
+      {/* Typographie du corps d'article (limitée à .article-content : plus de reset global) */}
+      <style>{`
+        html{scroll-behavior:smooth}
+        .article-content{font-size:16.5px;color:#bdbdbd;line-height:1.85}
         .article-content h2{
-          scroll-margin-top:100px;
-          font-size:clamp(20px,2.5vw,28px);font-weight:900;color:${C.text};
-          letter-spacing:-0.03em;margin:44px 0 16px;padding-top:8px;
-          border-top:1px solid ${C.border};
+          scroll-margin-top:100px;font-size:clamp(22px,2.6vw,30px);font-weight:700;color:#F2F2F2;
+          letter-spacing:-0.02em;margin:48px 0 16px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.08);
         }
         .article-content h2:first-child{border-top:none;padding-top:0;margin-top:0}
-        .article-content h3{scroll-margin-top:100px;font-size:20px;font-weight:800;color:${C.text};margin:30px 0 12px}
-        .article-content h4{font-size:16.5px;font-weight:700;color:${C.text};margin:22px 0 8px}
-        .article-content p{margin:0 0 18px;font-size:16px;color:${C.sub};line-height:1.85}
-        .article-content strong{color:${C.text};font-weight:700}
+        .article-content h3{scroll-margin-top:100px;font-size:21px;font-weight:650;color:#F2F2F2;margin:32px 0 12px}
+        .article-content h4{font-size:17px;font-weight:650;color:#F2F2F2;margin:24px 0 8px}
+        .article-content p{margin:0 0 18px;font-size:16.5px;color:#bdbdbd;line-height:1.85}
+        .article-content strong{color:#F2F2F2;font-weight:650}
         .article-content em{font-style:italic}
-        .article-content code{background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px;font-family:ui-monospace,monospace;font-size:13.5px;color:#10B981}
-        .article-content a{color:#2DD4BF;text-decoration:underline;text-underline-offset:2px}
-        .article-content a:hover{color:#5EEAD4}
-        .article-content hr{border:none;border-top:1px solid ${C.border};margin:32px 0}
+        .article-content code{background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px;font-family:ui-monospace,monospace;font-size:13.5px;color:${ACCENT}}
+        .article-content a{color:${ACCENT};text-decoration:underline;text-underline-offset:3px}
+        .article-content a:hover{color:#FFB894}
+        .article-content hr{border:none;border-top:1px solid rgba(255,255,255,0.08);margin:32px 0}
 
-        /* ── Listes : marqueurs colorés, espacement propre entre items ───── */
         .article-content ul,.article-content ol{margin:0 0 20px;padding-left:0;list-style:none}
-        .article-content ul li,.article-content ol li{
-          position:relative;padding-left:28px;margin-bottom:10px;font-size:16px;line-height:1.7;color:${C.sub};
-        }
-        .article-content ul li::before{
-          content:'';position:absolute;left:6px;top:11px;width:6px;height:6px;border-radius:50%;
-          background:#10B981;
-        }
+        .article-content ul li,.article-content ol li{position:relative;padding-left:28px;margin-bottom:10px;font-size:16.5px;line-height:1.7;color:#bdbdbd}
+        .article-content ul li::before{content:'';position:absolute;left:6px;top:12px;width:6px;height:6px;border-radius:50%;background:${ACCENT}}
         .article-content ol{counter-reset:kz-ol}
         .article-content ol li{counter-increment:kz-ol}
         .article-content ol li::before{
-          content:counter(kz-ol);position:absolute;left:0;top:0;
-          width:20px;height:20px;border-radius:6px;background:rgba(16,185,129,0.12);color:#10B981;
-          font-size:11.5px;font-weight:800;display:flex;align-items:center;justify-content:center;
+          content:counter(kz-ol);position:absolute;left:0;top:3px;width:20px;height:20px;border-radius:6px;
+          background:rgba(255,154,98,0.14);color:${ACCENT};font-size:11.5px;font-weight:700;display:flex;align-items:center;justify-content:center;
         }
 
-        /* ── Citations / callouts (lois, définitions clés) ────────────────── */
-        .article-content blockquote{
-          margin:24px 0;padding:16px 20px;border-left:3px solid #10B981;
-          background:rgba(16,185,129,0.05);border-radius:0 10px 10px 0;
-        }
-        .article-content blockquote p{
-          font-style:italic;color:${C.sub};margin:0 0 6px;font-size:15px;
-        }
+        .article-content blockquote{margin:24px 0;padding:16px 20px;border-left:3px solid ${ACCENT};background:rgba(255,154,98,0.06);border-radius:0 10px 10px 0}
+        .article-content blockquote p{font-style:italic;color:#bdbdbd;margin:0 0 6px;font-size:15.5px}
         .article-content blockquote p:last-child{margin-bottom:0}
 
-        /* ── Tableaux (barèmes, taux, plafonds) ───────────────────────────── */
-        .article-table-wrap{margin:24px 0;overflow-x:auto;border:1px solid ${C.border};border-radius:12px}
+        .article-table-wrap{margin:24px 0;overflow-x:auto;border:1px solid rgba(255,255,255,0.08);border-radius:12px}
         .article-content table{width:100%;border-collapse:collapse;font-size:14px}
-        .article-content thead th{
-          background:rgba(255,255,255,0.04);color:${C.text};font-weight:700;text-align:left;
-          padding:10px 14px;border-bottom:1px solid ${C.border};white-space:nowrap;
-        }
-        .article-content tbody td{padding:10px 14px;border-bottom:1px solid ${C.border};color:${C.sub}}
+        .article-content thead th{background:rgba(255,255,255,0.04);color:#F2F2F2;font-weight:650;text-align:left;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.08);white-space:nowrap}
+        .article-content tbody td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.08);color:#bdbdbd}
         .article-content tbody tr:last-child td{border-bottom:none}
         .article-content tbody tr:hover{background:rgba(255,255,255,0.02)}
-
-        @media(max-width:768px){
-          .article-layout{grid-template-columns:1fr!important}
-          .article-sidebar{display:none!important}
-          .article-content{font-size:15.5px}
-        }
+        @media(max-width:768px){.article-content{font-size:15.5px}.article-content p,.article-content li{font-size:15.5px!important}}
       `}</style>
     </div>
   );
