@@ -1,6 +1,6 @@
 // ============================================================================
-// 📁 app/outils/calcul-cnss-congo/page.tsx
-// 🎯 Cible : "calcul CNSS Congo", "taux CNSS Congo 2026", "cotisation CNSS Congo"
+// app/outils/calcul-cnss-congo/page.tsx
+// Cible : "calcul CNSS Congo", "taux CNSS Congo 2026", "cotisation CNSS Congo"
 // ============================================================================
 import type { Metadata } from 'next';
 import CnssCalculatorClient from './CnssCalculatorClient';

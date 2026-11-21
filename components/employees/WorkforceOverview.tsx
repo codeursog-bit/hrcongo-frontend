@@ -12,7 +12,11 @@ export interface WorkforceSummary {
   byContractType?:{type:string;label:string;count:number}[];
   registrationSummary?:RegistrationSummary|null;
 }
-const contracts=[['CDI','CDI'],['CDD','CDD'],['STAGE','Stages'],['INTERIM','Intérim'],['CONSULTANT','Consultants'],['PRESTATAIRE','Prestataires']];
+// Toujours affichés : les contrats courants. Les autres (intérim, consultant, prestataire…) n'apparaissent
+// qu'à partir du moment où au moins un employé en a un.
+const contracts=[['CDI','CDI'],['CDD','CDD'],['STAGE','Stages']];
+const optionalOrder=['INTERIM','CONSULTANT','PRESTATAIRE'];
+const optionalLabels:Record<string,string>={INTERIM:'Intérim',CONSULTANT:'Consultants',PRESTATAIRE:'Prestataires'};
 export function WorkforceOverview({summary,loading,filtered,canOpenDeclaration,declarationHref}:{summary:WorkforceSummary|null;loading:boolean;filtered:boolean;canOpenDeclaration:boolean;declarationHref:string}) {
   const value=(n:number|undefined)=>loading?<Skeleton style={{height:32,width:64}}/>:typeof n==='number'?n.toLocaleString('fr-FR'):'—';
   const cnss=summary?.registrationSummary?.cnss,tax=summary?.registrationSummary?.incomeTax;
@@ -21,7 +25,7 @@ export function WorkforceOverview({summary,loading,filtered,canOpenDeclaration,d
     <div className="workforce-kpis">
       <Card className="workforce-total"><p>Effectif total</p><strong>{value(summary?.total)}</strong><span>Employés actifs</span></Card>
       {contracts.map(([type,label])=><Card key={type}><p>{label}</p><strong>{value(summary?summary.byContractType?.find(c=>c.type===type)?.count ?? (Array.isArray(summary.byContractType)?0:undefined):undefined)}</strong><span>Type de contrat</span></Card>)}
-      {summary?.byContractType?.filter(c=>!contracts.some(([type])=>c.type===type)).map(c=><Card key={c.type}><p>{c.label}</p><strong>{value(c.count)}</strong><span>Type de contrat</span></Card>)}
+      {(summary?.byContractType||[]).filter(c=>!contracts.some(([type])=>c.type===type)&&c.count>0).sort((a,b)=>{const ia=optionalOrder.indexOf(a.type),ib=optionalOrder.indexOf(b.type);return (ia<0?99:ia)-(ib<0?99:ib);}).map(c=><Card key={c.type}><p>{optionalLabels[c.type]||c.label}</p><strong>{value(c.count)}</strong><span>Type de contrat</span></Card>)}
     </div>
     {canOpenDeclaration&&<div className="workforce-admin-grid">
       <Card title="Employés déclarés auprès de la CNSS">

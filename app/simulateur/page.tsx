@@ -1,8 +1,8 @@
 // ============================================================================
-// 📁 app/simulateur/page.tsx — Simulateur de paie Congo · SEO-first
-// ✅ Metadata title/description/OG optimisés
-// ✅ JSON-LD : WebApplication + FAQPage
-// ✅ Calcul 100% client-side (pas d'API requise)
+// app/simulateur/page.tsx — Simulateur de paie Congo · SEO-first
+// Metadata title/description/OG optimisés
+// JSON-LD : WebApplication + FAQPage
+// Calcul 100% client-side (pas d'API requise)
 // ============================================================================
 import type { Metadata } from 'next';
 import SimulateurPublicPage from './SimulateurClient';

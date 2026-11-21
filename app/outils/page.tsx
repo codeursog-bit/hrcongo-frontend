@@ -13,7 +13,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://konza-rh.cg';
 export const metadata: Metadata = {
   title: 'Outils RH & Paie Congo 2026 — Calculateurs gratuits',
   description:
-    'Calculateurs gratuits pour les entreprises congolaises : ITS 2026, CNSS, CAMU, TUS, heures supplémentaires, cotisations patronales. Conformes au droit congolais.',
+    'Calculateurs gratuits pour les entreprises congolaises : ITS 2026, CNSS, CAMU, TUS, heures supplémentaires, cotisations patronales. ',
   alternates: { canonical: `${SITE_URL}/outils` },
   openGraph: {
     title: 'Outils RH & Paie Congo 2026 — Calculateurs gratuits',
@@ -33,63 +33,42 @@ export const metadata: Metadata = {
 const TOOLS = [
   {
     href: '/simulateur',
-    icon: '🧮',
     title: 'Simulateur de paie complet',
     desc: 'Salaire brut → net + coût employeur. ITS, CNSS, TUS, CAMU, heures sup, primes, avances.',
     tags: ['ITS 2026', 'CNSS', 'TUS', 'CAMU'],
-    color: 'violet',
     featured: true,
   },
   {
     href: '/outils/calcul-its-congo',
-    icon: '📊',
     title: 'Calcul ITS 2026',
-    desc: 'Barème progressif officiel : 5 tranches, abattement 20%, quotient familial. Conforme Ordonnance 2025-44.',
+    desc: 'Barème progressif : 5 tranches, abattement 20 %, quotient familial. Ordonnance 2025-44.',
     tags: ['ITS 2026', 'Barème', 'Parts fiscales'],
-    color: 'indigo',
   },
   {
     href: '/outils/calcul-cnss-congo',
-    icon: '🏥',
     title: 'Calcul CNSS Congo',
-    desc: 'CNSS salarié (4%) et patronal (pensions 8% + famille 10,03% + AT 2,25%). Plafonds 2026.',
+    desc: 'CNSS salarié (4 %) et patronal (pensions 8 % + famille 10,03 % + AT 2,25 %). Plafonds 2026.',
     tags: ['CNSS', 'Cotisations', 'Plafonds'],
-    color: 'emerald',
   },
   {
     href: '/outils/calcul-camu-congo',
-    icon: '💊',
     title: 'Calcul CAMU',
-    desc: 'Assurance maladie universelle : 2,27% salarié + 4,55% employeur. Plafond 600 000 FCFA.',
+    desc: 'Assurance maladie universelle : 2,27 % salarié + 4,55 % employeur. Plafond 600 000 FCFA.',
     tags: ['CAMU', 'Assurance maladie'],
-    color: 'rose',
   },
   {
     href: '/outils/calcul-heures-supplementaires-congo',
-    icon: '⏰',
     title: 'Calcul heures supplémentaires',
-    desc: 'Majorations Décret 78-360 : +10%, +25%, +50%, +100%. Calcul sur taux horaire proratisé.',
+    desc: 'Majorations Décret 78-360 : +10 %, +25 %, +50 %, +100 %. Calcul sur taux horaire proratisé.',
     tags: ['HS', 'Majorations', 'Décret 78-360'],
-    color: 'orange',
   },
   {
     href: '/outils/calcul-tus-congo',
-    icon: '🏦',
     title: 'Calcul TUS Congo',
-    desc: 'Taxe Unique sur les Salaires 7,5% : part DGI 2,025% + part CNSS 5,475%.',
+    desc: 'Taxe Unique sur les Salaires 7,5 % : part DGI 2,025 % + part CNSS 5,475 %.',
     tags: ['TUS', 'DGI', 'Patronal'],
-    color: 'amber',
   },
 ];
-
-const COLOR_MAP: Record<string, { bg: string; border: string; badge: string; text: string }> = {
-  violet: { bg: 'bg-violet-900/20', border: 'border-violet-800', badge: 'bg-violet-100 text-violet-700', text: 'text-violet-300' },
-  indigo: { bg: 'bg-indigo-900/20', border: 'border-indigo-800', badge: 'bg-indigo-100 text-indigo-700', text: 'text-indigo-300' },
-  emerald: { bg: 'bg-emerald-900/20', border: 'border-emerald-800', badge: 'bg-emerald-100 text-emerald-700', text: 'text-emerald-300' },
-  rose: { bg: 'bg-rose-900/20', border: 'border-rose-800', badge: 'bg-rose-100 text-rose-700', text: 'text-rose-300' },
-  orange: { bg: 'bg-orange-900/20', border: 'border-orange-800', badge: 'bg-orange-100 text-orange-700', text: 'text-orange-300' },
-  amber: { bg: 'bg-amber-900/20', border: 'border-amber-800', badge: 'bg-amber-100 text-amber-700', text: 'text-amber-300' },
-};
 
 // JSON-LD ItemList
 const toolsJsonLd = {
@@ -109,105 +88,78 @@ const toolsJsonLd = {
 };
 
 export default function OutilsPage() {
+  const featured = TOOLS.find((t) => t.featured)!;
+  const others = TOOLS.filter((t) => !t.featured);
+
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(toolsJsonLd) }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(toolsJsonLd) }} />
 
-      <div className="min-h-screen bg-[#050607]">
+      <div className="min-h-screen overflow-x-hidden bg-[#050607] font-sans text-[#F2F2F2]">
         <Navbar />
-        <div className="fixed -right-40 -top-40 w-[600px] h-[600px] bg-white/[0.04] rounded-full blur-[130px] pointer-events-none" />
-        <div className="fixed -left-40 bottom-0 w-[500px] h-[500px] bg-[#D4A548]/[0.06] rounded-full blur-[130px] pointer-events-none" />
-        {/* Hero */}
-        <div className="bg-gradient-to-br from-gray-900 via-gray-900 to-violet-950 text-white">
-          <div className="max-w-5xl mx-auto px-4 pt-20 pb-12">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 rounded-full text-xs text-gray-300 mb-6">
-              🇨🇬 Outils RH Congo-Brazzaville 2026
-            </div>
-            <h1 className="text-3xl md:text-4xl font-black tracking-tight text-white mb-3">
-              Calculateurs RH & Paie<br />
-              <span className="text-violet-400">Congo-Brazzaville</span>
+
+        {/* Titre */}
+        <header className="relative px-6 pb-14 pt-36">
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{ background: 'radial-gradient(55% 60% at 20% 0%, rgba(247,135,75,.12), transparent 70%)' }}
+          />
+          <div className="relative mx-auto max-w-5xl">
+            <div className="mb-4 text-[13px] font-semibold uppercase tracking-[0.12em] text-[#FF9A62]">Outils RH Congo-Brazzaville 2026</div>
+            <h1 className="max-w-2xl text-[36px] font-bold leading-[1.08] tracking-[-0.03em] sm:text-[52px]">
+              Calculateurs RH et paie <span className="text-[#FF9A62]">pour le Congo</span>
             </h1>
-            <p className="text-gray-400 text-sm max-w-xl">
-              Tous les outils gratuits pour calculer vos cotisations et impôts congolais.
-              Conformes à la législation 2026 : ITS, CNSS, CAMU, TUS, heures supplémentaires.
+            <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-[#9a9a9a]">
+              Des outils gratuits pour calculer vos cotisations et impôts : ITS, CNSS, CAMU, TUS, heures supplémentaires.
             </p>
           </div>
-        </div>
+        </header>
 
-        {/* Grille outils */}
-        <div className="max-w-5xl mx-auto px-4 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {TOOLS.map((tool) => {
-              const c = COLOR_MAP[tool.color];
-              return (
-                <Link
-                  key={tool.href}
-                  href={tool.href}
-                  className={`group relative flex flex-col p-5 rounded-2xl border-2 transition-all hover:scale-[1.02] hover:shadow-lg
-                    ${tool.featured ? `${c.bg} ${c.border}` : 'hover:border-violet-300 bg-gray-800 border-gray-700'}`}
-                >
-                  {tool.featured && (
-                    <span className="absolute top-3 right-3 text-[10px] font-bold px-2 py-0.5 bg-violet-500 text-white rounded-full">
-                      Complet
-                    </span>
-                  )}
-                  <span className="text-3xl mb-3">{tool.icon}</span>
-                  <h2 className={`font-black text-sm mb-2 ${tool.featured ? c.text : 'text-white'}`}>
-                    {tool.title}
-                  </h2>
-                  <p className="text-xs leading-relaxed mb-4 flex-1 text-gray-400">
-                    {tool.desc}
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {tool.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${tool.featured ? c.badge : 'bg-gray-700 text-gray-300'}`}
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-
-          {/* Section SEO textuelle — importante pour Google */}
-          <div className="mt-16 prose prose-sm max-w-none prose-invert">
-            <h2 className="text-xl font-black mb-4 text-white">
-              Guide complet de la paie au Congo-Brazzaville 2026
-            </h2>
-            <div className="grid md:grid-cols-2 gap-6">
-              {[
-                {
-                  title: 'ITS 2026 — L\'essentiel',
-                  content: `L'Impôt sur les Traitements et Salaires (ITS) remplace l'IRPP depuis le 1er janvier 2026. Il s'applique sur un barème progressif à 5 tranches après abattement de 20% et annualisation : forfait de 1 200 FCFA jusqu'à 615 000 FCFA, 10% jusqu'à 1 500 000 FCFA, 15% jusqu'à 3 500 000 FCFA, 20% jusqu'à 5 000 000 FCFA et 30% au-delà. Le quotient familial est maintenu.`,
-                },
-                {
-                  title: 'CNSS Congo — Taux 2026',
-                  content: `La CNSS (Caisse Nationale de Sécurité Sociale) prélève 4% sur le salaire salarié (plafond 1 200 000 FCFA). L'employeur verse 8% pour les pensions (plafond 1 200 000 FCFA), 10,03% pour les prestations familiales et 2,25% pour les accidents du travail (plafonds 600 000 FCFA).`,
-                },
-                {
-                  title: 'CAMU — Assurance maladie universelle',
-                  content: `La CAMU (Caisse d'Assurance Maladie Universelle) est obligatoire depuis 2024. Le taux salarié est de 2,27% et le taux patronal de 4,55%, tous deux plafonnés à 600 000 FCFA de salaire brut. Elle couvre les frais de santé du salarié et de ses ayants droit.`,
-                },
-                {
-                  title: 'TUS — Taxe Unique sur les Salaires',
-                  content: `Le TUS (Taxe Unique sur les Salaires) est une charge patronale de 7,5% sur le salaire brut total, répartie entre la DGI (2,025%, versé via eTax) et la CNSS (5,475%, déclaration mensuelle CNSS). Il n'y a pas de plafond d'assiette pour le TUS.`,
-                },
-              ].map(({ title, content }) => (
-                <div key={title} className="p-4 rounded-xl border bg-gray-800 border-gray-700">
-                  <h3 className="font-bold text-sm mb-2 text-white">{title}</h3>
-                  <p className="text-xs leading-relaxed text-gray-400">{content}</p>
-                </div>
-              ))}
+        <main className="mx-auto max-w-5xl px-6 pb-24">
+          {/* Outil principal */}
+          <Link
+            href={featured.href}
+            className="group mb-5 flex flex-col gap-4 rounded-2xl border border-[#FF9A62]/40 bg-[#0c0c0d] p-7 transition-colors hover:border-[#FF9A62] sm:flex-row sm:items-center sm:justify-between sm:p-9"
+          >
+            <div>
+              <h2 className="mb-2 text-[24px] font-semibold tracking-[-0.01em]">{featured.title}</h2>
+              <p className="max-w-xl text-[15px] leading-relaxed text-[#9a9a9a]">{featured.desc}</p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {featured.tags.map((tag) => (
+                  <span key={tag} className="rounded-full border border-white/10 px-3 py-1 text-[12px] text-[#bdbdbd]">{tag}</span>
+                ))}
+              </div>
             </div>
+            <span className="shrink-0 rounded-xl bg-[#FAFAFA] px-6 py-3 text-center text-[14px] font-semibold text-black transition-colors group-hover:bg-white">
+              Lancer le simulateur
+            </span>
+          </Link>
+
+          {/* Calculateurs */}
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {others.map((tool) => (
+              <Link
+                key={tool.href}
+                href={tool.href}
+                className="group flex flex-col rounded-2xl border border-white/[0.08] bg-[#0c0c0d] p-6 transition-colors hover:border-white/[0.18]"
+              >
+                <h2 className="mb-2 text-[18px] font-semibold leading-snug transition-colors group-hover:text-[#FF9A62]">{tool.title}</h2>
+                <p className="mb-5 text-[14px] leading-relaxed text-[#9a9a9a]">{tool.desc}</p>
+                <div className="mt-auto flex flex-wrap gap-2">
+                  {tool.tags.map((tag) => (
+                    <span key={tag} className="rounded-full border border-white/10 px-2.5 py-0.5 text-[11.5px] text-[#9a9a9a]">{tag}</span>
+                  ))}
+                </div>
+              </Link>
+            ))}
           </div>
-        </div>
+
+          <p className="mt-12 max-w-2xl text-[13px] leading-relaxed text-[#6f6f6f]">
+            Ces calculateurs donnent une estimation à partir des barèmes et taux indiqués. Pour une paie complète, avec bulletins
+            et déclarations CNSS, <Link href="/auth/register" className="text-[#9a9a9a] underline underline-offset-4 hover:text-[#F2F2F2]">essayez Konza RH gratuitement</Link>.
+          </p>
+        </main>
+
         <Footer />
       </div>
     </>

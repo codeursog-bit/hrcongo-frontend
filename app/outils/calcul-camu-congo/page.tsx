@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   ].join(', '),
   openGraph: {
     title: 'Calcul CAMU Congo 2026 — 2,27% salarié + 4,55% employeur',
-    description: 'Calculez votre CAMU Congo : taux officiels, plafond 600 000 FCFA, exemple complet.',
+    description: 'Calculez votre CAMU Congo : taux en vigueur, plafond 600 000 FCFA, exemple complet.',
     url: `${SITE_URL}/outils/calcul-camu-congo`,
     type: 'website',
     images: [{ url: `${SITE_URL}/og/calcul-camu.png`, width: 1200, height: 630 }],

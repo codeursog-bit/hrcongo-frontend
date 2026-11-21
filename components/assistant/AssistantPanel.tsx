@@ -137,7 +137,11 @@ export function AssistantPanel({
     const list = await ctx.adapter.list();
     if (active.current) setHistory(list);
   };
-  const send = async (question = draft, analysis?: ChatInput["analysis"]) => {
+  const send = async (
+    question = draft,
+    analysis?: ChatInput["analysis"],
+    choice?: ChatInput["choice"],
+  ) => {
     const text = question.trim();
     if (
       !text ||
@@ -203,6 +207,7 @@ export function AssistantPanel({
           requestId,
           message: text,
           ...(analysis ? { analysis } : {}),
+          ...(choice ? { choice } : {}),
         },
         typing.push,
         abort.signal,
@@ -592,7 +597,7 @@ export function AssistantPanel({
                           </p>
                         </article>
                       )}
-                      {messages.map((message) => (
+                      {messages.map((message, index) => (
                         <article
                           key={message.id}
                           className={`assistant-message ${message.role === "USER" ? "is-user" : ""}`}
@@ -715,12 +720,47 @@ export function AssistantPanel({
                                 </small>
                               </section>
                             )}
+                          {message.payload?.clarification?.options?.length ? (
+                            <div
+                              className="assistant-clarify"
+                              role="group"
+                              aria-label="Choisissez l’employé concerné"
+                            >
+                              {message.payload.clarification.options.map(
+                                (option) => (
+                                  <button
+                                    key={option.id}
+                                    type="button"
+                                    disabled={
+                                      busy || index !== messages.length - 1
+                                    }
+                                    onClick={() =>
+                                      void send(
+                                        option.employeeNumber
+                                          ? `${option.label} (${option.employeeNumber})`
+                                          : option.label,
+                                        undefined,
+                                        { employeeId: option.id },
+                                      )
+                                    }
+                                  >
+                                    <strong>{option.label}</strong>
+                                    {option.employeeNumber && (
+                                      <span>N° {option.employeeNumber}</span>
+                                    )}
+                                  </button>
+                                ),
+                              )}
+                            </div>
+                          ) : null}
                           {message.payload && (
                             <>
                               <small>
                                 {message.payload.refusal
                                   ? "Hors du périmètre disponible"
-                                  : message.payload.analysis
+                                  : message.payload.clarification
+                                    ? "Précision nécessaire"
+                                    : message.payload.analysis
                                     ? "Source : outil de lecture vérifié"
                                     : "Source : aide de l’application"}
                               </small>

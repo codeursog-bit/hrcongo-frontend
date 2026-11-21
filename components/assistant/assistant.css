@@ -969,3 +969,40 @@
     display: none;
   }
 }
+
+/* Choix entre homonymes proposé par l'Agent Konza (conversation libre) */
+.assistant-clarify {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 4px;
+}
+.assistant-clarify > button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  text-align: left;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.assistant-clarify > button:hover:not(:disabled) {
+  background: var(--surface-subtle, rgba(127, 127, 127, 0.08));
+}
+.assistant-clarify > button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+.assistant-clarify > button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.assistant-clarify > button span {
+  font-size: 11px;
+  color: var(--text-secondary);
+}

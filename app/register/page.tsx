@@ -13,20 +13,20 @@ function RedirectInner() {
 
   useEffect(() => {
     const ref = searchParams.get('ref');
-    const target = ref ? `/auth/register?ref=${ref}` : '/auth/register';
+    const target = ref ? `/auth/register?ref=${encodeURIComponent(ref)}` : '/auth/register';
     router.replace(target);
   }, [router, searchParams]);
 
   return (
-    <div className="min-h-screen bg-[#020617] flex items-center justify-center">
-      <div className="w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+    <div role="status" className="flex min-h-screen items-center justify-center bg-[#050607]">
+      <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#FF9A62] border-t-transparent" />
     </div>
   );
 }
 
 export default function RegisterRedirectPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#020617]" />}>
+    <Suspense fallback={<div className="min-h-screen bg-[#050607]" />}>
       <RedirectInner />
     </Suspense>
   );

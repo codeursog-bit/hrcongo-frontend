@@ -48,6 +48,11 @@ export interface AssistantPayload {
       path?: string;
     }[];
   };
+  /** Précision demandée par l'Agent Konza (période, employé, jours ou homonymes à départager). */
+  clarification?: {
+    kind: string;
+    options?: { id: string; label: string; employeeNumber?: string | null }[];
+  };
   source: string;
   refusal: boolean;
   articleId?: string;
@@ -94,6 +99,8 @@ export interface ChatInput {
     employeeId?: string;
     days?: number;
   };
+  /** Choix d'un employé parmi les homonymes proposés (le serveur ne l'accepte que parmi les candidats). */
+  choice?: { employeeId: string };
   conversationId?: string;
   requestId: string;
   message: string;

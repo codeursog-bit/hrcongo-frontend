@@ -1,8 +1,8 @@
 // ============================================================================
-// 📁 app/outils/calcul-its-congo/page.tsx
-// 🎯 Cible : "calcul ITS Congo 2026", "barème ITS Congo", "impôt salaire Congo"
-// ✅ Server Component : metadata + JSON-LD FAQPage + WebApplication
-// ✅ Calculateur client-side inline
+// app/outils/calcul-its-congo/page.tsx
+// Cible : "calcul ITS Congo 2026", "barème ITS Congo", "impôt salaire Congo"
+// Server Component : metadata + JSON-LD FAQPage + WebApplication
+// Calculateur client-side inline
 // ============================================================================
 import type { Metadata } from 'next';
 import ItsCalculatorClient from './ItsCalculatorClient';
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     'ITS progressif Congo', 'tranche imposition Congo salaire',
   ].join(', '),
   openGraph: {
-    title: 'Calcul ITS Congo 2026 — Barème officiel + Simulateur gratuit',
+    title: 'Calcul ITS Congo 2026 — Barème + Simulateur gratuit',
     description: 'Simulez votre ITS 2026 : barème 5 tranches, abattement 20%, quotient familial. Conforme Ordonnance n°2025-44.',
     url: `${SITE_URL}/outils/calcul-its-congo`,
     type: 'website',
@@ -90,7 +90,7 @@ const webAppJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
   name: 'Calculateur ITS Congo-Brazzaville 2026',
-  description: 'Calculez l\'ITS (Impôt sur les Traitements et Salaires) au Congo 2026 avec le barème officiel de l\'Ordonnance n°2025-44.',
+  description: 'Calculez l\'ITS (Impôt sur les Traitements et Salaires) au Congo 2026 avec le barème de l\'Ordonnance n°2025-44.',
   url: `${SITE_URL}/outils/calcul-its-congo`,
   applicationCategory: 'FinanceApplication',
   isAccessibleForFree: true,

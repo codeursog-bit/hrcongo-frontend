@@ -22,8 +22,8 @@ export const metadata: Metadata = {
 };
 
 const C = {
-  bg: '#050607', card: '#0B0C0F', border: 'rgba(255,255,255,0.07)',
-  text: '#F8FAFC', muted: '#64748B', sub: '#94A3B8', accent: '#10B981',
+  bg: '#050607', card: '#0c0c0d', border: 'rgba(255,255,255,0.07)',
+  text: '#F2F2F2', muted: '#6f6f6f', sub: '#bdbdbd', accent: '#FF9A62',
 };
 
 function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
@@ -49,7 +49,7 @@ const toc = [
 
 export default function PrivacyPage() {
   return (
-    <div style={{ background: C.bg, minHeight: '100vh', fontFamily: "system-ui,-apple-system,'Segoe UI',sans-serif", color: C.text }}>
+    <div style={{ background: C.bg, minHeight: '100vh', fontFamily: 'inherit', color: C.text }}>
       <Navbar />
 
       <section style={{ padding: '130px 32px 0' }}>

@@ -60,10 +60,12 @@ function StepCelebrationToast({ show, step }: { show: boolean; step: number }) {
 // ─── SUCCESS MODAL ─────────────────────────────────────────────────────────────
 function SuccessModal({
   show, firstName, lastName, email, generatedPassword, fromCandidate, onGoToEmployee, onAddAnother,
+  accountStatus, accountMessage, retrying, onRetryAccount,
 }: {
   show: boolean; firstName: string; lastName: string; email: string;
   generatedPassword: string; fromCandidate: boolean;
   onGoToEmployee: () => void; onAddAnother: () => void;
+  accountStatus: 'created' | 'exists' | 'failed'; accountMessage: string; retrying: boolean; onRetryAccount: () => void;
 }) {
   const [showPwd, setShowPwd] = useState(false);
   const [copied, setCopied]   = useState(false);
@@ -140,7 +142,26 @@ function SuccessModal({
               )}
             </motion.div>
 
+            {/* Compte NON créé : message clair + nouvel essai (la fiche RH, elle, est bien créée) */}
+            {accountStatus !== 'created' && (
+              <div role="alert" className="mb-5 p-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] space-y-2.5">
+                <p className="text-sm font-bold text-[var(--text)]">
+                  {accountStatus === 'exists' ? 'Un compte existe déjà avec cet email' : 'Le compte utilisateur n’a pas été créé'}
+                </p>
+                <p className="text-xs text-[var(--text-muted)] leading-relaxed">
+                  {accountMessage || 'La fiche employé est enregistrée, mais l’employé ne pourra pas se connecter tant que son compte n’existe pas.'}
+                </p>
+                {accountStatus === 'failed' && (
+                  <Button variant="secondary" type="button" onClick={onRetryAccount} disabled={retrying}
+                    className="w-full py-2.5 rounded-xl text-sm font-bold cursor-pointer">
+                    {retrying ? 'Création du compte…' : 'Réessayer la création du compte'}
+                  </Button>
+                )}
+              </div>
+            )}
+
             {/* Credentials box */}
+            {accountStatus === 'created' && (
             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.36 }}
               className="mb-5 p-4 bg-[var(--surface-2)] rounded-2xl border border-[var(--border)] space-y-2.5">
               <div className="flex items-center gap-2 mb-2">
@@ -172,9 +193,10 @@ function SuccessModal({
                 {copied ? <><Check size={13} /> Copié !</> : <><Copy size={13} /> Copier les identifiants</>}
               </Button>
               <p className="text-[10px] text-[var(--text-muted)] text-center leading-relaxed">
-                L’accès dépend de la création du compte. Vérifiez les éventuels avertissements avant de transmettre ces identifiants à l’employé.
+                Le compte est créé : l’employé peut se connecter avec ces identifiants et devra changer son mot de passe.
               </p>
             </motion.div>
+            )}
 
             {/* Actions */}
             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.44 }}
@@ -220,6 +242,33 @@ function CreateEmployeeFormInner() {
   const [departments, setDepartments]         = useState<any[]>([]);
   const [generatedPassword, setGeneratedPassword] = useState('');
   const [createdEmployeeId, setCreatedEmployeeId] = useState('');
+  const [accountStatus, setAccountStatus]     = useState<'created' | 'exists' | 'failed'>('created');
+  const [accountMessage, setAccountMessage]   = useState('');
+  const [retrying, setRetrying]               = useState(false);
+
+  // Crée le compte de connexion. services/api.ts lève une Error avec .status / .data / .message (pas de .response comme axios).
+  const createAccount = async (pwd: string): Promise<{ status: 'created' | 'exists' | 'failed'; message: string }> => {
+    try {
+      const invitePromise = api.post('/users/invite', {
+        email: formData.email.trim(), firstName: formData.firstName,
+        lastName: formData.lastName, role: 'EMPLOYEE',
+        password: pwd, departmentId: formData.departmentId,
+      });
+      const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 15000));
+      await Promise.race([invitePromise, timeout]);
+      return { status: 'created', message: '' };
+    } catch (e: any) {
+      if (e?.message === 'timeout') return { status: 'created', message: 'L’email d’invitation sera envoyé ultérieurement.' };
+      const reason = (Array.isArray(e?.data?.message) ? e.data.message.join(' · ') : e?.data?.message) || e?.message || '';
+      if (e?.status === 409) return { status: 'exists', message: reason || 'Cet email est déjà utilisé par un autre compte. Modifiez l’email de la fiche ou rattachez le compte existant.' };
+      return { status: 'failed', message: reason || 'Le compte utilisateur n’a pas pu être créé.' };
+    }
+  };
+  const retryAccount = async () => {
+    setRetrying(true);
+    const r = await createAccount(generatedPassword);
+    setAccountStatus(r.status); setAccountMessage(r.message); setRetrying(false);
+  };
 
   const fromCandidate = searchParams.get('fromCandidate') || '';
   const prefill = {
@@ -448,24 +497,9 @@ function CreateEmployeeFormInner() {
       const pwd = generatePassword(10);
       setGeneratedPassword(pwd);
 
-      try {
-        const invitePromise = api.post('/users/invite', {
-          email: formData.email, firstName: formData.firstName,
-          lastName: formData.lastName, role: 'EMPLOYEE',
-          password: pwd, departmentId: formData.departmentId,
-        });
-        const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 15000));
-        await Promise.race([invitePromise, timeout]);
-      } catch (e: any) {
-        if (e.message === 'timeout') {
-          alert.warning('Email différé', "L'employé est créé. L'email d'invitation sera envoyé ultérieurement.");
-        } else if (e?.response?.status === 409) {
-          // silencieux : compte déjà existant
-        } else {
-          console.error('[invite] Erreur:', e?.response?.data || e.message);
-          alert.warning('Compte non créé', e?.response?.data?.message || "Le compte utilisateur n'a pas pu être créé.");
-        }
-      }
+      const result = await createAccount(pwd);
+      setAccountStatus(result.status);
+      setAccountMessage(result.message);
 
       setIsLoading(false);
       setShowSuccess(true);
@@ -509,6 +543,10 @@ function CreateEmployeeFormInner() {
           fromCandidate={!!fromCandidate}
           onGoToEmployee={() => router.push(createdEmployeeId ? `/employes/${createdEmployeeId}` : '/employes')}
           onAddAnother={() => window.location.reload()}
+          accountStatus={accountStatus}
+          accountMessage={accountMessage}
+          retrying={retrying}
+          onRetryAccount={retryAccount}
         />
 
         {/* Candidate banner */}

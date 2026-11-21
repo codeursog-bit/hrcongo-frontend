@@ -1,6 +1,6 @@
 'use client';
 // ============================================================================
-// 📁 app/outils/calcul-its-congo/ItsCalculatorClient.tsx
+// app/outils/calcul-its-congo/ItsCalculatorClient.tsx
 // Calculateur ITS 2026 + IRPP Legacy · avec décomposition tranches
 // ============================================================================
 import React, { useState, useMemo } from 'react';
@@ -86,28 +86,26 @@ export default function ItsCalculatorClient() {
   return (
     <div className="min-h-screen bg-[#050607]">
       <Navbar />
-      <div className="fixed -right-40 -top-40 w-[600px] h-[600px] bg-white/[0.04] rounded-full blur-[130px] pointer-events-none" />
-      <div className="fixed -left-40 bottom-0 w-[500px] h-[500px] bg-[#D4A548]/[0.06] rounded-full blur-[130px] pointer-events-none" />
 
       {/* ── HERO ── */}
-      <div className="bg-gradient-to-br from-gray-900 via-gray-900 to-indigo-950 text-white">
+      <div className="bg-gradient-to-br from-[#0c0c0d] via-[#0c0c0d] to-[#1a110c] text-white">
         <div className="max-w-4xl mx-auto px-4 pt-20 pb-10">
           {/* Breadcrumb */}
-          <nav className="flex items-center gap-2 text-xs text-gray-500 mb-6">
-            <Link href="/" className="hover:text-gray-300 transition-colors">Accueil</Link>
+          <nav className="flex items-center gap-2 text-xs text-[#6f6f6f] mb-6">
+            <Link href="/" className="hover:text-[#d6d6d6] transition-colors">Accueil</Link>
             <span>›</span>
-            <Link href="/outils" className="hover:text-gray-300 transition-colors">Outils RH</Link>
+            <Link href="/outils" className="hover:text-[#d6d6d6] transition-colors">Outils RH</Link>
             <span>›</span>
-            <span className="text-gray-300">Calcul ITS 2026</span>
+            <span className="text-[#d6d6d6]">Calcul ITS 2026</span>
           </nav>
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-full text-xs text-indigo-300 mb-4">
-            📊 Ordonnance n°2025-44 du 31 déc. 2025
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#FF9A62]/10 border border-[#FF9A62]/20 rounded-full text-xs text-[#FF9A62] mb-4">
+            Ordonnance n°2025-44 du 31 déc. 2025
           </div>
           <h1 className="text-3xl md:text-4xl font-black tracking-tight mb-3">
             Calcul ITS Congo-Brazzaville<br />
-            <span className="text-indigo-400">Barème 2026 officiel</span>
+            <span className="text-[#FF9A62]">Barème 2026</span>
           </h1>
-          <p className="text-gray-400 text-sm max-w-xl">
+          <p className="text-[#9a9a9a] text-sm max-w-xl">
             Impôt sur les Traitements et Salaires : abattement 20%, barème progressif 5 tranches, quotient familial maintenu.
             Décomposition tranche par tranche.
           </p>
@@ -121,17 +119,17 @@ export default function ItsCalculatorClient() {
         <div className="grid md:grid-cols-2 gap-6 items-start">
 
           {/* Formulaire */}
-          <div className="rounded-2xl border p-6 space-y-5 bg-gray-800 border-gray-700">
+          <div className="rounded-2xl border p-6 space-y-5 bg-[#161616] border-[#2a2a2a]">
             <h2 className="font-black text-base text-white">Paramètres</h2>
 
             <div>
-              <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Salaire brut mensuel (FCFA)</label>
+              <label className="block text-[11px] font-bold text-[#9a9a9a] uppercase tracking-wider mb-1.5">Salaire brut mensuel (FCFA)</label>
               <input type="number" value={gross} onChange={e => setGross(e.target.value)} placeholder="Ex : 500 000"
-                className="w-full px-4 py-3 border-2 rounded-xl text-base font-black font-mono outline-none focus:border-indigo-400 transition-colors border-gray-600 bg-gray-700" />
+                className="w-full px-4 py-3 border-2 rounded-xl text-base font-black font-mono outline-none focus:border-[#FF9A62] transition-colors border-[#3a3a3a] bg-[#2a2a2a]" />
             </div>
 
             <div>
-              <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Régime fiscal</label>
+              <label className="block text-[11px] font-bold text-[#9a9a9a] uppercase tracking-wider mb-2">Régime fiscal</label>
               <div className="grid grid-cols-2 gap-2">
                 {[
                   { val: 'ITS_2026',    label: 'ITS 2026',    sub: 'Depuis janv. 2026',   color: 'indigo' },
@@ -140,32 +138,32 @@ export default function ItsCalculatorClient() {
                   <button key={m.val} onClick={() => setMode(m.val as any)}
                     className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer
                       ${mode === m.val
-                        ? m.color === 'indigo' ? 'border-indigo-400 bg-indigo-900/20' : 'border-amber-400 bg-amber-900/20'
-                        : 'border-gray-600'}`}>
-                    <p className={`text-xs font-black ${mode === m.val ? m.color === 'indigo' ? 'text-indigo-300' : 'text-amber-300' : 'text-gray-400'}`}>{m.label}</p>
-                    <p className="text-[10px] text-gray-400">{m.sub}</p>
+                        ? m.color === 'indigo' ? 'border-[#FF9A62] bg-[#FF9A62]/15' : 'border-amber-400 bg-amber-900/20'
+                        : 'border-[#3a3a3a]'}`}>
+                    <p className={`text-xs font-black ${mode === m.val ? m.color === 'indigo' ? 'text-[#FF9A62]' : 'text-amber-300' : 'text-[#9a9a9a]'}`}>{m.label}</p>
+                    <p className="text-[10px] text-[#9a9a9a]">{m.sub}</p>
                   </button>
                 ))}
               </div>
             </div>
 
             <div>
-              <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Situation familiale</label>
+              <label className="block text-[11px] font-bold text-[#9a9a9a] uppercase tracking-wider mb-2">Situation familiale</label>
               <select value={marital} onChange={e => setMarital(e.target.value)}
-                className="w-full px-3 py-2.5 border rounded-xl text-sm outline-none mb-3 cursor-pointer border-gray-600 bg-gray-700">
+                className="w-full px-3 py-2.5 border rounded-xl text-sm outline-none mb-3 cursor-pointer border-[#3a3a3a] bg-[#2a2a2a]">
                 <option value="SINGLE">Célibataire / Divorcé(e)</option>
                 <option value="MARRIED">Marié(e)</option>
               </select>
               <div className="flex items-center gap-3">
-                <span className="text-xs text-gray-500 flex-1">Enfants à charge</span>
+                <span className="text-xs text-[#6f6f6f] flex-1">Enfants à charge</span>
                 <button onClick={() => setChildren(n => Math.max(0, n - 1))}
-                  className="w-8 h-8 rounded-lg border flex items-center justify-center text-sm font-bold cursor-pointer border-gray-600 bg-gray-700">−</button>
+                  className="w-8 h-8 rounded-lg border flex items-center justify-center text-sm font-bold cursor-pointer border-[#3a3a3a] bg-[#2a2a2a]">−</button>
                 <span className="w-8 text-center font-black font-mono">{children}</span>
                 <button onClick={() => setChildren(n => Math.min(10, n + 1))}
-                  className="w-8 h-8 rounded-lg border flex items-center justify-center text-sm font-bold cursor-pointer border-gray-600 bg-gray-700">+</button>
+                  className="w-8 h-8 rounded-lg border flex items-center justify-center text-sm font-bold cursor-pointer border-[#3a3a3a] bg-[#2a2a2a]">+</button>
               </div>
               {res && (
-                <p className="text-[11px] text-indigo-500 mt-2 font-semibold">
+                <p className="text-[11px] text-[#FF9A62] mt-2 font-semibold">
                   → {res.parts.toFixed(1)} parts fiscales
                 </p>
               )}
@@ -175,36 +173,36 @@ export default function ItsCalculatorClient() {
           {/* Résultat */}
           <div className="space-y-4">
             {!res ? (
-              <div className="border border-dashed rounded-2xl p-12 text-center bg-gray-800/50 border-gray-700">
-                <p className="text-3xl mb-3">📊</p>
-                <p className="text-sm text-gray-400">Entrez un salaire brut pour calculer</p>
+              <div className="border border-dashed rounded-2xl p-12 text-center bg-[#161616]/50 border-[#2a2a2a]">
+                <p className="text-3xl mb-3"></p>
+                <p className="text-sm text-[#9a9a9a]">Entrez un salaire brut pour calculer</p>
               </div>
             ) : (
               <>
                 {/* ITS mensuel — headline */}
                 <div className="rounded-2xl p-6 text-white bg-black">
-                  <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">ITS mensuel</p>
+                  <p className="text-[10px] text-[#6f6f6f] uppercase tracking-widest mb-1">ITS mensuel</p>
                   <p className="text-4xl font-black font-mono tracking-tight">
-                    {fmt(res.its)} <span className="text-base font-normal text-gray-400">FCFA</span>
+                    {fmt(res.its)} <span className="text-base font-normal text-[#9a9a9a]">FCFA</span>
                   </p>
-                  <p className="text-xs text-gray-500 mt-2">
-                    Taux effectif : <span className="font-bold text-indigo-400">{res.effectiveRate}%</span>
+                  <p className="text-xs text-[#6f6f6f] mt-2">
+                    Taux effectif : <span className="font-bold text-[#FF9A62]">{res.effectiveRate}%</span>
                     {' · '}{res.parts.toFixed(1)} parts fiscales
                     {' · '}{mode === 'ITS_2026' ? 'Barème ITS 2026' : 'IRPP legacy'}
                   </p>
                 </div>
 
                 {/* Récap calcul */}
-                <div className="rounded-2xl border overflow-hidden bg-gray-800 border-gray-700">
-                  <div className="px-4 py-3 border-b border-gray-700 bg-indigo-900/10">
+                <div className="rounded-2xl border overflow-hidden bg-[#161616] border-[#2a2a2a]">
+                  <div className="px-4 py-3 border-b border-[#2a2a2a] bg-[#FF9A62]/10">
                     <button onClick={() => setShowStep(s => !s)}
                       className="w-full flex items-center justify-between cursor-pointer">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-400">Décomposition étape par étape</span>
-                      <span className="text-gray-400 text-xs">{showStep ? '▲' : '▼'}</span>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#FF9A62]">Décomposition étape par étape</span>
+                      <span className="text-[#9a9a9a] text-xs">{showStep ? '▲' : '▼'}</span>
                     </button>
                   </div>
                   {showStep && (
-                    <div className="divide-y divide-gray-700/50">
+                    <div className="divide-y divide-[#2a2a2a]/50">
                       {[
                         { label: 'Salaire brut',                     value: `${fmt(Number(gross))} FCFA`,   color: 'text-emerald-600' },
                         { label: 'CNSS salarié (4%)',                 value: `− ${fmt(res.cnss)} FCFA`,      color: 'text-red-500' },
@@ -212,11 +210,11 @@ export default function ItsCalculatorClient() {
                         { label: 'Abattement 20%',                    value: `− ${fmt(res.abatt)} FCFA`,     color: 'text-orange-500' },
                         { label: 'RNI mensuel',                       value: `${fmt(res.rni)} FCFA`,         color: '' },
                         { label: 'RNI annualisé (× 12)',              value: `${fmt(res.rniAnnuel)} FCFA`,   color: '' },
-                        { label: `Divisé par ${res.parts.toFixed(1)} parts`, value: `${fmt(res.parPart)} FCFA / part`, color: 'text-indigo-600' },
+                        { label: `Divisé par ${res.parts.toFixed(1)} parts`, value: `${fmt(res.parPart)} FCFA / part`, color: 'text-[#FF9A62]' },
                       ].map(r => (
                         <div key={r.label} className="flex items-center justify-between px-4 py-2.5">
-                          <span className="text-xs text-gray-500">{r.label}</span>
-                          <span className={`text-xs font-mono font-bold ${r.color || 'text-gray-200'}`}>{r.value}</span>
+                          <span className="text-xs text-[#6f6f6f]">{r.label}</span>
+                          <span className={`text-xs font-mono font-bold ${r.color || 'text-[#e5e5e5]'}`}>{r.value}</span>
                         </div>
                       ))}
                     </div>
@@ -224,25 +222,25 @@ export default function ItsCalculatorClient() {
                 </div>
 
                 {/* Décomposition barème */}
-                <div className="rounded-2xl border overflow-hidden bg-gray-800 border-gray-700">
-                  <div className="px-4 py-3 border-b border-gray-700 bg-indigo-900/10">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-400">Barème par tranches</p>
-                    <p className="text-[10px] text-gray-400">Sur la base de {fmt(res.parPart)} FCFA / part</p>
+                <div className="rounded-2xl border overflow-hidden bg-[#161616] border-[#2a2a2a]">
+                  <div className="px-4 py-3 border-b border-[#2a2a2a] bg-[#FF9A62]/10">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-[#FF9A62]">Barème par tranches</p>
+                    <p className="text-[10px] text-[#9a9a9a]">Sur la base de {fmt(res.parPart)} FCFA / part</p>
                   </div>
-                  <div className="divide-y divide-gray-700/50">
+                  <div className="divide-y divide-[#2a2a2a]/50">
                     {res.details.map((d, i) => (
                       <div key={i} className="flex items-center justify-between px-4 py-2.5">
                         <div>
-                          <p className="text-xs text-gray-300">{d.label}</p>
-                          {d.taxable > 0 && <p className="text-[10px] text-gray-400">{fmt(d.taxable)} × {(d.rate * 100).toFixed(0)}%</p>}
-                          {d.amount > 0 && d.taxable === 0 && <p className="text-[10px] text-gray-400">Forfait minimum</p>}
+                          <p className="text-xs text-[#d6d6d6]">{d.label}</p>
+                          {d.taxable > 0 && <p className="text-[10px] text-[#9a9a9a]">{fmt(d.taxable)} × {(d.rate * 100).toFixed(0)}%</p>}
+                          {d.amount > 0 && d.taxable === 0 && <p className="text-[10px] text-[#9a9a9a]">Forfait minimum</p>}
                         </div>
-                        <span className="text-xs font-mono font-bold text-indigo-400">{fmt(d.amount)} F</span>
+                        <span className="text-xs font-mono font-bold text-[#FF9A62]">{fmt(d.amount)} F</span>
                       </div>
                     ))}
-                    <div className="flex items-center justify-between px-4 py-3 bg-indigo-900/20">
-                      <span className="text-xs font-bold text-indigo-300">ITS / part × {res.parts.toFixed(1)} parts ÷ 12</span>
-                      <span className="font-mono font-black text-indigo-300">{fmt(res.its)} F/mois</span>
+                    <div className="flex items-center justify-between px-4 py-3 bg-[#FF9A62]/15">
+                      <span className="text-xs font-bold text-[#FF9A62]">ITS / part × {res.parts.toFixed(1)} parts ÷ 12</span>
+                      <span className="font-mono font-black text-[#FF9A62]">{fmt(res.its)} F/mois</span>
                     </div>
                   </div>
                 </div>
@@ -252,7 +250,7 @@ export default function ItsCalculatorClient() {
                   className="flex items-center justify-between p-4 bg-[#FAFAFA] text-black rounded-2xl hover:bg-white transition-colors group">
                   <div>
                     <p className="font-black text-sm">Calculer le salaire net complet</p>
-                    <p className="text-xs text-gray-600">CNSS + ITS + TUS + CAMU + HS + Primes</p>
+                    <p className="text-xs text-[#3a3a3a]">CNSS + ITS + TUS + CAMU + HS + Primes</p>
                   </div>
                   <span className="text-xl group-hover:translate-x-1 transition-transform">→</span>
                 </Link>
@@ -266,20 +264,20 @@ export default function ItsCalculatorClient() {
           <h2 className="text-xl font-black mb-4 text-white">
             Barème ITS 2026 — Congo-Brazzaville
           </h2>
-          <p className="text-sm mb-4 text-gray-400">
+          <p className="text-sm mb-4 text-[#9a9a9a]">
             Le barème ITS 2026 est défini par l'Ordonnance n°2025-44 du 31 décembre 2025.
             Il remplace l'IRPP et s'applique sur le revenu annuel par part fiscale.
           </p>
-          <div className="overflow-x-auto rounded-2xl border border-gray-700">
+          <div className="overflow-x-auto rounded-2xl border border-[#2a2a2a]">
             <table className="w-full text-sm">
-              <thead className="bg-indigo-900/20">
+              <thead className="bg-[#FF9A62]/15">
                 <tr>
                   {['Tranche', 'Base annuelle / part', 'Taux', 'Impôt sur la tranche'].map(h => (
-                    <th key={h} className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-indigo-300">{h}</th>
+                    <th key={h} className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-[#FF9A62]">{h}</th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y bg-gray-800 divide-gray-700">
+              <tbody className="divide-y bg-[#161616] divide-[#2a2a2a]">
                 {[
                   { t: '1', range: '0 – 615 000 FCFA',          taux: '0%',  note: 'Forfait fixe 1 200 FCFA/an' },
                   { t: '2', range: '615 001 – 1 500 000 FCFA',   taux: '10%', note: 'Max 88 500 FCFA' },
@@ -287,17 +285,17 @@ export default function ItsCalculatorClient() {
                   { t: '4', range: '3 500 001 – 5 000 000 FCFA', taux: '20%', note: 'Max 300 000 FCFA' },
                   { t: '5', range: 'Au-delà de 5 000 000 FCFA',  taux: '30%', note: 'Pas de plafond' },
                 ].map(r => (
-                  <tr key={r.t} className="transition-colors hover:bg-gray-750">
-                    <td className="px-4 py-3 font-bold text-indigo-400">T{r.t}</td>
-                    <td className="px-4 py-3 font-mono text-xs text-gray-300">{r.range}</td>
-                    <td className="px-4 py-3"><span className="px-2 py-0.5 rounded-full text-xs font-bold bg-indigo-900/30 text-indigo-300">{r.taux}</span></td>
-                    <td className="px-4 py-3 text-gray-500 text-xs">{r.note}</td>
+                  <tr key={r.t} className="transition-colors hover:bg-[#6f6f6f]">
+                    <td className="px-4 py-3 font-bold text-[#FF9A62]">T{r.t}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-[#d6d6d6]">{r.range}</td>
+                    <td className="px-4 py-3"><span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#FF9A62]/15 text-[#FF9A62]">{r.taux}</span></td>
+                    <td className="px-4 py-3 text-[#6f6f6f] text-xs">{r.note}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          <p className="text-xs text-gray-400 mt-2">Source : Ordonnance n°2025-44 · PaySpace Congo Annual Amendments 2026</p>
+          <p className="text-xs text-[#9a9a9a] mt-2">Source : Ordonnance n°2025-44 · PaySpace Congo Annual Amendments 2026</p>
         </section>
 
         {/* ── QUOTIENT FAMILIAL ── */}
@@ -305,11 +303,11 @@ export default function ItsCalculatorClient() {
           <h2 className="text-xl font-black mb-4 text-white">
             Quotient familial ITS 2026 — Parts fiscales
           </h2>
-          <p className="text-sm mb-4 text-gray-400">
+          <p className="text-sm mb-4 text-[#9a9a9a]">
             Le quotient familial réduit l'impôt en divisant le revenu imposable annuel par le nombre de parts.
-            Il est <strong className="text-gray-200">maintenu en ITS 2026</strong> contrairement à ce qui était initialement annoncé.
+            Il est <strong className="text-[#e5e5e5]">maintenu en ITS 2026</strong> contrairement à ce qui était initialement annoncé.
           </p>
-          <div className="overflow-x-auto rounded-2xl border border-gray-700">
+          <div className="overflow-x-auto rounded-2xl border border-[#2a2a2a]">
             <table className="w-full text-sm">
               <thead className="bg-emerald-900/20">
                 <tr>
@@ -318,7 +316,7 @@ export default function ItsCalculatorClient() {
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y bg-gray-800 divide-gray-700">
+              <tbody className="divide-y bg-[#161616] divide-[#2a2a2a]">
                 {[
                   { s: 'Célibataire / Divorcé(e) / Veuf(ve) sans enfant', p: '1 part' },
                   { s: 'Marié(e) sans enfant',                            p: '2 parts' },
@@ -328,8 +326,8 @@ export default function ItsCalculatorClient() {
                   { s: 'Célibataire + 2e enfant et suivants',            p: '+0,5 par enfant' },
                   { s: 'Plafond maximum',                                 p: '6,5 parts' },
                 ].map(r => (
-                  <tr key={r.s} className="transition-colors hover:bg-gray-750">
-                    <td className="px-4 py-3 text-gray-300">{r.s}</td>
+                  <tr key={r.s} className="transition-colors hover:bg-[#6f6f6f]">
+                    <td className="px-4 py-3 text-[#d6d6d6]">{r.s}</td>
                     <td className="px-4 py-3 font-bold text-emerald-400">{r.p}</td>
                   </tr>
                 ))}
@@ -344,20 +342,20 @@ export default function ItsCalculatorClient() {
             Comment calculer l'ITS au Congo-Brazzaville en 2026 ?
           </h2>
 
-          <div className="rounded-2xl border p-6 bg-gray-800 border-gray-700">
+          <div className="rounded-2xl border p-6 bg-[#161616] border-[#2a2a2a]">
             <h3 className="font-bold text-sm mb-3 text-white">Formule de calcul ITS 2026</h3>
-            <div className="space-y-2 text-xs font-mono rounded-xl p-4 bg-gray-900">
-              <p className="text-gray-500">// Étape 1 : CNSS salariale</p>
-              <p className="text-indigo-400">CNSS = min(brut, 1 200 000) × 4%</p>
-              <p className="text-gray-500 mt-2">// Étape 2 : Base imposable et abattement</p>
-              <p className="text-indigo-400">Base = brut − CNSS</p>
-              <p className="text-indigo-400">RNI mensuel = Base × 80%  (abattement 20%)</p>
-              <p className="text-gray-500 mt-2">// Étape 3 : Annualisation + quotient familial</p>
-              <p className="text-indigo-400">RNI annuel = RNI mensuel × 12</p>
-              <p className="text-indigo-400">Base / part = RNI annuel ÷ parts fiscales</p>
-              <p className="text-gray-500 mt-2">// Étape 4 : Barème progressif</p>
-              <p className="text-indigo-400">ITS annuel = barème(Base / part) × parts fiscales</p>
-              <p className="text-gray-500 mt-2">// Étape 5 : Mensualisation (arrondi supérieur)</p>
+            <div className="space-y-2 text-xs font-mono rounded-xl p-4 bg-[#0c0c0d]">
+              <p className="text-[#6f6f6f]">// Étape 1 : CNSS salariale</p>
+              <p className="text-[#FF9A62]">CNSS = min(brut, 1 200 000) × 4%</p>
+              <p className="text-[#6f6f6f] mt-2">// Étape 2 : Base imposable et abattement</p>
+              <p className="text-[#FF9A62]">Base = brut − CNSS</p>
+              <p className="text-[#FF9A62]">RNI mensuel = Base × 80%  (abattement 20%)</p>
+              <p className="text-[#6f6f6f] mt-2">// Étape 3 : Annualisation + quotient familial</p>
+              <p className="text-[#FF9A62]">RNI annuel = RNI mensuel × 12</p>
+              <p className="text-[#FF9A62]">Base / part = RNI annuel ÷ parts fiscales</p>
+              <p className="text-[#6f6f6f] mt-2">// Étape 4 : Barème progressif</p>
+              <p className="text-[#FF9A62]">ITS annuel = barème(Base / part) × parts fiscales</p>
+              <p className="text-[#6f6f6f] mt-2">// Étape 5 : Mensualisation (arrondi supérieur)</p>
               <p className="text-emerald-400">ITS mensuel = ceil(ITS annuel ÷ 12)</p>
             </div>
           </div>
@@ -393,12 +391,12 @@ export default function ItsCalculatorClient() {
                 color: 'emerald',
               },
             ].map(ex => (
-              <div key={ex.title} className="rounded-xl border p-4 bg-gray-800 border-gray-700">
-                <h3 className={`font-bold text-sm mb-3 ${ex.color === 'indigo' ? 'text-indigo-300' : 'text-emerald-300'}`}>{ex.title}</h3>
+              <div key={ex.title} className="rounded-xl border p-4 bg-[#161616] border-[#2a2a2a]">
+                <h3 className={`font-bold text-sm mb-3 ${ex.color === 'indigo' ? 'text-[#FF9A62]' : 'text-emerald-300'}`}>{ex.title}</h3>
                 <ol className="space-y-1.5">
                   {ex.steps.map((s, i) => (
-                    <li key={i} className="flex gap-2 text-xs text-gray-400">
-                      <span className={`font-bold shrink-0 ${ex.color === 'indigo' ? 'text-indigo-500' : 'text-emerald-500'}`}>{i + 1}.</span>
+                    <li key={i} className="flex gap-2 text-xs text-[#9a9a9a]">
+                      <span className={`font-bold shrink-0 ${ex.color === 'indigo' ? 'text-[#FF9A62]' : 'text-emerald-500'}`}>{i + 1}.</span>
                       <span>{s}</span>
                     </li>
                   ))}
@@ -408,7 +406,7 @@ export default function ItsCalculatorClient() {
           </div>
 
           <div className="p-4 border rounded-xl bg-amber-900/20 border-amber-800">
-            <p className="text-sm font-bold mb-1 text-amber-300">⚠️ ITS 2026 vs IRPP — Ce qui change</p>
+            <p className="text-sm font-bold mb-1 text-amber-300">ITS 2026 vs IRPP — Ce qui change</p>
             <p className="text-xs leading-relaxed text-amber-400">
               L'ITS 2026 remplace l'IRPP (Ordonnance n°2025-44). Le principal changement : la tranche 1 passe de 1% sur 0–464 000 FCFA à un <strong>forfait fixe de 1 200 FCFA/an</strong> dès que le revenu dépasse 615 000 FCFA. Les tranches supérieures sont significativement plus favorables (10/15/20/30% vs 1/10/25/40%).
               L'abattement de 20% est inchangé. Le quotient familial est maintenu contrairement aux premières annonces.
@@ -426,12 +424,12 @@ export default function ItsCalculatorClient() {
               { q: 'Un expatrié est-il soumis à l\'ITS au Congo ?', a: 'Oui. Tout salarié qui travaille et réside légalement au Congo-Brazzaville est soumis à l\'ITS, qu\'il soit congolais ou étranger.' },
               { q: 'Peut-on simuler son ITS avant de négocier son salaire ?', a: 'Oui, c\'est même recommandé. Notre simulateur complet vous permet de calculer exactement votre net à partir d\'un brut donné, avec toutes les cotisations (CNSS, ITS, TUS, CAMU).' },
             ].map(({ q, a }) => (
-              <details key={q} className="group border rounded-xl overflow-hidden bg-gray-800 border-gray-700">
+              <details key={q} className="group border rounded-xl overflow-hidden bg-[#161616] border-[#2a2a2a]">
                 <summary className="flex items-center justify-between px-5 py-4 cursor-pointer font-bold text-sm list-none text-white">
                   {q}
-                  <span className="text-gray-400 text-xs ml-3 group-open:rotate-180 transition-transform inline-block">▼</span>
+                  <span className="text-[#9a9a9a] text-xs ml-3 group-open:rotate-180 transition-transform inline-block">▼</span>
                 </summary>
-                <div className="px-5 pb-4 pt-2 text-sm leading-relaxed border-t text-gray-400 border-gray-700">
+                <div className="px-5 pb-4 pt-2 text-sm leading-relaxed border-t text-[#9a9a9a] border-[#2a2a2a]">
                   {a}
                 </div>
               </details>
@@ -444,13 +442,13 @@ export default function ItsCalculatorClient() {
           <h2 className="text-xl font-black mb-4 text-white">Autres calculs RH Congo</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {[
-              { href: '/outils/calcul-cnss-congo',  icon: '🏥', label: 'Calcul CNSS' },
-              { href: '/outils/calcul-camu-congo',  icon: '💊', label: 'Calcul CAMU' },
-              { href: '/outils/calcul-tus-congo',   icon: '🏦', label: 'Calcul TUS' },
-              { href: '/outils/calcul-heures-supplementaires-congo', icon: '⏰', label: 'Heures sup' },
+              { href: '/outils/calcul-cnss-congo',  icon: '', label: 'Calcul CNSS' },
+              { href: '/outils/calcul-camu-congo',  icon: '', label: 'Calcul CAMU' },
+              { href: '/outils/calcul-tus-congo',   icon: '', label: 'Calcul TUS' },
+              { href: '/outils/calcul-heures-supplementaires-congo', icon: '', label: 'Heures sup' },
             ].map(l => (
               <Link key={l.href} href={l.href}
-                className="flex items-center gap-2 p-3 border rounded-xl hover:border-indigo-300 transition-all text-sm font-bold bg-gray-800 border-gray-700 hover:bg-indigo-900/10 text-gray-300">
+                className="flex items-center gap-2 p-3 border rounded-xl hover:border-[#FF9A62] transition-all text-sm font-bold bg-[#161616] border-[#2a2a2a] hover:bg-[#FF9A62]/10 text-[#d6d6d6]">
                 <span>{l.icon}</span>{l.label}
               </Link>
             ))}

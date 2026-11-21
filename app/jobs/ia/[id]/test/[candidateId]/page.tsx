@@ -1,9 +1,15 @@
+// ============================================================================
+// 📁 app/jobs/ia/[id]/test/[candidateId]/page.tsx — Test technique candidat
+// Page liée à l'entreprise : on affiche SON logo, pas celui de Konza.
+// Logique inchangée : questions, minuteur, anti-triche (3 changements d'onglet),
+// envoi des réponses, disqualification.
+// ============================================================================
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
-import { BrainCircuit, Clock, Target, CheckCircle2, Loader2, Zap, AlertTriangle, Sparkles, XCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Clock, XCircle } from 'lucide-react';
+import { ACCENT, CompanyTopBar, JobPageShell, PageSpinner, useJobOffer } from '@/components/jobs/job-kit';
 import { recruitmentTestRequest } from '@/lib/recruitment-test';
 
 interface TestQuestion {
@@ -36,6 +42,8 @@ const MAX_TAB_SWITCHES = 3;
 
 export default function TestIAPage({ params }: { params: { id: string; candidateId: string } }) {
   const router = useRouter();
+  // L'offre sert uniquement à afficher le logo et le nom de l'entreprise
+  const { job } = useJobOffer(params.id);
 
   const [questions, setQuestions] = useState<TestQuestion[]>([]);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(true);
@@ -186,371 +194,223 @@ export default function TestIAPage({ params }: { params: { id: string; candidate
   const timeIsLow = testState.timeRemaining < 60;
   const tabsLeft = MAX_TAB_SWITCHES - testState.tabSwitchCount;
 
-  /* ─── Loading ─────────────────────────────────────────── */
-  if (isLoadingQuestions) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 px-4">
-        <div className="relative">
-          <div className="absolute inset-0 bg-cyan-500 blur-2xl opacity-20 animate-pulse" />
-          <Loader2 className="animate-spin text-cyan-500 relative z-10" size={48} />
-        </div>
-      </div>
-    );
-  }
+  const card = 'rounded-2xl border border-white/[0.08] bg-[#0c0c0d] p-7 sm:p-10';
+  const btnPrimary = 'w-full rounded-xl bg-[#FAFAFA] py-3.5 text-[15px] font-semibold text-black transition-colors hover:bg-white';
+  const btnGhost = 'w-full rounded-xl border border-white/10 py-3.5 text-[15px] font-semibold transition-colors hover:border-white/25 hover:bg-white/[0.04]';
+
+  const Screen = ({ children }: { children: React.ReactNode }) => (
+    <JobPageShell>
+      <CompanyTopBar company={job?.company} />
+      <main className="mx-auto flex max-w-xl items-center px-6 py-14" style={{ minHeight: 'calc(100vh - 64px)' }}>
+        <div className={`${card} w-full text-center`}>{children}</div>
+      </main>
+    </JobPageShell>
+  );
+
+  /* ─── Chargement ─── */
+  if (isLoadingQuestions) return <PageSpinner />;
 
   if (questions.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-4">
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 sm:p-12 text-center max-w-md w-full">
-          <h1 className="text-xl sm:text-2xl font-bold text-white mb-4">Aucun test disponible</h1>
-          <p className="text-slate-400">Cette offre ne comporte pas de test technique.</p>
-        </div>
-      </div>
+      <Screen>
+        <h1 className="mb-3 text-[24px] font-semibold">Aucun test disponible</h1>
+        <p className="text-[15px] text-[#9a9a9a]">Cette offre ne comporte pas de test technique.</p>
+      </Screen>
     );
   }
 
-  /* ─── Disqualification screen ─────────────────────────── */
+  /* ─── Disqualification ─── */
   if (testState.isCompleted && testState.isDisqualified) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-4 relative overflow-hidden">
-        <div className="fixed inset-0 pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 sm:w-[600px] sm:h-[600px] bg-red-500/20 rounded-full blur-[150px] animate-pulse" />
+      <Screen>
+        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full border border-red-500/30 bg-red-500/10">
+          <XCircle size={28} className="text-red-400" />
         </div>
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="max-w-lg w-full bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-xl border-2 border-red-500/50 rounded-3xl p-8 sm:p-12 text-center relative z-10 shadow-2xl"
-        >
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', duration: 0.6 }}
-            className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-red-500/50"
-          >
-            <XCircle size={44} className="text-white" />
-          </motion.div>
-          <h1 className="text-3xl sm:text-4xl font-black text-white mb-4 tracking-tight">Test Annulé</h1>
-          <p className="text-slate-300 text-base sm:text-lg mb-6 leading-relaxed">
-            Vous avez changé d'onglet <span className="text-red-400 font-bold">{MAX_TAB_SWITCHES} fois</span>. Votre test a été automatiquement annulé et votre candidature disqualifiée.
-          </p>
-          <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-8 text-left">
-            <p className="text-sm text-slate-300 leading-relaxed">
-              Cette décision a été enregistrée. Si vous pensez qu'il s'agit d'une erreur, contactez directement le recruteur.
-            </p>
-          </div>
-          <button
-            onClick={() => { exitFullscreen(); router.push('/'); }}
-            className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-4 rounded-xl transition-all"
-          >
-            Retour à l'accueil
-          </button>
-        </motion.div>
-      </div>
+        <h1 className="mb-3 text-[28px] font-semibold">Test annulé</h1>
+        <p className="mb-6 text-[15px] leading-relaxed text-[#9a9a9a]">
+          Vous avez changé d’onglet <strong className="text-red-300">{MAX_TAB_SWITCHES} fois</strong>. Votre test a été annulé automatiquement et votre candidature disqualifiée.
+        </p>
+        <p className="mb-8 rounded-xl border border-red-500/25 bg-red-500/[0.06] p-4 text-left text-[13.5px] leading-relaxed text-[#d6d6d6]">
+          Cette décision a été enregistrée. Si vous pensez qu’il s’agit d’une erreur, contactez directement le recruteur.
+        </p>
+        <button type="button" onClick={() => { exitFullscreen(); router.push('/jobs/portal'); }} className={btnGhost}>
+          Voir d’autres offres
+        </button>
+      </Screen>
     );
   }
 
-  /* ─── Intro screen ────────────────────────────────────── */
+  /* ─── Présentation ─── */
   if (!testState.isStarted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-4 relative overflow-hidden">
-        <div className="fixed inset-0 pointer-events-none">
-          <div className="absolute top-0 left-1/4 w-72 h-72 sm:w-96 sm:h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-0 right-1/4 w-72 h-72 sm:w-96 sm:h-96 bg-blue-600/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+      <Screen>
+        <div className="mb-3 text-[13px] font-semibold uppercase tracking-[0.12em]" style={{ color: ACCENT }}>Étape 2 sur 2</div>
+        <h1 className="mb-3 text-[30px] font-bold tracking-[-0.02em] sm:text-[36px]">Test technique</h1>
+        <p className="mb-8 text-[15px] text-[#9a9a9a]">Évaluez vos compétences pour finaliser votre candidature.</p>
+
+        <div className="mb-6 grid grid-cols-2 gap-3 text-left">
+          <div className="rounded-xl border border-white/[0.08] p-4">
+            <p className="mb-1 text-[11.5px] font-semibold uppercase tracking-[0.1em] text-[#6f6f6f]">Durée</p>
+            <p className="text-[18px] font-semibold">{testConfig.duration} minutes</p>
+          </div>
+          <div className="rounded-xl border border-white/[0.08] p-4">
+            <p className="mb-1 text-[11.5px] font-semibold uppercase tracking-[0.1em] text-[#6f6f6f]">Questions</p>
+            <p className="text-[18px] font-semibold">{total} QCM ({testConfig.totalPoints} pts)</p>
+          </div>
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="max-w-xl w-full bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-xl border border-white/10 rounded-3xl p-8 sm:p-12 text-center relative z-10 shadow-2xl"
-        >
-          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-cyan-500/50">
-            <BrainCircuit size={32} className="text-white" />
-          </div>
+        <div className="mb-8 rounded-xl border p-5 text-left" style={{ borderColor: `${ACCENT}44`, background: `${ACCENT}0d` }}>
+          <h3 className="mb-3 flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.1em]" style={{ color: ACCENT }}>
+            <AlertTriangle size={15} /> Règles anti-triche
+          </h3>
+          <ul className="space-y-2 text-[14px] leading-relaxed text-[#d6d6d6]">
+            <li>Maximum <strong>{MAX_TAB_SWITCHES} changements</strong> d’onglet : au-delà, le test est annulé automatiquement.</li>
+            <li>Le copier-coller est désactivé.</li>
+            <li>Toute activité suspecte est signalée au recruteur.</li>
+          </ul>
+        </div>
 
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white mb-3 tracking-tight">Test Technique IA</h1>
-          <p className="text-slate-400 text-base sm:text-lg mb-8">Évaluez vos compétences pour finaliser votre candidature</p>
-
-          <div className="bg-black/40 backdrop-blur-sm rounded-2xl p-5 mb-6 space-y-3 border border-white/5">
-            <div className="flex items-center gap-4 justify-center">
-              <Clock size={20} className="text-cyan-400 shrink-0" />
-              <div className="text-left">
-                <p className="text-slate-500 text-xs uppercase font-bold">Durée</p>
-                <p className="text-white text-lg sm:text-xl font-bold">{testConfig.duration} minutes</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4 justify-center">
-              <Target size={20} className="text-purple-400 shrink-0" />
-              <div className="text-left">
-                <p className="text-slate-500 text-xs uppercase font-bold">Questions</p>
-                <p className="text-white text-lg sm:text-xl font-bold">{total} QCM ({testConfig.totalPoints} pts)</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border border-yellow-500/30 rounded-xl p-5 mb-8 text-left">
-            <div className="flex items-start gap-3 mb-3">
-              <AlertTriangle size={18} className="text-yellow-400 mt-0.5 shrink-0" />
-              <h3 className="text-sm font-bold text-yellow-400 uppercase">Règles Anti-Triche</h3>
-            </div>
-            <ul className="text-sm text-slate-300 space-y-2">
-              <li className="flex items-start gap-2">
-                <span className="text-yellow-400 mt-0.5">•</span>
-                <span>Maximum <strong className="text-yellow-300">{MAX_TAB_SWITCHES} changements</strong> d'onglet autorisés — au-delà, le test est annulé automatiquement</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-yellow-400 mt-0.5">•</span>
-                <span>Le copier-coller est désactivé</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-yellow-400 mt-0.5">•</span>
-                <span>Toute activité suspecte est signalée au recruteur</span>
-              </li>
-            </ul>
-          </div>
-
-          <button
-            onClick={startTest}
-            className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-4 sm:py-5 rounded-xl transition-all shadow-xl shadow-cyan-500/30 text-base sm:text-lg flex items-center justify-center gap-3"
-          >
-            <Zap size={22} />
-            Commencer le Test
-          </button>
-        </motion.div>
-      </div>
+        <button type="button" onClick={startTest} className={btnPrimary}>Commencer le test</button>
+      </Screen>
     );
   }
 
-  /* ─── Completed screen ────────────────────────────────── */
+  /* ─── Terminé ─── */
   if (testState.isCompleted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-4 relative overflow-hidden">
-        <div className="fixed inset-0 pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 sm:w-[600px] sm:h-[600px] bg-emerald-500/20 rounded-full blur-[150px] animate-pulse" />
+      <Screen>
+        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full border" style={{ borderColor: `${ACCENT}55`, background: `${ACCENT}14` }}>
+          <CheckCircle2 size={28} style={{ color: ACCENT }} />
+        </div>
+        <h1 className="mb-3 text-[28px] font-semibold">Test terminé</h1>
+        <p className="mb-6 text-[15px] text-[#9a9a9a]">Vos réponses ont été envoyées avec succès.</p>
+
+        <div className="mb-8 rounded-xl border border-white/[0.08] p-5 text-left">
+          <p className="mb-1.5 text-[14px] font-semibold">Prochaines étapes</p>
+          <p className="text-[13.5px] leading-relaxed text-[#9a9a9a]">
+            Vos résultats sont analysés et votre score final est calculé. Vous recevrez un e-mail sous 24 à 48 h avec le statut de votre candidature.
+          </p>
         </div>
 
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="max-w-xl w-full bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-xl border-2 border-emerald-500/50 rounded-3xl p-8 sm:p-12 text-center relative z-10 shadow-2xl"
-        >
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', duration: 0.6 }}
-            className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-emerald-500/50"
-          >
-            <CheckCircle2 size={48} className="text-white" />
-          </motion.div>
-
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white mb-4 tracking-tight">Test Terminé !</h1>
-          <p className="text-slate-400 text-base sm:text-lg mb-6">Bravo ! Vos réponses ont été envoyées avec succès.</p>
-
-          <div className="bg-black/40 backdrop-blur-sm p-5 rounded-2xl border border-white/5 mb-8">
-            <div className="flex items-center justify-center gap-3 mb-3">
-              <Sparkles size={22} className="text-cyan-400" />
-              <p className="text-white font-bold text-base sm:text-lg">Prochaines Étapes</p>
-            </div>
-            <p className="text-slate-400 text-sm leading-relaxed">
-              Notre IA va analyser vos résultats et calculer votre score final. Vous recevrez une notification par email sous 24-48h avec le statut de votre candidature.
-            </p>
-          </div>
-
-          <button
-            onClick={() => { exitFullscreen(); router.push('/'); }}
-            className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-4 rounded-xl transition-all shadow-xl shadow-cyan-500/30 mb-3"
-          >
-            Retour à l'accueil
+        <div className="space-y-3">
+          <button type="button" onClick={() => { exitFullscreen(); router.push('/jobs/portal'); }} className={btnPrimary}>
+            Voir d’autres offres
           </button>
-          <button
-            onClick={() => { exitFullscreen(); window.close(); }}
-            className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-4 rounded-xl transition-all"
-          >
+          <button type="button" onClick={() => { exitFullscreen(); window.close(); }} className={btnGhost}>
             Fermer cette fenêtre
           </button>
-          <p className="text-xs text-slate-500 mt-5">Merci d'avoir postulé chez nous ! 🚀</p>
-        </motion.div>
-      </div>
+        </div>
+        <p className="mt-6 text-[12.5px] text-[#6f6f6f]">Merci d’avoir postulé.</p>
+      </Screen>
     );
   }
 
-  /* ─── Test in progress ────────────────────────────────── */
+  /* ─── Test en cours ─── */
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden">
-      {/* Background Effects */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 right-1/4 w-72 h-72 bg-cyan-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-1/4 w-72 h-72 bg-blue-600/10 rounded-full blur-3xl" />
-      </div>
-
-      {/* Header — responsive */}
-      <div className="sticky top-0 z-30 bg-slate-950/80 backdrop-blur-xl border-b border-white/5 px-4 sm:px-6 py-3">
-        <div className="max-w-4xl mx-auto flex flex-wrap items-center justify-between gap-3">
-          <div className="min-w-0">
-            <h1 className="text-base sm:text-lg font-bold text-white leading-tight">Test Technique</h1>
-            <p className="text-slate-400 text-xs hidden sm:block">Restez concentré et bonne chance !</p>
-          </div>
-
-          <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
-            {/* Tab switch counter */}
+    <JobPageShell>
+      <CompanyTopBar
+        company={job?.company}
+        right={
+          <>
             {testState.tabSwitchCount > 0 && (
-              <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold ${
-                tabsLeft <= 1
-                  ? 'bg-red-500/20 border-red-500/40 text-red-400'
-                  : 'bg-yellow-500/20 border-yellow-500/30 text-yellow-400'
-              }`}>
-                <AlertTriangle size={14} />
-                <span className="hidden sm:inline">{testState.tabSwitchCount}/{MAX_TAB_SWITCHES} changement{testState.tabSwitchCount > 1 ? 's' : ''}</span>
-                <span className="sm:hidden">{testState.tabSwitchCount}/{MAX_TAB_SWITCHES}</span>
-              </div>
-            )}
-
-            {/* Timer */}
-            <div className={`flex items-center gap-2 px-3 sm:px-5 py-2 rounded-xl border ${
-              timeIsLow
-                ? 'bg-red-500/20 border-red-500/40'
-                : 'bg-cyan-500/20 border-cyan-500/30'
-            }`}>
-              <Clock size={18} className={timeIsLow ? 'text-red-400' : 'text-cyan-400'} />
-              <span className={`text-lg sm:text-2xl font-bold font-mono ${timeIsLow ? 'text-red-300' : 'text-white'}`}>
-                {formatTime(testState.timeRemaining)}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Question Card */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 relative z-10">
-        <motion.div
-          key={currentIdx}
-          initial={{ opacity: 0, x: 30 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -30 }}
-        >
-          <div className="bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-xl border border-white/10 rounded-2xl sm:rounded-3xl p-5 sm:p-8 lg:p-10 shadow-2xl">
-
-            {/* Progress row */}
-            <div className="flex items-center justify-between mb-5 sm:mb-8 flex-wrap gap-3">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className="bg-cyan-500/20 border border-cyan-500/30 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg">
-                  <span className="text-cyan-400 font-bold text-sm sm:text-lg">{currentIdx + 1}/{total}</span>
-                </div>
-                <div className="bg-white/5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg hidden sm:block">
-                  <span className="text-slate-400 text-xs sm:text-sm uppercase font-bold">Question {currentIdx + 1}</span>
-                </div>
-              </div>
-              <div className="bg-purple-500/20 border border-purple-500/30 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg">
-                <span className="text-purple-400 font-bold text-sm">{currentQuestion.points} pts</span>
-              </div>
-            </div>
-
-            {/* Progress Bar */}
-            <div className="w-full bg-slate-800/50 h-1.5 sm:h-2 rounded-full mb-6 sm:mb-10 overflow-hidden">
-              <motion.div
-                className="h-full bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full"
-                initial={{ width: 0 }}
-                animate={{ width: `${((currentIdx + 1) / total) * 100}%` }}
-                transition={{ duration: 0.5 }}
-              />
-            </div>
-
-            {/* Question Text */}
-            <div className="mb-6 sm:mb-10">
-              <h2 className="text-lg sm:text-2xl lg:text-3xl font-bold text-white leading-relaxed">
-                {currentQuestion.question}
-              </h2>
-            </div>
-
-            {/* Options */}
-            <div className="space-y-3 sm:space-y-4">
-              {currentQuestion.options.map((option, idx) => {
-                const isSelected = selectedAnswer === option;
-                const label = String.fromCharCode(65 + idx);
-
-                return (
-                  <motion.button
-                    key={idx}
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.08 }}
-                    onClick={() => selectAnswer(option)}
-                    className={`w-full text-left p-4 sm:p-6 rounded-xl border-2 transition-all duration-300 ${
-                      isSelected
-                        ? 'bg-cyan-500/20 border-cyan-500 shadow-lg shadow-cyan-500/20'
-                        : 'bg-white/5 border-white/10 hover:border-white/30 hover:bg-white/10 active:bg-white/15'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3 sm:gap-4">
-                      <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center font-bold shrink-0 text-sm sm:text-base ${
-                        isSelected ? 'bg-cyan-500 text-white' : 'bg-white/10 text-slate-400'
-                      }`}>
-                        {label}
-                      </div>
-                      <span className={`text-sm sm:text-lg font-medium leading-snug ${isSelected ? 'text-white' : 'text-slate-300'}`}>
-                        {option}
-                      </span>
-                    </div>
-                  </motion.button>
-                );
-              })}
-            </div>
-
-            {/* Navigation */}
-            <div className="mt-6 sm:mt-10 flex justify-end">
-              <button
-                onClick={nextQuestion}
-                disabled={!selectedAnswer}
-                className={`px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg transition-all flex items-center gap-2 sm:gap-3 ${
-                  selectedAnswer
-                    ? 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-xl shadow-cyan-500/30 active:scale-95'
-                    : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+              <span
+                className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[12px] font-semibold ${
+                  tabsLeft <= 1 ? 'border-red-500/40 bg-red-500/15 text-red-300' : 'border-white/15 text-[#d6d6d6]'
                 }`}
               >
-                {currentIdx === total - 1 ? (
-                  <>
-                    <CheckCircle2 size={20} />
-                    Terminer
-                  </>
-                ) : (
-                  <>
-                    Suivant
-                    <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </motion.div>
-      </div>
+                <AlertTriangle size={13} /> {testState.tabSwitchCount}/{MAX_TAB_SWITCHES}
+              </span>
+            )}
+            <span
+              className={`flex items-center gap-2 rounded-xl border px-3.5 py-1.5 ${
+                timeIsLow ? 'border-red-500/40 bg-red-500/15' : 'border-white/15'
+              }`}
+              role="timer"
+              aria-label="Temps restant"
+            >
+              <Clock size={16} className={timeIsLow ? 'text-red-300' : 'text-[#9a9a9a]'} />
+              <span className={`font-mono text-[18px] font-semibold ${timeIsLow ? 'text-red-300' : ''}`}>
+                {formatTime(testState.timeRemaining)}
+              </span>
+            </span>
+          </>
+        }
+      />
 
-      {/* Tab Switch Warning toast */}
-      <AnimatePresence>
-        {testState.tabSwitchCount > 0 && !testState.isCompleted && (
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 50 }}
-            className="fixed bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-50 w-[90vw] sm:w-auto"
+      <main className="mx-auto max-w-3xl px-6 py-8 sm:py-10">
+        <div className={card}>
+          <div className="mb-5 flex items-center justify-between">
+            <span className="text-[13px] font-semibold uppercase tracking-[0.1em] text-[#9a9a9a]">
+              Question {currentIdx + 1} sur {total}
+            </span>
+            <span className="rounded-lg border border-white/10 px-3 py-1 text-[13px] font-semibold" style={{ color: ACCENT }}>
+              {currentQuestion.points} pts
+            </span>
+          </div>
+
+          <div className="mb-8 h-1.5 overflow-hidden rounded-full bg-white/10">
+            <div
+              className="h-full rounded-full transition-[width] duration-500"
+              style={{ width: `${((currentIdx + 1) / total) * 100}%`, background: ACCENT }}
+            />
+          </div>
+
+          <h2 className="mb-8 text-[20px] font-semibold leading-relaxed sm:text-[24px]">{currentQuestion.question}</h2>
+
+          <div className="space-y-3">
+            {currentQuestion.options.map((option, idx) => {
+              const isSelected = selectedAnswer === option;
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => selectAnswer(option)}
+                  aria-pressed={isSelected}
+                  className={`flex w-full items-center gap-4 rounded-xl border-2 p-4 text-left transition-colors sm:p-5 ${
+                    isSelected ? 'bg-[#FF9A62]/10' : 'border-white/10 hover:border-white/30 hover:bg-white/[0.04]'
+                  }`}
+                  style={isSelected ? { borderColor: ACCENT } : undefined}
+                >
+                  <span
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[14px] font-semibold"
+                    style={isSelected ? { background: ACCENT, color: '#000' } : { background: 'rgba(255,255,255,0.08)', color: '#9a9a9a' }}
+                  >
+                    {String.fromCharCode(65 + idx)}
+                  </span>
+                  <span className={`text-[15px] leading-snug sm:text-[16px] ${isSelected ? 'font-medium' : 'text-[#d6d6d6]'}`}>{option}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="mt-8 flex justify-end">
+            <button
+              type="button"
+              onClick={nextQuestion}
+              disabled={!selectedAnswer}
+              className="rounded-xl bg-[#FAFAFA] px-8 py-3.5 text-[15px] font-semibold text-black transition-colors hover:bg-white disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-[#6f6f6f]"
+            >
+              {currentIdx === total - 1 ? 'Terminer' : 'Suivant'}
+            </button>
+          </div>
+        </div>
+      </main>
+
+      {/* Avertissement changement d'onglet */}
+      {testState.tabSwitchCount > 0 && !testState.isCompleted && (
+        <div role="alert" className="fixed bottom-6 left-1/2 z-50 w-[90vw] -translate-x-1/2 sm:w-auto">
+          <div
+            className={`flex items-center justify-center gap-2 rounded-xl border px-5 py-3 text-[14px] font-semibold shadow-2xl ${
+              tabsLeft <= 1 ? 'border-red-500/50 bg-red-950/90 text-red-200' : 'border-white/20 bg-[#0c0c0d] text-[#F2F2F2]'
+            }`}
           >
-            <div className={`backdrop-blur-xl border px-4 sm:px-6 py-3 sm:py-4 rounded-xl shadow-2xl text-center sm:text-left ${
-              tabsLeft <= 1
-                ? 'bg-red-500/20 border-red-500/50'
-                : 'bg-yellow-500/20 border-yellow-500/50'
-            }`}>
-              <p className={`font-bold flex items-center justify-center sm:justify-start gap-2 text-sm sm:text-base ${
-                tabsLeft <= 1 ? 'text-red-400' : 'text-yellow-400'
-              }`}>
-                <AlertTriangle size={18} />
-                {tabsLeft <= 1
-                  ? `⚠️ Dernier avertissement ! Encore 1 changement = disqualification`
-                  : `${testState.tabSwitchCount}/${MAX_TAB_SWITCHES} changement${testState.tabSwitchCount > 1 ? 's' : ''} d'onglet détecté${testState.tabSwitchCount > 1 ? 's' : ''}`}
-              </p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+            <AlertTriangle size={16} />
+            {tabsLeft <= 1
+              ? 'Dernier avertissement : encore 1 changement d’onglet et vous êtes disqualifié'
+              : `${testState.tabSwitchCount}/${MAX_TAB_SWITCHES} changement${testState.tabSwitchCount > 1 ? 's' : ''} d’onglet détecté${testState.tabSwitchCount > 1 ? 's' : ''}`}
+          </div>
+        </div>
+      )}
+    </JobPageShell>
   );
 }

@@ -22,6 +22,9 @@ export interface ChatConversation {
   /** État du dernier message s'il est de moi (✓ envoyé, ✓✓ reçu, ✓✓ lu) */
   lastStatus?: 'sent' | 'delivered' | 'read';
   unreadCount: number;
+  /** Vue portefeuille uniquement */
+  companyId?: string;
+  companyName?: string;
 }
 
 /** Accusés de l'autre personne : le client en déduit l'état de chacun de MES messages. */
@@ -76,6 +79,17 @@ export const chatApi = {
   send: (id: string, body: string, clientId: string) =>
     api.post<ChatMessage>(`/chat/conversations/${id}/messages`, { body, clientId }),
   markRead: (id: string) => api.post<{ ok: true }>(`/chat/conversations/${id}/read`, {}),
+  /** Boîte commune portefeuille : toutes les entreprises de l'admin (indépendant de l'entreprise active). */
+  portfolio: {
+    conversations: () => api.get<ChatConversation[]>('/chat/portfolio/conversations'),
+    messages: (id: string, p: { before?: number; after?: number; limit?: number } = {}) =>
+      api.get<{ messages: ChatMessage[]; hasMore: boolean; peer?: ChatPeer }>(
+        `/chat/portfolio/conversations/${id}/messages${qs(p)}`,
+      ),
+    send: (id: string, body: string, clientId: string) =>
+      api.post<ChatMessage>(`/chat/portfolio/conversations/${id}/messages`, { body, clientId }),
+    markRead: (id: string) => api.post<{ ok: true }>(`/chat/portfolio/conversations/${id}/read`, {}),
+  },
   poll: (v?: string, since?: string) => api.get<ChatPoll>(`/chat/poll${qs({ v, since })}`),
   /** Prévient le serveur que l'onglet passe en arrière-plan (le push hors-app reprend). */
   away: () => api.post<{ ok: true }>('/chat/away', {}).catch(() => {}),

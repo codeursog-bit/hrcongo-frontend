@@ -223,6 +223,8 @@ export default function ChatPage() {
   // 🆕 ?draft=… (lien « Contacter l'administration ») : message pré-rempli, jamais envoyé automatiquement
   const [draft, setDraft] = useState(() => (params.get('draft') ?? '').slice(0, MAX_MESSAGE_LENGTH));
   const [error, setError] = useState<string | null>(null);
+  // 403 = refus PERMANENT (contact désactivé / hors de votre périmètre) : inutile de proposer « réessayer ».
+  const [blocked, setBlocked] = useState<Record<string, boolean>>({});
   const [unseen, setUnseen] = useState(false);
   const [peer, setPeer] = useState<ChatPeer>(NO_PEER); // accusés de l'autre personne (conversation ouverte)
 
@@ -453,10 +455,20 @@ export default function ChatPage() {
       });
       if (!known) void loadConversations(); // 1re fois seulement : la conversation apparaît dans la liste
     } catch (e: any) {
+      if (e?.status === 403) {
+        // Refus définitif : on retire la bulle (sinon « Échec — réessayer » ne mènerait à rien), on rend le texte et on bloque la saisie.
+        setBlocked((prev) => ({ ...prev, [conversationId]: true }));
+        if (activeIdRef.current === conversationId) {
+          setMessages((prev) => prev.filter((m) => m.clientId !== clientId));
+          setDraft((d) => d || body);
+        }
+        setError("Cette personne n'est plus joignable depuis votre entreprise. Contactez les RH si c'est une erreur.");
+        return;
+      }
       if (activeIdRef.current === conversationId) {
         setMessages((prev) => prev.map((m) => (m.clientId === clientId ? { ...m, status: 'failed' } : m)));
       }
-      setError(e?.status === 403 ? "Vous ne pouvez plus écrire à cette personne." : e?.message || "Échec de l'envoi.");
+      setError(e?.message || "Échec de l'envoi.");
     }
   }, [loadConversations]);
 
@@ -797,13 +809,14 @@ export default function ChatPage() {
                   onKeyDown={onKeyDown}
                   rows={1}
                   maxLength={MAX_MESSAGE_LENGTH}
-                  placeholder="Écrire un message…"
+                  disabled={!!(activeId && blocked[activeId])}
+                  placeholder={activeId && blocked[activeId] ? 'Vous ne pouvez plus écrire à cette personne' : 'Écrire un message…'}
                   className="k-input !min-h-0 max-h-[120px] min-w-0 flex-1 resize-none !px-3.5 !py-2.5 text-base outline-none sm:max-h-[140px] sm:text-sm"
                 />
                 <DesignButton
                   variant="primary"
                   onClick={send}
-                  disabled={!draft.trim()}
+                  disabled={!draft.trim() || !!(activeId && blocked[activeId])}
                   className="!h-11 !w-11 !min-h-0 !shrink-0 !rounded-xl !p-0"
                   aria-label="Envoyer"
                 >

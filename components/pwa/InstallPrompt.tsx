@@ -1,211 +1,56 @@
-// 'use client';
-
-// import { useEffect, useState } from 'react';
-// import { useInstallPrompt } from '@/hooks/useInstallPrompt';
-// import { Download, X, Share, Plus } from 'lucide-react';
-
-// export function InstallPrompt() {
-//   const { canInstall, isIOS, promptInstall, dismissPrompt } = useInstallPrompt();
-//   const [showPrompt, setShowPrompt] = useState(false);
-//   const [isDismissed, setIsDismissed] = useState(false);
-
-//   useEffect(() => {
-//     // Vérifier si déjà refusé (pendant 7 jours)
-//     const dismissedUntil = localStorage.getItem('pwa-install-dismissed-until');
-    
-//     if (dismissedUntil) {
-//       const until = new Date(dismissedUntil);
-//       if (new Date() < until) {
-//         setIsDismissed(true);
-//         return;
-//       }
-//     }
-
-//     // Afficher après 10 secondes
-//     const timer = setTimeout(() => {
-//       if (canInstall || isIOS) {
-//         setShowPrompt(true);
-//       }
-//     }, 10000);
-
-//     return () => clearTimeout(timer);
-//   }, [canInstall, isIOS]);
-
-//   const handleInstall = async () => {
-//     if (isIOS) {
-//       return;
-//     }
-
-//     const result = await promptInstall();
-//     if (result.outcome === 'accepted') {
-//       setShowPrompt(false);
-//     }
-//   };
-
-//   const handleDismiss = () => {
-//     setShowPrompt(false);
-//     setIsDismissed(true);
-    
-//     // ✅ Cacher pendant 7 jours au lieu de définitivement
-//     const in7Days = new Date();
-//     in7Days.setDate(in7Days.getDate() + 7);
-//     localStorage.setItem('pwa-install-dismissed-until', in7Days.toISOString());
-    
-//     dismissPrompt();
-//   };
-
-//   if (!showPrompt || isDismissed) {
-//     return null;
-//   }
-
-//   // Instructions iOS
-//   if (isIOS) {
-//     return (
-//       <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-4">
-//         <div className="bg-white dark:bg-slate-800 rounded-t-2xl sm:rounded-2xl max-w-md w-full p-6 shadow-2xl animate-slide-up">
-//           <div className="flex justify-between items-start mb-4">
-//             <div className="flex items-center gap-3">
-//               <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-xl flex items-center justify-center">
-//                 <Download className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-//               </div>
-//               <div>
-//                 <h3 className="font-bold text-lg text-slate-900 dark:text-white">Installer KonzaRH</h3>
-//                 <p className="text-sm text-slate-500 dark:text-slate-400">Accès rapide depuis votre écran</p>
-//               </div>
-//             </div>
-//             <button
-//               onClick={handleDismiss}
-//               className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-//             >
-//               <X className="h-5 w-5" />
-//             </button>
-//           </div>
-
-//           <div className="space-y-4 mb-6">
-//             <p className="text-sm text-slate-600 dark:text-slate-300">
-//               Pour installer l'application sur votre iPhone :
-//             </p>
-            
-//             <div className="space-y-3">
-//               <div className="flex items-start gap-3 text-sm">
-//                 <div className="w-6 h-6 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-//                   <span className="text-blue-600 dark:text-blue-400 font-bold text-xs">1</span>
-//                 </div>
-//                 <div>
-//                   <p className="font-medium text-slate-900 dark:text-white">Appuyez sur le bouton Partager</p>
-//                   <div className="flex items-center gap-2 mt-1 text-slate-500 dark:text-slate-400">
-//                     <Share className="h-4 w-4" />
-//                     <span className="text-xs">(en bas de Safari)</span>
-//                   </div>
-//                 </div>
-//               </div>
-
-//               <div className="flex items-start gap-3 text-sm">
-//                 <div className="w-6 h-6 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-//                   <span className="text-blue-600 dark:text-blue-400 font-bold text-xs">2</span>
-//                 </div>
-//                 <div>
-//                   <p className="font-medium text-slate-900 dark:text-white">Sélectionnez "Sur l'écran d'accueil"</p>
-//                   <div className="flex items-center gap-2 mt-1 text-slate-500 dark:text-slate-400">
-//                     <Plus className="h-4 w-4" />
-//                     <span className="text-xs">Ajouter à l'écran d'accueil</span>
-//                   </div>
-//                 </div>
-//               </div>
-
-//               <div className="flex items-start gap-3 text-sm">
-//                 <div className="w-6 h-6 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-//                   <span className="text-blue-600 dark:text-blue-400 font-bold text-xs">3</span>
-//                 </div>
-//                 <div>
-//                   <p className="font-medium text-slate-900 dark:text-white">Appuyez sur "Ajouter"</p>
-//                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">L'icône apparaîtra sur votre écran</p>
-//                 </div>
-//               </div>
-//             </div>
-//           </div>
-
-//           <button
-//             onClick={handleDismiss}
-//             className="w-full py-3 px-4 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg font-medium text-slate-700 dark:text-slate-200 transition"
-//           >
-//             Compris
-//           </button>
-//         </div>
-//       </div>
-//     );
-//   }
-
-//   // Prompt Android/Desktop
-//   return (
-//     <div className="fixed bottom-0 left-0 right-0 sm:bottom-4 sm:left-4 sm:right-auto z-50 animate-slide-up">
-//       <div className="bg-white dark:bg-slate-800 sm:rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 max-w-md">
-//         <div className="p-6">
-//           <div className="flex items-start gap-4">
-//             <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-xl flex items-center justify-center flex-shrink-0">
-//               <Download className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-//             </div>
-            
-//             <div className="flex-1">
-//               <h3 className="font-bold text-lg mb-1 text-slate-900 dark:text-white">Installer KonzaRH</h3>
-//               <p className="text-sm text-slate-600 dark:text-slate-300 mb-4">
-//                 Accédez rapidement depuis votre écran d'accueil, même sans internet
-//               </p>
-              
-//               <div className="flex gap-2">
-//                 <button
-//                   onClick={handleInstall}
-//                   className="flex-1 py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition"
-//                 >
-//                   Installer
-//                 </button>
-//                 <button
-//                   onClick={handleDismiss}
-//                   className="px-4 py-2.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg font-medium transition"
-//                 >
-//                   Plus tard
-//                 </button>
-//               </div>
-//             </div>
-
-//             <button
-//               onClick={handleDismiss}
-//               className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-//             >
-//               <X className="h-5 w-5" />
-//             </button>
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-// // Bouton d'installation dans les settings
-// export function InstallButton() {
-//   const { canInstall, isInstalled, promptInstall } = useInstallPrompt();
-
-//   if (isInstalled || !canInstall) {
-//     return null;
-//   }
-
-//   return (
-//     <button
-//       onClick={promptInstall}
-//       className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition flex items-center justify-center gap-2"
-//     >
-//       <Download className="h-5 w-5" />
-//       Installer l'application
-//     </button>
-//   );
-// }
-
-
 'use client';
+
+// ============================================================================
+// 📁 components/pwa/InstallPrompt.tsx — Bannière d'installation de l'application
+// Page du PORTAIL / de l'app : on affiche le logo de l'application Konza RH.
+// Couleurs = variables du thème de l'app (clair / sombre) : plus de bleu fixe.
+// Logique inchangée : apparaît après 10 s, refus mémorisé 7 jours, iOS = étapes.
+// ============================================================================
 
 import { useEffect, useState } from 'react';
 import { useInstallPrompt } from '@/hooks/useInstallPrompt';
-import { Download, X, Share, Plus } from 'lucide-react';
+import { Download, Plus, Share, X } from 'lucide-react';
+
+const APP_ICON = '/icons/apple-touch-icon.png';
+
+function AppIcon({ size = 48 }: { size?: number }) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={APP_ICON}
+      alt=""
+      width={size}
+      height={size}
+      className="shrink-0 rounded-xl"
+      style={{ width: size, height: size, boxShadow: '0 0 0 1px var(--border)' }}
+    />
+  );
+}
+
+const cardStyle: React.CSSProperties = {
+  background: 'var(--surface)',
+  border: '1px solid var(--border)',
+  color: 'var(--text)',
+};
+
+const primaryBtn: React.CSSProperties = { background: 'var(--action)', color: '#fff' };
+
+function Step({ n, title, children }: { n: number; title: string; children?: React.ReactNode }) {
+  return (
+    <div className="flex items-start gap-3 text-sm">
+      <span
+        className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold"
+        style={{ background: 'var(--brand-soft)', color: 'var(--text)' }}
+      >
+        {n}
+      </span>
+      <div>
+        <p className="font-medium">{title}</p>
+        {children && <div className="mt-1 flex items-center gap-2 text-xs" style={{ color: 'var(--text-secondary)' }}>{children}</div>}
+      </div>
+    </div>
+  );
+}
 
 export function InstallPrompt() {
   const { canInstall, isIOS, promptInstall, dismissPrompt } = useInstallPrompt();
@@ -213,124 +58,67 @@ export function InstallPrompt() {
   const [isDismissed, setIsDismissed] = useState(false);
 
   useEffect(() => {
-    // Vérifier si déjà refusé (pendant 7 jours)
+    // Déjà refusé : on ne redemande pas pendant 7 jours
     const dismissedUntil = localStorage.getItem('pwa-install-dismissed-until');
-    
-    if (dismissedUntil) {
-      const until = new Date(dismissedUntil);
-      if (new Date() < until) {
-        setIsDismissed(true);
-        return;
-      }
+    if (dismissedUntil && new Date() < new Date(dismissedUntil)) {
+      setIsDismissed(true);
+      return;
     }
 
     // Afficher après 10 secondes
     const timer = setTimeout(() => {
-      if (canInstall || isIOS) {
-        setShowPrompt(true);
-      }
+      if (canInstall || isIOS) setShowPrompt(true);
     }, 10000);
-
     return () => clearTimeout(timer);
   }, [canInstall, isIOS]);
 
   const handleInstall = async () => {
-    if (isIOS) {
-      return;
-    }
-
+    if (isIOS) return;
     const result = await promptInstall();
-    if (result.outcome === 'accepted') {
-      setShowPrompt(false);
-    }
+    if (result.outcome === 'accepted') setShowPrompt(false);
   };
 
   const handleDismiss = () => {
     setShowPrompt(false);
     setIsDismissed(true);
-    
-    // ✅ Cacher pendant 7 jours au lieu de définitivement
     const in7Days = new Date();
     in7Days.setDate(in7Days.getDate() + 7);
     localStorage.setItem('pwa-install-dismissed-until', in7Days.toISOString());
-    
     dismissPrompt();
   };
 
-  if (!showPrompt || isDismissed) {
-    return null;
-  }
+  if (!showPrompt || isDismissed) return null;
 
-  // Instructions iOS - CENTRÉ (modal fullscreen)
+  // ── iOS : on ne peut pas installer d'un clic, on explique les étapes ──
   if (isIOS) {
     return (
-      <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-4">
-        <div className="bg-white dark:bg-slate-800 rounded-t-2xl sm:rounded-2xl max-w-md w-full p-6 shadow-2xl animate-slide-up">
-          <div className="flex justify-between items-start mb-4">
+      <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center">
+        <div role="dialog" aria-modal="true" aria-label="Installer Konza RH" className="animate-slide-up w-full max-w-md rounded-t-2xl p-6 shadow-2xl sm:rounded-2xl" style={cardStyle}>
+          <div className="mb-5 flex items-start justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-xl flex items-center justify-center">
-                <Download className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-              </div>
+              <AppIcon />
               <div>
-                <h3 className="font-bold text-lg text-slate-900 dark:text-white">Installer KonzaRH</h3>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Accès rapide depuis votre écran</p>
+                <h3 className="text-lg font-bold">Installer Konza RH</h3>
+                <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Accès rapide depuis votre écran d’accueil</p>
               </div>
             </div>
-            <button
-              onClick={handleDismiss}
-              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-            >
+            <button type="button" onClick={handleDismiss} aria-label="Fermer" style={{ color: 'var(--text-secondary)' }}>
               <X className="h-5 w-5" />
             </button>
           </div>
 
-          <div className="space-y-4 mb-6">
-            <p className="text-sm text-slate-600 dark:text-slate-300">
-              Pour installer l'application sur votre iPhone :
-            </p>
-            
-            <div className="space-y-3">
-              <div className="flex items-start gap-3 text-sm">
-                <div className="w-6 h-6 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-blue-600 dark:text-blue-400 font-bold text-xs">1</span>
-                </div>
-                <div>
-                  <p className="font-medium text-slate-900 dark:text-white">Appuyez sur le bouton Partager</p>
-                  <div className="flex items-center gap-2 mt-1 text-slate-500 dark:text-slate-400">
-                    <Share className="h-4 w-4" />
-                    <span className="text-xs">(en bas de Safari)</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3 text-sm">
-                <div className="w-6 h-6 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-blue-600 dark:text-blue-400 font-bold text-xs">2</span>
-                </div>
-                <div>
-                  <p className="font-medium text-slate-900 dark:text-white">Sélectionnez "Sur l'écran d'accueil"</p>
-                  <div className="flex items-center gap-2 mt-1 text-slate-500 dark:text-slate-400">
-                    <Plus className="h-4 w-4" />
-                    <span className="text-xs">Ajouter à l'écran d'accueil</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3 text-sm">
-                <div className="w-6 h-6 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-blue-600 dark:text-blue-400 font-bold text-xs">3</span>
-                </div>
-                <div>
-                  <p className="font-medium text-slate-900 dark:text-white">Appuyez sur "Ajouter"</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">L'icône apparaîtra sur votre écran</p>
-                </div>
-              </div>
-            </div>
+          <p className="mb-4 text-sm" style={{ color: 'var(--text-secondary)' }}>Pour installer l’application sur votre iPhone :</p>
+          <div className="mb-6 space-y-4">
+            <Step n={1} title="Appuyez sur le bouton Partager"><Share className="h-4 w-4" /><span>(en bas de Safari)</span></Step>
+            <Step n={2} title="Choisissez « Sur l’écran d’accueil »"><Plus className="h-4 w-4" /><span>Ajouter à l’écran d’accueil</span></Step>
+            <Step n={3} title="Appuyez sur « Ajouter »"><span>L’icône apparaîtra sur votre écran.</span></Step>
           </div>
 
           <button
+            type="button"
             onClick={handleDismiss}
-            className="w-full py-3 px-4 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg font-medium text-slate-700 dark:text-slate-200 transition"
+            className="w-full rounded-xl px-4 py-3 font-medium transition-opacity hover:opacity-80"
+            style={{ background: 'var(--surface-2)', color: 'var(--text)' }}
           >
             Compris
           </button>
@@ -339,42 +127,38 @@ export function InstallPrompt() {
     );
   }
 
-  // ✅ Prompt Android/Desktop - À DROITE
+  // ── Android / ordinateur ──
   return (
-    <div className="fixed bottom-0 right-0 left-0 sm:bottom-4 sm:right-4 sm:left-auto z-50 animate-slide-up">
-      <div className="bg-white dark:bg-slate-800 sm:rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 w-full sm:w-[420px] sm:max-w-[calc(100vw-2rem)]">
-        <div className="p-6">
+    <div className="animate-slide-up fixed bottom-0 left-0 right-0 z-50 sm:bottom-4 sm:left-auto sm:right-4">
+      <div role="dialog" aria-label="Installer Konza RH" className="w-full shadow-2xl sm:w-[420px] sm:max-w-[calc(100vw-2rem)] sm:rounded-2xl" style={cardStyle}>
+        <div className="p-5">
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-xl flex items-center justify-center flex-shrink-0">
-              <Download className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-            </div>
-            
-            <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-lg mb-1 text-slate-900 dark:text-white">Installer KonzaRH</h3>
-              <p className="text-sm text-slate-600 dark:text-slate-300 mb-4">
-                Accédez rapidement depuis votre écran d'accueil, même sans internet
+            <AppIcon />
+            <div className="min-w-0 flex-1">
+              <h3 className="mb-1 text-lg font-bold">Installer Konza RH</h3>
+              <p className="mb-4 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                Accédez à l’application depuis votre écran d’accueil, même avec une connexion instable.
               </p>
-              
-              <div className="flex flex-col sm:flex-row gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <button
+                  type="button"
                   onClick={handleInstall}
-                  className="flex-1 py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 font-medium transition-opacity hover:opacity-90"
+                  style={primaryBtn}
                 >
-                  Installer
+                  <Download className="h-4 w-4" /> Installer
                 </button>
                 <button
+                  type="button"
                   onClick={handleDismiss}
-                  className="sm:flex-initial px-4 py-2.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg font-medium transition"
+                  className="rounded-xl px-4 py-2.5 font-medium transition-opacity hover:opacity-70"
+                  style={{ color: 'var(--text-secondary)' }}
                 >
                   Plus tard
                 </button>
               </div>
             </div>
-
-            <button
-              onClick={handleDismiss}
-              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex-shrink-0"
-            >
+            <button type="button" onClick={handleDismiss} aria-label="Fermer" className="shrink-0" style={{ color: 'var(--text-secondary)' }}>
               <X className="h-5 w-5" />
             </button>
           </div>
@@ -384,21 +168,20 @@ export function InstallPrompt() {
   );
 }
 
-// Bouton d'installation dans les settings
+// Bouton d'installation dans les paramètres
 export function InstallButton() {
   const { canInstall, isInstalled, promptInstall } = useInstallPrompt();
 
-  if (isInstalled || !canInstall) {
-    return null;
-  }
+  if (isInstalled || !canInstall) return null;
 
   return (
     <button
+      type="button"
       onClick={promptInstall}
-      className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition flex items-center justify-center gap-2"
+      className="flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 font-medium transition-opacity hover:opacity-90"
+      style={primaryBtn}
     >
-      <Download className="h-5 w-5" />
-      Installer l'application
+      <Download className="h-5 w-5" /> Installer l’application
     </button>
   );
 }
