@@ -7,9 +7,9 @@
 //  1. Fiche d'informations contractuelles actuelles (type, salaire, date
 //     d'embauche, ancienneté, poste, catégorie...) — lues depuis la fiche
 //     employé elle-même, pas depuis l'historique des documents générés.
-//  2. Historique des documents de contrat déjà générés — chaque ligne peut
-//     être téléchargée en Word ou prévisualisée en PDF, régénérés à la
-//     volée à chaque clic (AUCUN fichier n'est stocké sur le cloud).
+//  2. Historique des contrats générés (système unique : modèles dynamiques) —
+//     chaque ligne peut être téléchargée en Word ou ouverte en PDF, fabriqués
+//     à la volée à chaque clic (AUCUN fichier n'est stocké sur le cloud).
 // ============================================================================
 
 import React, { useEffect, useState } from 'react';
@@ -22,22 +22,16 @@ import {
 import { motion } from 'framer-motion';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
+import { saveBlob } from '@/lib/contract-templates';
 import ContractChainPanel from '@/components/contracts/ContractChainPanel';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
 import { ModulePageFrame } from '@/components/requests/ModulePageFrame';
 
 interface GeneratedContract {
   id: string;
-  kind: 'CONTRAT_TRAVAIL' | 'PRESTATION_SERVICES' | 'CONSULTANT' | 'STAGE';
-  contractDuration: string;
-  status: string;
-  startDate: string | null;
-  endDate: string | null;
-  totalGross: number;
-  netPay: number;
-  fileName: string | null;
+  name: string;
+  templateId: string | null;
   generatedAt: string;
-  snapshot: Record<string, any>;
 }
 
 interface EmployeeSummary {
@@ -54,13 +48,6 @@ interface EmployeeSummary {
   contractEndDate?: string | null;
   photoUrl?: string | null;
 }
-
-const KIND_LABEL: Record<string, string> = {
-  CONTRAT_TRAVAIL: 'Contrat de travail',
-  PRESTATION_SERVICES: 'Prestation de services',
-  CONSULTANT: 'Consultance',
-  STAGE: 'Convention de stage',
-};
 
 const fmt = (n: number) => new Intl.NumberFormat('fr-FR').format(Math.round(n || 0));
 const fmtDate = (d: string | null | undefined) =>
@@ -99,7 +86,7 @@ function EmployeeContractPage() {
       try {
         const [emp, list] = await Promise.all([
           api.get(`/employees/${employeeId}`),
-          api.get(`/contracts/generation/employee/${employeeId}`),
+          api.get(`/contract-templates/contracts?employeeId=${employeeId}`),
         ]);
         setEmployee(emp as any);
         setContracts(list as any);
@@ -149,7 +136,7 @@ function EmployeeContractPage() {
             <span>Mat. {employee.employeeNumber}</span>
           </div>
         </div>
-        <button onClick={() => router.push(bp(`/contrats/generer?employeeId=${employee.id}`))}
+        <button onClick={() => router.push(bp(`/contrats/modeles/generer?employeeId=${employee.id}`))}
           className="flex items-center gap-2 px-4 py-2.5 bg-[var(--brand)] hover:bg-[var(--brand-strong)] text-white text-sm font-bold rounded-xl shadow-md transition-all shrink-0">
           <Plus className="w-4 h-4" /> Générer un contrat
         </button>
@@ -199,7 +186,7 @@ function EmployeeContractPage() {
             <FileX2 className="w-8 h-8 text-[var(--text-muted)] opacity-50 mx-auto mb-3" />
             <p className="text-sm font-semibold text-[var(--text)]">Aucun contrat généré pour cet employé</p>
             <p className="text-xs text-[var(--text-muted)] mt-1 mb-4">Générez son premier contrat en quelques secondes.</p>
-            <button onClick={() => router.push(bp(`/contrats/generer?employeeId=${employee.id}`))}
+            <button onClick={() => router.push(bp(`/contrats/modeles/generer?employeeId=${employee.id}`))}
               className="inline-flex items-center gap-2 px-4 py-2.5 bg-[var(--brand)] hover:bg-[var(--brand-strong)] text-white text-sm font-bold rounded-xl shadow-md transition-all">
               <Sparkles className="w-4 h-4" /> Générer maintenant
             </button>
@@ -230,13 +217,8 @@ function ContractCard({ contract, featured }: { contract: GeneratedContract; fea
   const downloadDocx = async () => {
     setDownloading(true);
     try {
-      const blob = await api.getBlob(`/contracts/generation/${contract.id}/download`);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${contract.fileName || 'contrat'}.docx`;
-      a.click();
-      URL.revokeObjectURL(url);
+      const blob = await api.getBlob(`/contract-templates/contracts/${contract.id}/docx`);
+      saveBlob(blob, `${contract.name || 'contrat'}.docx`);
     } catch {
       // silencieux — le bouton reprend son état normal, l'utilisateur peut réessayer
     } finally {
@@ -247,7 +229,7 @@ function ContractCard({ contract, featured }: { contract: GeneratedContract; fea
   const openPdf = async () => {
     setPreviewing(true);
     try {
-      const blob = await api.getBlob(`/contracts/generation/${contract.id}/preview`);
+      const blob = await api.getBlob(`/contract-templates/contracts/${contract.id}/pdf`);
       const url = URL.createObjectURL(blob);
       window.open(url, '_blank');
       setTimeout(() => URL.revokeObjectURL(url), 60_000);
@@ -269,19 +251,11 @@ function ContractCard({ contract, featured }: { contract: GeneratedContract; fea
         <FileSignature className={`w-5 h-5 ${featured ? 'text-white' : 'text-[var(--brand)]'}`} />
       </div>
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <p className={`text-sm font-bold ${featured ? 'text-white' : 'text-[var(--text)]'}`}>
-            {KIND_LABEL[contract.kind] || contract.kind}
-          </p>
-          <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${featured ? 'bg-white/15 text-white' : 'bg-[var(--surface-2)] text-[var(--text-muted)]'}`}>
-            {contract.contractDuration === 'DETERMINEE' ? 'Déterminée' : 'Indéterminée'}
-          </span>
-        </div>
+        <p className={`text-sm font-bold truncate ${featured ? 'text-white' : 'text-[var(--text)]'}`}>
+          {contract.name}
+        </p>
         <div className={`flex items-center gap-3 mt-1 text-xs flex-wrap ${featured ? 'text-white/70' : 'text-[var(--text-muted)]'}`}>
           <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> Généré le {fmtDate(contract.generatedAt)}</span>
-          <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Début {fmtDate(contract.startDate)}</span>
-          {contract.endDate && <span>Fin {fmtDate(contract.endDate)}</span>}
-          <span className="flex items-center gap-1"><Wallet className="w-3 h-3" /> Net {fmt(contract.netPay)} FCFA</span>
         </div>
       </div>
       <div className="flex gap-2 shrink-0">

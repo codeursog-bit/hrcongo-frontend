@@ -794,7 +794,7 @@ export default function SimulateurPublicPage() {
                 <div className="p-4 bg-gradient-to-r from-[#FF9A62]/20 to-[#FF9A62]/20 dark:from-[#FF9A62]/15 dark:to-[#FF9A62]/15 rounded-2xl border border-[#FF9A62] dark:border-[#FF9A62]">
                   <p className="font-bold text-sm text-[#0c0c0d] dark:text-white mb-1">Gérez la paie de toute votre équipe</p>
                   <p className="text-xs text-[#6f6f6f] dark:text-[#9a9a9a] mb-3">Bulletins PDF · Déclarations CNSS · CAMU · Contrats · Congés · Pointage</p>
-                  <a href="https://app.konza-rh.cg" target="_blank" rel="noopener noreferrer"
+                  <a href="https://konza-rh.cg" target="_blank" rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#B85A32] to-[#B85A32] text-white font-bold rounded-xl text-sm hover:from-[#B85A32] hover:to-[#B85A32] transition-all">
                     Essayer Konza gratuitement <ArrowRight size={14} />
                   </a>

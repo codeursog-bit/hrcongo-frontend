@@ -1,3 +1,4 @@
+// 📁 lib/demo/transport.ts
 import { company, demoUser, departments, employees } from './employees';
 import { payrolls, salaryTrend } from './payroll';
 import { recentDashboardPayrolls, dashboardUpcoming } from './dashboard-upcoming';
@@ -38,8 +39,8 @@ export function demoResponse(url: URL, method: string, body: Record<string, unkn
   if (settings) return settings;
   const performance = demoPerformance(url, method, role);
   if (performance) return performance;
-  if (method === 'GET' && /^\/contracts\/generation\/employee\/[^/]+$/.test(p)) {
-    const employeeId = p.split('/').at(-1);
+  if (method === 'GET' && p === '/contract-templates/contracts') {
+    const employeeId = url.searchParams.get('employeeId');
     const employee = store.employees.find(item => item.id === employeeId);
     if (!employee || role === 'EMPLOYEE' && employeeId !== user.employeeId) return json({ message: 'Historique de contrats introuvable.' }, 404);
     return json([]);

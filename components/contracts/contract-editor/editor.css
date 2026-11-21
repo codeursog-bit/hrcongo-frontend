@@ -1,0 +1,64 @@
+/* ============================================================================
+   components/contracts/contract-editor/editor.css
+   La feuille de contrat reste BLANCHE en dark mode : c'est un document imprimable.
+   ============================================================================ */
+.ct-sheet {
+  background: #fff;
+  color: #111;
+  width: 100%;
+  max-width: 794px; /* A4 à 96 dpi */
+  min-height: 1000px;
+  margin: 0 auto;
+  padding: 56px 64px;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .12), 0 8px 24px rgba(0, 0, 0, .08);
+  line-height: 1.45;
+}
+.ct-sheet .ProseMirror { outline: none; min-height: 880px; }
+.ct-sheet .ProseMirror p { margin: 0 0 .5em; }
+.ct-sheet .ProseMirror h1 { font-size: 1.5em; font-weight: 700; margin: .6em 0 .4em; }
+.ct-sheet .ProseMirror h2 { font-size: 1.2em; font-weight: 700; margin: .6em 0 .4em; }
+.ct-sheet .ProseMirror h3 { font-size: 1.05em; font-weight: 700; margin: .6em 0 .4em; }
+.ct-sheet .ProseMirror ul { list-style: disc; padding-left: 1.6em; margin: 0 0 .5em; }
+.ct-sheet .ProseMirror ol { list-style: decimal; padding-left: 1.6em; margin: 0 0 .5em; }
+.ct-sheet .ProseMirror li > p { margin: 0 0 .2em; }
+.ct-sheet .ProseMirror table { border-collapse: collapse; width: 100%; margin: .5em 0 .8em; table-layout: fixed; }
+.ct-sheet .ProseMirror td, .ct-sheet .ProseMirror th { border: 1px solid #808080; padding: 4px 8px; vertical-align: top; position: relative; }
+.ct-sheet .ProseMirror th { font-weight: 700; background: #f3f3f3; }
+.ct-sheet .ProseMirror .selectedCell { background: #dbeafe; }
+
+/* Variable : jeton coloré, non modifiable */
+.ct-var {
+  display: inline-block;
+  background: var(--brand-soft, #e6f4ee);
+  color: var(--brand, #0a7d55);
+  border: 1px solid var(--brand, #0a7d55);
+  border-radius: 6px;
+  padding: 0 6px;
+  font: 600 .82em ui-monospace, SFMono-Regular, Menlo, monospace;
+  line-height: 1.5;
+  white-space: nowrap;
+  cursor: default;
+}
+.ct-var.ProseMirror-selectednode { outline: 2px solid var(--brand, #0a7d55); }
+
+/* Champs « ………… » à compléter */
+.ct-gap {
+  background: #fff3bf;
+  border-bottom: 2px dashed #e0a800;
+  border-radius: 2px;
+  cursor: pointer;
+}
+.ct-gap:hover { background: #ffe066; }
+
+.ct-pagebreak {
+  border-top: 2px dashed #9ca3af;
+  margin: 1.2em 0;
+  text-align: center;
+  color: #9ca3af;
+  font: 600 10px system-ui, sans-serif;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  user-select: none;
+}
+.ct-pagebreak.ProseMirror-selectednode { border-color: var(--brand, #0a7d55); color: var(--brand, #0a7d55); }

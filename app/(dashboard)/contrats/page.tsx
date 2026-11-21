@@ -1,5 +1,7 @@
 'use client';
 
+// 📁 app/(dashboard)/contrats/page.tsx
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -331,9 +333,17 @@ function ContratsPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          {/* 🆕 Générer un contrat */}
+          {/* Modèles de contrat : créer / importer / adapter (éditeur) */}
           <button
-            onClick={() => router.push(bp('/contrats/generer'))}
+            onClick={() => router.push(bp('/contrats/modeles'))}
+            className="flex items-center gap-2 px-4 py-2.5 border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-2)] text-[var(--text)] text-sm font-semibold rounded-xl transition-all"
+          >
+            <FileText className="w-4 h-4" />
+            Modèles
+          </button>
+          {/* Générer un contrat (système unique : modèles dynamiques) */}
+          <button
+            onClick={() => router.push(bp('/contrats/modeles/generer'))}
             className="flex items-center gap-2 px-4 py-2.5 bg-[var(--brand)] hover:bg-[var(--brand-strong)] text-white text-sm font-semibold rounded-xl shadow-md transition-all"
           >
             <FileSignature className="w-4 h-4" />

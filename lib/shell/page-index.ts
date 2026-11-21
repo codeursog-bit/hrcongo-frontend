@@ -1,4 +1,4 @@
-// lib/shell/page-index.ts
+// 📁 lib/shell/page-index.ts
 // Index des pages de l'espace entreprise, utilisé par la recherche (Ctrl/⌘ + K)
 // et par le fil d'Ariane de la topbar. Lecture seule : aucune route n'est créée ici.
 // Les résultats affichés sont filtrés par rôle (canAccessPath) ET par la présence
@@ -114,7 +114,8 @@ export const SHELL_PAGES: ShellPage[] = [
   P('Performance', '/performance', '/performance/mon-espace', 'Ma performance', 'Ma performance'),
 
   P('Contrats', '/contrats', '/contrats', 'Contrats', undefined, 'contrat de travail cdi cdd'),
-  P('Contrats', '/contrats', '/contrats/generer', 'Générer un contrat', 'Générer', 'creer contrat'),
+  P('Contrats', '/contrats', '/contrats/modeles', 'Modèles de contrat', 'Modèles', 'template importer word coller editeur'),
+  P('Contrats', '/contrats', '/contrats/modeles/generer', 'Générer un contrat', 'Générer', 'creer contrat'),
   P('Contrats', '/contrats', '/contrats/rupture', 'Rupture de contrat', 'Rupture', 'licenciement demission fin'),
   P('Contrats', '/contrats', '/contrats/rupture/pse', 'Rupture économique (PSE)', 'PSE'),
 
