@@ -11,11 +11,11 @@ export function AssistantFloatingLauncher() {
     <button
       type="button"
       className="assistant-floating-launcher"
-      aria-label="Ouvrir Agent Konza"
+      aria-label="Ouvrir Sofia Konza, assistante IA"
       onClick={ctx.show}
     >
       <MessageCircle size={21} strokeWidth={1.5} />
-      <span>Agent Konza</span>
+      <span>Sofia Konza</span>
     </button>
   );
 }

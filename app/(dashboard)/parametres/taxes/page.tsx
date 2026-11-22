@@ -318,7 +318,7 @@ export default function TaxesPage() {
           <h1 className="text-xl font-black text-[var(--text)]">Cotisations & Taxes</h1>
           <p className="text-xs text-[var(--text-muted)]">Taxes légales fixes + taxes personnalisées</p>
         </div>
-        <button onClick={openCreate}
+        <button data-guide="taxes-new" onClick={openCreate}
           className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-sm shadow-emerald-500/25 transition-all text-sm">
           <Plus size={15} /> Nouvelle taxe
         </button>
@@ -371,7 +371,7 @@ export default function TaxesPage() {
             <Receipt size={36} className="mx-auto text-[var(--text-muted)] mb-3" />
             <p className="font-bold text-[var(--text)] text-sm mb-1">Aucune taxe personnalisée</p>
             <p className="text-xs text-[var(--text-muted)] mb-4">TOL, CAMU, taxe apprentissage, etc.</p>
-            <button onClick={openCreate}
+            <button data-guide="taxes-new" onClick={openCreate}
               className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm transition-all">
               <Plus size={14} /> Créer la première taxe
             </button>

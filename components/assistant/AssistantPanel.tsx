@@ -35,6 +35,10 @@ const analysisSources: Record<string, string> = {
   "leave.approved+workingDays.nextWorkingDay":
     "Congés et calendrier de travail",
   "leavesBalance.getTotalLeaveBalanceSummary": "Dossier de congé",
+  "attendanceSummary.monthly": "Résumés mensuels de présence",
+  "attendanceSummary.absences": "Résumés mensuels de présence",
+  "attendanceSummary.lateness": "Résumés mensuels de présence",
+  "leave.approved+leavesBalance.summary": "Congés approuvés et soldes de congé",
   "leavesIndemnity.calculateLeaveIndemnity": "Moteur d’allocation de congé",
 };
 export function AssistantPanel({
@@ -42,6 +46,7 @@ export function AssistantPanel({
 }: { kind?: "help" | "assistant" } = {}) {
   const ctx = useAssistant(),
     guide = useGuide();
+  const credits = ctx?.caps?.credits ?? null;
   const [tab, setTab] = useState<"help" | "chat" | "history">(
       kind === "help" ? "help" : "chat",
     ),
@@ -297,13 +302,13 @@ export function AssistantPanel({
     <AssistantWindow
       open={!!panelOpen}
       onClose={close}
-      title={kind === "help" ? "Besoin d’aide ?" : "Agent Konza"}
+      title={kind === "help" ? "Besoin d’aide ?" : "Sofia Konza"}
       subtitle={
-        DEMO_MODE
-          ? "Démonstration · aide à l’application"
-          : ctx.caps?.assistantMode === "IA_AVANCEE"
-            ? "Conversation · IA avancée"
-            : "Conversation · mode intégré"
+        kind === "help"
+          ? "Retrouvez votre chemin dans l’application"
+          : DEMO_MODE
+            ? "Assistante IA · démonstration"
+            : "Assistante IA de Konza RH"
       }
     >
       <div className={`assistant-workspace assistant-workspace-${kind}`}>
@@ -392,11 +397,11 @@ export function AssistantPanel({
                   <summary>Confidentialité des échanges</summary>
                   <p className="assistant-privacy">
                     {ctx.caps?.assistantMode === "IA_AVANCEE"
-                      ? "Le connecteur externe ne reçoit que des identifiants de phrases vérifiées, sans votre question ni vos données RH. "
+                      ? "Sofia ne lit jamais votre base de données : les analyses sont calculées par l’application, et le modèle d’IA externe ne reçoit que des textes dont les noms, montants et numéros sont masqués. Évitez malgré tout d’écrire des informations confidentielles dans vos messages. "
                       : "Aucun appel à un fournisseur IA externe dans ce mode. "}
-                    L’historique garde des questions normalisées, pas votre
-                    texte libre. Les résultats chiffrés sont protégés côté
-                    serveur.
+                    L’historique garde des questions normalisées et vos
+                    échanges avec Sofia chiffrés côté serveur, pendant la durée
+                    de conservation prévue.
                   </p>
                 </details>
               )}
@@ -438,44 +443,32 @@ export function AssistantPanel({
                     onRun={(message, analysis) => void send(message, analysis)}
                   />
                 )}
-              {ctx.caps?.analysesEnabled &&
-                typeof ctx.caps.remainingAnalyses === "number" && (
-                  <div className="assistant-quota">
-                    <span>
-                      {ctx.caps.remainingAnalyses} analyses restantes sur{" "}
-                      {ctx.caps.monthlyAnalyses}
-                    </span>
-                    <progress
-                      max={100}
-                      value={ctx.caps.usagePercent || 0}
-                      aria-label="Quota d’analyses consommé"
-                    />
-                    {ctx.caps.quotaPeriodEnd && (
-                      <small>
-                        Renouvellement :{" "}
-                        {new Date(ctx.caps.quotaPeriodEnd).toLocaleDateString(
-                          "fr-FR",
-                        )}
-                      </small>
-                    )}
-                    {(ctx.caps.usagePercent || 0) >= 80 && (
-                      <p>
-                        {ctx.caps.remainingAnalyses === 0
-                          ? "Quota atteint. L’aide et les guides restent gratuits."
-                          : "Vous approchez du quota de votre forfait."}{" "}
-                        <Link
-                          href="/pricing"
-                          onClick={() => {
-                            void ctx.adapter.trackUpgrade?.().catch(() => {});
-                            close();
-                          }}
-                        >
-                          Voir les forfaits
-                        </Link>
-                      </p>
-                    )}
-                  </div>
-                )}
+              {ctx.caps?.analysesEnabled && credits && (
+                <div className="assistant-quota">
+                  <span>
+                    {credits.balance} crédit{credits.balance > 1 ? "s" : ""} ·{" "}
+                    {ctx.caps.remainingAnalyses ?? 0} analyse
+                    {(ctx.caps.remainingAnalyses ?? 0) > 1 ? "s" : ""} possible
+                    {(ctx.caps.remainingAnalyses ?? 0) > 1 ? "s" : ""}
+                  </span>
+                  {credits.balance < credits.costPerAnalysis * 5 && (
+                    <p>
+                      {credits.balance < credits.costPerAnalysis
+                        ? "Crédits épuisés. L’aide et les guides restent gratuits."
+                        : "Il vous reste peu de crédits."}{" "}
+                      <Link
+                        href="/messages?support=1"
+                        onClick={() => {
+                          void ctx.adapter.trackUpgrade?.().catch(() => {});
+                          close();
+                        }}
+                      >
+                        Obtenir des crédits
+                      </Link>
+                    </p>
+                  )}
+                </div>
+              )}
             </aside>
           )}
           <div className="assistant-thread">
@@ -589,11 +582,36 @@ export function AssistantPanel({
                     >
                       {!messages.length && (
                         <article className="assistant-message assistant-welcome">
-                          <strong>Agent Konza</strong>
+                          <strong>Sofia Konza</strong>
                           <p>
-                            Bonjour ! Que souhaitez-vous faire aujourd’hui ? Je
-                            peux vous orienter dans l’application et expliquer
-                            les analyses disponibles pour votre compte.
+                            Bonjour, je suis Sofia, l’assistante IA de Konza RH.
+                            Voici ce que je peux faire pour vous :
+                          </p>
+                          <ul className="assistant-capabilities">
+                            <li>
+                              <strong>Vous guider</strong> : où trouver une
+                              page, comment faire une paie, un congé, une
+                              demande.
+                            </li>
+                            {ctx.caps?.analysesEnabled ? (
+                              <li>
+                                <strong>Analyser votre entreprise</strong> :
+                                effectif, masse salariale, rémunérations les
+                                plus élevées, permissions, départs et retours
+                                de congé, soldes de congé.
+                              </li>
+                            ) : (
+                              <li>
+                                <strong>Analyses</strong> : disponibles avec
+                                des crédits, pour les administrateurs et les
+                                RH.
+                              </li>
+                            )}
+                          </ul>
+                          <p className="assistant-limits">
+                            Je travaille en lecture seule : je ne modifie, ne
+                            crée et ne valide rien, et je ne vois pas vos
+                            données brutes.
                           </p>
                         </article>
                       )}
@@ -603,7 +621,7 @@ export function AssistantPanel({
                           className={`assistant-message ${message.role === "USER" ? "is-user" : ""}`}
                         >
                           <strong>
-                            {message.role === "USER" ? "Vous" : "Agent Konza"}
+                            {message.role === "USER" ? "Vous" : "Sofia"}
                           </strong>
                           <p>
                             {message.text || "…"}
@@ -810,7 +828,7 @@ export function AssistantPanel({
                           className="assistant-quick-questions"
                           aria-label="Questions suggérées"
                         >
-                          {suggestions.slice(0, 3).map((q) => (
+                          {suggestions.slice(0, 6).map((q) => (
                             <button
                               type="button"
                               key={q}
@@ -826,7 +844,7 @@ export function AssistantPanel({
                       <div ref={end} className="assistant-scroll-anchor" />
                     </div>
                     <div role="status" className="assistant-status">
-                      {busy ? "Agent Konza écrit…" : ""}
+                      {busy ? "Sofia écrit…" : ""}
                     </div>
                     <form
                       className="assistant-composer"
@@ -837,7 +855,7 @@ export function AssistantPanel({
                     >
                       <textarea
                         rows={2}
-                        aria-label="Votre question à Agent Konza"
+                        aria-label="Votre question à Sofia"
                         maxLength={800}
                         value={draft}
                         onChange={(e) => setDraft(e.target.value)}
@@ -851,7 +869,11 @@ export function AssistantPanel({
                             void send();
                           }
                         }}
-                        placeholder="Comment utiliser l’application ?"
+                        placeholder={
+                          ctx.caps?.analysesEnabled
+                            ? "Posez une question sur l’application ou sur votre entreprise…"
+                            : "Comment utiliser l’application ?"
+                        }
                         disabled={busy || loading || !ctx.caps}
                       />
                       {busy ? (
@@ -884,12 +906,7 @@ export function AssistantPanel({
                 <ArrowRight size={14} strokeWidth={1.5} />
               </Link>
               {kind === "assistant" && (
-                <span>
-                  {ctx.caps?.assistantMode === "IA_AVANCEE"
-                    ? "IA avancée"
-                    : "Mode intégré"}{" "}
-                  · lecture seule
-                </span>
+                <span>Assistante IA · lecture seule</span>
               )}
             </footer>
           </div>

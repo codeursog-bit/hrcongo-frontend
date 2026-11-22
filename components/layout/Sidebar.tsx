@@ -879,7 +879,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     </div>
                   ))}
                   <Link
-                    data-guide={['paie','recrutement','employes'].includes(item.id) ? `menu-${item.id}` : undefined}
+                    data-guide={['paie','recrutement','employes','parametres'].includes(item.id) ? `menu-${item.id}` : undefined}
                     href={fullPath} aria-current={active ? 'page' : undefined}
                     onClick={() => { setTip(null); if (window.innerWidth < 768) onClose(); }}
                     onMouseEnter={(e) => showTip(e, alert ? `${item.label} (${alert.count})` : item.label)}
@@ -926,6 +926,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onMouseEnter={(e) => showTip(e, 'Autre')}
                 onMouseLeave={() => setTip(null)}
                 aria-label={mini ? 'Autre' : undefined}
+                data-guide="menu-autre"
                 className={`relative w-full flex items-center ${mini ? 'justify-center' : 'justify-between px-3'} py-2.5 rounded-xl text-sm font-medium transition-colors hover:bg-black/[0.04] dark:hover:bg-white/[0.06]`}
                 style={{ color: 'var(--text-muted)' }}
               >
@@ -946,6 +947,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     return (
                       <Link
                         key={sub.path}
+                        data-guide={sub.path === '/contrats' ? 'menu-contrats' : undefined}
                         href={subHref}
                         className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-colors relative"
                         style={{ color: subActive ? 'var(--action)' : 'var(--text-muted)', background: subActive ? 'var(--brand-soft)' : 'transparent' }}

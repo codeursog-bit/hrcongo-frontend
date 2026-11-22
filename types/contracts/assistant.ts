@@ -14,6 +14,17 @@ export interface AssistantCapabilities {
   guideEnabled: boolean;
   disabledGuides: string[];
   retentionDays: number;
+  /** Accueil de première arrivée : décidé par le serveur (créateur d'un compte neuf, guide jamais démarré ni masqué). */
+  welcome?: { eligible: boolean };
+  /** Crédits de l'entreprise (réservé aux administrateurs et RH). */
+  credits?: {
+    balance: number;
+    costPerAnalysis: number;
+    costPerMessage: number;
+    trialGranted: boolean;
+  } | null;
+  creditCost?: number;
+  messageCost?: number;
 }
 export interface HelpArticle {
   id: string;
@@ -48,7 +59,7 @@ export interface AssistantPayload {
       path?: string;
     }[];
   };
-  /** Précision demandée par l'Agent Konza (période, employé, jours ou homonymes à départager). */
+  /** Précision demandée par Sofia (période, employé, jours ou homonymes à départager). */
   clarification?: {
     kind: string;
     options?: { id: string; label: string; employeeNumber?: string | null }[];
@@ -118,7 +129,7 @@ export interface AssistantAdapter {
   >;
   trackGuide?: (
     guideId: string,
-    state: "STARTED" | "COMPLETED",
+    state: "STARTED" | "COMPLETED" | "DISMISSED" | "POSTPONED",
     sessionId: string,
   ) => Promise<void>;
   trackUpgrade?: () => Promise<void>;

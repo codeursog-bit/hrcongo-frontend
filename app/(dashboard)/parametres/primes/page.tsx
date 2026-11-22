@@ -484,7 +484,7 @@ function CataloguePrimesPage() {
           className="inline-flex items-center gap-2 text-sm text-[var(--text-muted)] hover:text-[var(--success-text)] transition-colors">
           <ArrowLeft size={16} /> {backUrl === '/parametres' ? 'Paramètres' : 'Retour'}
         </button>
-        <button onClick={openCreate}
+        <button data-guide="primes-new" onClick={openCreate}
           className="px-5 py-2.5 bg-[var(--brand)] hover:bg-[var(--brand)] text-[var(--on-brand)] font-semibold rounded-xl shadow-lg  flex items-center gap-2 transition-colors">
           <Plus size={18} /> Nouvelle prime
         </button>
@@ -670,7 +670,7 @@ function CataloguePrimesPage() {
           </div>
           <p className="text-[var(--text-muted)] font-medium text-lg mb-2">Catalogue vide</p>
           <p className="text-[var(--text-muted)] text-sm mb-5">Créez vos premiers types de primes.</p>
-          <button onClick={openCreate}
+          <button data-guide="primes-new" onClick={openCreate}
             className="px-5 py-2.5 bg-[var(--brand)] text-[var(--on-brand)] font-semibold rounded-xl text-sm flex items-center gap-2 mx-auto">
             <Plus size={16} /> Créer ma première prime
           </button>

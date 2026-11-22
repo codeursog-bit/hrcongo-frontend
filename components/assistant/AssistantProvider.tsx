@@ -12,6 +12,7 @@ import { usePathname } from "next/navigation";
 import { featureActor } from "@/lib/data/context";
 import { assistantAvailable, getAssistant } from "@/lib/data/assistant";
 import { GuideProvider } from "@/components/guides/GuideProvider";
+import { WelcomeGuide } from "@/components/guides/WelcomeGuide";
 import type { FeatureActor } from "@/types/contracts/tasks";
 import type {
   AssistantAdapter,
@@ -87,11 +88,12 @@ function Runtime({ children }: { children: React.ReactNode }) {
   const generation = useRef(0);
   const guideWrites = useRef<Promise<void>>(Promise.resolve());
   const trackGuide = useCallback(
-    (id: string, state: "STARTED" | "COMPLETED", sessionId: string) => {
-      if (!adapter?.trackGuide) return;
+    (id: string, state: "STARTED" | "COMPLETED" | "DISMISSED" | "POSTPONED", sessionId: string) => {
+      if (!adapter?.trackGuide) return Promise.resolve();
       guideWrites.current = guideWrites.current
         .then(() => adapter.trackGuide!(id, state, sessionId))
         .catch(() => {});
+      return guideWrites.current;
     },
     [adapter],
   );
@@ -167,6 +169,11 @@ function Runtime({ children }: { children: React.ReactNode }) {
             <AssistantPanel key={identity + ":help"} kind="help" />
             <AssistantPanel key={identity + ":assistant"} kind="assistant" />
             <AssistantFloatingLauncher />
+            <WelcomeGuide
+              eligible={!!caps?.welcome?.eligible}
+              track={trackGuide}
+              refresh={refresh}
+            />
           </>
         )}
       </GuideProvider>

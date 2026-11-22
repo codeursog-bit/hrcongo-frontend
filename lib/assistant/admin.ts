@@ -19,6 +19,9 @@ export interface AssistantSettings {
   guideEnabled: boolean;
   disabledGuides: string[];
   retentionDays: number;
+  trialCredits?: number;
+  creditsPerAnalysis?: number;
+  creditsPerMessage?: number;
   planLimits: Record<
     (typeof ASSISTANT_PLANS)[number],
     { maxMode: "OFF" | "INTEGRE" | "IA_AVANCEE"; monthlyAnalyses: number }
@@ -31,6 +34,28 @@ export interface AssistantCompany {
     allowed: boolean;
     forceMode: "OFF" | "INTEGRE" | null;
   } | null;
+  assistantWallet?: { balance: number; trialGrantedAt: string | null } | null;
+}
+export interface CreditPack {
+  id: string;
+  name: string;
+  credits: number;
+  price: number;
+  currency: string;
+  active: boolean;
+  sortOrder: number;
+}
+export interface CompanyCredits {
+  balance: number;
+  trialGrantedAt: string | null;
+  ledger: {
+    id: string;
+    delta: number;
+    balanceAfter: number;
+    reason: string;
+    note: string | null;
+    createdAt: string;
+  }[];
 }
 export interface AssistantUsage {
   from: string;
@@ -62,6 +87,9 @@ export const assistantAdmin = {
     guideEnabled,
     disabledGuides,
     retentionDays,
+    trialCredits,
+    creditsPerAnalysis,
+    creditsPerMessage,
     planLimits,
     provider,
     model,
@@ -77,6 +105,9 @@ export const assistantAdmin = {
       guideEnabled,
       disabledGuides,
       retentionDays,
+      trialCredits,
+      creditsPerAnalysis,
+      creditsPerMessage,
       planLimits,
       provider,
       model,
@@ -85,6 +116,28 @@ export const assistantAdmin = {
       licenseDate,
       licenseReference,
     }),
+  packs: () => api.get<CreditPack[]>("/admin/assistant/packs"),
+  savePack: (pack: Partial<CreditPack> & { name: string; credits: number; price: number }) =>
+    api.put<CreditPack>("/admin/assistant/packs", pack),
+  removePack: (id: string) =>
+    api.delete("/admin/assistant/packs/" + encodeURIComponent(id)),
+  credits: (id: string) =>
+    api.get<CompanyCredits>(
+      "/admin/assistant/companies/" + encodeURIComponent(id) + "/credits",
+    ),
+  adjustCredits: (
+    id: string,
+    body: {
+      credits: number;
+      reason: "GRANT" | "PURCHASE" | "ADJUST";
+      note?: string;
+      reference?: string;
+    },
+  ) =>
+    api.post<CompanyCredits>(
+      "/admin/assistant/companies/" + encodeURIComponent(id) + "/credits",
+      body,
+    ),
   usage: () => api.get<AssistantUsage>("/admin/assistant/usage"),
   companies: (search = "") =>
     api.get<AssistantCompany[]>(

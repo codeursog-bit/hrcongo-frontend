@@ -343,6 +343,7 @@ function ContratsPage() {
           </button>
           {/* Générer un contrat (système unique : modèles dynamiques) */}
           <button
+            data-guide="contrats-generate"
             onClick={() => router.push(bp('/contrats/modeles/generer'))}
             className="flex items-center gap-2 px-4 py-2.5 bg-[var(--brand)] hover:bg-[var(--brand-strong)] text-white text-sm font-semibold rounded-xl shadow-md transition-all"
           >
@@ -351,6 +352,7 @@ function ContratsPage() {
           </button>
           {/* ✅ Bouton vers page rupture */}
           <button
+            data-guide="contrats-rupture"
             onClick={() => router.push(bp('/contrats/rupture'))}
             className="flex items-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-xl shadow-md shadow-red-500/30 transition-all"
           >
@@ -410,7 +412,7 @@ function ContratsPage() {
       </div>
 
       {/* Onglets */}
-      <div className="flex gap-1 p-1 bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-x-auto">
+      <div data-guide="contrats-tabs" className="flex gap-1 p-1 bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-x-auto">
         {TABS.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
             className={`relative flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${tab === t.id ? 'bg-[var(--brand)] text-white shadow-md' : 'text-[var(--text-muted)] hover:text-[var(--text)]'}`}>
@@ -424,7 +426,7 @@ function ContratsPage() {
 
       {/* Recherche */}
       {tab !== 'essais' && (
-        <div className="relative">
+        <div data-guide="contrats-search" className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher nom, matricule, poste…"
             className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40" />
@@ -593,7 +595,7 @@ function ContratsPage() {
                         {emp.status === 'ACTIVE' && <span>{fmt(emp.baseSalary)}/mois</span>}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div data-guide="contrats-actions" className="flex items-center gap-2 shrink-0">
                       {canRenew && (
                         <button
                           // CDD : renouvellement via la chaîne de contrats (contrôles légaux + historique tracé)

@@ -146,7 +146,7 @@ function Content() {
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <label className="block">
+          <label data-guide="contrat-model" className="block">
             <span className="text-xs font-bold text-[var(--text-muted)]">1. Modèle de contrat</span>
             <select value={templateId} onChange={(e) => setTemplateId(e.target.value)}
               className="mt-1 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] px-3 py-2 text-sm">
@@ -157,7 +157,7 @@ function Content() {
               <span className="mt-1 block text-[11px] text-[var(--text-muted)]">Aucun modèle à vous pour l'instant : importez votre contrat ou copiez une base Konza depuis « Modèles de contrat ».</span>
             )}
           </label>
-          <div>
+          <div data-guide="contrat-employee">
             <span className="text-xs font-bold text-[var(--text-muted)]">2. Employé</span>
             <div className="relative mt-1">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
@@ -261,7 +261,7 @@ function Content() {
               </section>
             ))}
 
-            <div className="flex justify-end">
+            <div data-guide="contrat-submit" className="flex justify-end">
               <button onClick={generate} disabled={generating || missing > 0 || resolving}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--brand)] text-white font-semibold disabled:opacity-50">
                 {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileSignature className="w-4 h-4" />} Générer le contrat

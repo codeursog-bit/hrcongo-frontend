@@ -992,7 +992,7 @@
   cursor: pointer;
 }
 .assistant-clarify > button:hover:not(:disabled) {
-    background: var(--surface-2, rgba(127, 127, 127, 0.08));
+  background: var(--surface-subtle, rgba(127, 127, 127, 0.08));
 }
 .assistant-clarify > button:focus-visible {
   outline: 2px solid currentColor;
@@ -1005,4 +1005,141 @@
 .assistant-clarify > button span {
   font-size: 11px;
   color: var(--text-secondary);
+}
+/* ---- Chat Sofia : présentation sobre type assistant moderne ------------------------------ */
+.assistant-window:has(.assistant-conversations) {
+  width: min(1040px, calc(100vw - 40px));
+}
+.assistant-window .assistant-transcript {
+  padding: 8px 8px 16px 4px;
+  scroll-behavior: smooth;
+}
+/* Réponses de Sofia : texte pleine largeur, sans bulle, comme dans les assistants IA courants. */
+.assistant-window .assistant-message {
+  max-width: 100%;
+  padding: 2px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.assistant-window .assistant-message > strong {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.assistant-window .assistant-message:not(.is-user) > strong::before {
+  content: "S";
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--brand);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+/* Messages de l'utilisateur : bulle discrète alignée à droite. */
+.assistant-window .assistant-message.is-user {
+  max-width: 78%;
+  margin-left: auto;
+  padding: 10px 14px;
+  border-radius: 18px 18px 4px 18px;
+  background: var(--brand-soft);
+}
+.assistant-window .assistant-message.is-user > strong {
+  display: none;
+}
+.assistant-window .assistant-welcome {
+  max-width: 640px;
+  margin: 8vh auto 0;
+}
+.assistant-capabilities {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0;
+  padding: 0;
+  list-style: none;
+}
+.assistant-capabilities li {
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+.assistant-capabilities li strong {
+  color: var(--text);
+}
+.assistant-window .assistant-welcome .assistant-limits {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.assistant-quick-questions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  max-width: 640px;
+  margin: 12px auto;
+}
+.assistant-quick-questions button {
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-radius: 14px;
+  font-size: 13px;
+}
+/* Zone de saisie arrondie, bouton d'envoi rond. */
+.assistant-window .assistant-composer {
+  align-items: flex-end;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 22px;
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.06);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.assistant-window .assistant-composer:focus-within {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--brand-soft);
+}
+.assistant-window .assistant-composer textarea {
+  border: 0;
+  outline: 0;
+  background: transparent;
+  height: 44px;
+  min-height: 44px;
+  max-height: 44px;
+  padding: 10px 6px;
+}
+.assistant-window .assistant-composer > button {
+  width: 40px;
+  height: 40px;
+  min-height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  display: inline-grid;
+  place-items: center;
+}
+.assistant-window .assistant-quota {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+@media (max-width: 640px) {
+  .assistant-quick-questions {
+    grid-template-columns: 1fr;
+  }
+  .assistant-window .assistant-welcome {
+    margin-top: 2vh;
+  }
+  .assistant-window .assistant-message.is-user {
+    max-width: 92%;
+  }
 }

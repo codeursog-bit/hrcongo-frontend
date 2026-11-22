@@ -12,6 +12,10 @@ const choices = [
   ["leave_returns", "Retours de congé"],
   ["leave_balance", "Solde de congé"],
   ["leave_allowance", "Allocation de congé"],
+  ["attendance_summary", "Résumé des présences"],
+  ["absences_ranking", "Classement des absences"],
+  ["lateness_ranking", "Classement des retards"],
+  ["leave_planning", "Planning de congés proposé"],
 ];
 export function AnalysisComposer({
   adapter,
