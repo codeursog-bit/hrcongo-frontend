@@ -66,6 +66,9 @@ function Sep() {
 }
 
 export default function ContractEditor({ initialContent, settings, editable = true, onChange, onSettingsChange }: Props) {
+  // ⚠️ La classe « loan-document-protected » (racine ci-dessous) empêche le cadre de page
+  // (LoanModuleFrame) d'« annoter » les tableaux de l'éditeur : ses observateurs entraient
+  // en boucle infinie avec ceux de ProseMirror et gelaient tout le navigateur.
   const { success, error: showError } = useAlert();
   const [catalog, setCatalog] = useState<CatalogVariable[]>([]);
   const [query, setQuery] = useState('');
@@ -184,7 +187,7 @@ export default function ContractEditor({ initialContent, settings, editable = tr
 
   return (
     <EditableCtx.Provider value={editable}>
-    <div className="flex flex-col lg:flex-row gap-4 items-start" ref={wrapRef}>
+    <div className="flex flex-col lg:flex-row gap-4 items-start loan-document-protected" ref={wrapRef}>
       {/* ── Feuille + barre d'outils ───────────────────────────────────────── */}
       <div className="flex-1 min-w-0 w-full relative">
         <div className="sticky top-0 z-20 mb-3 flex flex-wrap items-center gap-0.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-2 py-1.5 shadow-sm">

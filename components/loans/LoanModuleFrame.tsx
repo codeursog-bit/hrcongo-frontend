@@ -1,4 +1,7 @@
 'use client';
+// 📁 components/loans/LoanModuleFrame.tsx
+// ⚠️ Les zones d'édition (.ProseMirror / contenteditable) sont EXCLUES de l'annotation : sinon l'observateur
+//    ci-dessous et celui de l'éditeur de contrats se déclenchent mutuellement à l'infini (page figée).
 import React,{createContext,useContext,useLayoutEffect,useEffect,useRef,useId,useState} from 'react';
 import {ListPage,DetailPage,DashboardPage} from '@/components/templates';
 import {Card,Skeleton,Button} from '@/components/design-system/primitives';
@@ -15,11 +18,11 @@ export function LoanModuleFrame({children,kind='list',error}:{children:React.Rea
     const annotate=()=>{
       root.querySelectorAll<HTMLElement>('[id*="print"],[id*="preview"]').forEach(el=>{if(el.matches('div,article,section')&&!el.closest('.loan-module-controls'))el.classList.add('loan-document-protected');});
       root.querySelectorAll<HTMLTableElement>('table').forEach(table=>{
-        if(table.closest('.loan-document-protected'))return;
+        if(table.closest('.loan-document-protected,.ProseMirror,[contenteditable="true"]'))return;
         const labels=Array.from(table.querySelectorAll('thead tr:last-child th')).map(th=>th.textContent?.trim()||'Actions');
         table.setAttribute('role','table');table.querySelectorAll('tbody tr').forEach(row=>{row.setAttribute('role','row');row.querySelectorAll<HTMLTableCellElement>('td').forEach((cell,i)=>{if(cell.colSpan>1)return;cell.dataset.label=labels[i]||'';cell.setAttribute('role','cell');});});
       });
-      root.querySelectorAll<HTMLElement>('input:not([aria-label]):not([id]),select:not([aria-label]):not([id]),textarea:not([aria-label]):not([id])').forEach(el=>{if(el.closest('.loan-document-protected'))return;const label=el.parentElement?.querySelector('label')?.textContent?.trim()||el.getAttribute('placeholder')||(el.tagName==='SELECT'?(el as HTMLSelectElement).options[0]?.textContent:'');if(label)el.setAttribute('aria-label',label);});
+      root.querySelectorAll<HTMLElement>('input:not([aria-label]):not([id]),select:not([aria-label]):not([id]),textarea:not([aria-label]):not([id])').forEach(el=>{if(el.closest('.loan-document-protected,.ProseMirror,[contenteditable="true"]'))return;const label=el.parentElement?.querySelector('label')?.textContent?.trim()||el.getAttribute('placeholder')||(el.tagName==='SELECT'?(el as HTMLSelectElement).options[0]?.textContent:'');if(label)el.setAttribute('aria-label',label);});
     };annotate();const observer=new MutationObserver(annotate);observer.observe(root,{childList:true,subtree:true,characterData:true});return()=>observer.disconnect();
   },[]);
   const Page=kind==='dashboard'?DashboardPage:kind==='detail'?DetailPage:ListPage;
