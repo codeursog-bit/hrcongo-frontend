@@ -11,6 +11,7 @@ import {
 import { GUIDES } from "@/lib/guides/catalog";
 import { Card, Button, Input } from "@/components/design-system/primitives";
 import { FancySelect } from "@/components/ui/FancySelect";
+import { CompanyCreditsBox } from "../CreditsAdmin";
 import "./assistant-admin.css";
 export default function AssistantAdminPage() {
   const [settings, setSettings] = useState<AssistantSettings | null>(null),
@@ -498,6 +499,14 @@ export default function AssistantAdminPage() {
             >
               Enregistrer l’exception
             </Button>
+            <CompanyCreditsBox
+              companyId={company.id}
+              initialBalance={
+                (company as unknown as { assistantWallet?: { balance?: number } | null })
+                  .assistantWallet?.balance ?? 0
+              }
+              onChanged={() => void searchCompanies()}
+            />
           </section>
         ))}
         {!loading && !companies.length && (
