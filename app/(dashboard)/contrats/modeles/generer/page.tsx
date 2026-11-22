@@ -9,7 +9,7 @@
 
 import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Loader2, FileSignature, Download, CheckCircle2, AlertCircle, RefreshCcw } from 'lucide-react';
+import { ArrowLeft, Loader2, FileSignature, Download, CheckCircle2, AlertCircle, RefreshCcw, Search } from 'lucide-react';
 import { api } from '@/services/api';
 import { useAlert } from '@/components/providers/AlertProvider';
 import { useBasePath } from '@/hooks/useBasePath';
@@ -37,6 +37,7 @@ function Content() {
 
   const [templates, setTemplates] = useState<TemplateListItem[]>([]);
   const [employees, setEmployees] = useState<EmployeeOption[]>([]);
+  const [employeesState, setEmployeesState] = useState<'loading' | 'ok' | 'error'>('loading');
   const [templateId, setTemplateId] = useState(params.get('templateId') || '');
   const [employeeId, setEmployeeId] = useState(params.get('employeeId') || '');
   const [search, setSearch] = useState('');
@@ -54,7 +55,9 @@ function Content() {
 
   useEffect(() => {
     api.get<TemplateListItem[]>('/contract-templates').then((l) => setTemplates(l.filter((t) => !t.isSystem))).catch(() => {});
-    api.get<EmployeeOption[]>('/employees/simple').then((r: any) => setEmployees(r)).catch(() => {});
+    api.get<EmployeeOption[]>('/employees/simple')
+      .then((r: any) => { setEmployees(Array.isArray(r) ? r : []); setEmployeesState('ok'); })
+      .catch(() => setEmployeesState('error'));
   }, []);
 
   const resolve = useCallback(async (tId: string, eId: string, ov: Record<string, string>) => {
@@ -94,7 +97,7 @@ function Content() {
 
   const filteredEmployees = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return employees.filter((e) => !q || `${e.firstName} ${e.lastName} ${e.employeeNumber}`.toLowerCase().includes(q)).slice(0, 50);
+    return employees.filter((e) => !q || `${e.firstName} ${e.lastName} ${e.employeeNumber}`.toLowerCase().includes(q));
   }, [employees, search]);
 
   const missing = resolved?.missingCount ?? 0;
@@ -156,12 +159,52 @@ function Content() {
           </label>
           <div>
             <span className="text-xs font-bold text-[var(--text-muted)]">2. Employé</span>
-            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Rechercher un employé…"
-              className="mt-1 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] px-3 py-2 text-sm" />
-            <select value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} size={4}
-              className="mt-1 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] px-2 py-1 text-sm">
-              {filteredEmployees.map((e) => <option key={e.id} value={e.id}>{e.lastName} {e.firstName} — {e.position}</option>)}
-            </select>
+            <div className="relative mt-1">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+              <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Rechercher un employé…"
+                className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] pl-9 pr-3 py-2 text-sm" />
+            </div>
+            <div className="mt-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
+              {employeesState === 'loading' && (
+                <div className="flex items-center justify-center gap-2 py-8 text-sm text-[var(--text-muted)]">
+                  <Loader2 className="w-4 h-4 animate-spin" /> Chargement des employés…
+                </div>
+              )}
+              {employeesState === 'error' && (
+                <div className="py-8 px-4 text-center text-sm text-rose-600">Impossible de charger la liste des employés. Actualisez la page.</div>
+              )}
+              {employeesState === 'ok' && filteredEmployees.length === 0 && (
+                <div className="py-8 px-4 text-center text-sm text-[var(--text-muted)]">
+                  {employees.length === 0 ? 'Aucun employé dans cette entreprise.' : 'Aucun employé ne correspond à votre recherche.'}
+                </div>
+              )}
+              {employeesState === 'ok' && filteredEmployees.length > 0 && (
+                <ul role="listbox" aria-label="Employés" className="max-h-72 overflow-y-auto divide-y divide-[var(--border)]">
+                  {filteredEmployees.map((e) => {
+                    const active = e.id === employeeId;
+                    const initials = `${(e.firstName || '?').charAt(0)}${(e.lastName || '').charAt(0)}`.toUpperCase();
+                    return (
+                      <li key={e.id}>
+                        <button type="button" role="option" aria-selected={active} onClick={() => setEmployeeId(e.id)}
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors ${active ? 'bg-[var(--brand-soft)]' : 'hover:bg-[var(--surface-2)]'}`}>
+                          <span className="w-9 h-9 shrink-0 rounded-full bg-[var(--surface-2)] text-[var(--brand)] flex items-center justify-center text-xs font-bold">{initials}</span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-sm font-semibold text-[var(--text)] truncate">{e.lastName} {e.firstName}</span>
+                            <span className="block text-xs text-[var(--text-muted)] truncate">{e.position || 'Poste non renseigné'}</span>
+                          </span>
+                          {active && <CheckCircle2 className="w-4 h-4 text-[var(--brand)] shrink-0" />}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+            {employeesState === 'ok' && employees.length > 0 && (
+              <span className="mt-1 block text-[11px] text-[var(--text-muted)]">
+                {filteredEmployees.length} employé{filteredEmployees.length > 1 ? 's' : ''}{search ? ' trouvé' + (filteredEmployees.length > 1 ? 's' : '') : ''}
+              </span>
+            )}
           </div>
         </div>
 

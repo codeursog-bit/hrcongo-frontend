@@ -44,6 +44,27 @@ const SOURCE_DOT: Record<string, string> = {
   COMPUTED: 'bg-emerald-500', MANUAL: 'bg-rose-500', CUSTOM: 'bg-slate-500',
 };
 
+const EditableCtx = React.createContext(true);
+
+/** Bouton de la barre d'outils — défini HORS du composant pour ne pas être recréé (et remonté) à chaque rendu. */
+function Btn({ onClick, active, disabled, title, children }: any) {
+  const editable = React.useContext(EditableCtx);
+  return (
+    <button
+      type="button" title={title} disabled={disabled || !editable}
+      onMouseDown={(e) => e.preventDefault()} onClick={onClick}
+      className={`p-1.5 rounded-lg text-sm transition-colors disabled:opacity-40 ${
+        active ? 'bg-[var(--brand-soft)] text-[var(--brand)]' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text)]'
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+function Sep() {
+  return <span className="w-px h-5 bg-[var(--border)] mx-1" />;
+}
+
 export default function ContractEditor({ initialContent, settings, editable = true, onChange, onSettingsChange }: Props) {
   const { success, error: showError } = useAlert();
   const [catalog, setCatalog] = useState<CatalogVariable[]>([]);
@@ -151,24 +172,18 @@ export default function ContractEditor({ initialContent, settings, editable = tr
     }
   };
 
-  const Btn = ({ onClick, active, disabled, title, children }: any) => (
-    <button
-      type="button" title={title} disabled={disabled || !editable}
-      onMouseDown={(e) => e.preventDefault()} onClick={onClick}
-      className={`p-1.5 rounded-lg text-sm transition-colors disabled:opacity-40 ${
-        active ? 'bg-[var(--brand-soft)] text-[var(--brand)]' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text)]'
-      }`}
-    >
-      {children}
-    </button>
-  );
-  const Sep = () => <span className="w-px h-5 bg-[var(--border)] mx-1" />;
-
-  if (!editor) return null;
+  if (!editor) {
+    return (
+      <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-10 text-center text-sm text-[var(--text-muted)]">
+        Préparation de l'éditeur…
+      </div>
+    );
+  }
   const inTable = editor.isActive('table');
   const gapCount = findGaps(editor.state.doc).length;
 
   return (
+    <EditableCtx.Provider value={editable}>
     <div className="flex flex-col lg:flex-row gap-4 items-start" ref={wrapRef}>
       {/* ── Feuille + barre d'outils ───────────────────────────────────────── */}
       <div className="flex-1 min-w-0 w-full relative">
@@ -357,5 +372,6 @@ export default function ContractEditor({ initialContent, settings, editable = tr
         </div>
       </aside>
     </div>
+    </EditableCtx.Provider>
   );
 }

@@ -66,36 +66,44 @@ export const PageBreak = Node.create({
 
 /** Suite de points/points de suspension/underscores = champ à compléter dans le contrat d'origine. */
 export const GAP_REGEX = /(?:[….]){4,}|_{4,}/g;
-const gapKey = new PluginKey('ctGap');
+const gapKey = new PluginKey<DecorationSet>('ctGap');
+
+function buildGapDecorations(doc: any): DecorationSet {
+  const decos: Decoration[] = [];
+  doc.descendants((node: any, pos: number) => {
+    if (!node.isText || !node.text) return;
+    GAP_REGEX.lastIndex = 0;
+    let m: RegExpExecArray | null;
+    while ((m = GAP_REGEX.exec(node.text))) {
+      const from = pos + m.index;
+      const to = from + m[0].length;
+      decos.push(
+        Decoration.inline(from, to, {
+          class: 'ct-gap',
+          'data-from': String(from),
+          'data-to': String(to),
+          title: 'Cliquez pour choisir la variable à placer ici',
+        }),
+      );
+    }
+  });
+  return DecorationSet.create(doc, decos);
+}
 
 export const GapHighlight = Extension.create({
   name: 'gapHighlight',
   addProseMirrorPlugins() {
     return [
-      new Plugin({
+      new Plugin<DecorationSet>({
         key: gapKey,
+        // ⚡ Les surlignages ne sont recalculés QUE si le texte change (pas à chaque
+        // déplacement du curseur ou clic) : le document n'est plus parcouru en boucle.
+        state: {
+          init: (_config, state) => buildGapDecorations(state.doc),
+          apply: (tr, old) => (tr.docChanged ? buildGapDecorations(tr.doc) : old),
+        },
         props: {
-          decorations(state) {
-            const decos: Decoration[] = [];
-            state.doc.descendants((node, pos) => {
-              if (!node.isText || !node.text) return;
-              GAP_REGEX.lastIndex = 0;
-              let m: RegExpExecArray | null;
-              while ((m = GAP_REGEX.exec(node.text))) {
-                const from = pos + m.index;
-                const to = from + m[0].length;
-                decos.push(
-                  Decoration.inline(from, to, {
-                    class: 'ct-gap',
-                    'data-from': String(from),
-                    'data-to': String(to),
-                    title: 'Cliquez pour choisir la variable à placer ici',
-                  }),
-                );
-              }
-            });
-            return DecorationSet.create(state.doc, decos);
-          },
+          decorations: (state) => gapKey.getState(state),
         },
       }),
     ];

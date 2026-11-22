@@ -21,7 +21,15 @@ import {
 } from '@/lib/contract-templates';
 
 // TipTap n'a pas besoin du rendu serveur
-const ContractEditor = dynamic(() => import('@/components/contracts/contract-editor/ContractEditor'), { ssr: false });
+const ContractEditor = dynamic(() => import('@/components/contracts/contract-editor/ContractEditor'), {
+  ssr: false,
+  // Message visible pendant le téléchargement du code de l'éditeur (au lieu d'une zone vide)
+  loading: () => (
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-10 text-center text-sm text-[var(--text-muted)]">
+      Téléchargement de l'éditeur…
+    </div>
+  ),
+});
 
 export default function ContractTemplateEditPage() {
   const { id } = useParams() as { id: string };
@@ -178,7 +186,7 @@ export default function ContractTemplateEditPage() {
             className="p-2 rounded-xl border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)]"><ArrowLeft className="w-4 h-4" /></button>
           <div className="flex-1 min-w-[220px]">
             <input value={name} disabled={readOnly} onChange={(e) => { setName(e.target.value); setDirty(true); }}
-              placeholder="Nom du modèle (ex. CDD — Papagallo)"
+              placeholder="Nom du modèle (ex. Contrat CDD standard)"
               className="w-full text-lg font-bold bg-transparent text-[var(--text)] outline-none border-b border-transparent focus:border-[var(--brand)] disabled:opacity-70" />
             <div className="flex flex-wrap items-center gap-2 mt-1">
               <select value={category} disabled={readOnly} onChange={(e) => { setCategory(e.target.value); setDirty(true); }}
