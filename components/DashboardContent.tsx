@@ -484,10 +484,12 @@ export const DashboardContent = () => {
                 )}
                 <p className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>{myStats.checkIn ? new Date(myStats.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Pointer'}</p>
               </div>
+              {leaveEligible && (
               <div className="rounded-xl p-4" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
                 <p className="text-xs mb-2" style={{ color: 'var(--text-muted)' }}>Solde congés</p>
                 <p className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">{myStats.remainingLeaves || '0'} j</p>
               </div>
+              )}
               <div className="rounded-xl p-4" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
                 <p className="text-xs mb-2" style={{ color: 'var(--text-muted)' }}>Reste à rembourser</p>
                 <p className="text-xl font-extrabold text-amber-500">{formatCurrency(myStats.totalDebt || 0)} F</p>
@@ -501,7 +503,7 @@ export const DashboardContent = () => {
               <div className="rounded-xl p-4" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
                 <p className="text-xs mb-3" style={{ color: 'var(--text-muted)' }}>Actions rapides</p>
                 <div className="flex flex-col gap-2">
-                  <button onClick={() => router.push('/conges/nouveau')} className="w-full text-[11px] bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-2 py-1.5 rounded-lg font-bold transition-colors border border-emerald-500/20 text-left flex items-center gap-1.5"><Calendar size={12} /> + Congé</button>
+                  {leaveEligible && <button onClick={() => router.push('/conges/nouveau')} className="w-full text-[11px] bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-2 py-1.5 rounded-lg font-bold transition-colors border border-emerald-500/20 text-left flex items-center gap-1.5"><Calendar size={12} /> + Congé</button>}
                   <button onClick={() => router.push('/presences/pointage-manuel')} className="w-full text-[11px] bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 px-2 py-1.5 rounded-lg font-bold transition-colors border border-amber-500/20 text-left flex items-center gap-1.5"><Fingerprint size={12} /> Pointer équipe</button>
                 </div>
               </div>

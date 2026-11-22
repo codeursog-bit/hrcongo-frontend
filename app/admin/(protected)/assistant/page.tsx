@@ -231,7 +231,8 @@ export default function AssistantAdminPage() {
                   setSettings({ ...settings, killSwitch: e.target.checked })
                 }
               />
-              Interrupteur de sécurité des appels externes
+              Bloquer tous les appels externes (interrupteur de sécurité : à
+              décocher pour utiliser Gemini)
             </label>
             <p className="assistant-admin-muted">
               Le mode avancé exige la licence confirmée et un fournisseur
@@ -323,11 +324,17 @@ export default function AssistantAdminPage() {
             >
               Tester la connexion avec des données fictives
             </Button>
+            {settings.killSwitch && (
+              <p className="assistant-admin-muted">
+                Le test est désactivé tant que l’interrupteur de sécurité
+                ci-dessus est coché.
+              </p>
+            )}
             <p className="assistant-admin-muted">
               Le test utilise la configuration serveur actuelle, sans activer
               l’IA pour les clients. Pour l’activer : enregistrez la licence,
-              choisissez IA avancée pour la plateforme et les forfaits
-              concernés.
+              choisissez IA avancée, décochez l’interrupteur de sécurité et
+              vérifiez que l’entreprise a des crédits d’analyse.
             </p>
           </Card>
           <Card title="Guides pas à pas">

@@ -132,11 +132,12 @@ export default function AbsenceManagementPage() {
 
   // 🆕 Motif « Autre » : la RH doit trancher payé / non payé avant de valider.
   const [paidDecision, setPaidDecision] = useState<boolean | null>(null);
-  useEffect(() => { setPaidDecision(null); }, [selectedId]);
+  // Pré-rempli avec la proposition de l'employé (motifs standards) ; « Autre » : la RH doit choisir.
+  useEffect(() => { setPaidDecision(selected && selected.subType !== 'AUTRE' && typeof selected.isPaid === 'boolean' ? selected.isPaid : null); }, [selectedId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleDecision = async (status: 'APPROVED' | 'REJECTED') => {
     if (!selected) return;
-    if (status === 'APPROVED' && selected.subType === 'AUTRE' && paidDecision === null) return;
+    if (status === 'APPROVED' && paidDecision === null) return;
     if (status === 'REJECTED' && !rejectionReason.trim()) { setRejectMode(true); return; }
 
     setIsProcessing(true);
@@ -144,10 +145,10 @@ export default function AbsenceManagementPage() {
       await api.patch(`/absence-requests/${selected.id}/status`, {
         status,
         rejectionReason: status === 'REJECTED' ? rejectionReason : undefined,
-        isPaid: status === 'APPROVED' && selected.subType === 'AUTRE' ? paidDecision! : undefined,
+        isPaid: status === 'APPROVED' ? paidDecision! : undefined,
       });
       setRequests(prev => prev.map(r => r.id === selected.id
-        ? { ...r, status, rejectionReason, ...(status === 'APPROVED' && selected.subType === 'AUTRE' ? { isPaid: paidDecision } : {}) }
+        ? { ...r, status, rejectionReason, ...(status === 'APPROVED' ? { isPaid: paidDecision } : {}) }
         : r));
       setRejectMode(false);
       setRejectionReason('');
@@ -400,16 +401,19 @@ export default function AbsenceManagementPage() {
 
                   <div className="flex items-center gap-2 text-sm px-3.5 py-2.5 rounded-xl border border-[var(--border)]">
                     <Wallet size={14} className="text-[var(--text-muted)]" />
-                    {selected.subType === 'AUTRE' && selected.status === 'PENDING'
-                      ? 'Motif « Autre » — paiement à définir par la RH'
-                      : selected.subType === 'AUTRE'
+                    {selected.status === 'PENDING'
+                      ? (selected.subType === 'AUTRE'
+                        ? 'Motif « Autre » — paiement à définir par la RH'
+                        : (selected.isPaid ? 'Absence payée demandée — à confirmer par la RH' : 'Absence non payée demandée — à confirmer par la RH'))
+                      : selected.status === 'APPROVED'
                         ? (selected.isPaid ? 'Absence payée (décision RH)' : 'Absence non payée (décision RH)')
-                        : selected.isPaid ? 'Absence payée demandée' : 'Absence non-payée demandée'}
+                        : (selected.isPaid ? 'Absence payée demandée' : 'Absence non payée demandée')}
                   </div>
 
-                  {selected.status === 'PENDING' && canApprove && selected.subType === 'AUTRE' && (
+                  {selected.status === 'PENDING' && canApprove && (
                     <div className="p-3.5 rounded-xl border-2 border-[var(--border)]  bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  space-y-2">
                       <p className="text-xs font-semibold text-[var(--warning-text)] ">Cette période sera-t-elle payée ? (obligatoire pour valider)</p>
+                      <p className="text-[11px] text-[var(--text-muted)]">Payée : le jour est rémunéré. Non payée : le jour est déduit de la paie.</p>
                       <div className="grid grid-cols-2 gap-2">
                         {([[true, 'Payée'], [false, 'Non payée']] as const).map(([v, l]) => (
                           <Button variant="ghost"
@@ -456,7 +460,7 @@ export default function AbsenceManagementPage() {
                     <div className="pt-2 space-y-3">
                       {!rejectMode ? (
                         <div className="flex gap-2">
-                          <Button variant="primary" onClick={() => handleDecision('APPROVED')} disabled={isProcessing || (selected.subType === 'AUTRE' && paidDecision === null)} className="flex-1 py-3 bg-[var(--brand)] hover:bg-[var(--brand)] disabled:opacity-50 text-[var(--on-brand)] text-sm font-semibold rounded-xl flex items-center justify-center gap-2">
+                          <Button variant="primary" onClick={() => handleDecision('APPROVED')} disabled={isProcessing || paidDecision === null} className="flex-1 py-3 bg-[var(--brand)] hover:bg-[var(--brand)] disabled:opacity-50 text-[var(--on-brand)] text-sm font-semibold rounded-xl flex items-center justify-center gap-2">
                             <Check size={16} /> Valider
                           </Button>
                           <Button variant="ghost" onClick={() => setRejectMode(true)} disabled={isProcessing} className="flex-1 py-3 border border-[var(--border)] hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] dark:hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] hover:border-[var(--border)] hover:text-[var(--danger-text)] text-[var(--text-muted)] text-sm font-semibold rounded-xl flex items-center justify-center gap-2">

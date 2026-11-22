@@ -6,15 +6,26 @@ import { Headphones, Users } from "lucide-react";
 import ChatPage from "@/components/chat/ChatPage";
 import { authService } from "@/lib/services/authService";
 import SupportInbox from "./SupportInbox";
+import { canUseSupport } from "./access";
 import { supportApi } from "@/lib/support/api";
 import { DEMO_MODE } from "@/lib/demo/config";
 import "./support.css";
 export default function MessagesWorkspace() {
-  const support = useSearchParams().get("support") === "1",
+  const params = useSearchParams(),
     u = authService.getCurrentUser();
+  // Rôle lu côté client après l'hydratation (évite tout écart serveur/client).
+  const [role, setRole] = useState<string | null | undefined>(undefined);
+  useEffect(() => {
+    setRole(
+      (authService.getCurrentUser() as { role?: string } | null)?.role ?? null,
+    );
+  }, []);
+  const ready = role !== undefined,
+    allowed = ready && canUseSupport(role),
+    support = allowed && params.get("support") === "1";
   const [unread, setUnread] = useState(0);
   useEffect(() => {
-    if (support || DEMO_MODE || !u?.id) return;
+    if (support || !allowed || DEMO_MODE || !u?.id) return;
     let active = true,
       timer: ReturnType<typeof setTimeout>;
     async function poll() {
@@ -34,9 +45,11 @@ export default function MessagesWorkspace() {
       active = false;
       clearTimeout(timer);
     };
-  }, [support, u?.id]);
+  }, [support, allowed, u?.id]);
+  if (!ready) return null;
   return (
     <>
+      {allowed && (
       <nav className="support-channel-nav" aria-label="Espace de messagerie">
         <Link href="?" aria-current={!support ? "page" : undefined}>
           <Users size={17} />
@@ -52,6 +65,7 @@ export default function MessagesWorkspace() {
           )}
         </Link>
       </nav>
+      )}
       {support ? <SupportInbox key={u?.id || "guest"} /> : <ChatPage />}
     </>
   );

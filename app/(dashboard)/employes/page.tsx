@@ -182,7 +182,7 @@ export default function EmployeeListPage() {
   const [uiLoadError, setUiLoadError] = useState('');
   const { bp } = useBasePath();
   const router = useRouter();
-  const [viewMode, setViewMode]             = useState<'grid' | 'table'>('table');
+  const [viewMode, setViewMode]             = useState<'grid' | 'table'>('grid');
   const [isLoading, setIsLoading]           = useState(true);
   const [isInitialLoading, setIsInitialLoading] = useState(true); // 🆕 uniquement au tout premier chargement
   const [employees, setEmployees]           = useState<Employee[]>([]);

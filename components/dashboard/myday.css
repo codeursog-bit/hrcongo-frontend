@@ -20,7 +20,7 @@
 .myday-task-create>.k-button { flex:0 0 auto; gap:6px; }
 .myday-task-count { display:inline-block; margin-left:8px; min-width:18px; padding:0 6px; border-radius:999px; background:color-mix(in srgb,var(--text) 10%,transparent); font-size:11px; line-height:18px; text-align:center; }
 .myday-task-hint { margin:10px 0 0; }
-.myday-task-viewport { height:300px; margin-top:16px; overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; }
+.myday-task-viewport { height:300px; margin-top:16px; overflow-y:auto; overscroll-behavior:auto; -webkit-overflow-scrolling:touch; touch-action:pan-y; scrollbar-gutter:stable; }
 .myday-task-viewport .myday-task-list { margin:0; max-height:none; overflow:visible; }
 .myday-task-viewport .k-empty,.myday-task-viewport [class*="empty"] { min-height:100%; }
 .myday-task-list li { align-items:flex-start; }
@@ -82,3 +82,13 @@
 .myday-week-work { background:color-mix(in srgb,var(--action) 10%,transparent); }
 .myday-week-holiday { background:color-mix(in srgb,#eab308 12%,transparent); }
 .myday-week-today { border-color:var(--action); box-shadow:0 0 0 1px var(--action) inset; }
+/* Événements de l'équipe : carrousel horizontal (flèches, swipe, clavier) */
+.myday-carousel { display:flex; flex-direction:column; gap:12px; }
+.myday-carousel-bar { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.myday-carousel-bar .k-button { min-height:30px; padding:4px; }
+.myday-carousel-count { font-size:12px; color:var(--text-secondary); font-variant-numeric:tabular-nums; }
+.myday-carousel-track { display:flex; overflow-x:auto; overflow-y:hidden; scroll-snap-type:x mandatory; overscroll-behavior-x:contain; scrollbar-width:none; border-radius:var(--radius-control); }
+.myday-carousel-track::-webkit-scrollbar { display:none; }
+.myday-carousel-track:focus-visible { outline:2px solid var(--focus); outline-offset:2px; }
+.myday-carousel-slide { flex:0 0 100%; min-width:0; scroll-snap-align:start; scroll-snap-stop:always; }
+.myday-carousel .myday-event-post { border-bottom:0; margin-bottom:0; padding-bottom:4px; }

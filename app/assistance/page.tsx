@@ -5,6 +5,7 @@ import { api } from "@/services/api";
 import { authService } from "@/lib/services/authService";
 import { getRedirectUrl } from "@/lib/redirectAfterLogin";
 import SupportInbox from "@/components/support/SupportInbox";
+import { canUseSupport } from "@/components/support/access";
 import "@/components/support/support.css";
 export default function Assistance() {
   const [user, setUser] = useState<{
@@ -67,6 +68,15 @@ export default function Assistance() {
         <p role="status">Vérification de votre session…</p>
       ) : staff ? (
         <Link href="/admin/support">Ouvrir la boîte de réception support</Link>
+      ) : !canUseSupport(user.role) ? (
+        <div className="support-info">
+          <p>
+            Le support Konza est réservé aux administrateurs de votre
+            entreprise. Pour toute question, écrivez à votre équipe RH depuis
+            la messagerie.
+          </p>
+          <Link href="/messages">Ouvrir la messagerie</Link>
+        </div>
       ) : (
         <SupportInbox key={user.id + ":" + user.role} />
       )}

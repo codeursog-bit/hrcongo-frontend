@@ -21,6 +21,7 @@ import { useGuide } from "@/components/guides/GuideProvider";
 import { searchGuides } from "@/lib/guides/catalog";
 import { normalizeHelp } from "@/lib/assistant/help";
 import { DEMO_MODE } from "@/lib/demo/config";
+import { canUseSupport } from "@/components/support/access";
 import type {
   AssistantMessage,
   AssistantSummary,
@@ -901,10 +902,12 @@ export function AssistantPanel({
               </section>
             )}
             <footer className="assistant-support">
-              <Link href="/messages?support=1" onClick={close}>
-                Discuter avec Support Konza
-                <ArrowRight size={14} strokeWidth={1.5} />
-              </Link>
+              {canUseSupport(ctx.actor.role) && (
+                <Link href="/messages?support=1" onClick={close}>
+                  Discuter avec Support Konza
+                  <ArrowRight size={14} strokeWidth={1.5} />
+                </Link>
+              )}
               {kind === "assistant" && (
                 <span>Assistante IA · lecture seule</span>
               )}

@@ -1,5 +1,5 @@
 "use client";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, CheckCircle2, Lightbulb, Send } from "lucide-react";
 import {
@@ -9,6 +9,8 @@ import {
   Textarea,
 } from "@/components/design-system/primitives";
 import { supportApi } from "@/lib/support/api";
+import { authService } from "@/lib/services/authService";
+import { canUseSupport } from "@/components/support/access";
 import { DEMO_MODE } from "@/lib/demo/config";
 import "./suggestions.css";
 
@@ -20,6 +22,12 @@ export default function SuggestionsPage() {
   const [error, setError] = useState("");
   const request = useRef<{ key: string; id: string } | null>(null);
   const sending = useRef(false);
+  const [blocked, setBlocked] = useState(false);
+  useEffect(() => {
+    const role = (authService.getCurrentUser() as { role?: string } | null)
+      ?.role;
+    setBlocked(!canUseSupport(role));
+  }, []);
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (
@@ -52,6 +60,23 @@ export default function SuggestionsPage() {
       setBusy(false);
     }
   }
+  if (blocked)
+    return (
+      <main className="product-suggestions">
+        <Link href="/dashboard" className="product-suggestions-back">
+          <ArrowLeft size={16} strokeWidth={1.5} />
+          Retour au tableau de bord
+        </Link>
+        <Card>
+          <p>
+            Les suggestions à l’équipe Konza sont réservées aux
+            administrateurs de l’entreprise. Partagez votre idée avec votre
+            équipe RH depuis la messagerie.
+          </p>
+          <Link href="/messages">Ouvrir la messagerie</Link>
+        </Card>
+      </main>
+    );
   return (
     <main className="product-suggestions">
       <Link href="/dashboard" className="product-suggestions-back">

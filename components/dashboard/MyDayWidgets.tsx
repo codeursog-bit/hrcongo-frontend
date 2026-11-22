@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, ChevronLeft, ChevronRight, MessageSquare, Plus, Flag, Megaphone, Send } from 'lucide-react';
 import { Badge, Button, Card, EmptyState, Input, Skeleton, Textarea } from '@/components/design-system/primitives';
@@ -86,24 +86,53 @@ export function DayTasks() {
   </Card>;
 }
 
-export function DayCalendar({ context, holidays, holidaysAvailable }: { context: DayContext; holidays: { date: string; label: string }[]; holidaysAvailable: boolean }) {
+export function DayCalendar({ context, holidays, holidaysAvailable, leaveEligible = true }: { context: DayContext; holidays: { date: string; label: string }[]; holidaysAvailable: boolean; leaveEligible?: boolean }) {
   const [month, setMonth] = useState(() => dayKey().slice(0, 7)); const today = dayKey();
   const label = new Date(`${month}-01T12:00:00Z`).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric', timeZone: 'Africa/Brazzaville' });
   return <Card className="myday-calendar" title="Mon calendrier"><div className="myday-month"><Button variant="ghost" aria-label="Mois précédent" onClick={() => setMonth(nextCalendarMonth(month, -1))}><ChevronLeft size={17} strokeWidth={1.5} /></Button><strong>{label}</strong><Button variant="ghost" aria-label="Mois suivant" onClick={() => setMonth(nextCalendarMonth(month, 1))}><ChevronRight size={17} strokeWidth={1.5} /></Button></div><div className="myday-calendar-grid" role="list" aria-label={label}>{['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => <span aria-hidden="true" key={`weekday-${i}`} className="myday-weekday">{d}</span>)}{calendarDays(month).map((day, i) => {
     if (!day) return <span key={`blank-${i}`} aria-hidden="true" />;
-    const holiday = holidays.find(h => h.date === day); const leave = context.leaves?.find(l => l.status === 'APPROVED' && day >= l.startDate.slice(0, 10) && day <= l.endDate.slice(0, 10));
+    const holiday = holidays.find(h => h.date === day); const leave = leaveEligible ? context.leaves?.find(l => l.status === 'APPROVED' && day >= l.startDate.slice(0, 10) && day <= l.endDate.slice(0, 10)) : undefined;
     return <span key={day} role="listitem" aria-current={day === today ? 'date' : undefined} aria-label={`${day}${holiday ? ` · ${holiday.label}` : ''}${leave ? ' · Congé approuvé' : ''}`} className={`${holiday ? 'myday-holiday' : ''} ${leave ? 'myday-leave' : ''}`}><time dateTime={day}>{Number(day.slice(-2))}</time></span>;
-  })}</div><div className="myday-calendar-key"><span>Congé approuvé</span><span>Jour férié</span></div>{!holidaysAvailable && <p className="k-help">Les jours fériés de votre entreprise seront bientôt disponibles.</p>}</Card>;
+  })}</div><div className="myday-calendar-key">{leaveEligible && <span>Congé approuvé</span>}<span>Jour férié</span></div>{!holidaysAvailable && <p className="k-help">Les jours fériés de votre entreprise seront bientôt disponibles.</p>}</Card>;
 }
 
 type FeedEvent = ReturnType<typeof useDayEvents>['events'][number] & { canComment?: boolean; sentCount?: number; comments?: { id: string; author: string; text: string; createdAt: string }[] };
 const CONFETTI_COLORS = ['#f97316', '#ec4899', '#8b5cf6', '#06b6d4', '#22c55e', '#eab308'];
 
+function EventCarousel({ items }: { items: { key: string; node: React.ReactNode }[] }) {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [index, setIndex] = useState(0);
+  const count = items.length;
+  const current = Math.min(index, Math.max(0, count - 1));
+  const go = (to: number) => {
+    const el = trackRef.current; if (!el) return;
+    const next = Math.max(0, Math.min(count - 1, to));
+    const reduce = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    el.scrollTo({ left: next * el.clientWidth, behavior: reduce ? 'auto' : 'smooth' });
+    setIndex(next);
+  };
+  const onScroll = () => { const el = trackRef.current; if (el && el.clientWidth) setIndex(Math.round(el.scrollLeft / el.clientWidth)); };
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.target !== e.currentTarget) return; // ne pas intercepter les flèches dans les champs de message
+    if (e.key === 'ArrowRight') { e.preventDefault(); go(current + 1); } else if (e.key === 'ArrowLeft') { e.preventDefault(); go(current - 1); }
+  };
+  return <div className="myday-carousel" role="region" aria-roledescription="carrousel" aria-label="Événements de l’équipe">
+    {count > 1 && <div className="myday-carousel-bar">
+      <Button variant="ghost" aria-label="Événement précédent" disabled={current === 0} onClick={() => go(current - 1)}><ChevronLeft size={18} strokeWidth={1.5} /></Button>
+      <span className="myday-carousel-count" aria-live="polite">{current + 1} / {count}</span>
+      <Button variant="ghost" aria-label="Événement suivant" disabled={current >= count - 1} onClick={() => go(current + 1)}><ChevronRight size={18} strokeWidth={1.5} /></Button>
+    </div>}
+    <div className="myday-carousel-track" ref={trackRef} onScroll={onScroll} onKeyDown={onKeyDown} tabIndex={count > 1 ? 0 : undefined}>
+      {items.map((it, i) => <div className="myday-carousel-slide" key={it.key} role="group" aria-roledescription="diapositive" aria-label={`${i + 1} sur ${count}`}>{it.node}</div>)}
+    </div>
+  </div>;
+}
+
 export function DayEvents() {
   const events = useDayEvents(); const notify = useToast();
-  return <Card className="myday-events" title="Dans l’équipe">{!events.available ? <p className="k-caption">Anniversaires et messages de bienvenue : bientôt disponibles.</p> : events.loading ? <Skeleton className="myday-event-loading" /> : events.error ? <p role="alert" className="k-error">{events.error}</p> : events.events.length ? events.events.map(event => <EventCard key={event.id} event={event as FeedEvent}
-    react={async emoji => { try { await events.react(event.id, emoji); } catch { notify('error', 'Votre réaction n’a pas pu être enregistrée.'); } }}
-    comment={async text => { try { await events.comment(event.id, text); return true; } catch (e) { notify('error', e instanceof Error ? e.message : 'Le message n’a pas pu être envoyé.'); return false; } }} />) : <p className="k-caption">Les prochains moments à partager apparaîtront ici.</p>}</Card>;
+  const react = (id: string) => async (emoji: string) => { try { await events.react(id, emoji); } catch { notify('error', 'Votre réaction n’a pas pu être enregistrée.'); } };
+  const comment = (id: string) => async (text: string) => { try { await events.comment(id, text); return true; } catch (e) { notify('error', e instanceof Error ? e.message : 'Le message n’a pas pu être envoyé.'); return false; } };
+  return <Card className="myday-events" title="Dans l’équipe">{!events.available ? <p className="k-caption">Anniversaires et messages de bienvenue : bientôt disponibles.</p> : events.loading ? <Skeleton className="myday-event-loading" /> : events.error ? <p role="alert" className="k-error">{events.error}</p> : events.events.length ? <EventCarousel items={events.events.map(event => ({ key: event.id, node: <EventCard event={event as FeedEvent} react={react(event.id)} comment={comment(event.id)} /> }))} /> : <p className="k-caption">Les prochains moments à partager apparaîtront ici.</p>}</Card>;
 }
 
 function EventCard({ event, react, comment }: { event: FeedEvent; react: (emoji: string) => void; comment: (text: string) => Promise<boolean> }) {
