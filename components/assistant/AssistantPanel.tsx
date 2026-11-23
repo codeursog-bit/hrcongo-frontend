@@ -402,7 +402,10 @@ export function AssistantPanel({
                       : "Aucun appel à un fournisseur IA externe dans ce mode. "}
                     L’historique garde des questions normalisées et vos
                     échanges avec Sofia chiffrés côté serveur, pendant la durée
-                    de conservation prévue.
+                    de conservation prévue. Quand Sofia ne sait pas encore
+                    répondre à une question que vous avez écrite, une copie
+                    sans noms, montants ni identifiants peut être conservée
+                    jusqu’à 90 jours pour améliorer l’assistant.
                   </p>
                 </details>
               )}

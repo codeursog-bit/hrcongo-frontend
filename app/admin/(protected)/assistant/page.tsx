@@ -12,6 +12,7 @@ import { GUIDES } from "@/lib/guides/catalog";
 import { Card, Button, Input } from "@/components/design-system/primitives";
 import { FancySelect } from "@/components/ui/FancySelect";
 import { CompanyCreditsBox } from "../CreditsAdmin";
+import UnansweredQuestionsCard from "./UnansweredQuestionsCard";
 import "./assistant-admin.css";
 export default function AssistantAdminPage() {
   const [settings, setSettings] = useState<AssistantSettings | null>(null),
@@ -513,6 +514,7 @@ export default function AssistantAdminPage() {
           <p>Aucune entreprise ne correspond.</p>
         )}
       </Card>
+      <UnansweredQuestionsCard />
       {usage && (
         <Card title="Usage et audit">
           <p>
