@@ -67,9 +67,9 @@ function CompleteHRReport() {
           api.get(`/reports/payroll?month=${currentMonth}&year=${currentYear}`),
           api.get(`/reports/departments?month=${currentMonth}&year=${currentYear}`),
           api.get(`/reports/comparison?month=${currentMonth}&year=${currentYear}`),
-          api.get('/reports/top-employees'),
+          api.get(`/reports/top-employees?year=${currentYear}`),
           api.get(`/reports/overtime?month=${currentMonth}&year=${currentYear}`),
-          api.get('/reports/leaves')
+          api.get(`/reports/leaves?year=${currentYear}`)
         ]);
 
         setPayrollData(payroll);

@@ -1,0 +1,285 @@
+{
+ "_lisez_moi": "Tokens et variantes de composants des 8 designs de référence. Les valeurs de variantes (ex. 'roman-hairline') sont des énumérations que le moteur doit implémenter une seule fois ; un design = une combinaison de variantes + des tokens (couleurs, polices). Unités : couleurs hex sans #, tailles de police en pt, filets en pt, marges en mm.",
+ "variantesAImplementer": {
+  "header": [
+   "wordmark-rules",
+   "bar-wordmark",
+   "dark-band",
+   "cartouche-3-cells",
+   "title-right-big (bulletin)"
+  ],
+  "title": [
+   "center-serif-caps-spaced",
+   "left-bold-sans",
+   "center-bold-sans",
+   "inside-cartouche"
+  ],
+  "section": [
+   "roman-hairline",
+   "number-left-bar",
+   "grey-band-left-bar",
+   "pale-band-centered"
+  ],
+  "field": [
+   "leader-dots",
+   "stacked-label-over-line",
+   "boxed-label-top",
+   "label-cell-left"
+  ],
+  "table": [
+   "rules",
+   "minimal-rules",
+   "grid",
+   "grid-filled-header"
+  ],
+  "signature": [
+   "box-pale-header",
+   "line-caption",
+   "dark-header-box",
+   "pale-header-box"
+  ],
+  "footer": [
+   "centered-hairline",
+   "left-colored-rule",
+   "centered-slate-rule",
+   "centered-double-rule"
+  ],
+  "checkbox": "glyphe U+2610, police Segoe UI Symbol / fallback 'DejaVu Sans'"
+ },
+ "documentsAdministratifs": {
+  "page": {
+   "format": "A4",
+   "margesMm": {
+    "haut": 16,
+    "bas": 18,
+    "gauche": 20,
+    "droite": 20
+   },
+   "largeurUtileMm": 170
+  },
+  "skins": {
+   "A_CLASSIQUE": {
+    "nom": "Classique",
+    "fonts": {
+     "titre": "Cambria",
+     "corps": "Calibri"
+    },
+    "colors": {
+     "ink": "1B1F27",
+     "main": "14213D",
+     "accent": "9A7B4F",
+     "muted": "5E6672",
+     "hair": "C9CDD3",
+     "paper": "F4F1EA"
+    },
+    "variants": {
+     "header": "wordmark-rules",
+     "title": "center-serif-caps-spaced",
+     "section": "roman-hairline",
+     "field": "leader-dots",
+     "table": "rules",
+     "signature": "box-pale-header",
+     "footer": "centered-hairline"
+    },
+    "notes": "Filet marine 1pt + filet cuivre 0,4pt sous l'en-tête. Titre 18pt gras, interlettrage 1,5pt. Sections : chiffre romain cuivre + titre capitales + filet gris."
+   },
+   "B_MODERNE": {
+    "nom": "Moderne",
+    "fonts": {
+     "titre": "Calibri",
+     "corps": "Calibri"
+    },
+    "colors": {
+     "ink": "241E21",
+     "main": "6B1E2E",
+     "accent": "6B1E2E",
+     "muted": "6B6266",
+     "hair": "CFC6C3"
+    },
+    "variants": {
+     "header": "bar-wordmark",
+     "title": "left-bold-sans",
+     "section": "number-left-bar",
+     "field": "stacked-label-over-line",
+     "table": "minimal-rules",
+     "signature": "line-caption",
+     "footer": "left-colored-rule"
+    },
+    "notes": "Petite barre bordeaux (26 mm x 1,6 mm) au-dessus du nom. Titre 21pt gras aligné à gauche. Sections : '01' bordeaux + barre verticale 3pt."
+   },
+   "C_INSTITUTIONNEL": {
+    "nom": "Institutionnel",
+    "fonts": {
+     "titre": "Arial",
+     "corps": "Arial"
+    },
+    "colors": {
+     "ink": "1C232B",
+     "main": "1F2B38",
+     "band": "E3E8ED",
+     "soft": "F4F6F8",
+     "border": "A9B3BD",
+     "muted": "56626E"
+    },
+    "variants": {
+     "header": "dark-band",
+     "title": "center-bold-sans",
+     "section": "grey-band-left-bar",
+     "field": "boxed-label-top",
+     "table": "grid",
+     "signature": "dark-header-box",
+     "footer": "centered-slate-rule"
+    },
+    "notes": "Bandeau ardoise pleine largeur (nom en blanc à gauche, 'RÉFÉRENCE' + valeur à droite). Cases encadrées filet 0,5pt."
+   },
+   "D_CARTOUCHE": {
+    "nom": "Cartouche",
+    "fonts": {
+     "titre": "Cambria",
+     "corps": "Calibri"
+    },
+    "colors": {
+     "ink": "1B221F",
+     "main": "24493A",
+     "pale": "E9F1ED",
+     "border": "8FA79B",
+     "muted": "55625B"
+    },
+    "variants": {
+     "header": "cartouche-3-cells",
+     "title": "inside-cartouche",
+     "section": "pale-band-centered",
+     "field": "label-cell-left",
+     "table": "grid-filled-header",
+     "signature": "pale-header-box",
+     "footer": "centered-double-rule"
+    },
+    "notes": "En-tête en 3 cellules encadrées : nom | titre + sous-titre sur fond pâle | référence. Libellés dans des cellules pâles à gauche."
+   }
+  }
+ },
+ "bulletinDePaie": {
+  "page": {
+   "format": "A4",
+   "margesMm": {
+    "haut": 11.5,
+    "bas": 13,
+    "gauche": 15,
+    "droite": 15
+   },
+   "largeurUtileMm": 180
+  },
+  "structureCommune": [
+   "ligne 1 : nom de l'entreprise à gauche (bold ~18pt), titre 'BULLETIN DE PAIE' à droite (bold ~28pt)",
+   "ligne 2 : bloc 'Période du … au …' + 'Paie : …' (centre), 'Mois de' + 'Année' (droite)",
+   "cadre d'infos 3 colonnes : gauche (conv. coll., date d'embauche, ancienneté, emploi, département, catégorie, code banque, nom banque), milieu (matricule, salarié, N° CNSS, situation familiale, nbre d'enfants, nbre parts ITS), droite étroite (localité) ; cadre extérieur filet 1pt",
+   "tableau de paie qui occupe toute la hauteur restante (colonnes verticales continues) jusqu'aux cumuls",
+   "tableau des cumuls collé sous le tableau de paie ; cellule NET À PAYER fusionnée sur les 2 lignes (Mensuel/Annuel), chiffre ~17pt gras",
+   "deux cadres de signature (légende au-dessus), puis mention de conservation centrée en pied"
+  ],
+  "colonnesTableauPaie_unites": {
+   "N°": 600,
+   "Désignation": 2806,
+   "Nombre": 900,
+   "Base": 1100,
+   "Taux (sal.)": 700,
+   "Gain": 1100,
+   "Retenue (sal.)": 1100,
+   "Taux (pat.)": 800,
+   "Retenue (pat.)": 1100,
+   "total": 10206,
+   "remarque": "Convertir en pourcentages du total. JAMAIS de largeurs fixes en px."
+  },
+  "colonnesCumuls_unites": {
+   "Cumuls": 900,
+   "Salaire brut": 1050,
+   "Charges salariales": 1050,
+   "Charges patronales": 1050,
+   "ITS": 1050,
+   "Net imposable": 1050,
+   "Base congé": 1050,
+   "Jrs congé": 1000,
+   "NET À PAYER": 2006,
+   "total": 10206
+  },
+  "skins": {
+   "A_BLEU": {
+    "nom": "Bleu",
+    "fonts": {
+     "titre": "Calibri",
+     "corps": "Calibri"
+    },
+    "colors": {
+     "main": "14284B",
+     "headFill": "CFE0F1",
+     "line": "5F7A99",
+     "thin": "9FB1C6",
+     "totFill": "EEF3F9",
+     "netHeadFill": "14284B",
+     "netCellFill": "EEF3F9",
+     "netCellText": "14284B"
+    },
+    "colonnesVerticales": "toutes",
+    "cadreExterieur": "simple 1pt"
+   },
+   "B_VERT": {
+    "nom": "Vert Konza",
+    "fonts": {
+     "titre": "Calibri",
+     "corps": "Calibri"
+    },
+    "colors": {
+     "main": "0F4A3A",
+     "headFill": "DCEFE6",
+     "line": "6FA58C",
+     "thin": "C3DACE",
+     "totFill": "EFF7F3",
+     "netHeadFill": "E8873A",
+     "netCellFill": "0F4A3A",
+     "netCellText": "FFFFFF"
+    },
+    "colonnesVerticales": "seulement entre groupes (après Base et après Retenue sal.)",
+    "cadreExterieur": "simple 0,75pt"
+   },
+   "C_ARDOISE": {
+    "nom": "Ardoise",
+    "fonts": {
+     "titre": "Arial",
+     "corps": "Arial"
+    },
+    "colors": {
+     "main": "1F2B38",
+     "headFill": "1F2B38",
+     "headText": "FFFFFF",
+     "line": "7C8996",
+     "thin": "C4CBD2",
+     "totFill": "E9EDF1",
+     "netHeadFill": "1F2B38",
+     "netCellFill": "E9EDF1",
+     "netCellText": "1F2B38"
+    },
+    "colonnesVerticales": "toutes",
+    "cadreExterieur": "simple 1pt"
+   },
+   "D_BORDEAUX": {
+    "nom": "Bordeaux",
+    "fonts": {
+     "titre": "Cambria",
+     "corps": "Calibri"
+    },
+    "colors": {
+     "main": "6B1E2E",
+     "headFill": "F1E4E7",
+     "line": "8E4A58",
+     "thin": "D9C2C7",
+     "totFill": "F8F1F2",
+     "netHeadFill": "6B1E2E",
+     "netCellFill": "F8F1F2",
+     "netCellText": "6B1E2E"
+    },
+    "colonnesVerticales": "toutes (filet clair)",
+    "cadreExterieur": "double 0,75pt"
+   }
+  }
+ }
+}

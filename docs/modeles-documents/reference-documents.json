@@ -1,0 +1,580 @@
+{
+ "_lisez_moi": "Contenu des documents de référence (champs, libellés par défaut, ordre). Les 'key' sont des clés stables proposées ; l'agent doit les aligner sur les noms réels de l'API/du schéma Prisma. Les libellés sont les libellés PAR DÉFAUT (modifiables par l'utilisateur sans changer la clé).",
+ "ABSENCE": {
+  "exemple": {
+   "entreprise": "AXIS Oïl S.A",
+   "reference": "AXS-001-2026/DDA/DRH"
+  },
+  "titre": "DEMANDE D’AUTORISATION D’ABSENCE",
+  "sousTitre": "Absence pour événement familial ou motif conventionnel",
+  "blocs": [
+   {
+    "type": "fieldGroup",
+    "titre": "Renseignements du collaborateur",
+    "champs": [
+     [
+      "employee.fullName",
+      "Nom(s) et prénom(s)"
+     ],
+     [
+      "employee.position",
+      "Poste occupé"
+     ]
+    ]
+   },
+   {
+    "type": "motifTable",
+    "titre": "Motif de l’absence — cocher la case correspondante",
+    "colonnes": [
+     "Motif",
+     "Durée conventionnelle",
+     "Choix"
+    ],
+    "lignes": [
+     {
+      "key": "MARIAGE_TRAVAILLEUR",
+      "label": "Mariage du travailleur",
+      "jours": 4
+     },
+     {
+      "key": "MARIAGE_ENFANT",
+      "label": "Mariage d’un de ses enfants",
+      "jours": 2
+     },
+     {
+      "key": "DECES_CONJOINT",
+      "label": "Décès du conjoint légitime",
+      "jours": 6
+     },
+     {
+      "key": "DECES_ENFANT",
+      "label": "Décès d’un de ses enfants",
+      "jours": 6
+     },
+     {
+      "key": "DECES_ASCENDANT_FRATRIE",
+      "label": "Décès d’un ascendant (père, mère), d’une sœur ou d’un frère en ligne directe",
+      "jours": 5
+     },
+     {
+      "key": "ACCOUCHEMENT_PARTENAIRE",
+      "label": "Accouchement de la partenaire légitime",
+      "jours": 3
+     },
+     {
+      "key": "RETRAIT_DEUIL",
+      "label": "Retrait de deuil pour le décès d’un conjoint, d’une sœur, d’un frère, d’un descendant ou d’un ascendant direct",
+      "jours": 2
+     },
+     {
+      "key": "AUTRE",
+      "label": "Autres (à préciser)",
+      "jours": null
+     }
+    ]
+   },
+   {
+    "type": "fieldGroup",
+    "champs": [
+     [
+      "absence.startDate",
+      "Période d’absence : du"
+     ],
+     [
+      "absence.endDate",
+      "au"
+     ]
+    ]
+   },
+   {
+    "type": "dateSignature",
+    "date": "Fait à {ville}, le ……/……/ 2026",
+    "signature": "Signature du collaborateur"
+   },
+   {
+    "type": "decision",
+    "titre": "Décision de la hiérarchie",
+    "options": [
+     "Accordé",
+     "Refusé"
+    ],
+    "commentaire": "Commentaire"
+   },
+   {
+    "type": "signatures",
+    "items": [
+     "Le Supérieur hiérarchique",
+     "La Direction des Ressources Humaines",
+     "La Direction Générale"
+    ]
+   }
+  ]
+ },
+ "LEAVE": {
+  "exemple": {
+   "entreprise": "ARKIA SARLU",
+   "reference": "ARK-010-2026/FDA/DRH"
+  },
+  "titre": "FORMULAIRE DE DÉPART EN CONGÉ",
+  "blocs": [
+   {
+    "type": "fieldGroup",
+    "titre": "Identité du salarié",
+    "colonnes": 2,
+    "champs": [
+     [
+      "employee.fullName",
+      "Nom et prénom"
+     ],
+     [
+      "employee.position",
+      "Poste occupé"
+     ],
+     [
+      "employee.department",
+      "Service / Direction"
+     ],
+     [
+      "employee.hireDate",
+      "Date d’embauche"
+     ]
+    ]
+   },
+   {
+    "type": "fieldGroup",
+    "titre": "Objet de la demande",
+    "colonnes": 3,
+    "champs": [
+     [
+      "leave.startDate",
+      "Date de départ"
+     ],
+     [
+      "leave.endDate",
+      "Date de retour"
+     ],
+     [
+      "leave.days",
+      "Nombre de jours"
+     ]
+    ]
+   },
+   {
+    "type": "signatures",
+    "titre": "Signatures",
+    "items": [
+     "Le Salarié",
+     "Le Responsable Hiérarchique",
+     "Les Ressources Humaines",
+     "La Direction Générale"
+    ],
+    "hauteurRelative": "grande (page peu remplie : étirer)"
+   },
+   {
+    "type": "note",
+    "texte": "Le présent formulaire, une fois complété et validé, est transmis au service des Ressources Humaines pour établissement de l’attestation de mise en congé et mise à jour du dossier administratif du salarié."
+   },
+   {
+    "type": "dateSignature",
+    "date": "Fait à {ville}, le ……/……/……"
+   }
+  ]
+ },
+ "ADVANCE": {
+  "exemple": {
+   "entreprise": "ARKIA SARLU",
+   "reference": "AK-003-2026/DDA/DRH"
+  },
+  "titre": "FORMULAIRE DE DEMANDE D’AVANCE SUR SALAIRE",
+  "sousTitre": "Avance sur salaire — à usage interne",
+  "intro": "À compléter par le/la salarié(e) demandeur(se) et à remettre à la Direction des Ressources Humaines, accompagné des pièces justificatives requises.",
+  "blocs": [
+   {
+    "type": "fieldGroup",
+    "titre": "Identité du demandeur",
+    "colonnes": 3,
+    "champs": [
+     [
+      "employee.fullName",
+      "Nom et prénom"
+     ],
+     [
+      "employee.position",
+      "Poste occupé"
+     ],
+     [
+      "employee.phone",
+      "Téléphone"
+     ]
+    ]
+   },
+   {
+    "type": "fieldGroup",
+    "titre": "Objet de la demande",
+    "colonnes": 2,
+    "champs": [
+     [
+      "advance.amount",
+      "Montant de l’avance sollicitée"
+     ],
+     [
+      "advance.repaymentMode",
+      "Mode de récupération"
+     ]
+    ]
+   },
+   {
+    "type": "textLines",
+    "label": "Motif de la demande",
+    "lignes": 2
+   },
+   {
+    "type": "declaration",
+    "texte": "Je reconnais que cette avance sera déduite de mon salaire selon les modalités approuvées par la Direction, conformément au règlement intérieur en vigueur."
+   },
+   {
+    "type": "dateSignature",
+    "date": "Fait à {ville}, le ……/……/2026",
+    "signature": "Signature du demandeur"
+   },
+   {
+    "type": "reviewTable",
+    "titre": "Avis hiérarchique et décision",
+    "colonnes": [
+     "Fonction",
+     "Nom et visa",
+     "Décision"
+    ],
+    "lignes": [
+     "Responsable direct",
+     "Direction des Ressources Humaines",
+     "Direction Générale"
+    ],
+    "options": [
+     "Favorable",
+     "Défavorable"
+    ],
+    "ligneFinale": "Montant approuvé"
+   }
+  ]
+ },
+ "LOAN": {
+  "exemple": {
+   "entreprise": "ARKIA SARLU",
+   "reference": "AK-002-2026/FDP/DRH"
+  },
+  "titre": "FORMULAIRE DE DEMANDE DE PRÊT",
+  "sousTitre": "Prêt au personnel — à usage interne",
+  "blocs": [
+   {
+    "type": "fieldGroup",
+    "titre": "Identité du demandeur",
+    "colonnes": 3,
+    "champs": [
+     [
+      "employee.fullName",
+      "Nom et prénom"
+     ],
+     [
+      "employee.position",
+      "Poste occupé"
+     ],
+     [
+      "employee.phone",
+      "Téléphone"
+     ]
+    ]
+   },
+   {
+    "type": "checklist",
+    "label": "Nature du prêt",
+    "options": [
+     "Prêt social",
+     "Prêt scolarité",
+     "Prêt logement",
+     "Prêt exceptionnel",
+     "Autre"
+    ]
+   },
+   {
+    "type": "fieldGroup",
+    "colonnes": 2,
+    "champs": [
+     [
+      "loan.amount",
+      "Montant sollicité"
+     ],
+     [
+      "loan.duration",
+      "Durée de remboursement souhaitée"
+     ],
+     [
+      "loan.repaymentMode",
+      "Mode de remboursement"
+     ]
+    ]
+   },
+   {
+    "type": "textLines",
+    "label": "Motif de la demande",
+    "lignes": 2
+   },
+   {
+    "type": "checklist",
+    "titre": "Pièces jointes",
+    "label": "Documents fournis",
+    "options": [
+     "Devis / facture",
+     "Justificatif de scolarité",
+     "Justificatif médical",
+     "Autre pièce"
+    ]
+   },
+   {
+    "type": "declaration",
+    "texte": "Je certifie l’exactitude des informations ci-dessus et m’engage, en cas d’accord, à respecter les modalités de remboursement fixées par la société."
+   },
+   {
+    "type": "dateSignature",
+    "date": "Fait à {ville}, le ……/……/2026",
+    "signature": "Signature du demandeur"
+   },
+   {
+    "type": "reviewTable",
+    "titre": "Avis hiérarchique et décision",
+    "lignes": [
+     "Responsable comptable",
+     "Direction des Ressources Humaines",
+     "Direction Générale"
+    ],
+    "options": [
+     "Favorable",
+     "Défavorable"
+    ]
+   }
+  ]
+ },
+ "PAYSLIP": {
+  "exemple": {
+   "entreprise": "Konza Tech",
+   "periode": "01/11/2026 – 30/11/2026"
+  },
+  "titre": "BULLETIN DE PAIE",
+  "infosSalarie": {
+   "gauche": [
+    [
+     "company.collectiveAgreement",
+     "Conv. Coll."
+    ],
+    [
+     "employee.hireDate",
+     "Date d’embauche"
+    ],
+    [
+     "employee.seniority",
+     "Ancienneté"
+    ],
+    [
+     "employee.position",
+     "Emploi"
+    ],
+    [
+     "employee.department",
+     "Département"
+    ],
+    [
+     "employee.category",
+     "Catégorie"
+    ],
+    [
+     "employee.bankCode",
+     "Code Banque"
+    ],
+    [
+     "employee.bankName",
+     "Nom Banque"
+    ]
+   ],
+   "milieu": [
+    [
+     "employee.employeeNumber",
+     "Matricule"
+    ],
+    [
+     "employee.fullName",
+     "Salarié"
+    ],
+    [
+     "employee.cnssNumber",
+     "N° CNSS"
+    ],
+    [
+     "employee.maritalStatus",
+     "Situation familiale"
+    ],
+    [
+     "employee.numberOfChildren",
+     "Nbre d’enfants"
+    ],
+    [
+     "employee.itsParts",
+     "Nbre parts ITS"
+    ]
+   ],
+   "droite": [
+    [
+     "company.city",
+     "Localité"
+    ]
+   ]
+  },
+  "colonnesPaie": [
+   "N°",
+   "Désignation",
+   "Nombre",
+   "Base",
+   "Taux (salarial)",
+   "Gain",
+   "Retenue (salariale)",
+   "Taux (patronal)",
+   "Retenue (patronale)"
+  ],
+  "lignesExemple": [
+   {
+    "n": "100",
+    "label": "Salaire de base",
+    "nombre": "26",
+    "base": "26 382,69",
+    "gain": "685 950"
+   },
+   {
+    "n": "200",
+    "label": "Prime d’ancienneté",
+    "base": "685 950",
+    "taux": "4 %",
+    "gain": "27 438"
+   },
+   {
+    "type": "total",
+    "label": "Total Brut",
+    "gain": "713 388"
+   },
+   {
+    "label": "Cotisation CNSS",
+    "base": "713 388",
+    "taux": "4 %",
+    "retenue": "28 536"
+   },
+   {
+    "label": "CNSS Pension",
+    "tauxPat": "8 %",
+    "retenuePat": "57 071"
+   },
+   {
+    "label": "CNSS Famille",
+    "tauxPat": "10,03 %",
+    "retenuePat": "60 180",
+    "note": "plafonné (assiette 600 000)"
+   },
+   {
+    "label": "CNSS Accidents",
+    "tauxPat": "2,25 %",
+    "retenuePat": "13 500",
+    "note": "plafonné (assiette 600 000)"
+   },
+   {
+    "label": "ITS",
+    "retenue": "48 357"
+   },
+   {
+    "label": "Camu",
+    "base": "713 388",
+    "taux": "2,27 %",
+    "retenue": "16 194",
+    "tauxPat": "4,55 %",
+    "retenuePat": "32 459"
+   },
+   {
+    "label": "TOL",
+    "base": "5 000",
+    "retenue": "5 000"
+   },
+   {
+    "label": "TUS FISC",
+    "tauxPat": "2,025 %",
+    "retenuePat": "14 446"
+   },
+   {
+    "label": "TUS CNSS",
+    "tauxPat": "5,475 %",
+    "retenuePat": "39 058"
+   },
+   {
+    "type": "total",
+    "label": "Total Cotisations",
+    "retenue": "98 087"
+   },
+   {
+    "n": "9900",
+    "type": "total",
+    "label": "TOTAL GAINS",
+    "gain": "713 388"
+   },
+   {
+    "n": "9950",
+    "type": "total",
+    "label": "TOTAL RETENUES",
+    "retenue": "98 087"
+   }
+  ],
+  "remarque": "Les lignes réelles viennent de payroll.items (voir types/bulletin-template.ts PayrollItem). Les montants ci-dessus sont des données d'exemple de la maquette ; ne rien recalculer côté affichage.",
+  "cumuls": {
+   "colonnes": [
+    "Cumuls",
+    "Salaire brut",
+    "Charges salariales",
+    "Charges patronales",
+    "ITS",
+    "Net imposable",
+    "Base congé",
+    "Jrs congé",
+    "NET À PAYER"
+   ],
+   "mensuel": [
+    "713 388",
+    "98 087",
+    "216 714",
+    "48 357",
+    "",
+    "",
+    "",
+    "615 301"
+   ],
+   "annuel": [
+    "7 751 236",
+    "1 061 869",
+    "2 364 599",
+    "520 864",
+    "",
+    "645 936",
+    "",
+    ""
+   ],
+   "remarque": "Net imposable et Jrs congé vides dans la maquette ; la cellule NET À PAYER est fusionnée sur les 2 lignes."
+  },
+  "signatures": [
+   "Signature Employé",
+   "Signature Employeur & Cachet"
+  ],
+  "piedDePage": "Pour vous aider à faire valoir vos droits, conservez ce bulletin de paie sans limitation de durée."
+ },
+ "EXIT_PERMISSION": {
+  "statut": "À concevoir : reprendre les champs du composant existant (dossier components/permissions). Même moteur, mêmes designs."
+ },
+ "CONTRACTOR_INVOICE": {
+  "statut": "Deux modèles existent (FactureRendererForfait, FactureRendererDetaillee) : à migrer vers le moteur plus tard (lot 6)."
+ },
+ "TRAINING_CERTIFICATE": {
+  "statut": "Plus tard (lot 6, optionnel)."
+ }
+}

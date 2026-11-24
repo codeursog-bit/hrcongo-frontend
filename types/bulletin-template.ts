@@ -40,6 +40,8 @@ export interface PayrollEmployee {
 }
 
 export interface PayrollCompany {
+  id?: string;
+  documentTemplate?: import('@/lib/document-template').DocumentTemplate;
   legalName?: string;
   tradeName?: string;
   logo?: string;
@@ -58,6 +60,7 @@ export interface PayrollCompany {
 
 export interface BulletinPayroll {
   id: string;
+  companyId?: string;
   month: number;
   year: number;
   status: string;

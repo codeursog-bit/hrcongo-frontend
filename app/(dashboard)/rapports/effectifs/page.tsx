@@ -91,6 +91,9 @@ interface TurnoverMonthly { month: string; rate: number; }
 interface TurnoverMotif { motif: string; label: string; count: number; }
 interface TurnoverByDept { department: string; count: number; }
 interface TurnoverDetail {
+  deletions?:number;
+  unconfirmedDepartures?:number;
+  definition?:string;
   recordedRuptures: number;
   monthly: TurnoverMonthly[];
   byMotif: TurnoverMotif[];
@@ -175,8 +178,8 @@ function EmployeeAnalyticsPage() {
 
         const [workforceRes, deptRes, topRes] = await Promise.all([
           api.get(`/reports/workforce?${params}`),
-          api.get('/reports/departments'),
-          api.get('/reports/top-employees')
+          api.get(`/reports/departments?year=${reportFilters.year}`),
+          api.get(`/reports/top-employees?year=${reportFilters.year}`)
         ]);
 
         setData(workforceRes as WorkforceData);
@@ -799,6 +802,7 @@ function EmployeeAnalyticsPage() {
       <div>
         <h3 id="report-section-8" tabIndex={-1} className="text-lg font-semibold text-[var(--text)] mb-1">KPI Bilan Social</h3>
         <p className="text-sm text-[var(--text-muted)] mb-4">Turnover détaillé et absentéisme — indicateurs RH classiques</p>
+        <p className="text-xs text-[var(--text-muted)] mb-5">{data?.turnoverDetail?.definition||'Le turnover mesure les départs effectifs confirmés. Les suppressions de fiches sont exclues.'} {data?.turnoverDetail?.deletions??0} fiche(s) supprimée(s) sur 12 mois.{!!data?.turnoverDetail?.unconfirmedDepartures&&` ${data.turnoverDetail.unconfirmedDepartures} ancienne(s) fin(s) d’emploi à confirmer.`}</p>
 
         {/* Cartes Absentéisme */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
@@ -826,7 +830,7 @@ function EmployeeAnalyticsPage() {
               <span className="text-xs font-semibold   text-[var(--text-muted)]">Motifs de départ enregistrés</span>
             </div>
             <p className="text-3xl font-semibold text-[var(--text)]">{data?.turnoverDetail?.recordedRuptures ?? 0}</p>
-            <p className="text-xs text-[var(--text-muted)] mt-1">via le module rupture de contrat (12 mois)</p>
+            <p className="text-xs text-[var(--text-muted)] mt-1">Départs effectifs confirmés, y compris fins d’essai (12 mois)</p>
           </div>
         </div>
 

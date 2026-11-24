@@ -7,7 +7,7 @@
 //   MODERN   → Modèle 3 (élégant, commun aux 4 types de demandes)
 // ============================================================================
 
-export type DocumentTemplate = 'DEFAULT' | 'ORCA' | 'STANDARD' | 'MODERN';
+export type DocumentTemplate = 'DEFAULT' | 'ORCA' | 'STANDARD' | 'MODERN' | 'CUSTOM';
 
 /**
  * Les modèles 2 et 3 consomment EXACTEMENT les mêmes données (catalogue

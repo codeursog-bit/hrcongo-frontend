@@ -77,7 +77,7 @@ export default function OrcaDocumentShell({ company, title, reference, id, child
       {/* Corps du document */}
       <div>{children}</div>
 
-      {/* Pied de page légal — texte libre si l'entreprise en a défini un (ex. Orca), sinon composé automatiquement */}
+      {/* Pied de page légal — texte libre défini par l'entreprise ou composé automatiquement */}
       <div style={{ marginTop: 40, textAlign: 'center', fontSize: 9, color: '#555', lineHeight: 1.5, whiteSpace: 'pre-line' }}>
         {company.documentFooterText ? (
           company.documentFooterText

@@ -24,6 +24,7 @@
 // ============================================================================
 
 import React from 'react';
+import dynamic from 'next/dynamic';
 import BulletinRenderer from '@/components/BulletinRenderer';
 import BulletinRendererClarifie from '@/components/BulletinRendererClarifie';
 import BulletinRendererClassique from '@/components/BulletinRendererClassique';
@@ -33,14 +34,20 @@ import FactureDisplay   from '@/components/FactureDisplay';
 import { useBulletinConfig } from '@/hooks/useBulletinConfig';
 import { isFactureContract } from '@/lib/facture-contract-types';
 import { presentSalaryProrata } from '@/lib/bulletin-salary-prorata';
+import { authService } from '@/lib/services/authService';
 import type { BulletinPayroll } from '@/types/bulletin-template';
+import type { DocLayout } from '@/types/document-layout';
+
+const EnginePayslip = dynamic(() => import('@/components/DocumentRenderer/EnginePayslip'), { ssr: false });
+const CompanyEnginePayslip = dynamic(() => import('@/components/DocumentRenderer/CompanyEnginePayslip'), { ssr: false });
 
 interface Props {
   payroll:      BulletinPayroll;
   previewMode?: boolean;
+  documentLayout?: DocLayout;
 }
 
-export default function BulletinDisplay({ payroll: rawPayroll, previewMode = false }: Props) {
+export default function BulletinDisplay({ payroll: rawPayroll, previewMode = false, documentLayout }: Props) {
   const { config, isLoading } = useBulletinConfig();
 
   // ✅ Option entreprise « salaire de base proratisé » : fusion SAL_BASE +
@@ -53,6 +60,18 @@ export default function BulletinDisplay({ payroll: rawPayroll, previewMode = fal
   //    template/canvas puisque ça concerne le TYPE de document, pas son style.
   if (isFactureContract(payroll.employee?.contractType)) {
     return <FactureDisplay payroll={payroll} previewMode={previewMode} />;
+  }
+
+  if (!documentLayout && payroll.company?.documentTemplate === 'CUSTOM') {
+    const companyId = payroll.company.id ?? payroll.companyId;
+    if (companyId && companyId === authService.getCurrentUser()?.companyId) {
+      return <CompanyEnginePayslip key={companyId} companyId={companyId} payroll={payroll} />;
+    }
+  }
+
+  const engineLayout = documentLayout ?? (config.mode === 'engine' ? config.documentLayout : undefined);
+  if (engineLayout?.docType === 'PAYSLIP') {
+    return <EnginePayslip layout={engineLayout} payroll={payroll} />;
   }
 
   if (isLoading) {

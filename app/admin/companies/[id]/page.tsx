@@ -13,6 +13,7 @@ import {
   ArchiveRestore, Pencil, Loader2, X, AlertTriangle, BarChart3,
 } from 'lucide-react';
 import { adminService } from '@/lib/services/adminService';
+import type { DocumentTemplate } from '@/lib/document-template';
 import { CompanyInsightsPanel, CompanyInsightsData } from '@/components/admin/companies/CompanyInsights';
 
 const PLANS = ['FREE', 'BASIC', 'PRO', 'ENTERPRISE'];
@@ -74,6 +75,11 @@ function EditCompanyModal({ company, onSave, onClose }: {
   const [saving, setSaving] = useState(false);
 
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
+  const savedTemplate: DocumentTemplate = company.documentTemplate ?? 'DEFAULT';
+  const [documentTemplate, setDocumentTemplate] = useState(savedTemplate);
+  const templateChange = documentTemplate !== savedTemplate
+    && (documentTemplate === 'ORCA' || documentTemplate === 'STANDARD')
+    ? { documentTemplate } : {};
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
@@ -109,13 +115,24 @@ function EditCompanyModal({ company, onSave, onClose }: {
               <input value={form.city} onChange={e => set('city', e.target.value)}
                 className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-gray-600" />
             </div>
+            <label className="col-span-2 block text-xs font-medium text-gray-400">
+              Modèle de document
+              <select value={documentTemplate} onChange={e => setDocumentTemplate(e.target.value as DocumentTemplate)}
+                className="mt-1.5 w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-gray-600">
+                {(savedTemplate === 'DEFAULT' || savedTemplate === 'MODERN') && (
+                  <option value={savedTemplate}>Modèle actuel (ancien)</option>
+                )}
+                <option value="STANDARD">Modèle Standard</option>
+                <option value="ORCA">Modèle Orca</option>
+              </select>
+            </label>
           </div>
         </div>
         <div className="p-5 border-t border-gray-800 flex justify-end gap-3">
           <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-white">Annuler</button>
           <button
             disabled={saving}
-            onClick={async () => { setSaving(true); try { await onSave(form); } finally { setSaving(false); } }}
+            onClick={async () => { setSaving(true); try { await onSave({ ...form, ...templateChange }); } finally { setSaving(false); } }}
             className="px-5 py-2 text-sm font-bold rounded-lg bg-brand-red hover:bg-red-700 text-white flex items-center gap-2 disabled:opacity-50">
             {saving && <Loader2 size={14} className="animate-spin" />}
             Enregistrer

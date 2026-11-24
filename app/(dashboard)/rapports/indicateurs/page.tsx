@@ -58,15 +58,12 @@ function IndicateursRhPage() {
         const y = period.year;
         const [w, d, l, p, r, t, pay] = await Promise.all([
           api.get(`/reports/workforce?year=${y}`),
-          // ⚠️ Ces deux-là ignorent encore l'année choisie : traceability
-          // est une fenêtre glissante de 3 mois par conception, et
-          // /reports/payroll n'a pas encore de paramètre de période.
-          api.get('/reports/department-traceability'),
+          api.get(`/reports/department-traceability?year=${y}`),
           api.get(`/reports/leaves?year=${y}`),
           api.get(`/reports/performance-indicators?year=${y}`),
           api.get(`/reports/recruitment-indicators?year=${y}`),
           api.get(`/reports/training-indicators?year=${y}`),
-          api.get('/reports/payroll'),
+          api.get(`/reports/payroll?year=${y}`),
         ]);
         setWorkforce(w); setDepartments(d); setLeaves(l);
         setPerformance(p); setRecruitment(r); setTraining(t); setPayroll(pay);

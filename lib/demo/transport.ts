@@ -19,6 +19,8 @@ import { demoServiceCatalogs } from './service-catalogs';
 import { demoEmployeeManagement } from './employee-management';
 import { demoWorkforce } from './workforce';
 import { demoPresenceScreens } from './presence-screens';
+import type { SavedDocumentLayout } from '@/lib/document-engine/layout-api';
+import type { DocumentTemplate } from '@/lib/document-template';
 
 const notifications = [{ id: 'demo-notification-1', type: 'LEAVE', title: 'Demande de congé de Patrick Likibi', message: 'Une demande attend votre décision.', link: '/conges', read: false, createdAt: '2026-11-12T08:00:00+01:00' }];
 type Store = ReturnType<typeof createDemoStore>;
@@ -28,7 +30,7 @@ export function createDemoStore() {
   store.employees[0].selfServiceEnabled = true;
   store.employees.forEach((employee,index)=>Object.assign(employee,{cnssNumber:index===0?'DEMO-CNSS-001':null,cnssEmployeeDeclared:index===0?false:index===1?true:null,isSubjectToCnss:index!==2,isSubjectToIrpp:index!==2}));
   Object.assign(store.loans[0], { repaymentLogs: structuredClone(loanHistory) });
-  return store;
+  return { ...store, documentLayout: null as SavedDocumentLayout | null, documentTemplate: 'DEFAULT' as DocumentTemplate };
 }
 const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
 /** Closed fixture router: unsupported requests never fall through to the real API. */
@@ -49,11 +51,33 @@ export function demoResponse(url: URL, method: string, body: Record<string, unkn
   if (recruitment) return role === 'ADMIN' ? recruitment : json({ message: 'Cet espace de recrutement est réservé aux RH en démonstration.' }, 403);
   const serviceCatalog = demoServiceCatalogs(url, method, role);
   if (serviceCatalog) return serviceCatalog;
+  if (p === '/companies/mine' && method === 'GET') return json({ ...company, documentTemplate: store.documentTemplate });
+  if (p === '/document-layouts/PAYSLIP') {
+    if (method === 'GET') return json({ layout: store.documentLayout });
+    if (role !== 'ADMIN') return json({ message: 'Modification réservée à l’administration.' }, 403);
+    if (method === 'DELETE') {
+      store.documentLayout = null;
+      return json({ layout: null });
+    }
+    if (method === 'PUT') {
+      const config = body.config as SavedDocumentLayout['config'] | undefined;
+      if (config?.docType !== 'PAYSLIP' || config.schemaVersion !== 2 || typeof config.basePreset !== 'string') {
+        return json({ message: 'Modèle de bulletin invalide.' }, 400);
+      }
+      store.documentLayout = {
+        id: 'demo-payslip-layout', companyId: company.id, docType: 'PAYSLIP',
+        config, name: typeof body.name === 'string' ? body.name : 'Mon modèle', basePreset: config.basePreset,
+        version: (store.documentLayout?.version ?? 0) + 1, updatedAt: new Date().toISOString(),
+      };
+      store.documentTemplate = 'CUSTOM';
+      return json({ layout: store.documentLayout });
+    }
+  }
   if (method === 'GET' && p === '/companies/bulletin-template') return json({ config: { templateId: 'default' } });
   if (method === 'GET' && /^\/payrolls\/demo-payroll-\d+$/.test(p)) {
     const payroll = payrolls.find(item => item.id === p.split('/')[2]);
     if (!payroll || role === 'EMPLOYEE' && payroll.employeeId !== user.employeeId) return json({ message: 'Bulletin de démonstration introuvable.' }, 404);
-    return json(payroll);
+    return json({ ...payroll, company: { ...payroll.company, documentTemplate: store.documentTemplate } });
   }
   if (/export|print|bulletin|document|signature|payment|checkout|subscription.*pay/.test(p)) return json({ message: 'Cette sortie officielle ou action de paiement est indisponible en démonstration.' }, 501);
   if (p === '/auth/verify' || p === '/auth/login' || p === '/auth/refresh') return json({ user });

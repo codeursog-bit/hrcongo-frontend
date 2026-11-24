@@ -101,6 +101,7 @@ function PayrollAnalyticsPage() {
             </h1>
             <p className="text-[var(--text-muted)]">
               Rapports financiers et décomposition des coûts salariaux
+              {' '}— même mois que la page Paie, hors annulations ; brouillons inclus. Les déclarations fiscales utilisent les bulletins confirmés.
             </p>
           </div>
         </div>

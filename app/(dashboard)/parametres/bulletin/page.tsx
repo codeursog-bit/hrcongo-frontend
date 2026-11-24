@@ -1,4 +1,6 @@
 'use client';
+
+import Link from 'next/link';
 import { DocumentReader } from '@/components/ui/DocumentReader';
 import { SettingsFrame } from '@/components/settings/SettingsFrame';
 import { SettingsModelChoice } from '@/components/settings/SettingsModelChoice';
@@ -728,6 +730,7 @@ export default function BulletinDesignerPage() {
             {previewKind==='facture' ? 'Facture prestataire' : 'Mon bulletin de paie'}
           </h1>
           <p style={{ fontSize:11, color:'var(--text-muted)', margin:'0 0 12px' }}>L’aperçu se met à jour à chaque réglage.</p>
+          <Link className="mb-3 inline-block text-xs underline" href="/parametres/documents">Voir les nouveaux designs</Link>
 <div className="settings-document-kind" style={{ display:'flex', gap:3, background:'var(--surface-2)', borderRadius:8, padding:3 }}>
                 <button onClick={()=>setPreviewKind('bulletin')}
                   style={{ padding:'5px 10px', borderRadius:6, border:'none', cursor:'pointer', fontSize:11, fontWeight:600,

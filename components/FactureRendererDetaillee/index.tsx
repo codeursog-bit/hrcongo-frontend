@@ -4,7 +4,7 @@
 // components/FactureRendererDetaillee/index.tsx
 //
 // Gabarit "Facture détaillée" — reproduit fidèlement le modèle papier fourni
-// par le client (facture manuscrite type "MBAYE Modou / ORCA DECO") :
+// par le client (exemple de facture manuscrite) :
 //   - Expéditeur = le prestataire (employé) en haut à gauche (nom + ville)
 //   - Date d'émission alignée à droite, sous l'expéditeur
 //   - Encadré "Doit :" = payroll.company (même société que pour un bulletin

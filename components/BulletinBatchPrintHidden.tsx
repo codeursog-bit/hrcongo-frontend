@@ -19,6 +19,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import { api } from '@/services/api';
 import BulletinDisplay from '@/components/BulletinDisplay';
 import type { BulletinPayroll } from '@/types/bulletin-template';
+import type { DocLayout } from '@/types/document-layout';
+import { isFactureContract } from '@/lib/facture-contract-types';
+import { authService } from '@/lib/services/authService';
 
 interface Props {
   payrollIds: string[];
@@ -27,12 +30,13 @@ interface Props {
 }
 
 export default function BulletinBatchPrintHidden({ payrollIds, onReady, onError }: Props) {
-  const [payrolls, setPayrolls] = useState<BulletinPayroll[] | null>(null);
+  const [entries, setEntries] = useState<{ payroll: BulletinPayroll; layout?: DocLayout }[] | null>(null);
+  const root = useRef<HTMLDivElement>(null);
   const firedRef = useRef(false);
 
   useEffect(() => {
     firedRef.current = false;
-    setPayrolls(null);
+    setEntries(null);
     let cancelled = false;
 
     (async () => {
@@ -54,7 +58,28 @@ export default function BulletinBatchPrintHidden({ payrollIds, onReady, onError 
         await Promise.all(
           Array.from({ length: Math.min(6, Math.max(payrollIds.length, 1)) }, worker),
         );
-        if (!cancelled) setPayrolls(results);
+        if (cancelled) return;
+        const sessionCompanyId = authService.getCurrentUser()?.companyId;
+        const companies = new Set(results.flatMap(payroll => {
+          if (payroll.company?.documentTemplate !== 'CUSTOM' || isFactureContract(payroll.employee?.contractType)) return [];
+          const id = payroll.company.id ?? payroll.companyId;
+          return id && id === sessionCompanyId ? [id] : [];
+        }));
+        const layouts = new Map<string, DocLayout>();
+        if (companies.size) {
+          const [{ loadPayslipLayout }, { createPayslipLayout }] = await Promise.all([
+            import('@/lib/document-engine/layout-api'), import('@/lib/document-engine/registry'),
+          ]);
+          await Promise.all([...companies].map(async id => {
+            const saved = await loadPayslipLayout(id);
+            layouts.set(id, saved?.config ?? createPayslipLayout());
+          }));
+        }
+        if (!cancelled) setEntries(results.map(payroll => ({
+          payroll,
+          layout: payroll.company?.documentTemplate === 'CUSTOM' && !isFactureContract(payroll.employee?.contractType)
+            ? layouts.get(payroll.company.id ?? payroll.companyId ?? '') : undefined,
+        })));
       } catch (e: any) {
         if (!cancelled) onError(e?.message || 'Impossible de charger les bulletins sélectionnés.');
       }
@@ -68,23 +93,39 @@ export default function BulletinBatchPrintHidden({ payrollIds, onReady, onError 
   // temps aux logos (Cloudinary, cross-origin) de charger avant d'imprimer —
   // même délai de sécurité que downloadBulletinPDF.
   useEffect(() => {
-    if (!payrolls || firedRef.current) return;
-    firedRef.current = true;
-    const t = setTimeout(() => onReady(), 700);
-    return () => clearTimeout(t);
+    if (!entries || firedRef.current || !root.current) return;
+    const element = root.current;
+    const expected = entries.filter(entry => entry.layout).length;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const observer = new MutationObserver(ready);
+    const deadline = setTimeout(() => {
+      observer.disconnect();
+      onError('Le rendu des bulletins n’a pas pu être chargé.');
+    }, 15_000);
+    function ready() {
+      if (element.querySelectorAll('[data-document-engine]').length < expected || firedRef.current) return;
+      firedRef.current = true;
+      clearTimeout(deadline);
+      observer.disconnect();
+      timer = setTimeout(() => onReady(), 700);
+    }
+    observer.observe(element, { childList: true, subtree: true });
+    ready();
+    return () => { clearTimeout(deadline); clearTimeout(timer); observer.disconnect(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [payrolls]);
+  }, [entries]);
 
-  if (!payrolls) return null;
+  if (!entries) return null;
 
   return (
     <div
       id="bul-batch-root"
+      ref={root}
       style={{ position: 'fixed', top: 0, left: '-99999px', width: '210mm', background: '#fff', zIndex: -1 }}
     >
-      {payrolls.map((p, i) => (
-        <div key={(p as any).id ?? i} style={{ pageBreakAfter: i < payrolls.length - 1 ? 'always' : 'auto' }}>
-          <BulletinDisplay payroll={p} previewMode={false} />
+      {entries.map(({ payroll, layout }, i) => (
+        <div key={payroll.id ?? i} style={{ pageBreakAfter: i < entries.length - 1 ? 'always' : 'auto' }}>
+          <BulletinDisplay payroll={payroll} previewMode={false} documentLayout={layout} />
         </div>
       ))}
     </div>

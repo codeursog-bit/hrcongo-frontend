@@ -16,15 +16,17 @@ import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/services/api';
 import type { BulletinTemplateConfig } from '@/types/bulletin-template';
 import type { CanvasLayout } from '@/types/canvas-block';
+import type { DocLayout } from '@/types/document-layout';
 import { getBaseTemplate } from '@/lib/bulletin-templates';
 import { EMPTY_CANVAS } from '@/types/canvas-block';
 
-export type BulletinMode = 'template' | 'canvas';
+export type BulletinMode = 'template' | 'canvas' | 'engine';
 
 export interface BulletinConfig {
   mode:           BulletinMode;
   templateConfig: BulletinTemplateConfig;
   canvasLayout:   CanvasLayout;
+  documentLayout?: DocLayout;
 }
 
 // ─── Constantes ──────────────────────────────────────────────────────────────
@@ -66,6 +68,10 @@ function lsClear() {
 
 function parse(saved: any): BulletinConfig {
   if (!saved) return DEFAULT_CONFIG;
+
+  if (saved.mode === 'engine' && saved.documentLayout?.schemaVersion === 2 && saved.documentLayout.docType === 'PAYSLIP') {
+    return { ...DEFAULT_CONFIG, mode: 'engine', documentLayout: saved.documentLayout };
+  }
 
   if (saved.mode === 'canvas' && saved.canvasLayout) {
     return {

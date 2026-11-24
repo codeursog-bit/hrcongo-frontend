@@ -199,6 +199,7 @@ function ItsBncPage() {
           <h1 className="text-xl font-semibold text-[var(--text)]">Répartition ITS / BNC</h1>
           <p className="text-sm text-[var(--text-muted)] mt-1">
             Par salarié, par mois et par département — les trois impôts ne sont jamais additionnés entre eux.
+            {' '}Bulletins validés, à payer ou payés ; brouillons et annulations exclus.
           </p>
         </div>
         <div className="flex items-center gap-2">

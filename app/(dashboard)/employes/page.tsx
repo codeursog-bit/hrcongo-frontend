@@ -140,9 +140,9 @@ const DeleteConfirmModal = ({ employee, isDeleting, onConfirm, onCancel }: Delet
           </p>
           <ul className="space-y-2">
             {[
-              { text: <>Le statut passera à <strong>TERMINÉ</strong></>, red: true },
-              { text: <>Le compte utilisateur associé sera <strong>définitivement supprimé</strong></>, red: true },
-              { text: <>L'adresse email sera à nouveau <strong>disponible</strong></>, red: true },
+              { text: <>La fiche sera <strong>retirée des listes d’employés</strong></>, red: true },
+              { text: <>L’accès du compte employé associé sera <strong>désactivé</strong></>, red: true },
+              { text: <>Cette suppression <strong>ne constitue pas un départ</strong> et n’entre pas dans le turnover</>, red: false },
               { text: <>L'historique de paie et congés sera <strong>conservé</strong></>, red: false },
             ].map((item, i) => (
               <li key={i} className={`flex items-start gap-2 text-xs ${item.red ? 'text-[var(--danger-text)] ' : 'text-[var(--employee-ink,var(--text))] '}`}>

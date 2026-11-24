@@ -49,6 +49,8 @@ function findBulletinElement(bulletinElementId?: string): HTMLElement | null {
 export function printBulletin(bulletinElementId?: string) {
   const el = findBulletinElement(bulletinElementId);
   if (!el) { window.print(); return; }
+  const engine = el.matches('[data-document-engine]') ? el : el.querySelector<HTMLElement>('[data-document-engine]');
+  const orientation = engine?.dataset.orientation === 'landscape' ? 'landscape' : 'portrait';
 
   const iframe = document.createElement('iframe');
   iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:210mm;height:297mm;border:none;visibility:hidden;';
@@ -71,7 +73,7 @@ export function printBulletin(bulletinElementId?: string) {
 ${styleLinks}
 ${styleInlines}
 <style>
-  @page { size: A4 portrait; margin: 8mm 6mm; }
+  @page { size: A4 ${orientation}; margin: ${engine ? '0' : '8mm 6mm'}; }
   html, body {
     margin: 0; padding: 0;
     background: #fff;
@@ -82,7 +84,7 @@ ${styleInlines}
   /* Masquer tout sauf le bulletin */
   body > *:not(#bul-print-target) { display: none !important; }
   #bul-print-target {
-    width: 210mm !important;
+    width: ${orientation === 'landscape' ? '297mm' : '210mm'} !important;
     margin: 0 auto !important;
     background: #fff !important;
   }
@@ -107,7 +109,7 @@ ${styleInlines}
   }
 </style>
 </head><body>
-<div id="bul-print-target">${el.outerHTML}</div>
+<div id="bul-print-target">${(engine ?? el).outerHTML}</div>
 </body></html>`);
   doc.close();
 
@@ -120,6 +122,16 @@ ${styleInlines}
       if (document.body.contains(iframe)) document.body.removeChild(iframe);
     }, 1500);
   };
+
+  if (engine) {
+    const printWhenReady = async () => {
+      await doc.fonts.ready;
+      doPrint();
+    };
+    if (doc.readyState === 'complete') void printWhenReady();
+    else win.addEventListener('load', () => void printWhenReady(), { once: true });
+    return;
+  }
 
   if (doc.readyState === 'complete') setTimeout(doPrint, 300);
   else {
@@ -144,6 +156,10 @@ export async function downloadBulletinPDF(
   if (!el) {
     console.error('[bulletin-print] Aucun div bulletin trouvé. Ids cherchés:', BULLETIN_IDS);
     alert('Impossible de générer le PDF : bulletin non trouvé.');
+    return;
+  }
+  if (el.matches('[data-document-engine]') || el.querySelector('[data-document-engine]')) {
+    printBulletin(bulletinElementId);
     return;
   }
 
@@ -299,6 +315,7 @@ export async function downloadBulletinPDF(
 export function printBulletinBatch(rootId: string): void {
   const el = document.getElementById(rootId);
   if (!el) { window.print(); return; }
+  const hasEngine = !!el.querySelector('[data-document-engine]');
 
   const iframe = document.createElement('iframe');
   iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:210mm;height:297mm;border:none;visibility:hidden;';
@@ -318,6 +335,12 @@ ${styleLinks}
 ${styleInlines}
 <style>
   @page { size: A4 portrait; margin: 8mm 6mm; }
+  ${hasEngine ? `
+  @page enginePortrait { size: A4 portrait; margin: 0; }
+  @page engineLandscape { size: A4 landscape; margin: 0; }
+  [data-document-engine] { page: enginePortrait; }
+  [data-document-engine][data-orientation="landscape"] { page: engineLandscape; }
+  ` : ''}
   html, body {
     margin: 0; padding: 0;
     background: #fff;
@@ -375,7 +398,11 @@ ${styleInlines}
     }, 2500);
   };
 
-  if (doc.readyState === 'complete') setTimeout(doPrint, 500);
+  if (hasEngine) {
+    const printWhenReady = async () => { await doc.fonts.ready; doPrint(); };
+    if (doc.readyState === 'complete') void printWhenReady();
+    else win.addEventListener('load', () => void printWhenReady(), { once: true });
+  } else if (doc.readyState === 'complete') setTimeout(doPrint, 500);
   else {
     win.addEventListener('load', () => setTimeout(doPrint, 500), { once: true });
     setTimeout(doPrint, 2500);

@@ -129,7 +129,7 @@ export default function YearlyEvolutionPanel({ companyId }: { companyId?: string
     'Brut': Math.round(y.brut / 1000),
     'Net': Math.round(y.net / 1000),
     'Charges patronales': Math.round(y.chargesPatronales / 1000),
-    'Charges salariales': Math.round(y.chargesSalariales / 1000),
+    'Retenues salariales': Math.round(y.chargesSalariales / 1000),
   }));
 
   // Évolution entre la première et la dernière année de la plage — répond
@@ -232,7 +232,7 @@ export default function YearlyEvolutionPanel({ companyId }: { companyId?: string
                 <Line type="monotone" dataKey="Brut" stroke={C.sky} strokeWidth={2.25} dot={false} activeDot={{ r: 4 }} isAnimationActive={prefersReducedMotion !== true} animationDuration={700} />
                 <Line type="monotone" dataKey="Net" stroke={C.emerald} strokeWidth={2.25} dot={false} activeDot={{ r: 4 }} isAnimationActive={prefersReducedMotion !== true} animationDuration={700} />
                 <Line type="monotone" dataKey="Charges patronales" stroke={C.violet} strokeWidth={2.25} dot={false} activeDot={{ r: 4 }} isAnimationActive={prefersReducedMotion !== true} animationDuration={700} />
-                <Line type="monotone" dataKey="Charges salariales" stroke={C.rose} strokeWidth={2} dot={false} activeDot={{ r: 4 }} isAnimationActive={prefersReducedMotion !== true} animationDuration={700} />
+                <Line type="monotone" dataKey="Retenues salariales" stroke={C.rose} strokeWidth={2} dot={false} activeDot={{ r: 4 }} isAnimationActive={prefersReducedMotion !== true} animationDuration={700} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -248,7 +248,7 @@ export default function YearlyEvolutionPanel({ companyId }: { companyId?: string
                   <th scope="col" className="text-right">Brut</th>
                   <th scope="col" className="text-right">Net</th>
                   <th scope="col" className="text-right">Charges patronales</th>
-                  <th scope="col" className="text-right">Charges salariales</th>
+                  <th scope="col" className="text-right">Retenues salariales</th>
                   <th scope="col" className="text-right">Coût total employeur</th>
                 </tr>
               </thead>
@@ -276,7 +276,7 @@ export default function YearlyEvolutionPanel({ companyId }: { companyId?: string
                   <div><dt>Brut</dt><dd>{fcfa(y.brut)}</dd></div>
                   <div><dt>Net</dt><dd>{fcfa(y.net)}</dd></div>
                   <div><dt>Charges patronales</dt><dd className="text-[var(--mustard)]">{fcfa(y.chargesPatronales)}</dd></div>
-                  <div><dt>Charges salariales</dt><dd>{fcfa(y.chargesSalariales)}</dd></div>
+                  <div><dt>Retenues salariales</dt><dd>{fcfa(y.chargesSalariales)}</dd></div>
                   <div><dt>Coût total employeur</dt><dd className="font-semibold">{fcfa(y.coutTotalEmployeur)}</dd></div>
                 </dl>
               </li>

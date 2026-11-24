@@ -1,5 +1,6 @@
 'use client';
 import { ModuleSelect } from '@/components/ui/ModuleSelect';
+import Link from 'next/link';
 
 import { AppearanceLink } from '@/components/appearance/AppearanceLink';
 import React, { useState, useEffect } from 'react';
@@ -17,6 +18,8 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAlert } from '@/components/providers/AlertProvider';
 import { api } from '@/services/api';
+import { authService } from '@/lib/services/authService';
+import type { DocumentTemplate } from '@/lib/document-template';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
 import { SettingsFrame as ModulePageFrame } from '@/components/settings/SettingsFrame';
 import { EchelonSuggestionsPanel } from '@/components/settings/EchelonSuggestionsPanel'; // 🆕
@@ -58,7 +61,7 @@ interface CompanySettings {
   payrollCloseDay:       number;
   // 🆕 Pied de page légal des documents imprimables (congé, absence, prêt...)
   documentFooterText?:   string;
-  documentTemplate?:     string; // 'DEFAULT' | 'ORCA' — affiché "Modèle par défaut" / "Modèle 1" côté écran
+  documentTemplate:      DocumentTemplate;
   // 🆕 Générateur de contrats — représentant légal & ville de signature par défaut
   contractRepresentativeName?: string;
   contractRepresentativeRole?: string;
@@ -154,6 +157,8 @@ type TabId = 'general' | 'fiscal' | 'convention' | 'payroll_calendar' | 'locatio
 function CompanySettingsPage() {
   const alert    = useAlert();
   const router   = useRouter();
+  const [savedDocumentTemplate, setSavedDocumentTemplate] = useState<DocumentTemplate>('DEFAULT');
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   const [activeTab,    setActiveTab]    = useState<TabId>('general');
   const [companyData,  setCompanyData]  = useState<CompanySettings>(DEFAULT_COMPANY);
@@ -244,8 +249,10 @@ function CompanySettingsPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setIsSuperAdmin(authService.getCurrentUser()?.role === 'SUPER_ADMIN');
         const company: any = await api.get('/companies/mine');
         if (company) {
+          setSavedDocumentTemplate(company.documentTemplate || 'DEFAULT');
           setCompanyData({
             legalName:            company.legalName           || '',
             tradeName:            company.tradeName           || '',
@@ -567,10 +574,12 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
       // payrollPaymentDay + payrollCloseDay + echelonReminderEnabled, etc. → PATCH /companies
       await api.patch('/companies', {
         ...companyData,
+        documentTemplate: companyData.documentTemplate === savedDocumentTemplate ? undefined : companyData.documentTemplate,
         collectiveAgreement: companyData.collectiveAgreement || null,
       });
 
       // fiscalMode, workDays, etc. → PATCH /payroll-settings
+      setSavedDocumentTemplate(companyData.documentTemplate);
       await api.patch('/payroll-settings', payrollData);
 
       setShowConfirm(false);
@@ -889,15 +898,21 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
     Mise en page utilisée pour les documents imprimables (congé, absence, prêt, avance...).
   </p>
   <ModuleSelect
+    aria-label="Modèle de document"
     value={companyData.documentTemplate}
-    onChange={(e) => setCompanyData({ ...companyData, documentTemplate: e.target.value })}
+    onChange={(e) => setCompanyData({ ...companyData, documentTemplate: e.target.value as DocumentTemplate })}
     className="w-full md:w-72 p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm text-[var(--text)]"
   >
-    <option value="DEFAULT">Modèle par défaut</option>
-    <option value="ORCA">Modèle 1</option>
-    <option value="STANDARD">Modèle 2</option>
-    <option value="MODERN">Modèle 3</option>
+    {(savedDocumentTemplate === 'DEFAULT' || savedDocumentTemplate === 'MODERN') && (
+      <option value={savedDocumentTemplate}>Modèle actuel (ancien)</option>
+    )}
+    <option value="STANDARD">Modèle Standard</option>
+    <option value="CUSTOM">Mes modèles</option>
+    {(savedDocumentTemplate === 'ORCA' || isSuperAdmin) && (
+      <option value="ORCA">Modèle Orca</option>
+    )}
   </ModuleSelect>
+  <Link href="/parametres/documents" className="mt-3 inline-block text-sm underline">Ouvrir la galerie Documents</Link>
 </div>
 
               {/* ── Pied de page légal des documents ── */}
@@ -912,7 +927,7 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
     value={companyData.documentFooterText}
     onChange={(e) => setCompanyData({ ...companyData, documentFooterText: e.target.value })}
     rows={4}
-    placeholder={"Ex. : ORCA DECO CONGO S.A\nSociété Anonyme à Responsabilité Limitée (SARL) au capital de 100 000 000 CFA\nRCCM CG/PNR/14 B 197 · NIU : M2014 110000707066 · Tél : +242 22 294 16 42\nSiège social : Avenue Marien Ngouabi, Pointe-Noire"}
+    placeholder={"Ex. : KONZA TECH S.A.\nSociété Anonyme au capital de 10 000 000 FCFA\nRCCM CG/XXX/00 B 0000 · NIU : M0000 000000000 · Tél : +242 00 000 00 00\nSiège social : Avenue de l’Indépendance, Pointe-Noire"}
     className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm text-[var(--text)] resize-y"
   />
 </div>

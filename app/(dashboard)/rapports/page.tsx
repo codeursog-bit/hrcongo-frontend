@@ -92,10 +92,10 @@ export default function RapportsPage() {
       setIsLoading(true);
       try {
         const [ov,pay,ot,lv,ct,exp] = await Promise.allSettled([
-          api.get('/reports/overview'),
-          api.get('/reports/payroll'),
+          api.get(`/reports/overview?month=${month}&year=${year}`),
+          api.get(`/reports/payroll?month=${month}&year=${year}`),
           api.get(`/reports/overtime?month=${month}&year=${year}`),
-          api.get('/reports/leaves'),
+          api.get(`/reports/leaves?year=${year}`),
           api.get('/contracts/trials'),
           api.get('/contracts/expiring'),
         ]);

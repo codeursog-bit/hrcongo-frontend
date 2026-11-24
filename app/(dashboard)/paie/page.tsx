@@ -280,6 +280,7 @@ export default function PayrollPage() {
         paidCount={stats.paidCount}
         totalActive={stats.totalActive}
       />
+      <p className="text-xs text-[var(--text-secondary)]">Totaux du mois hors bulletins annulés, comme dans les rapports de paie.</p>
 
       {/* ── TABLE ── */}
       <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] overflow-hidden flex flex-col">

@@ -75,7 +75,7 @@ export const adminService = {
   getCompanyDetails: (id: string)      => adminFetch<any>(`/admin/companies/${id}`),
   getCompanyInsights: (id: string)     => adminFetch<any>(`/admin/companies/${id}/insights`),
 
-  updateCompany: (id: string, data: { legalName?: string; tradeName?: string; email?: string; phone?: string; address?: string; city?: string; website?: string }) =>
+  updateCompany: (id: string, data: { legalName?: string; tradeName?: string; email?: string; phone?: string; address?: string; city?: string; website?: string; documentTemplate?: 'ORCA' | 'STANDARD' }) =>
     adminFetch<any>(`/admin/companies/${id}`, 'PATCH', data),
 
   updateCompanyStatus: (id: string, isActive: boolean, reason?: string) =>

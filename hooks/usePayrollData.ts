@@ -120,7 +120,7 @@ export function usePayrollData(selectedMonth: string, selectedYear: number) {
         avatar: `https://ui-avatars.com/api/?name=${p.employee?.firstName || 'U'}+${p.employee?.lastName || 'U'}&background=random`,
         position: p.employee?.position || 'N/A',
         department: p.employee?.department?.name || 'N/A',
-        contractType: 'CDI',
+        contractType: p.employee?.contractType || 'CDI',
         daysWorked: Number(p.workedDays) || 0,
         totalDays: Number(p.workDays) || 0,
         grossSalary: Number(p.grossSalary) || 0,
@@ -154,11 +154,12 @@ export function usePayrollData(selectedMonth: string, selectedYear: number) {
   }, [fetchPayrolls]);
 
   const stats = useMemo(() => {
-    const totalGross = entries.reduce((acc, curr) => acc + Number(curr.grossSalary || 0), 0);
-    const totalNet = entries.reduce((acc, curr) => acc + Number(curr.netSalary || 0), 0);
-    const totalCharges = entries.reduce((acc, curr) => acc + Number(curr.charges || 0), 0);
+    const activeEntries=entries.filter(entry=>entry.status!=='Cancelled');
+    const totalGross = activeEntries.reduce((acc, curr) => acc + Number(curr.grossSalary || 0), 0);
+    const totalNet = activeEntries.reduce((acc, curr) => acc + Number(curr.netSalary || 0), 0);
+    const totalCharges = activeEntries.reduce((acc, curr) => acc + Number(curr.charges || 0), 0);
     const paidCount = entries.filter((e) => e.status === 'Paid').length;
-    const totalActive = entries.length;
+    const totalActive = activeEntries.length;
 
     return { totalGross, totalNet, totalCharges, paidCount, totalActive };
   }, [entries]);

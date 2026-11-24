@@ -32,6 +32,8 @@ interface WorkforceMovement {
   periodLabel: string;
   departments: DeptMovement[];
   totals: { initial: number; hires: number; departures: number; final: number };
+  deletions?:number;
+  unconfirmedDepartures?:number;
 }
 
 const fmt = (n: number) => new Intl.NumberFormat('fr-FR').format(Math.round(n || 0));
@@ -166,6 +168,7 @@ function MouvementsEffectifsPage() {
           </div>
 
           {/* Tableau — même structure que le modèle : départements en colonnes */}
+          <p className="text-xs text-[var(--text-muted)] mb-5">{data.deletions??0} fiche(s) supprimée(s) sur la période, comptées séparément et exclues des sorties et du turnover.{!!data.unconfirmedDepartures&&` ${data.unconfirmedDepartures} ancienne(s) fin(s) d’emploi restent à confirmer et ne sont pas comptées comme départs.`}</p>
           <div className="overflow-x-auto border border-[var(--border)] rounded-xl mb-6">
             <div className="reports-table-region" role="region" aria-label="Données du rapport" tabIndex={0}><table data-report-table className="min-w-full text-sm reports-table">
               <thead className="bg-[var(--surface-2)] border-b border-[var(--border)]">
