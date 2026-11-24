@@ -15,9 +15,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import {
   CalendarDays, X, ChevronRight, Clock,
-  AlertTriangle, CheckCircle2, Bell,
+  AlertTriangle, CheckCircle2, Bell, RotateCcw,
 } from 'lucide-react';
 import { api } from '@/services/api';
+import { useDraggableWidget, resetFloatingWidgets } from '@/hooks/useDraggableWidget';
 import { differenceInDays, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -66,6 +67,8 @@ export function ContractExpiryToast({ userRole }: { userRole: string }) {
   const [markingId, setMarkingId]       = useState<string | null>(null);
   const autoShownRef                    = useRef(false);
   const intervalRef                     = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Déplaçable partout dans la page ; position mémorisée dans ce navigateur.
+  const drag = useDraggableWidget<HTMLDivElement>('konza:widget:contract-alerts');
 
   // Ne rien afficher si pas le bon rôle
   const isAllowed = ALLOWED_ROLES.includes(userRole);
@@ -136,8 +139,13 @@ export function ContractExpiryToast({ userRole }: { userRole: string }) {
   const topDaysLeft   = topAlert?.metadata?.daysLeft ?? 0;
   const topUrgency    = getUrgencyStyle(topDaysLeft);
 
+  // Position par défaut : au-dessus du bouton Sofia (bas-droite). Une fois déplacé,
+  // si le bouton est dans la moitié basse de l'écran le panneau s'ouvre vers le haut,
+  // sinon vers le bas : il reste toujours visible.
+  const openDown = !!drag.pos && typeof window !== 'undefined' && drag.pos.bottom > window.innerHeight / 2;
+
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+    <div ref={drag.ref} style={drag.style} className={`fixed bottom-[84px] right-4 md:right-6 z-50 flex ${openDown ? 'flex-col-reverse' : 'flex-col'} items-end gap-3`}>
 
       {/* ── PANEL ÉTENDU ─────────────────────────────────────────────────── */}
       <AnimatePresence>
@@ -155,7 +163,7 @@ export function ContractExpiryToast({ userRole }: { userRole: string }) {
 
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)]">
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2.5 select-none" {...drag.handlers} style={drag.handleStyle} title={drag.handleTitle}>
                 <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[var(--surface-2)]">
                   <AlertTriangle size={15} className="text-[var(--text-muted)]" />
                 </div>
@@ -172,6 +180,10 @@ export function ContractExpiryToast({ userRole }: { userRole: string }) {
                 </div>
               </div>
               <div className="flex items-center gap-1">
+                <button onClick={resetFloatingWidgets} title="Remettre les boutons flottants à leur place d'origine" aria-label="Remettre les boutons flottants à leur place d'origine"
+                  className="rounded-lg p-1.5 text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text)] transition-colors">
+                  <RotateCcw size={13} />
+                </button>
                 <button onClick={markAllRead}
                   className="rounded-lg px-2 py-1 text-[11px] font-semibold text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text)] transition-colors">
                   Tout lu
@@ -261,11 +273,13 @@ export function ContractExpiryToast({ userRole }: { userRole: string }) {
 
       {/* ── BOUTON FLOTTANT (toujours visible si alertes) ──────────────── */}
       <motion.button
-        onClick={() => { setIsOpen((o) => !o); setDismissed(false); }}
+        {...drag.handlers}
+        title={drag.handleTitle}
+        onClick={() => { if (drag.didDrag()) return; setIsOpen((o) => !o); setDismissed(false); }}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         className="relative flex items-center gap-2.5 rounded-2xl bg-[var(--text)] px-4 py-3 text-[var(--bg)] shadow-2xl transition-all"
-        style={{ boxShadow: '0 8px 32px -8px rgba(0,0,0,0.35)' }}
+        style={{ boxShadow: '0 8px 32px -8px rgba(0,0,0,0.35)', ...drag.handleStyle }}
       >
         {/* Icône + badge */}
         <div className="relative">

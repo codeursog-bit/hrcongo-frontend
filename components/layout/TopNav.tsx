@@ -7,7 +7,7 @@ import { ProfileAvatar } from '@/components/ui/ProfileAvatar';
 
 import React, { useEffect, useState, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { Bell, Menu, ChevronRight, ChevronDown, CheckCircle2, Clock, AlertTriangle, Info, LogOut, User, Mail, Layers } from 'lucide-react';
+import { Bell, Menu, ChevronRight, ChevronDown, CheckCircle2, Clock, AlertTriangle, Info, LogOut, User, Mail, Layers, RotateCcw } from 'lucide-react';
 
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { api } from '@/services/api';
@@ -15,6 +15,7 @@ import { useBasePath } from '@/hooks/useBasePath';
 import { useMyEmployeePhoto } from '@/hooks/useMyEmployeePhoto';
 import { PushMenuItem } from '@/components/PushNotificationBanner';
 import { resolveCrumb } from '@/lib/shell/page-index';
+import { resetFloatingWidgets } from '@/hooks/useDraggableWidget';
 
 interface TopNavProps {
   onMenuClick: () => void;
@@ -308,6 +309,12 @@ export const TopNav: React.FC<TopNavProps> = ({ onMenuClick, activeLabel }) => {
                   <button type="button" role="menuitem" onClick={() => { router.push('/mon-profil'); setShowProfileMenu(false); }} className="shell-menu-item">
                     <User size={16} strokeWidth={1.5} aria-hidden="true" />
                     Mon profil
+                  </button>
+
+                  {/* Remet Sofia et les alertes contrat à leur place d'origine */}
+                  <button type="button" role="menuitem" onClick={() => { resetFloatingWidgets(); setShowProfileMenu(false); }} className="shell-menu-item">
+                    <RotateCcw size={16} strokeWidth={1.5} aria-hidden="true" />
+                    Remettre les boutons à leur place
                   </button>
 
                   {/* Notifications téléphone (hors app) */}

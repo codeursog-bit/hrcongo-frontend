@@ -748,11 +748,14 @@
     font-weight: 500;
   }
 }
+/* Bouton Sofia : en bas à DROITE, au-dessus du reste de la page.
+   Avant : en bas à gauche avec z-index 39 → la barre latérale (z-50) le
+   recouvrait sur ordinateur et le bouton devenait invisible. */
 .assistant-floating-launcher {
   position: fixed;
-  left: max(22px, env(safe-area-inset-left));
+  right: max(22px, env(safe-area-inset-right));
   bottom: calc(22px + env(safe-area-inset-bottom));
-  z-index: 39;
+  z-index: 55;
   display: inline-flex;
   align-items: center;
   gap: 9px;
@@ -773,7 +776,7 @@
 }
 @media (max-width: 640px) {
   .assistant-floating-launcher {
-    left: 16px;
+    right: 16px;
     bottom: calc(16px + env(safe-area-inset-bottom));
     padding: 12px 14px;
   }
