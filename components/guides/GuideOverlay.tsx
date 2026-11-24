@@ -3,6 +3,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ArrowLeft, ArrowRight, MousePointer2, X } from "lucide-react";
 import {
+  onGuideDetour,
   remainingGuideSteps,
   routeMatches,
   type Guide,
@@ -44,6 +45,7 @@ interface Props {
   previous?: () => void;
   close: () => void;
   navigate: () => void;
+  onContinue?: () => void;
 }
 export function GuideOverlay({
   guide,
@@ -55,6 +57,7 @@ export function GuideOverlay({
   previous,
   close,
   navigate,
+  onContinue,
 }: Props) {
   const [rect, setRect] = useState<GuideRect | null>(null),
     [host, setHost] = useState<HTMLElement | null>(null),
@@ -65,6 +68,15 @@ export function GuideOverlay({
   const target = useRef<HTMLElement | null>(null),
     bubble = useRef<HTMLElement | null>(null);
   const onRoute = routeMatches(step, path);
+  const detour = allowed && !onRoute && onGuideDetour(step, path);
+  const continueRef = useRef(onContinue);
+  continueRef.current = onContinue;
+  useEffect(() => {
+    if (!detour) return;
+    const saved = () => continueRef.current?.();
+    window.addEventListener("konza:guide:saved", saved);
+    return () => window.removeEventListener("konza:guide:saved", saved);
+  }, [detour]);
   useLayoutEffect(() => {
     let frame = 0,
       previousTarget: HTMLElement | null = null;
@@ -218,7 +230,9 @@ export function GuideOverlay({
   );
   const info = !allowed
     ? "Ce parcours n’est pas inclus dans les fonctionnalités disponibles de votre abonnement. Le guide ne contourne pas les droits de l’application."
-    : !onRoute
+    : detour
+      ? step.detourText || step.text
+      : !onRoute
       ? "Vous avez changé de page. Reprenez ce parcours à l’endroit indiqué, ou quittez le guide."
       : fallback
         ? step.route === "*"
@@ -303,6 +317,15 @@ export function GuideOverlay({
             >
               Fermer
             </button>
+          ) : detour ? (
+            <button
+              type="button"
+              className="k-button k-button-primary"
+              onClick={() => onContinue?.()}
+            >
+              Continuer
+              <ArrowRight size={15} strokeWidth={1.5} />
+            </button>
           ) : !onRoute ? (
             <button
               type="button"
@@ -327,17 +350,29 @@ export function GuideOverlay({
               className="k-button k-button-secondary"
               onClick={() => {
                 const element = target.current;
-                if (element) {
-                  const focusable = element.matches(
-                    "a,button,input,select,[tabindex]",
-                  )
-                    ? element
-                    : findGuideTarget(
-                        "a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),[tabindex]",
-                        element,
-                      );
-                  focusable?.focus({ preventScroll: true });
-                }
+                if (!element) return;
+                element.scrollIntoView({ block: "center", behavior: "smooth" });
+                const focusable = element.matches(
+                  "a,button,input,select,textarea,[tabindex]",
+                )
+                  ? element
+                  : findGuideTarget(
+                      "a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]",
+                      element,
+                    );
+                focusable?.focus({ preventScroll: true });
+                // Étape « cliquer » à cible unique : on exécute l'action à la place
+                // de la personne (navigation, ouverture du menu…). Le clic remonte
+                // jusqu'à l'écouteur du guide, qui passe alors à l'étape suivante.
+                // Champs de saisie et choix multiples : on se contente du focus.
+                const actionable = focusable ?? element;
+                if (
+                  step.waitFor === "click" &&
+                  !step.choices &&
+                  !actionable.matches("input,select,textarea") &&
+                  !actionable.closest('[disabled],[aria-disabled="true"]')
+                )
+                  actionable.click();
               }}
             >
               Aller à l’élément

@@ -7,6 +7,7 @@ export function AssistantFloatingLauncher() {
   const ctx = useAssistant(),
     guide = useGuide();
   if (!ctx || ctx.open || ctx.helpOpen || guide?.active) return null;
+  if (ctx.actor.role === "EMPLOYEE") return null;
   return (
     <button
       type="button"

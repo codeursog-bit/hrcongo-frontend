@@ -12,6 +12,8 @@ interface PayrollBatchActionsFooterProps {
   onClear: () => void;
   onPrintAll?: () => void;
   isPrinting?: boolean;
+  /** Texte affiché pendant un traitement en masse, ex. « Traitement 120/500… » */
+  progressLabel?: string;
 }
 
 export function PayrollBatchActionsFooter({
@@ -23,6 +25,7 @@ export function PayrollBatchActionsFooter({
   onClear,
   onPrintAll,
   isPrinting = false,
+  progressLabel,
 }: PayrollBatchActionsFooterProps) {
   if (selectedCount === 0) return null;
 
@@ -54,7 +57,7 @@ export function PayrollBatchActionsFooter({
           <div className="flex items-center gap-4 w-full md:w-auto">
             {isLoading ? (
               <Button variant="secondary" loading className="flex-1 md:flex-none">
-                Traitement...
+                {progressLabel ?? 'Traitement...'}
               </Button>
             ) : (
               <>

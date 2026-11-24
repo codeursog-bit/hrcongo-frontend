@@ -188,3 +188,8 @@
   .konza-shell:not(.shell-brand-legacy) .shell-topbar .shell-menu { position:fixed; inset:80px 12px auto; width:auto; max-height:calc(100dvh - 104px); overflow-y:auto; }
 }
 
+
+/* Menu Apparence : sur mobile le menu est fixe, les valeurs inline (top en %, width 248) le sortaient de l'écran */
+@media(max-width:767px) {
+  .konza-shell .shell-topbar .shell-theme-menu { position:fixed!important; top:80px!important; left:12px!important; right:12px!important; bottom:auto!important; width:auto!important; max-height:calc(100dvh - 104px); overflow-y:auto; z-index:60; }
+}

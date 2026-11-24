@@ -118,7 +118,7 @@ export default function BatchPayrollPage() {
       setEstimation({ gross: 0, cost: 0, net: 0, count: 0, bonuses: 0, deductions: 0, failed: 0 });
       return;
     }
-    const t = setTimeout(fetchEstimation, 400);
+    const t = setTimeout(fetchEstimation, selectedIds.length > 100 ? 1200 : 400); // gros lot : on attend plus avant d'estimer
     return () => clearTimeout(t);
   }, [selectedIds, month, year, workDays, daysInput]);
 
@@ -195,7 +195,33 @@ export default function BatchPayrollPage() {
     const monthNumber = getMonthNumber(month);
     const total = selectedIds.length;
     let processed = 0;
+    let finished = false; // résumé final reçu, ou erreur déjà affichée
+    const counters = { success: 0, failed: 0, skipped: 0 };
     const details: any[] = [];
+
+    // ⚡ Gros lots (500+ bulletins) : mettre à jour l'écran à CHAQUE ligne
+    // recopiait la liste entière 500 fois et gelait l'interface. On accumule
+    // en mémoire et on rafraîchit l'écran au plus 4 fois par seconde.
+    const MAX_LOG_LINES = 300;
+    let pendingLogs: string[] = [];
+    let lastEmployee = '';
+    let lastFlush = 0;
+    const flush = (force = false) => {
+      const ts = Date.now();
+      if (!force && ts - lastFlush < 250) return;
+      lastFlush = ts;
+      setProcessingDetails([...details]);
+      if (lastEmployee) setCurrentEmployee(lastEmployee);
+      if (!finished && processed > 0) {
+        setProgress(Math.min(97, Math.round((processed / Math.max(total, 1)) * 95) + 2));
+      }
+      setResults({ ...counters });
+      if (pendingLogs.length > 0) {
+        const batch = pendingLogs.reverse(); // le plus récent en premier
+        pendingLogs = [];
+        setLogs(prev => [...batch, ...prev].slice(0, MAX_LOG_LINES));
+      }
+    };
 
     setLogs(prev => [`🚀 Lancement du traitement de ${total} bulletins...`, ...prev]);
     setProgress(2);
@@ -215,24 +241,42 @@ export default function BatchPayrollPage() {
         if (line.type === 'detail') {
           processed++;
           details.push(line);
-          setProcessingDetails([...details]);
-          setCurrentEmployee(line.employeeName || `Employé ${processed}`);
-          setProgress(Math.min(97, Math.round((processed / Math.max(total, 1)) * 95) + 2));
-          setLogs(prev => [formatDetailLog(line), ...prev]);
-          setResults(prev => ({
-            ...prev,
-            success: prev.success + (line.status === 'SUCCESS' ? 1 : 0),
-            skipped: prev.skipped + (line.status === 'SKIPPED' ? 1 : 0),
-            failed:  prev.failed  + (line.status === 'FAILED'  ? 1 : 0),
-          }));
+          lastEmployee = line.employeeName || `Employé ${processed}`;
+          pendingLogs.push(formatDetailLog(line));
+          if (line.status === 'SUCCESS') counters.success++;
+          else if (line.status === 'SKIPPED') counters.skipped++;
+          else counters.failed++;
+          flush();
+        } else if (line.type === 'heartbeat') {
+          // Le serveur calcule encore (phase de calcul d'un gros lot) : la connexion reste ouverte.
+          if (processed === 0) setCurrentEmployee('Calcul des bulletins en cours…');
         } else if (line.type === 'summary') {
+          flush(true);
+          finished = true;
           setProgress(100);
           setLogs(prev => [`🎉 Terminé : ${line.created || 0} créés, ${line.skipped || 0} ignorés, ${line.failed || 0} échecs`, ...prev]);
         } else if (line.type === 'error') {
+          flush(true);
+          finished = true;
           setLogs(prev => [`❌ ERREUR : ${line.message}`, ...prev]);
         }
       });
+
+      // Flux fermé sans récapitulatif (coupure réseau, proxy, serveur redémarré) :
+      // le serveur a pu continuer. Les bulletins déjà créés sont conservés et
+      // un nouveau lancement ignore ceux qui existent déjà.
+      if (!finished) {
+        flush(true);
+        finished = true;
+        setProgress(100);
+        setLogs(prev => [
+          '⚠️ Connexion interrompue avant la fin. Vérifiez la liste Paie : les bulletins déjà créés sont conservés. Relancez la génération pour compléter (les bulletins existants seront ignorés).',
+          ...prev,
+        ]);
+      }
     } catch (e: any) {
+      flush(true);
+      finished = true;
       setProgress(100);
       setLogs(prev => [`❌ ERREUR : ${e.message}`, ...prev]);
       if (details.length === 0) {
@@ -247,6 +291,8 @@ export default function BatchPayrollPage() {
         }));
       }
     } finally {
+      finished = true;
+      if (details.length > 0) flush(true);
       setIsProcessing(false);
     }
   };

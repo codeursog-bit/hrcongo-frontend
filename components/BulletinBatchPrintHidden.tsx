@@ -38,11 +38,21 @@ export default function BulletinBatchPrintHidden({ payrollIds, onReady, onError 
     (async () => {
       try {
         // ✅ Même endpoint que la page de détail (GET /payrolls/:id), un
-        // appel par bulletin sélectionné — le navigateur les met en file
-        // (limite de connexions simultanées par domaine), donc pas de
-        // surcharge côté serveur même pour une centaine de bulletins.
-        const results = await Promise.all(
-          payrollIds.map((id) => api.get<BulletinPayroll>(`/payrolls/${id}`)),
+        // appel par bulletin sélectionné.
+        // 🛡️ Au plus 6 appels en vol à la fois. Avant : Promise.all lançait
+        // tous les appels d'un coup en comptant sur le navigateur pour les
+        // mettre en file — faux en HTTP/2 (tout part en parallèle). Pour 500
+        // bulletins, c'étaient 500 requêtes simultanées sur le serveur.
+        const results: BulletinPayroll[] = new Array(payrollIds.length);
+        let cursor = 0;
+        const worker = async () => {
+          while (cursor < payrollIds.length && !cancelled) {
+            const i = cursor++;
+            results[i] = await api.get<BulletinPayroll>(`/payrolls/${payrollIds[i]}`);
+          }
+        };
+        await Promise.all(
+          Array.from({ length: Math.min(6, Math.max(payrollIds.length, 1)) }, worker),
         );
         if (!cancelled) setPayrolls(results);
       } catch (e: any) {

@@ -237,6 +237,11 @@ function GuideRuntime({
             previous={run.index ? previous : undefined}
             close={close}
             navigate={() => navigate(step)}
+            onContinue={() => {
+              const next = guide.steps.find((s) => s.id === step.next);
+              advance();
+              if (next) navigate(next);
+            }}
             allowed={!step.feature || hasFeature(step.feature)}
           />
         )}

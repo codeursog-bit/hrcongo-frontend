@@ -578,6 +578,8 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
         'Paramètres enregistrés',
         `Les modifications ont été appliquées.${conventionFeedback}`,
       );
+      // Le guide « Premiers pas » attend cet enregistrement pour passer à l'étape suivante.
+      window.dispatchEvent(new CustomEvent('konza:guide:saved'));
     } catch (e: any) {
       alert.error("Erreur d'enregistrement", e.message || 'Impossible de sauvegarder.');
     } finally {

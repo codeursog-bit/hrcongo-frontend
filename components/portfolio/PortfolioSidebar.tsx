@@ -23,8 +23,6 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { ProfileAvatar } from '@/components/ui/ProfileAvatar';
-import { BrandLogo } from '@/components/ui/BrandLogo';
-import { useShellBrand } from '@/components/layout/CompanyBrand';
 import { AlertBadge, ALERT_TONES } from '@/components/ui/AlertBadge';
 import { useChatUnread } from '@/components/chat/ChatProvider';
 import { usePortfolioAlerts } from './usePortfolioAlerts';
@@ -74,7 +72,6 @@ interface PortfolioSidebarProps {
 
 export default function PortfolioSidebar({ userName, userEmail, userRoleLabel, userPhotoUrl, open = false, onClose }: PortfolioSidebarProps) {
   const pathname = usePathname();
-  const brand = useShellBrand();
   const router = useRouter();
 
   // ─── Mode réduit (mêmes clés / mêmes réglages que le dashboard) ──────────────
@@ -177,11 +174,11 @@ export default function PortfolioSidebar({ userName, userEmail, userRoleLabel, u
               className="flex items-center justify-center rounded-2xl shrink-0"
               style={{ width: 44, height: 44, background: 'var(--brand-soft)', border: '1.5px solid var(--border)' }}
             >
-              <BrandLogo src={brand.logo} name={brand.name} size="compact" />
+              <Wallet size={22} strokeWidth={1.5} aria-hidden="true" style={{ color: 'var(--action)' }} />
             </Link>
           ) : (
             <Link href="/portefeuille/dashboard" className="inline-flex flex-col items-start group">
-              <BrandLogo src={brand.logo} name={brand.name} />
+              <span className="text-[17px] font-semibold leading-tight" style={{ color: 'var(--text)' }}>Mon portefeuille</span>
               <div className="flex items-center gap-1.5 mt-1.5 pl-1">
                 <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--green)' }} aria-hidden="true" />
                 <span className="text-[11px] font-medium" style={{ color: 'var(--text-secondary)' }}>Portefeuille</span>

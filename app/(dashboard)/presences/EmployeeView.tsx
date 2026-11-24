@@ -178,46 +178,46 @@ export default function EmployeeView({ myAttendances, date, employeeId }: Employ
         <div className="bg-[var(--brand)] rounded-3xl p-6 text-[var(--on-brand)] shadow-xl sticky top-24">
           <h3 className="font-semibold text-lg mb-4 opacity-90">Résumé Mensuel</h3>
           <div className="space-y-4">
-            <div className="flex justify-between items-center p-3 bg-[var(--surface)] rounded-xl ">
+            <div className="flex justify-between items-center p-3 bg-[var(--surface)] text-[var(--text)] rounded-xl ">
               <span>
                 Jours travaillés
                 {(report?.daysWorkedOnRest ?? 0) > 0 && (
-                  <span className="block text-[11px] bg-[var(--brand)] text-[var(--on-brand)] font-normal">dont {report.daysWorkedOnRest} jour(s) de repos / férié</span>
+                  <span className="block text-[11px] text-[var(--text-secondary)] font-normal">dont {report.daysWorkedOnRest} jour(s) de repos / férié</span>
                 )}
               </span>
               <span className="font-semibold text-2xl">{daysWorked}</span>
             </div>
-            <div className="flex justify-between items-center p-3 bg-[var(--surface)] rounded-xl border border-[var(--border)] ">
+            <div className="flex justify-between items-center p-3 bg-[var(--surface)] text-[var(--text)] rounded-xl border border-[var(--border)] ">
               <span className="flex items-center gap-2">
                 <AlertTriangle size={16} className="text-[var(--warning-text)]"/> Retards
               </span>
               <span className="font-semibold text-2xl text-[var(--warning-text)]">{daysLate}</span>
             </div>
-            <div className="flex justify-between items-center p-3 bg-[var(--surface)] rounded-xl ">
+            <div className="flex justify-between items-center p-3 bg-[var(--surface)] text-[var(--text)] rounded-xl ">
               <span>Heures travaillées</span>
               <span className="font-semibold text-2xl">{parseFloat(Number(hoursTotal).toFixed(2))}h</span>
             </div>
-            <div className="flex justify-between items-center p-3 bg-[var(--surface)] rounded-xl border border-[var(--border)] ">
+            <div className="flex justify-between items-center p-3 bg-[var(--surface)] text-[var(--text)] rounded-xl border border-[var(--border)] ">
               <span className="flex items-center gap-2">
-                <Umbrella size={16} className="bg-[var(--brand)] text-[var(--on-brand)]"/>
+                <Umbrella size={16} className="text-[var(--text-secondary)]"/>
                 <span>
                   Congés pris
                   {(report?.daysWorkedDuringLeave ?? 0) > 0 && (
-                    <span className="block text-[11px] bg-[var(--brand)] text-[var(--on-brand)] font-normal">+ {report.daysWorkedDuringLeave} jour(s) travaillé(s) pendant le congé</span>
+                    <span className="block text-[11px] text-[var(--text-secondary)] font-normal">+ {report.daysWorkedDuringLeave} jour(s) travaillé(s) pendant le congé</span>
                   )}
                 </span>
               </span>
-              <span className="font-semibold text-2xl bg-[var(--brand)] text-[var(--on-brand)]">{daysLeave}</span>
+              <span className="font-semibold text-2xl">{daysLeave}</span>
             </div>
             {((report?.daysAbsentUnpaid ?? 0) + (report?.daysAbsentPaid ?? 0)) > 0 && (
-              <div className="flex justify-between items-center p-3 bg-[var(--surface)] rounded-xl border border-[var(--border)] ">
+              <div className="flex justify-between items-center p-3 bg-[var(--surface)] text-[var(--text)] rounded-xl border border-[var(--border)] ">
                 <span>
                   Absences
                   {(report?.daysAbsentUnpaid ?? 0) > 0 && (
-                    <span className="block text-[11px] bg-[var(--brand)] text-[var(--on-brand)] font-normal">dont {report.daysAbsentUnpaid} non justifiée(s)</span>
+                    <span className="block text-[11px] text-[var(--text-secondary)] font-normal">dont {report.daysAbsentUnpaid} non justifiée(s)</span>
                   )}
                 </span>
-                <span className="font-semibold text-2xl bg-[var(--brand)] text-[var(--on-brand)]">{(report?.daysAbsentUnpaid ?? 0) + (report?.daysAbsentPaid ?? 0)}</span>
+                <span className="font-semibold text-2xl">{(report?.daysAbsentUnpaid ?? 0) + (report?.daysAbsentPaid ?? 0)}</span>
               </div>
             )}
             <p className="text-[11px] bg-[var(--brand)] text-[var(--on-brand)] leading-relaxed pt-1">

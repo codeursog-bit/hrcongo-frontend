@@ -13,6 +13,9 @@ export interface GuideStep {
   next?: string;
   choices?: Record<string, string>;
   prerequisite?: string;
+  /** Sous-pages que la personne peut ouvrir pendant cette étape sans quitter le parcours. */
+  detour?: string[];
+  detourText?: string;
   feature?: GuideFeature;
   info?: { label: string; text: string }[];
 }
@@ -235,6 +238,8 @@ export const GUIDES: Guide[] = [
         target: '[data-guide="parametres-entreprise"]',
         route: "/parametres",
         text: "Les informations de votre entreprise sont déjà renseignées à votre inscription. Vous pouvez les vérifier ou les modifier ici à tout moment.",
+        detour: ["/parametres/entreprise"],
+        detourText: "Vérifiez ou modifiez les informations de votre entreprise. Dès que vous enregistrez, le guide passe aux primes. Vous pouvez aussi continuer sans modifier.",
         waitFor: "continue",
         next: "primes-hub",
       },
@@ -306,6 +311,8 @@ export const GUIDES: Guide[] = [
         target: '[data-guide="employes-form-workspace"]',
         route: "/employes/nouveau/formulaire",
         text: "Suivez le parcours en haut du formulaire : identité, famille, contrat, compléments et vérification. Vous confirmez la création après relecture.",
+        detour: ["/employes", "/employes/*"],
+        detourText: "Une fois votre employé créé, cliquez sur Continuer : le guide passe à l’attribution des primes.",
         waitFor: "continue",
         next: "bonuses",
       },
@@ -315,6 +322,8 @@ export const GUIDES: Guide[] = [
         route: "/employes/import",
         feature: "hasEmployeeImportExcel",
         text: "Utilisez le modèle proposé ou votre fichier Excel, associez les colonnes et corrigez les lignes signalées avant de lancer l’import.",
+        detour: ["/employes", "/employes/*"],
+        detourText: "Une fois l’import terminé, cliquez sur Continuer : le guide passe à l’attribution des primes.",
         waitFor: "continue",
         next: "bonuses",
       },
@@ -323,6 +332,8 @@ export const GUIDES: Guide[] = [
         target: '[data-guide="primes-workspace"]',
         route: "/primes/attribuer",
         text: "Attribuez maintenant leurs primes aux employés : choisissez un employé, puis « Attribuer une prime ». Si vos primes figuraient déjà dans votre fichier d’import, vous pouvez passer cette étape.",
+        detour: ["/primes", "/primes/*", "/employes/*"],
+        detourText: "Quand vous avez fini d’attribuer les primes, cliquez sur Continuer pour passer au premier bulletin.",
         waitFor: "continue",
         next: "payroll",
       },
@@ -331,6 +342,8 @@ export const GUIDES: Guide[] = [
         target: '[data-guide="paie-individual-workspace"]',
         route: "/paie/nouveau",
         text: "Dernier pas : créez un premier bulletin pour tester. Choisissez l’employé et la période, vérifiez les gains et les retenues. Le guide ne génère aucun bulletin.",
+        detour: ["/paie", "/paie/*"],
+        detourText: "Une fois votre bulletin créé, cliquez sur Continuer pour terminer le guide.",
         waitFor: "continue",
       },
     ],
@@ -453,6 +466,13 @@ export const guidePath = (path: string) =>
   path.replace(/^\/pme\/[^/]+(?=\/|$)/, "") || "/";
 export const routeMatches = (step: GuideStep, path: string) =>
   step.route === "*" || guidePath(path) === step.route;
+// Un détour se termine par « /* » pour couvrir toutes les sous-pages (ex. /employes/*).
+export const onGuideDetour = (step: GuideStep, path: string) => {
+  const current = guidePath(path);
+  return !!step.detour?.some((d) =>
+    d.endsWith("/*") ? current.startsWith(d.slice(0, -1)) : current === d,
+  );
+};
 export const guideAllowed = (guide: Guide, role: string) =>
   guide.roles.includes(role);
 export function guideEntry(guide: Guide, path: string) {

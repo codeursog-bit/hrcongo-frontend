@@ -750,7 +750,7 @@
 }
 .assistant-floating-launcher {
   position: fixed;
-  right: max(22px, env(safe-area-inset-right));
+  left: max(22px, env(safe-area-inset-left));
   bottom: calc(22px + env(safe-area-inset-bottom));
   z-index: 39;
   display: inline-flex;
@@ -773,7 +773,7 @@
 }
 @media (max-width: 640px) {
   .assistant-floating-launcher {
-    right: 16px;
+    left: 16px;
     bottom: calc(16px + env(safe-area-inset-bottom));
     padding: 12px 14px;
   }

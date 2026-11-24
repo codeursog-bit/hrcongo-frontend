@@ -66,7 +66,7 @@ export function ThemeControl({ compact = false }: { compact?: boolean }) {
         <Icon size={20} strokeWidth={1.5} aria-hidden="true" />
       </button>
       {open && (
-        <div id={`${id}-menu`} role="menu" aria-label="Apparence" className="shell-menu" style={{ right: 0, top: 'calc(100% + 10px)', width: 248 }} onKeyDown={onMenuKey}>
+        <div id={`${id}-menu`} role="menu" aria-label="Apparence" className="shell-menu shell-theme-menu" style={{ right: 0, top: 'calc(100% + 10px)', width: 248 }} onKeyDown={onMenuKey}>
           <div className="shell-menu-head"><span className="shell-menu-title">Apparence</span></div>
           {OPTIONS.map(o => (
             <button

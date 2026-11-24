@@ -729,7 +729,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <aside ref={asideRef} role={isOpen && !isDesktop ? 'dialog' : undefined} aria-modal={isOpen && !isDesktop ? true : undefined} aria-label="Navigation principale" className={`shell-sidebar ${!isWhiteLabel ? (mini ? 'shell-sidebar-mini' : 'shell-sidebar-wide') : ''} fixed md:static inset-y-0 left-0 z-50 w-[272px] ${collapsed ? 'md:w-[76px]' : 'md:w-[272px]'} shrink-0 flex flex-col overflow-hidden rounded-r-[28px] md:rounded-[28px] md:m-3 md:mr-0 shadow-[0_12px_40px_-14px_rgba(15,23,42,0.22)] dark:shadow-[0_12px_40px_-14px_rgba(0,0,0,0.65)] transform ${animate ? 'transition-[width,transform] duration-300 ease-out' : ''} ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} print:hidden`} style={{ background: 'var(--surface)', border: 'none' }}>
         <div className="absolute top-0 left-0 right-0 h-px opacity-0 dark:opacity-70" style={{ background: isWhiteLabel ? `linear-gradient(to right, transparent, ${accentColor}, transparent)` : 'linear-gradient(to right, transparent, #10B981, transparent)' }} />
 
-        <button type="button" aria-label="Fermer le menu" onClick={onClose} className="md:hidden self-end m-3 p-2 rounded-xl"><X size={20} strokeWidth={1.5} /></button>
+        <button type="button" aria-label="Fermer le menu" onClick={onClose} className="md:hidden absolute top-7 right-3 z-10 p-2 rounded-xl"><X size={20} strokeWidth={1.5} /></button>
         {/* Logo Section */}
         <div className={mini ? 'shell-brand-zone is-mini' : 'shell-brand-zone'}>
           {mini ? (

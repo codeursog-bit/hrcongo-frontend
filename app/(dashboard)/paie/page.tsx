@@ -66,6 +66,7 @@ export default function PayrollPage() {
   const [filterDept,         setFilterDept]          = useState('Tous');
   const [showMonthSelector,  setShowMonthSelector]   = useState(false);
   const [isBatchActionLoading, setIsBatchActionLoading] = useState(false);
+  const [batchProgress, setBatchProgress] = useState<{ done: number; total: number } | null>(null);
   const [currentPage,        setCurrentPage]         = useState(1);
 
   // ── ÉTAT IMPRESSION GROUPÉE ───────────────────────────────────────────────
@@ -145,30 +146,44 @@ export default function PayrollPage() {
     if (!confirm(`Voulez-vous vraiment ${label} ${selectedIds.length} bulletin(s) ?`)) return;
 
     setIsBatchActionLoading(true);
-    let successCount = 0, failCount = 0;
-    let blockedForModal: AuditBlocked | null = null;
-    for (const id of selectedIds) {
-      try {
-        if (action === 'CANCELLED') {
-          const cur = entries.find(e => e.id === id);
-          if (cur?.status === 'Paid') await api.delete(`/payrolls/${id}`);
-          else await api.patch(`/payrolls/${id}`, { status: action });
-        } else {
-          await api.patch(`/payrolls/${id}`, { status: action });
+    const total = selectedIds.length;
+    setBatchProgress({ done: 0, total });
+    // ✅ UNE requête pour tout le lot (flux temps réel) au lieu d'un PATCH par
+    // bulletin : le serveur applique la même logique à chaque bulletin, et la
+    // progression s'affiche pendant le traitement.
+    const outcome = { success: 0, failed: 0, gotSummary: false, blocked: null as AuditBlocked | null, streamError: '' };
+    try {
+      await api.postStream('/payrolls/batch-status-stream', { payrollIds: selectedIds, status: action }, (line: any) => {
+        if (line.type === 'detail') {
+          if (line.ok) {
+            outcome.success++;
+          } else {
+            outcome.failed++;
+            const b = auditBlockedOf({ code: line.code, data: line.data, message: line.message });
+            if (b && !outcome.blocked) outcome.blocked = b;
+          }
+          setBatchProgress({ done: outcome.success + outcome.failed, total });
+        } else if (line.type === 'summary') {
+          outcome.gotSummary = true;
+        } else if (line.type === 'error') {
+          outcome.streamError = line.message || 'Erreur inconnue';
         }
-        successCount++;
-      } catch (e: any) {
-        failCount++;
-        // 🛡️ Refus du contrôle de paie : on garde le premier refus pour l'afficher
-        const b = auditBlockedOf(e);
-        if (b && !blockedForModal) blockedForModal = b;
-      }
+      });
+    } catch (e: any) {
+      outcome.streamError = e?.message || 'Erreur réseau';
     }
-    alert(`✅ ${successCount} réussis, ❌ ${failCount} échecs`);
-    if (blockedForModal) setAuditBlocked(blockedForModal);
+
+    const handled = outcome.success + outcome.failed;
+    let msg = `✅ ${outcome.success} réussis, ❌ ${outcome.failed} échecs`;
+    if (!outcome.gotSummary && handled < total) {
+      msg += `\n⚠️ ${total - handled} bulletin(s) non traité(s)${outcome.streamError ? ` (${outcome.streamError})` : ' (connexion interrompue)'}. Les bulletins déjà traités sont conservés : relancez l'action pour les autres.`;
+    }
+    alert(msg);
+    if (outcome.blocked) setAuditBlocked(outcome.blocked);
     setAuditRefresh(k => k + 1);
     setSelectedIds([]);
     refetch();
+    setBatchProgress(null);
     setIsBatchActionLoading(false);
   };
 
@@ -181,6 +196,12 @@ export default function PayrollPage() {
       alert('⚠️ Veuillez sélectionner au moins un bulletin');
       return;
     }
+    // Au-delà d'environ 150 bulletins, monter tous les bulletins dans la page avant
+    // d'imprimer ralentit fortement l'ordinateur : on prévient avant de lancer.
+    if (
+      selectedIds.length > 150 &&
+      !confirm(`Vous allez imprimer ${selectedIds.length} bulletins en une seule fois. Au-delà d'environ 150, l'ordinateur peut devenir très lent. Pour une grande quantité, imprimez par lots de 100 à 150. Continuer quand même ?`)
+    ) return;
     setPrintBatchIds(selectedIds);
   };
 
@@ -374,6 +395,7 @@ export default function PayrollPage() {
         onClear={() => setSelectedIds([])}
         onPrintAll={handleBatchPrint}
         isPrinting={printBatchIds !== null}
+        progressLabel={batchProgress ? `Traitement ${batchProgress.done}/${batchProgress.total}…` : undefined}
       />
 
       {/* ── IMPRESSION GROUPÉE — rendu hors-écran, invisible, démonté après usage ── */}
