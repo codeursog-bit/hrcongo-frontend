@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ArrowUpRight } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, Check, FileText, Users, CalendarDays } from 'lucide-react';
 import './auth.css';
 
 export function AuthLogo({ onDark = false }: { onDark?: boolean }) {
@@ -34,39 +34,21 @@ export function AuthLogo({ onDark = false }: { onDark?: boolean }) {
 function AuthBrandPanel() {
   return (
     <aside className="au-panel" aria-label="Découvrir Konza RH">
-      <p className="au-panel-label">Konza RH · Ressources humaines & paie</p>
-      <h2 className="au-panel-title">
-        Le futur de la <em>gestion RH</em>
-      </h2>
-      <p className="au-panel-sub">
-        Connectez-vous à l’écosystème le plus avancé pour les entreprises congolaises.
-      </p>
-      <figure className="au-product">
-        <div className="au-product-scene">
-          <div className="au-dashboard-shot">
-            <span>Tableau de bord</span>
-            <img
-              src="/images/produit/dashboard-fourni.png"
-              alt="Tableau de bord Konza RH : effectifs, paie et suivi des équipes"
-              width={1276}
-              height={906}
-            />
-          </div>
-          <div className="au-bulletin-shot">
-            <span>Bulletin de paie</span>
-            <img
-              src="/images/produit/bulletin.webp"
-              alt="Bulletin de paie complet, avec des données de démonstration"
-              width={794}
-              height={1123}
-            />
-          </div>
-        </div>
-        <figcaption>Captures de l’application · Bulletin de démonstration</figcaption>
-      </figure>
-      <Link href="/" className="au-product-link">
-        Découvrir le produit <ArrowUpRight size={16} />
-      </Link>
+      <div className="au-brand-copy">
+        <p className="au-panel-label"><span className="au-brand-spark" /> Pensé pour les équipes d’ici</p>
+        <h2 className="au-panel-title">Le travail avance.<br /><em>Tout le monde suit.</em></h2>
+        <p className="au-panel-sub">Les personnes, les absences et la paie réunies dans un espace clair. Pour se concentrer sur ce qui compte vraiment.</p>
+        <Link href="/" className="au-product-link">Découvrir Konza RH <ArrowUpRight size={17} /></Link>
+      </div>
+      <div className="au-brand-art" aria-hidden="true">
+        <div className="au-art-orbit au-art-orbit-one" />
+        <div className="au-art-orbit au-art-orbit-two" />
+        <div className="au-art-core"><span className="au-art-core-k">K</span><span className="au-art-core-dot" /></div>
+        <div className="au-art-chip au-art-chip-team"><Users size={18} /><span>Équipes</span><Check size={14} /></div>
+        <div className="au-art-chip au-art-chip-leave"><CalendarDays size={18} /><span>Congés</span><Check size={14} /></div>
+        <div className="au-art-chip au-art-chip-pay"><FileText size={18} /><span>Paie</span><Check size={14} /></div>
+      </div>
+      <p className="au-panel-note">Une organisation plus simple, chaque jour.</p>
     </aside>
   );
 }
