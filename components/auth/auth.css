@@ -1499,3 +1499,7 @@ button.au-step:focus-visible {
 @media(max-width:1023px){.au-form{overflow:hidden}}
 @media(max-width:600px){.au-form{overflow:hidden}}
 @media(max-height:700px){.au-heading{margin-bottom:16px}.au-title{font-size:clamp(25px,3vw,35px)}.au-desc{margin-top:7px;font-size:13px}.au-stack{gap:10px}.au-input.au-input{min-height:44px;padding-top:9px;padding-bottom:9px}.au-btn{min-height:44px;padding-top:9px;padding-bottom:9px}.au-foot{margin-top:14px;padding-top:12px}.au-panel{padding-top:20px;padding-bottom:20px}.au-brand-art{height:min(24vh,160px)}}
+.au-return-home{position:absolute;z-index:5;right:clamp(18px,4vw,70px);top:22px;display:inline-flex;align-items:center;gap:8px;padding:9px 13px;border-radius:999px;background:color-mix(in srgb,var(--surface) 82%,transparent);color:var(--text);font-size:13px;font-weight:600;text-decoration:none;box-shadow:0 4px 18px rgba(0,0,0,.06)}
+.au-return-home:hover{background:var(--brand-soft)}
+.au-return-home:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
+@media(max-width:600px){.au-return-home{top:10px;right:12px;padding:7px 10px;font-size:12px}.au-main{padding-top:48px}}

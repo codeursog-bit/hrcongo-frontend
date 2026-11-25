@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 import Link from 'next/link';
-import { ArrowUpRight, Check, FileText, Users, CalendarDays } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, Check, FileText, Users, CalendarDays } from 'lucide-react';
 import './auth.css';
 
 export function AuthLogo({ onDark = false }: { onDark?: boolean }) {
@@ -67,6 +67,7 @@ export function AuthShell({
   const split = variant === 'split';
   return (
     <div className={split ? 'au-root au-split' : 'au-root au-centered'}>
+      <Link href="/" className="au-return-home"><ArrowLeft size={16} /> Accueil</Link>
       <div className="au-layout">
         {split &&
           (panel ? (
