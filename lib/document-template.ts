@@ -16,6 +16,9 @@ export type DocumentTemplate = 'DEFAULT' | 'ORCA' | 'STANDARD' | 'MODERN' | 'CUS
  * charger / quels champs afficher, on teste maintenant ceci.
  */
 export const usesStandardData = (template?: string | null): boolean =>
-  template === 'STANDARD' || template === 'MODERN';
+  template === 'STANDARD' || template === 'MODERN' || template === 'CUSTOM';
 
 export const isModernTemplate = (template?: string | null): boolean => template === 'MODERN';
+
+export const isDocumentLayoutActive = (layout: { independent?: true } | undefined, template?: string | null) =>
+  !!layout && (layout.independent === true || template === 'CUSTOM');

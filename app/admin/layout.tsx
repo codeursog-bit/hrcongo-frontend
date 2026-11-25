@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { LayoutWrapper } from '@/components/admin/LayoutWrapper'; // ✅ AJOUT
+import { IncidentAlerts } from '@/components/admin/IncidentAlerts';
 
 export const metadata = {
   title: 'HRCongo | Super Admin Command Center',
@@ -59,6 +60,7 @@ export default function AdminLayout({
       <body className="theme-legacy flex flex-col h-screen overflow-hidden bg-[#0B0F19] text-gray-200 font-sans selection:bg-brand-red selection:text-white">
         {/* ✅ DÉCOMMENTER LAYOUTWRAPPER */}
         <LayoutWrapper>
+          <IncidentAlerts />
           {children}
         </LayoutWrapper>
       </body>

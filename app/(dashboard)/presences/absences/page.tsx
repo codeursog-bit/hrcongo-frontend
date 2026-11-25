@@ -1,4 +1,5 @@
 'use client';
+import { useRequestDocumentTemplate } from '@/hooks/useRequestDocumentTemplate';
 import { DocumentReader } from '@/components/ui/DocumentReader';
 import { AttendanceModuleFrame as ModulePageFrame } from '@/components/attendance/AttendanceModuleFrame';
 import { ModulePageSkeleton } from '@/components/requests/ModulePageFrame';
@@ -221,8 +222,10 @@ export default function AbsenceManagementPage() {
     rejectionReason: selected.rejectionReason,
   } : null;
 
+  const requestTemplate = useRequestDocumentTemplate('ABSENCE', docData?.company);
   const isStandard = usesStandardData(docData?.company?.documentTemplate);
-  const standardAbsenceData = docData && isStandard ? {
+  const standardDocument = usesStandardData(requestTemplate);
+  const standardAbsenceData = docData && standardDocument ? {
     reference: `DEA-${selected?.id?.slice(0, 8).toUpperCase() || ''}`,
     company: docData.company,
     employee: docData.employee,
@@ -538,7 +541,7 @@ export default function AbsenceManagementPage() {
                     )}
                   </div>
 
-                  {docData?.company?.documentTemplate === 'ORCA' && (
+                  {requestTemplate === 'ORCA' && (
                     <Button variant="ghost"
                       onClick={() => window.open(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/absence-requests/${selected.id}/document.docx`, '_blank')}
                       className="w-full py-2.5 border border-[var(--border)]  bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  text-sm font-semibold rounded-xl text-[var(--success-text)]  flex items-center justify-center gap-2 hover:bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))] dark:hover:bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]"
@@ -552,7 +555,7 @@ export default function AbsenceManagementPage() {
                 {/* Aperçu imprimable */}
                 <DocumentReader title="Demande d’absence">
                   <div className="loan-document-protected scale-[0.42] origin-top-left -mb-[58%]" style={{ width: '238%' }}>
-                    {docData?.company?.documentTemplate === 'ORCA' ? (
+                    {requestTemplate === 'ORCA' ? (
                       <OrcaLeaveAbsenceDocument
                         id="absence-print-root"
                         variant="ABSENCE"
@@ -569,8 +572,8 @@ export default function AbsenceManagementPage() {
                         status={docData.status}
                         company={docData.company}
                       />
-                    ) : isStandard ? (
-                      standardAbsenceData && <AbsenceRequestDocument template={docData?.company?.documentTemplate} id="absence-print-root" data={standardAbsenceData as any} />
+                    ) : standardDocument ? (
+                      standardAbsenceData && <AbsenceRequestDocument template={requestTemplate} id="absence-print-root" data={standardAbsenceData as any} />
                     ) : (
                       printData && <AbsenceRequestPrintable data={printData as any} />
                     )}

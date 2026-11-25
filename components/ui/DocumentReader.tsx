@@ -4,7 +4,8 @@ import { Maximize2, Minus, Plus, Scan } from 'lucide-react';
 import './document-reader.css';
 
 /** A screen-only reading frame. Children keep their original print IDs and content. */
-export function DocumentReader({ children, title = 'Aperçu du document', landscape = false, fitPage = false, initialZoom }: { children: React.ReactNode; title?: string; landscape?: boolean; fitPage?: boolean; initialZoom?: number }) {
+export function DocumentReader({ children, title = 'Aperçu du document', subtitle = 'Document officiel · aperçu avant impression',
+  landscape = false, fitPage = false, initialZoom }: { children: React.ReactNode; title?: string; subtitle?: string; landscape?: boolean; fitPage?: boolean; initialZoom?: number }) {
   const root = useRef<HTMLElement>(null), viewport = useRef<HTMLDivElement>(null), paper = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0), [height, setHeight] = useState(0), [zoom, setZoom] = useState<number | null>(initialZoom ?? null);
   const [availableHeight, setAvailableHeight] = useState(0);
@@ -22,7 +23,7 @@ export function DocumentReader({ children, title = 'Aperçu du document', landsc
   const scale = zoom ?? fit;
   return <section ref={root} className="document-reader" aria-label={title}>
     <div className="document-reader-toolbar">
-      <div><strong>{title}</strong><span>Document officiel · aperçu avant impression</span></div>
+      <div><strong>{title}</strong>{subtitle && <span>{subtitle}</span>}</div>
       <div className="document-reader-tools">
         <button type="button" aria-label="Réduire le zoom" disabled={scale <= .25} onClick={() => setZoom(Math.max(.25, scale - .1))}><Minus size={16} /></button>
         <output aria-live="polite">{Math.round(scale * 100)} %</output>

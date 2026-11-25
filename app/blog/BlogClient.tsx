@@ -8,10 +8,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { Navbar } from '@/components/landing/Navbar';
+import s from '@/components/landing/PublicSite.module.css';
 import { Footer } from '@/components/landing/Footer';
 import { blogApi, BlogPostSummary, BlogCategory } from '@/services/blog-api';
 
-const ACCENT = '#FF9A62';
+const ACCENT = 'var(--action)';
 
 const CATS = [
   { value: '' as const,              label: 'Tous'          },
@@ -48,7 +49,7 @@ function ShareIcon() {
 function Avatar({ initial, size = 26 }: { initial: string; size?: number }) {
   return (
     <span
-      className="flex shrink-0 items-center justify-center rounded-full bg-white/10 font-semibold text-[#F2F2F2]"
+      className="flex shrink-0 items-center justify-center rounded-full bg-[var(--surface-2)] font-semibold text-[var(--text)]"
       style={{ width: size, height: size, fontSize: size * 0.4 }}
     >
       {initial}
@@ -70,14 +71,14 @@ function PostCard({
   const company = post.author.company?.tradeName || post.author.company?.legalName || '';
 
   return (
-    <article className="group flex flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0c0c0d] transition-colors hover:border-white/[0.18]">
+    <article className={s.articleRow}>
       {post.coverImage && (
         <Link href={`/blog/${post.slug}`} className="block h-44 shrink-0 overflow-hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={post.coverImage}
             alt={post.title}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+            className="h-full w-full object-cover transition-transform duration-500 "
           />
         </Link>
       )}
@@ -85,33 +86,33 @@ function PostCard({
       <div className="flex flex-1 flex-col gap-3 p-6">
         <div className="flex items-center gap-3 text-[12px]">
           <span className="font-semibold uppercase tracking-[0.1em]" style={{ color: ACCENT }}>{catLabel}</span>
-          {isSA && <span className="rounded-full border border-white/15 px-2 py-0.5 text-[11px] text-[#d6d6d6]">Officiel</span>}
+          {isSA && <span className="rounded-full border border-[var(--border)] px-2 py-0.5 text-[11px] text-[var(--text-secondary)]">Officiel</span>}
         </div>
 
         <Link href={`/blog/${post.slug}`}>
-          <h3 className="text-[18px] font-semibold leading-snug tracking-[-0.01em] text-[#F2F2F2]" style={clamp(2)}>
+          <h3 className="text-[18px] font-semibold leading-snug tracking-[-0.01em] text-[var(--text)]" style={clamp(2)}>
             {post.title}
           </h3>
         </Link>
 
-        {post.excerpt && <p className="text-[14px] leading-relaxed text-[#9a9a9a]" style={clamp(2)}>{post.excerpt}</p>}
+        {post.excerpt && <p className="text-[14px] leading-relaxed text-[var(--text-secondary)]" style={clamp(2)}>{post.excerpt}</p>}
 
-        <div className="mt-auto flex items-center gap-2 pt-2 text-[12.5px] text-[#9a9a9a]">
-          <Avatar initial={isSA ? 'K' : post.author.firstName[0]} />
-          <span className="truncate font-medium text-[#d6d6d6]">{authorName(post)}</span>
+        <div className="mt-auto flex items-center gap-2 pt-2 text-[12.5px] text-[var(--text-secondary)]">
+          <Avatar initial={isSA ? 'K' : (post.author.firstName || 'K')[0]} />
+          <span className="truncate font-medium text-[var(--text-secondary)]">{authorName(post)}</span>
           {company && !isSA && <span className="truncate">· {company}</span>}
         </div>
 
-        <div className="flex items-center justify-between border-t border-white/[0.08] pt-3">
-          <span className="text-[12px] text-[#6f6f6f]">{date}</span>
+        <div className="flex items-center justify-between border-t border-[var(--border)] pt-3">
+          <span className="text-[12px] text-[var(--text-secondary)]">{date}</span>
           <div className="flex items-center gap-1">
             <button
               type="button"
               onClick={() => onLike(post.slug)}
               aria-pressed={post.hasLiked}
               aria-label="J’aime"
-              className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[12px] font-medium transition-colors hover:bg-white/[0.05]"
-              style={{ color: post.hasLiked ? ACCENT : '#9a9a9a' }}
+              className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[12px] font-medium transition-colors hover:bg-[var(--surface-2)]"
+              style={{ color: post.hasLiked ? ACCENT : 'var(--text-secondary)' }}
             >
               <HeartIcon filled={!!post.hasLiked} /> {post.likesCount}
             </button>
@@ -119,7 +120,7 @@ function PostCard({
               type="button"
               onClick={() => onShare(post)}
               aria-label="Partager"
-              className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[12px] text-[#9a9a9a] transition-colors hover:bg-white/[0.05] hover:text-[#F2F2F2]"
+              className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[12px] text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
             >
               <ShareIcon /> {copied && <span style={{ color: ACCENT }}>Lien copié</span>}
             </button>
@@ -193,36 +194,13 @@ export default function BlogPage() {
   const gridPosts = showFeatured ? posts.slice(1) : posts;
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#050607] font-sans text-[#F2F2F2]">
+    <div className={s.site}>
       <Navbar />
 
-      {/* ── Titre ── */}
-      <section className="relative px-6 pb-14 pt-36">
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{ background: 'radial-gradient(55% 60% at 20% 0%, rgba(247,135,75,.12), transparent 70%)' }}
-        />
-        <div className="relative mx-auto flex max-w-6xl flex-wrap items-end justify-between gap-6">
-          <div className="max-w-xl">
-            <div className="mb-4 text-[13px] font-semibold uppercase tracking-[0.12em]" style={{ color: ACCENT }}>Blog RH</div>
-            <h1 className="text-[36px] font-bold leading-[1.08] tracking-[-0.03em] sm:text-[52px]">
-              Partages et actualités de la <span style={{ color: ACCENT }}>communauté RH</span>
-            </h1>
-            <p className="mt-5 text-[17px] leading-relaxed text-[#9a9a9a]">
-              Bonnes pratiques, actualités fiscales et retours d’expérience, partagés par les RH du Congo.
-            </p>
-          </div>
-          <Link
-            href="/auth/login"
-            className="rounded-xl border border-white/10 px-5 py-2.5 text-[14px] font-medium text-[#d6d6d6] transition-colors hover:border-white/25 hover:bg-white/[0.04]"
-          >
-            Se connecter pour publier
-          </Link>
-        </div>
-      </section>
-
+      <main id="contenu">
+      <header className={[s.container,s.pageHeader,s.blogHeader].join(' ')}><div><p className={s.eyebrow}>Le journal RH</p><h1 className={s.title}>Des repères pour<br/>le travail au Congo.</h1><p className={s.copy}>Paie, droit du travail et vie des équipes.<br/>Les publications de Konza et de sa communauté.</p></div><Link href="/auth/login" className={s.secondary}>Se connecter pour publier</Link></header>
       {/* ── Filtres ── */}
-      <section className="border-y border-white/[0.06]">
+      <section className="border-y border-[var(--border)]">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-4">
           <div className="flex flex-wrap gap-2" role="group" aria-label="Catégories">
             {CATS.map((c) => {
@@ -234,7 +212,7 @@ export default function BlogPage() {
                   onClick={() => setCat(c.value)}
                   aria-pressed={on}
                   className={`rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors ${
-                    on ? 'border-[#FF9A62] text-[#FF9A62]' : 'border-white/10 text-[#9a9a9a] hover:border-white/25 hover:text-[#F2F2F2]'
+                    on ? 'border-[var(--action)] text-[var(--action)]' : 'border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border)] hover:text-[var(--text)]'
                   }`}
                 >
                   {c.label}
@@ -243,7 +221,7 @@ export default function BlogPage() {
             })}
           </div>
           <div className="relative">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6f6f6f" strokeWidth="2" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="2" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2">
               <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
             </svg>
             <input
@@ -251,7 +229,7 @@ export default function BlogPage() {
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Rechercher…"
               aria-label="Rechercher un article"
-              className="w-52 rounded-lg border border-white/10 bg-[#0c0c0d] py-2 pl-9 pr-3 text-[13.5px] text-[#F2F2F2] outline-none transition-colors placeholder:text-[#5a5a5a] focus:border-[#FF9A62]/60"
+              className="w-52 rounded-lg border border-[var(--border)] bg-[var(--surface)] py-2 pl-9 pr-3 text-[13.5px] text-[var(--text)] outline-none transition-colors placeholder:text-[var(--text-secondary)] focus:border-[var(--action)]/60"
             />
           </div>
         </div>
@@ -261,11 +239,11 @@ export default function BlogPage() {
       <section>
         <div className="mx-auto max-w-6xl px-6 py-14">
           {loading ? (
-            <p role="status" className="py-20 text-center text-[#9a9a9a]">Chargement…</p>
+            <p role="status" className="py-20 text-center text-[var(--text-secondary)]">Chargement…</p>
           ) : posts.length === 0 ? (
             <div className="py-20 text-center">
               <h3 className="mb-2 text-[20px] font-semibold">Aucun article</h3>
-              <p className="text-[14px] text-[#9a9a9a]">
+              <p className="text-[14px] text-[var(--text-secondary)]">
                 {dSearch ? `Aucun résultat pour « ${dSearch} »` : 'Pas encore d’articles.'}
               </p>
             </div>
@@ -274,30 +252,30 @@ export default function BlogPage() {
               {/* À la une */}
               {featured && (
                 <div className="mb-14">
-                  <p className="mb-4 text-[12px] font-semibold uppercase tracking-[0.12em] text-[#6f6f6f]">À la une</p>
-                  <div className="grid overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0c0c0d] md:grid-cols-2">
-                    <div className="relative min-h-[220px] md:min-h-[320px]">
+                  <p className="mb-4 text-[12px] font-semibold uppercase tracking-[0.12em] text-[var(--text-secondary)]">À la une</p>
+                  <div className={'grid overflow-hidden rounded-2xl bg-[var(--surface)] ' + (featured.coverImage ? 'md:grid-cols-2' : '')}>
+                    {featured.coverImage && <div className="relative min-h-[220px] md:min-h-[320px]">
                       {featured.coverImage ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={featured.coverImage} alt={featured.title} className="absolute inset-0 h-full w-full object-cover" />
                       ) : (
-                        <div className="absolute inset-0" style={{ background: 'radial-gradient(80% 80% at 30% 20%, rgba(247,135,75,.18), #0c0c0d)' }} />
+                        <img src="/images/produit/dashboard.webp" alt="Le tableau de bord Konza RH" className="absolute inset-0 h-full w-full object-cover" />
                       )}
-                    </div>
+                    </div>}
                     <div className="flex flex-col justify-center gap-4 p-8 sm:p-10">
-                      <div className="flex items-center gap-2.5 text-[12.5px] text-[#9a9a9a]">
-                        <Avatar initial={featured.author.role === 'SUPER_ADMIN' ? 'K' : featured.author.firstName[0]} size={28} />
-                        <span className="font-medium text-[#d6d6d6]">{authorName(featured)}</span>
+                      <div className="flex items-center gap-2.5 text-[12.5px] text-[var(--text-secondary)]">
+                        <Avatar initial={featured.author.role === 'SUPER_ADMIN' ? 'K' : (featured.author.firstName || 'K')[0]} size={28} />
+                        <span className="font-medium text-[var(--text-secondary)]">{authorName(featured)}</span>
                         <span>· {new Date(featured.publishedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
                       </div>
                       <Link href={`/blog/${featured.slug}`}>
                         <h2 className="text-[26px] font-semibold leading-tight tracking-[-0.02em] sm:text-[32px]">{featured.title}</h2>
                       </Link>
-                      {featured.excerpt && <p className="text-[15px] leading-relaxed text-[#9a9a9a]" style={clamp(3)}>{featured.excerpt}</p>}
+                      {featured.excerpt && <p className="text-[15px] leading-relaxed text-[var(--text-secondary)]" style={clamp(3)}>{featured.excerpt}</p>}
                       <div className="flex flex-wrap items-center gap-3 pt-1">
                         <Link
                           href={`/blog/${featured.slug}`}
-                          className="rounded-xl bg-[#FAFAFA] px-5 py-2.5 text-[14px] font-semibold text-black transition-colors hover:bg-white"
+                          className="rounded-xl bg-[var(--text)] px-5 py-2.5 text-[14px] font-semibold text-[var(--surface)] transition-colors hover:bg-[var(--action)]"
                         >
                           Lire l’article
                         </Link>
@@ -305,8 +283,8 @@ export default function BlogPage() {
                           type="button"
                           onClick={() => handleLike(featured.slug)}
                           aria-pressed={featured.hasLiked}
-                          className="flex items-center gap-1.5 rounded-xl border border-white/10 px-4 py-2.5 text-[13.5px] font-medium transition-colors hover:border-white/25"
-                          style={{ color: featured.hasLiked ? ACCENT : '#9a9a9a' }}
+                          className="flex items-center gap-1.5 rounded-xl border border-[var(--border)] px-4 py-2.5 text-[13.5px] font-medium transition-colors hover:border-[var(--border)]"
+                          style={{ color: featured.hasLiked ? ACCENT : 'var(--text-secondary)' }}
                         >
                           <HeartIcon filled={!!featured.hasLiked} /> {featured.likesCount}
                         </button>
@@ -319,10 +297,10 @@ export default function BlogPage() {
               {/* Grille */}
               {gridPosts.length > 0 && (
                 <>
-                  <p className="mb-5 text-[12px] font-semibold uppercase tracking-[0.12em] text-[#6f6f6f]">
+                  <p className="mb-5 text-[12px] font-semibold uppercase tracking-[0.12em] text-[var(--text-secondary)]">
                     {showFeatured ? 'Derniers articles' : `${posts.length} article${posts.length > 1 ? 's' : ''}`}
                   </p>
-                  <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="grid gap-x-10 lg:grid-cols-2">
                     {gridPosts.map((p) => (
                       <PostCard key={p.id} post={p} onLike={handleLike} onShare={handleShare} copied={copiedSlug === p.slug} />
                     ))}
@@ -337,7 +315,7 @@ export default function BlogPage() {
                     type="button"
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page === 1}
-                    className="rounded-lg border border-white/10 px-4 py-2 text-[13px] font-medium text-[#d6d6d6] transition-colors hover:border-white/25 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="rounded-lg border border-[var(--border)] px-4 py-2 text-[13px] font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--border)] disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     ← Préc.
                   </button>
@@ -351,7 +329,7 @@ export default function BlogPage() {
                         onClick={() => setPage(pg)}
                         aria-current={on ? 'page' : undefined}
                         className={`h-9 w-9 rounded-lg border text-[13px] font-semibold transition-colors ${
-                          on ? 'border-[#FF9A62] text-[#FF9A62]' : 'border-white/10 text-[#9a9a9a] hover:border-white/25'
+                          on ? 'border-[var(--action)] text-[var(--action)]' : 'border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border)]'
                         }`}
                       >
                         {pg}
@@ -362,7 +340,7 @@ export default function BlogPage() {
                     type="button"
                     onClick={() => setPage((p) => Math.min(totalPgs, p + 1))}
                     disabled={page === totalPgs}
-                    className="rounded-lg border border-white/10 px-4 py-2 text-[13px] font-medium text-[#d6d6d6] transition-colors hover:border-white/25 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="rounded-lg border border-[var(--border)] px-4 py-2 text-[13px] font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--border)] disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     Suiv. →
                   </button>
@@ -373,6 +351,7 @@ export default function BlogPage() {
         </div>
       </section>
 
+      </main>
       <Footer />
     </div>
   );

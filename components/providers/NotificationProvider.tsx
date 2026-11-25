@@ -48,7 +48,7 @@ const APPROVER_ROLES = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'];
 export function NotificationProvider({ children }: { children?: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const isPublicPage = pathname === '/' || /^\/(auth|register|verify|tarifs|contact|qui-sommes-nous|blog|docs|entreprises|privacy|mentions-legales|confidentialite|cgu|cgv|jobs|outils|simulateur|kiosk|ecran|inscription-portefeuille)(\/|$)/.test(pathname);
+  const isPublicPage = pathname === '/' || /^\/(auth|register|verify|tarifs|contact|qui-sommes-nous|blog|docs|aide|entreprises|privacy|mentions-legales|confidentialite|cgu|cgv|jobs|outils|simulateur|kiosk|ecran|inscription-portefeuille)(\/|$)/.test(pathname);
   const { bp } = useBasePath();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [mutedUntil, setMutedUntil] = useState<number | null>(null);

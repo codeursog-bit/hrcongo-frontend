@@ -1,4 +1,5 @@
 'use client';
+import { useRequestDocumentTemplate } from '@/hooks/useRequestDocumentTemplate';
 import { AttendanceModuleFrame as ModulePageFrame } from '@/components/attendance/AttendanceModuleFrame';
 import { ModulePageSkeleton } from '@/components/requests/ModulePageFrame';
 import { Button } from '@/components/design-system/primitives';
@@ -22,7 +23,7 @@ import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import PresenceModuleSwitcher from '@/components/PresenceModuleSwitcher';
 import PermissionsSubNav from '@/components/PermissionsSubNav';
-import PermissionTicketPrintable from '@/components/PermissionTicketPrintable';
+import { ExitPermissionDocument } from '@/components/documents/RequestDocuments';
 import EmployeeTicketHistorySidebar, { EmployeeTicketHistoryData } from '@/components/EmployeeTicketHistorySidebar';
 import PermissionsOverview from '@/components/permissions/PermissionsOverview';
 import DocumentPreviewModal from '@/components/loans/DocumentPreviewModal';
@@ -55,6 +56,7 @@ export default function PermissionsManagementPage() {
   const [tab, setTab] = useState<'overview' | 'tickets'>('overview');
   const [tickets, setTickets] = useState<any[]>([]);
   const [company, setCompany] = useState<any>(null);
+  const requestTemplate = useRequestDocumentTemplate('EXIT_PERMISSION', company);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<'PENDING' | 'ALL'>('PENDING');
   const [search, setSearch] = useState('');
@@ -177,7 +179,7 @@ export default function PermissionsManagementPage() {
 
   const printData = selected ? {
     reference: ticketRef,
-    company: { legalName: company?.legalName, tradeName: company?.tradeName, logo: company?.logo, rccmNumber: company?.rccmNumber, taxNumber: company?.taxNumber, address: company?.address, phone: company?.phone },
+    company: { id: company?.id, city: company?.city, documentFooterText: company?.documentFooterText, legalName: company?.legalName, tradeName: company?.tradeName, logo: company?.logo, rccmNumber: company?.rccmNumber, taxNumber: company?.taxNumber, address: company?.address, phone: company?.phone },
     employee: { firstName: selected.employee?.firstName || '', lastName: selected.employee?.lastName || '', employeeNumber: selected.employee?.employeeNumber, department: selected.employee?.department?.name, position: selected.employee?.position },
     type: selected.type, missionType: selected.missionType, reason: selected.reason, destination: selected.destination,
     departureTime: effectiveDeparture(selected), expectedReturnTime: selected.expectedReturnTime, actualReturnTime: selected.actualReturnTime,
@@ -408,7 +410,7 @@ export default function PermissionsManagementPage() {
 
                 {/* Rendu réel hors-écran : nécessaire pour la capture d'impression navigateur */}
                 <div className="fixed -left-[9999px] top-0 pointer-events-none" aria-hidden="true">
-                  {printData && <PermissionTicketPrintable id={TICKET_ID} data={printData as any} />}
+                  {printData && <ExitPermissionDocument template={requestTemplate} id={TICKET_ID} data={printData as any} />}
                 </div>
               </div>
 
@@ -424,7 +426,7 @@ export default function PermissionsManagementPage() {
       )}
 
       <DocumentPreviewModal open={showPreviewModal} onClose={() => setShowPreviewModal(false)}>
-        {printData && <PermissionTicketPrintable id="permission-doc-preview" data={printData as any} />}
+        {printData && <ExitPermissionDocument template={requestTemplate} id="permission-doc-preview" data={printData as any} />}
       </DocumentPreviewModal>
 
       <EditTimesModal open={showEditTimes} onClose={() => setShowEditTimes(false)} ticket={selected} onUpdated={mergeTicket} />

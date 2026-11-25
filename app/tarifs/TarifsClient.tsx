@@ -11,19 +11,35 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Navbar } from '@/components/landing/Navbar';
-import { Footer } from '@/components/landing/Footer';
+import { PublicSite, PublicClosing } from '@/components/landing/PublicSite';
+import s from '@/components/landing/PublicSite.module.css';
+import p from './pricing.module.css';
 import { usePlans } from '@/hooks/useSubscription';
-import { buildPublicPlans, publicPlanAmount, type PublicPricingPlan as Plan } from '@/lib/public-pricing';
+import { DEMO_MODE } from '@/lib/demo/config';
+import {
+  buildPublicPlans,
+  publicPlanAmount,
+  type PublicPricingPlan as Plan,
+} from '@/lib/public-pricing';
 
-const ACCENT = '#FF9A62';
+const ACCENT = 'var(--action)';
 const PHONE_DISPLAY = '+242 06 413 36 93';
 const PHONE_HREF = 'tel:+242064133693';
 const MAX_HIGHLIGHTS = 7; // fonctionnalités listées dans une carte (le reste est dans le tableau)
 
 function IconCheck() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0">
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={ACCENT}
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="mt-0.5 shrink-0"
+    >
       <path d="M5 12.5l4.5 4.5L19 7" />
     </svg>
   );
@@ -31,66 +47,87 @@ function IconCheck() {
 
 function IconArrow() {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+    <svg
+      width="15"
+      height="15"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+    >
       <path d="M5 12h14M12 5l7 7-7 7" />
     </svg>
   );
 }
 
 // ─── Carte d'une offre ───────────────────────────────────────────────────────
-function PlanCard({ plan, annual, withTable }: { plan: Plan; annual: boolean; withTable: boolean }) {
+function PlanCard({
+  plan,
+  annual,
+  withTable,
+}: {
+  plan: Plan;
+  annual: boolean;
+  withTable: boolean;
+}) {
   const price = publicPlanAmount(plan, annual);
   const included = plan.features.filter((f) => f.included === true);
-  const shown = included.slice(0, MAX_HIGHLIGHTS);
+  const highlightPriority = (label: string) =>
+    ['Déclarations CNSS', 'Déclarations DAS', 'Bulletins annuels'].includes(label) ? 0 : label.endsWith('/ mois') ? 1 : 2;
+  const shown = [...included].sort((a, b) => highlightPriority(a.label) - highlightPriority(b.label)).slice(0, MAX_HIGHLIGHTS);
   const rest = included.length - shown.length;
 
   return (
-    <div
-      className={`relative flex flex-col rounded-2xl border bg-[#0c0c0d] p-7 transition-colors ${
-        plan.popular ? 'border-[#FF9A62]' : 'border-white/[0.08] hover:border-white/[0.18]'
-      }`}
-    >
-      {plan.popular && (
-        <span className="absolute -top-3 left-7 rounded-full bg-[#FF9A62] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-black">
-          Recommandé
-        </span>
-      )}
+    <div className={[p.planCard, plan.popular ? p.popular : ''].join(' ')}>
+      {plan.popular && <span className={p.recommended}>Recommandé</span>}
 
-      <h3 className="text-[18px] font-semibold text-[#F2F2F2]">{plan.name}</h3>
-      <p className="mt-2 text-[13.5px] leading-snug text-[#9a9a9a] xl:min-h-[110px]">{plan.tagline}</p>
+      <h3 className="text-[18px] font-semibold text-[var(--text)]">{plan.name}</h3>
+      <p className={p.tagline}>{plan.tagline}</p>
 
-      <div className="mt-6">
+      <div className={p.price}>
         {price !== null ? (
           <div className="flex flex-wrap items-baseline gap-x-2">
-            <span className="text-[38px] font-bold leading-none tracking-[-0.03em] text-[#F2F2F2]">
+            <span className="text-[38px] font-bold leading-none tracking-[-0.03em] text-[var(--text)]">
               {price.toLocaleString('fr-FR')}
             </span>
-            <span className="text-[14px] text-[#9a9a9a]">
+            <span className="text-[14px] text-[var(--text-secondary)]">
               {plan.currency} / {annual ? 'an' : 'mois'}
             </span>
           </div>
         ) : (
-          <div className="text-[28px] font-bold leading-none text-[#F2F2F2]">Sur devis</div>
+          <div className="text-[23px] font-semibold leading-snug text-[var(--text)]">
+            {DEMO_MODE ? 'Tarif indisponible en démo' : 'Tarif à confirmer'}
+          </div>
         )}
-        <p className="mt-2 text-[12.5px] text-[#6f6f6f]">{plan.priceNote}</p>
+        <p className="mt-2 text-[12.5px] text-[var(--text-secondary)]">
+          {DEMO_MODE && price === null ? 'Prix définis par le superadmin dans le catalogue réel.' : plan.priceNote}
+        </p>
       </div>
 
       {/* Le nom de l'offre est déjà le palier d'effectif (« Jusqu’à 25 employés ») : on ne le répète pas */}
-      <div className="my-6 space-y-1.5 border-y border-white/[0.08] py-4 text-[13.5px]">
-        {plan.employees !== plan.name && <div className="text-[#d6d6d6]">{plan.employees}</div>}
-        <div className="text-[#d6d6d6]">{plan.users}</div>
+      <div className="my-6 space-y-1.5 border-y border-[var(--border)] py-4 text-[13.5px]">
+        {plan.employees !== plan.name && (
+          <div className="text-[var(--text-secondary)]">{plan.employees}</div>
+        )}
+        <div className="text-[var(--text-secondary)]">{plan.users}</div>
       </div>
 
       <ul className="mb-6 flex flex-1 flex-col gap-2.5">
         {shown.map((f) => (
-          <li key={f.label} className="flex items-start gap-2.5 text-[13.5px] leading-snug text-[#d6d6d6]">
+          <li
+            key={f.label}
+            className="flex items-start gap-2.5 text-[13.5px] leading-snug text-[var(--text-secondary)]"
+          >
             <IconCheck />
             {f.label}
           </li>
         ))}
         {rest > 0 && withTable && (
           <li className="pl-[26px] text-[13px]">
-            <a href="#comparaison" className="text-[#9a9a9a] underline-offset-4 hover:text-[#F2F2F2] hover:underline">
+            <a
+              href="#comparaison"
+              className="text-[var(--text-secondary)] underline-offset-4 hover:text-[var(--text)] hover:underline"
+            >
               + {rest} autre{rest > 1 ? 's' : ''} dans la comparaison
             </a>
           </li>
@@ -101,8 +138,8 @@ function PlanCard({ plan, annual, withTable }: { plan: Plan; annual: boolean; wi
         href={plan.ctaHref}
         className={`flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-[14px] font-semibold transition-colors ${
           plan.popular
-            ? 'bg-[#FAFAFA] text-black hover:bg-white'
-            : 'border border-white/10 text-[#F2F2F2] hover:border-white/25 hover:bg-white/[0.04]'
+            ? 'bg-[var(--text)] text-[var(--surface)] hover:bg-[var(--action)]'
+            : 'border border-[var(--border)] text-[var(--text)] hover:border-[var(--border)] hover:bg-[var(--surface-2)]'
         }`}
       >
         {plan.cta}
@@ -129,23 +166,32 @@ function ComparisonTable({ plans }: { plans: Plan[] }) {
   if (rows.length === 0) return null;
 
   return (
-    <section id="comparaison" className="border-t border-white/[0.06] px-6 py-20">
+    <section id="comparaison" className="border-t border-[var(--border)] px-6 py-20">
       <div className="mx-auto max-w-5xl">
-        <h2 className="text-[30px] font-semibold tracking-[-0.02em] text-[#F2F2F2] sm:text-[36px]">
+        <h2 className="text-[30px] font-semibold tracking-[-0.02em] text-[var(--text)] sm:text-[36px]">
           Comparer les offres
         </h2>
-        <p className="mt-3 text-[16px] text-[#9a9a9a]">Toutes les fonctionnalités, offre par offre.</p>
+        <p className="mt-3 text-[16px] text-[var(--text-secondary)]">
+          Toutes les fonctionnalités, offre par offre.
+        </p>
 
-        <div className="mt-10 overflow-x-auto rounded-2xl border border-white/[0.08]">
+        <div
+          className="mt-10 overflow-x-auto rounded-xl bg-[var(--surface)]"
+          tabIndex={0}
+          role="region"
+          aria-label="Tableau comparatif des offres"
+        >
           <table className="w-full min-w-[640px] border-collapse text-[14px]">
             <thead>
-              <tr className="border-b border-white/[0.08] bg-[#0c0c0d]">
-                <th className="px-5 py-4 text-left text-[13px] font-medium text-[#6f6f6f]">Fonctionnalité</th>
+              <tr className="border-b border-[var(--border)] bg-[var(--surface)]">
+                <th className="px-5 py-4 text-left text-[13px] font-medium text-[var(--text-secondary)]">
+                  Fonctionnalité
+                </th>
                 {plans.map((p) => (
                   <th
                     key={p.id}
                     className="px-4 py-4 text-center text-[13px] font-semibold"
-                    style={{ color: p.popular ? ACCENT : '#d6d6d6' }}
+                    style={{ color: p.popular ? ACCENT : 'var(--text-secondary)' }}
                   >
                     {p.name}
                   </th>
@@ -154,16 +200,24 @@ function ComparisonTable({ plans }: { plans: Plan[] }) {
             </thead>
             <tbody>
               {rows.map((label) => (
-                <tr key={label} className="border-b border-white/[0.05] last:border-0">
-                  <td className="px-5 py-3 text-[#d6d6d6]">{label}</td>
+                <tr key={label} className="border-b border-[var(--border)] last:border-0">
+                  <td className="px-5 py-3 text-[var(--text-secondary)]">{label}</td>
                   {plans.map((p) => {
                     const on = p.features.find((f) => f.label === label)?.included === true;
                     return (
                       <td key={p.id} className="px-4 py-3 text-center">
                         {on ? (
-                          <span aria-label="Inclus" className="font-semibold" style={{ color: ACCENT }}>✓</span>
+                          <span
+                            aria-label="Inclus"
+                            className="font-semibold"
+                            style={{ color: ACCENT }}
+                          >
+                            ✓
+                          </span>
                         ) : (
-                          <span aria-label="Non inclus" className="text-white/20">–</span>
+                          <span aria-label="Non inclus" className="text-[var(--text-secondary)]">
+                            –
+                          </span>
                         )}
                       </td>
                     );
@@ -194,7 +248,7 @@ const FAQS = [
   },
   {
     q: 'La rupture de contrat génère-t-elle le solde de tout compte ?',
-    a: 'Oui. Konza RH calcule l’indemnité de licenciement, l’indemnité compensatrice de préavis et les congés non pris, puis génère le document de solde de tout compte selon le Code du Travail du Congo.',
+    a: 'L’accès aux alertes et à la génération des documents dépend de votre offre. Contactez notre équipe pour vérifier le parcours disponible pour votre entreprise.',
   },
   {
     q: 'Comment fonctionne le système de shifts ?',
@@ -213,22 +267,31 @@ function FaqList() {
       {FAQS.map((f, i) => {
         const isOpen = open === i;
         return (
-          <div key={f.q} className="border-t border-white/10 last:border-b">
+          <div key={f.q} className="border-t border-[var(--border)] last:border-b">
             <button
               type="button"
               onClick={() => setOpen(isOpen ? null : i)}
               aria-expanded={isOpen}
               className="flex w-full items-center justify-between gap-4 py-5 text-left"
             >
-              <span className="text-[16px] font-medium leading-snug text-[#F2F2F2]">{f.q}</span>
+              <span className="text-[16px] font-medium leading-snug text-[var(--text)]">{f.q}</span>
               <svg
-                width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2.5"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke={ACCENT}
+                strokeWidth="2.5"
                 className={`shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-45' : ''}`}
               >
                 <path d="M12 5v14M5 12h14" />
               </svg>
             </button>
-            {isOpen && <p className="pb-6 pr-8 text-[14.5px] leading-relaxed text-[#9a9a9a]">{f.a}</p>}
+            {isOpen && (
+              <p className="pb-6 pr-8 text-[14.5px] leading-relaxed text-[var(--text-secondary)]">
+                {f.a}
+              </p>
+            )}
           </div>
         );
       })}
@@ -243,74 +306,80 @@ export default function PricingPage() {
   const plans = buildPublicPlans(catalog || {});
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#050607] font-sans text-[#F2F2F2]">
-      <Navbar />
-
-      {/* ── Titre ── */}
-      <section className="relative px-6 pb-12 pt-36 text-center">
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{ background: 'radial-gradient(55% 60% at 50% 0%, rgba(247,135,75,.12), transparent 70%)' }}
-        />
-        <div className="relative mx-auto max-w-2xl">
-          <div className="mb-4 text-[13px] font-semibold uppercase tracking-[0.12em]" style={{ color: ACCENT }}>
-            Tarifs
-          </div>
-          <h1 className="text-[38px] font-bold leading-[1.08] tracking-[-0.03em] sm:text-[54px]">
-            Des tarifs simples et <span style={{ color: ACCENT }}>transparents</span>
+    <PublicSite>
+      <header className={[s.container, s.pageHeader].join(' ')}>
+        <p className={s.eyebrow}>Tarifs et abonnements</p>
+        <div className={s.heroGrid}>
+          <h1 className={s.title}>
+            Une offre à la taille
+            <br />
+            de votre entreprise.
           </h1>
-          <p className="mx-auto mt-5 max-w-lg text-[18px] leading-relaxed text-[#9a9a9a]">
-            Paie, pointage GPS, congés et recrutement dans un seul outil. Choisissez l’offre qui correspond à votre
-            effectif.
-          </p>
-
-          {/* Mensuel / annuel */}
-          <div
-            role="group"
-            aria-label="Période de facturation"
-            className="mt-9 inline-flex rounded-full border border-white/10 bg-white/[0.03] p-1"
-          >
-            {[
-              { label: 'Mensuel', value: false },
-              { label: 'Annuel', value: true },
-            ].map((opt) => (
-              <button
-                key={opt.label}
-                type="button"
-                onClick={() => setAnnual(opt.value)}
-                aria-pressed={annual === opt.value}
-                className={`rounded-full px-6 py-2 text-[14px] font-medium transition-colors ${
-                  annual === opt.value ? 'bg-[#FAFAFA] text-black' : 'text-[#9a9a9a] hover:text-[#F2F2F2]'
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
+          <div>
+            <p className={s.intro}>
+              Quatre plans : jusqu’à 25, 50 ou 100 employés, puis plus de 100 employés.
+              Comparez les fonctionnalités pour choisir votre offre. Pour un besoin spécifique,
+              une proposition sur devis est disponible séparément.
+            </p>
+            {/* Mensuel / annuel */}
+            <div
+              role="group"
+              aria-label="Période de facturation"
+              className="mt-9 inline-flex rounded-full border border-[var(--border)] bg-[var(--surface-2)] p-1"
+            >
+              {[
+                { label: 'Mensuel', value: false },
+                { label: 'Annuel', value: true },
+              ].map((opt) => (
+                <button
+                  key={opt.label}
+                  type="button"
+                  onClick={() => setAnnual(opt.value)}
+                  aria-pressed={annual === opt.value}
+                  className={`rounded-full px-6 py-2 text-[14px] font-medium transition-colors ${
+                    annual === opt.value
+                      ? 'bg-[var(--text)] text-[var(--surface)]'
+                      : 'text-[var(--text-secondary)] hover:text-[var(--text)]'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-      </section>
+      </header>
 
       {/* ── Offres ── */}
-      <section className="mx-auto max-w-6xl px-6 pb-20">
+      <section className={[s.container, p.offers].join(' ')}>
+        <p className="mb-6 text-sm text-[var(--text-secondary)]">
+          {DEMO_MODE ? 'Mode démo : les fonctionnalités et quotas suivent les plans du serveur ; les prix ne sont pas affichés.' : 'Les prix mensuels et annuels ci-dessous proviennent du catalogue Konza.'}
+        </p>
         {isLoading && (
-          <p role="status" className="text-center text-[#9a9a9a]">Chargement des tarifs…</p>
+          <p role="status" className="text-center text-[var(--text-secondary)]">
+            Chargement des tarifs…
+          </p>
         )}
         {error && (
-          <div role="alert" className="text-center text-[#9a9a9a]">
+          <div role="alert" className="text-center text-[var(--text-secondary)]">
             Les tarifs sont momentanément indisponibles.{' '}
-            <button type="button" onClick={() => refetch()} className="underline underline-offset-4 hover:text-[#F2F2F2]">
+            <button
+              type="button"
+              onClick={() => refetch()}
+              className="underline underline-offset-4 hover:text-[var(--text)]"
+            >
               Réessayer
             </button>
           </div>
         )}
         {!isLoading && !error && (
-          <div className="grid items-stretch gap-5 pt-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className={p.plans}>
             {plans.map((plan) => (
               <PlanCard key={plan.id} plan={plan} annual={annual} withTable={plans.length > 1} />
             ))}
           </div>
         )}
-        <p className="mt-8 text-center text-[14px] text-[#6f6f6f]">
+        <p className="mt-8 text-center text-[14px] text-[var(--text-secondary)]">
           30 jours d’essai gratuit · Sans carte bancaire · Résiliation sans engagement
         </p>
       </section>
@@ -318,30 +387,33 @@ export default function PricingPage() {
       {!isLoading && !error && plans.length > 1 && <ComparisonTable plans={plans} />}
 
       {/* ── Sur devis ── */}
-      <section className="border-t border-white/[0.06] px-6 py-20">
-        <div className="mx-auto grid max-w-4xl gap-8 rounded-2xl border border-white/[0.08] bg-[#0c0c0d] p-8 sm:p-12 md:grid-cols-[1fr_auto] md:items-center">
+      <section className="border-t border-[var(--border)] px-6 py-20">
+        <div className="mx-auto grid max-w-4xl gap-8 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-8 sm:p-12 md:grid-cols-[1fr_auto] md:items-center">
           <div>
-            <div className="mb-3 text-[13px] font-semibold uppercase tracking-[0.12em]" style={{ color: ACCENT }}>
+            <div
+              className="mb-3 text-[13px] font-semibold uppercase tracking-[0.12em]"
+              style={{ color: ACCENT }}
+            >
               Besoin spécifique
             </div>
             <h3 className="text-[26px] font-semibold leading-tight tracking-[-0.02em] sm:text-[30px]">
               Sur devis. Parlons de vos besoins.
             </h3>
-            <p className="mt-3 max-w-md text-[14.5px] leading-relaxed text-[#9a9a9a]">
-              Une étude personnalisée selon vos besoins et votre effectif. Le devis est établi par notre équipe ;
-              aucun tarif personnalisé n’est appliqué sans validation.
+            <p className="mt-3 max-w-md text-[14.5px] leading-relaxed text-[var(--text-secondary)]">
+              Une étude personnalisée selon vos besoins et votre effectif. Le devis est établi par
+              notre équipe ; aucun tarif personnalisé n’est appliqué sans validation.
             </p>
           </div>
           <div className="flex flex-col gap-3">
             <Link
               href="/contact"
-              className="whitespace-nowrap rounded-xl bg-[#FAFAFA] px-7 py-3.5 text-center text-[14px] font-semibold text-black transition-colors hover:bg-white"
+              className="whitespace-nowrap rounded-xl bg-[var(--text)] px-7 py-3.5 text-center text-[14px] font-semibold text-[var(--surface)] transition-colors hover:bg-[var(--action)]"
             >
               Demander un devis
             </Link>
             <a
               href={PHONE_HREF}
-              className="whitespace-nowrap rounded-xl border border-white/10 px-7 py-3 text-center text-[14px] font-medium text-[#d6d6d6] transition-colors hover:border-white/25 hover:bg-white/[0.04]"
+              className="whitespace-nowrap rounded-xl border border-[var(--border)] px-7 py-3 text-center text-[14px] font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--border)] hover:bg-[var(--surface-2)]"
             >
               {PHONE_DISPLAY}
             </a>
@@ -349,35 +421,18 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* ── FAQ ── */}
-      <section className="border-t border-white/[0.06] px-6 py-20">
-        <h2 className="mb-12 text-center text-[30px] font-semibold tracking-[-0.02em] sm:text-[36px]">
-          Questions fréquentes
-        </h2>
+      <section className={[s.container, s.section, s.editorial, s.rule].join(' ')}>
+        <div>
+          <p className={s.eyebrow}>Avant de choisir</p>
+          <h2 className={s.sectionTitle}>
+            Les questions
+            <br />
+            les plus fréquentes.
+          </h2>
+        </div>
         <FaqList />
       </section>
-
-      {/* ── Appel final ── */}
-      <section className="border-t border-white/[0.06] px-6 py-24 text-center">
-        <h2 className="text-[30px] font-bold tracking-[-0.025em] sm:text-[42px]">
-          Prêt à moderniser vos <span style={{ color: ACCENT }}>RH</span> ?
-        </h2>
-        <p className="mx-auto mt-4 max-w-md text-[17px] text-[#9a9a9a]">
-          Commencez gratuitement. Aucune carte bancaire requise.
-        </p>
-        <Link
-          href="/auth/register"
-          className="mt-9 inline-flex items-center gap-2.5 rounded-xl bg-[#FAFAFA] px-9 py-4 text-[16px] font-semibold text-black transition-colors hover:bg-white"
-        >
-          Démarrer gratuitement <IconArrow />
-        </Link>
-      </section>
-
-      <Footer />
-    </main>
+      <PublicClosing />
+    </PublicSite>
   );
 }
-
-
-
-

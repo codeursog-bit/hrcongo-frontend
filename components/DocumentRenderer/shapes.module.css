@@ -1,0 +1,9 @@
+.shape { position:absolute; z-index:10; height:0; pointer-events:none; }
+.line { width:100%; }
+.move { position:absolute; inset:-5px 0 auto; height:12px; width:100%; cursor:move; touch-action:none; pointer-events:auto; background:transparent; }
+.handle { position:absolute; right:-4px; top:-4px; width:8px; height:8px; border:1px solid #666; background:white; cursor:ew-resize; touch-action:none; pointer-events:auto; }
+.controls { position:absolute; z-index:30; top:14px; left:0; width:290px; padding:10px; display:flex; flex-wrap:wrap; gap:8px; background:var(--surface,#fff); color:var(--text,#222); box-shadow:0 3px 18px #0003; border-radius:8px; font:12px Arial,sans-serif; pointer-events:auto; }
+.controls label { display:grid; gap:3px; }
+.controls input { width:70px; border:1px solid #aaa; background:var(--surface,#fff); color:inherit; }
+.controls button,.controls select { padding:4px; background:var(--surface-2,#eee); color:inherit; border-radius:4px; }
+@media print { .move,.handle,.controls { display:none!important; } }

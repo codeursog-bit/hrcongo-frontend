@@ -237,6 +237,7 @@ export default function BulletinRendererInf({ payroll, template, previewMode }: 
   const absCongeItem  = findItem('ABS_CONGE');
   const ctaxSalItems  = items.filter((i: any) => typeof i.code === 'string' && i.code.startsWith('CTAX_') && !i.code.startsWith('CTAX_EMP_'));
   const loanItemsList     = items.filter((i: any) => i.code === 'LOAN');
+  const salaryRounding = items.find((i: any) => i.code === 'SALARY_ROUNDING');
   const advanceItemsList  = items.filter((i: any) => i.code === 'ADVANCE');
   const companyDeductions = items.filter((i: any) => i.code === 'COMPANY_DEDUCTION');
 
@@ -259,7 +260,7 @@ export default function BulletinRendererInf({ payroll, template, previewMode }: 
     [
       cnssSalItem, itsItem, absCongeItem, findItem('ABS_DEDUCT'),
       cnssEmpPensionItem, cnssEmpFamItem, cnssEmpAtItem, tusDgiItem, tusCnssItem,
-      ...ctaxSalItems, ...ctaxPatItems, ...loanItemsList, ...advanceItemsList, ...companyDeductions,
+      ...ctaxSalItems, ...ctaxPatItems, ...loanItemsList, ...advanceItemsList, ...companyDeductions, salaryRounding,
     ].filter(Boolean).map((i: any) => i.id ?? i.code),
   );
   const otherDeductionItems    = items.filter((i: any) => i.type === 'DEDUCTION'      && !claimed.has(i.id ?? i.code));
@@ -594,6 +595,7 @@ export default function BulletinRendererInf({ payroll, template, previewMode }: 
                 <Row key={item.id || item.code} n={n} label={item.label}
                   nombre={indemNombre(item)} base={itemBase(item)} tauxS={indemTaux(item)} gain={fmt(item.amount)} />
               ); })}
+              {salaryRounding && <Row n={6999} label={salaryRounding.label} ret={fmt(salaryRounding.amount)} />}
 
               <DashRow />
               <TotalRow n={9900} label="TOTAL GAINS" gain={fmtZ(totalGains)} />

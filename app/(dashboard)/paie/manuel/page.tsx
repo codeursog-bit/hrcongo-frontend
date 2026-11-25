@@ -86,6 +86,7 @@ interface Row {
   base: number | '';
   rate: number | '';
   amount: number;
+  isNature?: boolean;
   // ✅ true = ligne préremplie depuis les primes déjà configurées pour
   // l'employé, jamais touchée par l'utilisateur. Reste synchronisée avec
   // le calcul automatique (donc reproratisée) à chaque recalcul, et n'est
@@ -231,12 +232,13 @@ const SimpleRow = ({ row, onChangeLabel, onChangeAmount, onRemove, placeholder =
 );
 
 const InputRow = ({
-  row, onChangeLabel, onChangeBase, onChangeRate, onRemove, placeholder = 'Libellé…', suggestions = [],
+  row, onChangeLabel, onChangeBase, onChangeRate, onChangeNature, onRemove, placeholder = 'Libellé…', suggestions = [],
 }: {
   row: Row;
   onChangeLabel: (v: string) => void;
   onChangeBase: (v: number | '') => void;
   onChangeRate: (v: number | '') => void;
+  onChangeNature?: (v: boolean) => void;
   onRemove: () => void;
   placeholder?: string;
   suggestions?: string[];
@@ -274,7 +276,7 @@ const InputRow = ({
         ? 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  border-[var(--border)]  text-[var(--success-text)] '
         : 'bg-[var(--surface-2)]  border-[var(--border)]  text-[var(--text-secondary)] '
     }`}>
-      {row.amount > 0 ? row.amount.toLocaleString('fr-FR') : '—'}
+      {row.amount !== 0 ? row.amount.toLocaleString('fr-FR') : '—'}
     </div>
     <button
       onClick={onRemove}
@@ -282,6 +284,8 @@ const InputRow = ({
     >
       <Trash2 size={13} />
     </button>
+    {onChangeNature && <label className="col-span-full flex items-center gap-2 text-xs text-[var(--text-secondary)]"><input type="checkbox" checked={row.isNature ?? false} onChange={e => onChangeNature(e.target.checked)} /> Avantage en nature</label>}
+    {row.amount < 0 && <p role="alert" className="col-span-full text-xs text-amber-700">Montant négatif : le net à payer diminuera.</p>}
   </motion.div>
 );
 
@@ -418,7 +422,6 @@ export default function ManuelPayrollPage() {
   const [congesDroits, setCongesDroits]       = useState<number|''>('');
   const [congesPris, setCongesPris]           = useState<number|''>('');
   const [congesSolde, setCongesSolde]         = useState<number|''>('');
-  const [joursCongesPris, setJoursCongesPris] = useState<number|''>('');  // jours consommés ce mois
 
   // ── CarryOver — point de départ historique ────────────────────────────────
   // ✅ Simplifié : seul le brut annuel est saisi. Le reste (CNSS sal. 4%, net
@@ -685,9 +688,10 @@ export default function ManuelPayrollPage() {
   // corrigées à la main — sinon leur montant resterait figé à sa valeur
   // du premier calcul, sans jamais suivre un changement de jours ensuite.
   const buildBonusPayload = (rows: Row[], taxable: boolean) =>
-    rows.filter(r => !r.auto && n(r.amount) > 0).map(r => ({
+    rows.filter(r => !r.auto && n(r.amount) !== 0).map(r => ({
       bonusType:  r.label || (taxable ? 'Prime' : 'Indemnité'),
       amount:     r.amount,
+      isNature:   r.isNature ?? false,
       // ✅ Si base non saisie → base = amount (gain direct sans calcul)
       base:       n(r.base) > 0 ? n(r.base) : r.amount,
       // ✅ Rate seulement si saisi et différent de 0 et 1
@@ -810,8 +814,6 @@ export default function ManuelPayrollPage() {
         congesDroits:     n(congesDroits)     || undefined,
         congesPris:       n(congesPris)       || undefined,
         congesSolde:      n(congesSolde)      || undefined,
-        // ✅ Jours consommés ce mois — pour déduire du LeaveBalance
-        joursCongesPris:  n(joursCongesPris)  || undefined,
         manualDeductions: manualDedP.length > 0 ? manualDedP : undefined,
       });
       setCreatedId(result?.id || null);
@@ -879,18 +881,20 @@ export default function ManuelPayrollPage() {
           base:    i.base  ? Number(i.base)  : '',
           rate:    i.quantity ? Number(i.quantity) : (i.rate ? Number(i.rate) : 1),
           amount:  Number(i.amount ?? 0),
+          isNature: i.isNature ?? false,
         }));
       if (prevPrimes.length > 0) setPrimes(sortPrimes(prevPrimes));
 
       // Indemnités (GAIN !isTaxable && !isCnss) depuis les items
       const prevIndem: Row[] = (prev.items ?? [])
-        .filter((i: any) => i.type === 'GAIN' && !i.isTaxable && !i.isCnss)
+        .filter((i: any) => i.type === 'GAIN' && !i.isTaxable && !i.isCnss && i.code !== 'SALARY_ROUNDING')
         .map((i: any) => ({
           localId: uid(),
           label:   i.label ?? '',
           base:    i.base  ? Number(i.base)  : '',
           rate:    i.quantity ? Number(i.quantity) : (i.rate ? Number(i.rate) : 1),
           amount:  Number(i.amount ?? 0),
+          isNature: i.isNature ?? false,
         }));
       if (prevIndem.length > 0) setIndemnites(prevIndem);
 
@@ -939,7 +943,7 @@ export default function ManuelPayrollPage() {
     setWorkedDays(''); setWorkedDaysEdited(false); setOt10(0); setOt25(0); setOt50(0); setOt100(0);
     setPrimes([]); setIndemnites([]); setTaxes([]); setLoans([]); setAdvances([]); setRetenues([]);
     setCarryOverBrut(''); setCarryOverTauxPat(Number(companyInfo?.cnssEmployerRate) || 20.28);
-    setCongesDroits(''); setCongesPris(''); setCongesSolde(''); setJoursCongesPris(''); setCarryOverSaved(false);
+    setCongesDroits(''); setCongesPris(''); setCongesSolde(''); setCarryOverSaved(false);
     setUsePrevData(false); setPrevDataLoaded(false);
   };
 
@@ -1255,6 +1259,7 @@ export default function ManuelPayrollPage() {
                     }}
                     onChangeBase={v => updateRow(setPrimes, row.localId, { base: v })}
                     onChangeRate={v => updateRow(setPrimes, row.localId, { rate: v })}
+                    onChangeNature={v => updateRow(setPrimes, row.localId, { isNature: v })}
                     onRemove={() => removeRow(setPrimes, row.localId)} />
                 ))}
               </AnimatePresence>
@@ -1323,6 +1328,7 @@ export default function ManuelPayrollPage() {
                     onChangeLabel={v => updateRow(setIndemnites, row.localId, { label: v })}
                     onChangeBase={v => updateRow(setIndemnites, row.localId, { base: v })}
                     onChangeRate={v => updateRow(setIndemnites, row.localId, { rate: v })}
+                    onChangeNature={v => updateRow(setIndemnites, row.localId, { isNature: v })}
                     onRemove={() => removeRow(setIndemnites, row.localId)} />
                 ))}
               </AnimatePresence>
@@ -1674,21 +1680,7 @@ export default function ManuelPayrollPage() {
                 Ces valeurs s'affichent dans la section congés annuels du bulletin.
               </p>
 
-              {/* ✅ Jours pris ce mois — visible si congés payés dans les primes */}
-              {primes.some(p => /cong[eé]/i.test(p.label)) && (
-                <div className="mt-3 p-3 bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  border border-[var(--border)]  rounded-xl">
-                  <p className="text-xs font-semibold text-[var(--warning-text)]  mb-2">
-                    🏖️ Congés payés détectés — combien de jours part-il ?
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <input type="number" value={joursCongesPris} min={1} max={78}
-                      onChange={e => setJoursCongesPris(e.target.value===''?'':Number(e.target.value))}
-                      placeholder="ex: 26"
-                      className="w-24 px-3 py-2 bg-[var(--surface)]  border border-[var(--border)]  rounded-xl text-sm font-semibold text-center text-[var(--text)]  focus:outline-none focus:ring-2 focus:ring-[var(--focus)]" />
-                    <span className="text-xs text-[var(--warning-text)]">jours — le cycle brut/charges repart à 0 après ce bulletin</span>
-                  </div>
-                </div>
-              )}
+              <p className="text-[10px] text-[var(--text-secondary)] mt-2 text-center">Les jours réellement pris proviennent des congés approuvés, à leur date de départ.</p>
             </Card>
           )}
 

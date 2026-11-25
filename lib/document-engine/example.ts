@@ -33,6 +33,7 @@ export const payslipExample: DocumentContext = {
     'pay.payment': 'Le 5 du mois suivant par Virement',
     'pay.month': 'NOVEMBRE',
     'pay.year': 2026,
+    'leave.entitled': '30', 'leave.taken': '12', 'leave.remaining': '18',
     'pay.netSalary': numberSpacing(example.cumuls.mensuel.at(-1)),
     ...Object.fromEntries(cumulativeColumns.slice(1, -1).flatMap(({ key }, index) => [
       [`monthly.${key}`, numberSpacing(example.cumuls.mensuel[index])],

@@ -8,7 +8,7 @@
   .document-reader-tools button:hover { background:var(--surface-2); color:var(--action); }
   .document-reader-tools button:disabled { opacity:.35; cursor:default; }
   .document-reader-tools output { min-width:48px; text-align:center; font-size:12px; font-variant-numeric:tabular-nums; color:var(--text); }
-  .document-reader-scroll { padding:16px; overflow:auto; max-height:72dvh; background:var(--surface-2); scrollbar-width:thin; overscroll-behavior:contain; }
+  .document-reader-scroll { padding:16px; overflow:auto; max-height:72dvh; background:var(--surface-2); scrollbar-width:thin; overscroll-behavior:auto; }
   .document-reader-size { position:relative; margin-inline:auto; flex-shrink:0; }
   .document-reader-paper { transform-origin:top left; background:#fff; color:#111; box-shadow:0 2px 12px #00000014; display:flow-root; }
   .document-reader-paper > .loan-document-protected,.document-reader-paper > [style*="-99999"] { position:static!important; inset:auto!important; width:100%!important; transform:none!important; margin:0!important; box-shadow:none!important; }

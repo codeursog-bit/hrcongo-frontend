@@ -298,6 +298,7 @@ export function BulletinRendererDefault({ payroll, template }: BulletinRendererD
 
   // ✅ Autres retenues manuelles — affichage direct sans base/taux
   const manualDeductions = retenueItems.filter((i: any) => i.code === 'MANUAL_DEDUCTION');
+  const salaryRounding = retenueItems.find((i: any) => i.code === 'SALARY_ROUNDING');
 
   const ctaxEmp = cotisItems.filter((i: any) =>
     !['CNSS_SAL','CNSS','ITS','IRPP','BNC_SOURCE'].includes(i.code) &&
@@ -323,6 +324,7 @@ export function BulletinRendererDefault({ payroll, template }: BulletinRendererD
     + ctaxEmp.reduce((s: number, i: any) => s + nv(i.amount), 0)
     + loanItems.reduce((s: number, i: any) => s + nv(i.amount), 0)
     + manualDeductions.reduce((s: number, i: any) => s + nv(i.amount), 0)
+    + nv(salaryRounding?.amount)
     + absDeductAmount;  // ✅ ABS_DEDUCT dans totalRetenues
 
   const ctaxPatTotal = ctaxPat.reduce((s: number, i: any) => s + nv(i.amount), 0);
@@ -655,6 +657,7 @@ export function BulletinRendererDefault({ payroll, template }: BulletinRendererD
                   label={cleanLabel(item.label)}
                   ret={fmt(item.amount)} />
               ))}
+              {salaryRounding && <Row rub={6999} label={salaryRounding.label} ret={fmt(salaryRounding.amount)} />}
 
               {/* ── Spacer ──────────────────────────────────────────── */}
               <tr id="grid-spacer" style={{ background:'#fff' }}>

@@ -1,4 +1,5 @@
 'use client';
+import { useRequestDocumentTemplate } from '@/hooks/useRequestDocumentTemplate';
 import { AttendanceDialog } from '@/components/attendance/AttendanceDialog';
 import { AttendanceSelect } from '@/components/attendance/AttendanceSelect';
 import { AttendanceModuleFrame as ModulePageFrame } from '@/components/attendance/AttendanceModuleFrame';
@@ -24,7 +25,7 @@ import {
 import { api } from '@/services/api';
 import PresenceModuleSwitcher from '@/components/PresenceModuleSwitcher';
 import PermissionsSubNav from '@/components/PermissionsSubNav';
-import PermissionTicketPrintable from '@/components/PermissionTicketPrintable';
+import { ExitPermissionDocument } from '@/components/documents/RequestDocuments';
 import DocumentPreviewModal from '@/components/loans/DocumentPreviewModal';
 import { printTicket } from '@/lib/ticket-print';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
@@ -50,6 +51,7 @@ export default function PermissionsValidationsPage() {
  const [uiLoadError,setUiLoadError]=useState('');
   const [tickets, setTickets] = useState<any[]>([]);
   const [company, setCompany] = useState<any>(null);
+  const requestTemplate = useRequestDocumentTemplate('EXIT_PERMISSION', company);
   const [userRole, setUserRole] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
@@ -137,7 +139,7 @@ export default function PermissionsValidationsPage() {
   const ticketRef = selected ? `TK-${selected.id.slice(0, 8).toUpperCase()}` : '';
   const printData = selected ? {
     reference: ticketRef,
-    company: { legalName: company?.legalName, tradeName: company?.tradeName, logo: company?.logo, rccmNumber: company?.rccmNumber, taxNumber: company?.taxNumber, address: company?.address, phone: company?.phone },
+    company: { id: company?.id, city: company?.city, documentFooterText: company?.documentFooterText, legalName: company?.legalName, tradeName: company?.tradeName, logo: company?.logo, rccmNumber: company?.rccmNumber, taxNumber: company?.taxNumber, address: company?.address, phone: company?.phone },
     employee: { firstName: selected.employee?.firstName || '', lastName: selected.employee?.lastName || '', employeeNumber: selected.employee?.employeeNumber, department: selected.employee?.department?.name, position: selected.employee?.position },
     type: selected.type, missionType: selected.missionType, reason: selected.reason, destination: selected.destination,
     departureTime: effectiveDeparture(selected), expectedReturnTime: selected.expectedReturnTime, actualReturnTime: selected.actualReturnTime,
@@ -360,7 +362,7 @@ export default function PermissionsValidationsPage() {
 
             {/* Rendu réel hors-écran : nécessaire pour la capture d'impression navigateur */}
             <div className="fixed -left-[9999px] top-0 pointer-events-none" aria-hidden="true">
-              {printData && <PermissionTicketPrintable id="perm-val-print-target" data={printData as any} />}
+              {printData && <ExitPermissionDocument template={requestTemplate} id="perm-val-print-target" data={printData as any} />}
             </div>
           </div>
         </AttendanceDialog>
@@ -369,7 +371,7 @@ export default function PermissionsValidationsPage() {
       <EditTimesModal open={showEditTimes} onClose={() => setShowEditTimes(false)} ticket={selected} onUpdated={handleTicketUpdated} />
 
       <DocumentPreviewModal open={showPreviewModal} onClose={() => setShowPreviewModal(false)}>
-        {printData && <PermissionTicketPrintable id="perm-val-doc-preview" data={printData as any} />}
+        {printData && <ExitPermissionDocument template={requestTemplate} id="perm-val-doc-preview" data={printData as any} />}
       </DocumentPreviewModal>
     </div></ModulePageFrame>
   );

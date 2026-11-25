@@ -1,3 +1,4 @@
+import demoPlans from './subscription-plans.json';
 import { employees, company } from './employees';
 import { subscription } from './subscription';
 export const documentMetadata=[
@@ -14,7 +15,7 @@ export function demoServiceCatalogs(url:URL,method:string,role:'ADMIN'|'EMPLOYEE
  if(p==='/documents/stats')return json({total:docs.length,pending:docs.filter(d=>d.status==='PENDING_REVIEW').length,verified:docs.filter(d=>d.status==='VERIFIED').length,rejected:0,expired:0,expiring30:0,expiring7:0});
  if(p==='/subscriptions/quote')return json({quote:null});
  if(p==='/subscriptions/payment-provider')return json({provider:'NONE'});
- if(p==='/public/subscriptions/plans')return json({plans:Object.fromEntries(['FREE','BASIC','PRO','ENTERPRISE'].map(key=>[key,{...subscription.planDetails,name:key==='FREE'?'Gratuit':key,description:'Exemple de présentation — tarifs indisponibles en démo.',priceMonthly:null,priceYearly:null,isPriceConfigured:false,popular:key==='PRO'}]))});
+ if(p==='/public/subscriptions/plans') return json({plans:demoPlans});
  if(p.startsWith('/cnss-declaration/')){
   if(role!=='ADMIN')return json({message:'Accès réservé aux RH.'},403);
   if(p.endsWith('/history'))return json([]);

@@ -23,6 +23,7 @@
 
 import React, { useMemo } from 'react';
 import type { BulletinPayroll, BulletinTemplateConfig, PayrollItem } from '@/types/bulletin-template';
+import { FixedInvoiceSheet } from '@/components/DocumentRenderer/FixedDocument';
 import { classifyItems } from '@/lib/bulletin-items-classifier';
 import { getBaseTemplate } from '@/lib/bulletin-templates';
 
@@ -65,7 +66,7 @@ const Row = ({ label, value, bold = false, divider = false }: { label: string; v
   </tr>
 );
 
-export default function FactureRendererForfait({ payroll, template, previewMode }: FactureRendererForfaitProps) {
+export default function InvoiceForfait({ payroll, template }: FactureRendererForfaitProps) {
   const tpl = template ?? getBaseTemplate('classique');
   const e   = (payroll.employee ?? {}) as any;
   const co  = (payroll.company  ?? {}) as any;
@@ -121,96 +122,77 @@ export default function FactureRendererForfait({ payroll, template, previewMode 
   const moisPrefix = /^[aeiouéèêô]/i.test(moisNom) ? "d'" : 'de ';
   const ville    = co.city || '—';
 
-  return (
-    <>
-      <style>{`
-        @media print {
-          @page { size: A5 portrait; margin: 0; }
-          body { visibility: hidden !important; background: #fff !important; margin: 0 !important; padding: 0 !important; }
-          #fac-forfait-wrap, #fac-forfait-wrap * { visibility: visible !important; }
-          #fac-forfait-wrap { position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; }
-          #fac-forfait { box-shadow: none !important; border: none !important; }
-          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-        }
-      `}</style>
-
-      <div id="fac-forfait-wrap" data-bulletin-root="true" style={{ background: '#fff' }}>
-        <div id="fac-forfait" style={{
-          fontFamily: SANS, color: K, background: '#fff',
-          width: '148mm', height: '210mm', boxSizing: 'border-box', padding: '20mm 16mm',
-          margin: '0 auto', boxShadow: '0 2px 16px rgba(0,0,0,0.10)',
-          display: 'flex', flexDirection: 'column',
-        }}>
-
-          {/* ── En-tête entreprise — nom centré, logo centré ────────────── */}
-          <div style={{ textAlign: 'center' }}>
-            {tpl.style.showLogo !== false && co.logo && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={co.logo} alt="" crossOrigin="anonymous" style={{ height: 36, marginBottom: 6, display: 'block', marginLeft: 'auto', marginRight: 'auto' }} />
-            )}
-            <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: 0.6, color: tpl.style.primaryColor || '#0a7a3d', textTransform: 'uppercase' as const }}>
-              {co.tradeName || co.legalName || '—'}
-            </div>
+  return <FixedInvoiceSheet layout="invoiceForfait" id="fac-forfait" style={{
+    fontFamily: SANS, color: K, background: '#fff',
+    width: '148mm', height: '210mm', boxSizing: 'border-box', padding: '20mm 16mm',
+    margin: '0 auto', boxShadow: '0 2px 16px rgba(0,0,0,0.10)',
+    display: 'flex', flexDirection: 'column',
+  }} sections={{
+      header: (
+        <div style={{ textAlign: 'center' }}>
+          {tpl.style.showLogo !== false && co.logo && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={co.logo} alt="" crossOrigin="anonymous" style={{ height: 36, marginBottom: 6, display: 'block', marginLeft: 'auto', marginRight: 'auto' }} />
+          )}
+          <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: 0.6, color: tpl.style.primaryColor || '#0a7a3d', textTransform: 'uppercase' as const }}>
+            {co.tradeName || co.legalName || '—'}
           </div>
-
-          {/* ── Ville / date — alignées à droite ─────────────────────────── */}
-          <div style={{ fontSize: 10.5, marginTop: 8, width: '100%', textAlign: 'right' }}>
-            {ville} — Paie du mois {moisPrefix}{moisNom} {anneeComplete}
-          </div>
-
-          {/* ── Bandeau prestataire (nom + qualité) — centré sur la page ── */}
-          <div style={{ textAlign: 'center', marginTop: 26, marginBottom: 24 }}>
-            <div style={{
-              display: 'inline-block', background: '#e4f1e8', border: '1px solid #0a7a3d',
-              padding: '4px 10px', fontSize: 12, fontWeight: 800,
-            }}>
-              {fullName} {qualite}
-            </div>
-          </div>
-
-          {/* ── Corps : lignes conditionnelles, colonne resserrée, centrée ─ */}
-          <div style={{ flex: 1 }}>
-            <table style={{ borderCollapse: 'collapse' }}>
-              <tbody>
-                <Row label="Forfait" value={fmt(forfaitMontant)} bold />
-
-                {congeMontant > 0 && <Row label="Indemnité de congé" value={fmt(congeMontant)} />}
-                {autresGains.map((item: any) => (
-                  <Row key={item.id || item.code} label={item.label} value={fmt(item.amount)} />
-                ))}
-                {indems.map((item: any) => (
-                  <Row key={item.id || item.code} label={item.label} value={fmt(item.amount)} />
-                ))}
-                {absMontant > 0 && <Row label={absItem?.label || 'Retenue absence'} value={fmt(absMontant)} />}
-                {bncMontant > 0 && <Row label={bncItem?.label || 'Retenue impôt'} value={fmt(bncMontant)} />}
-                {retenues.map((item: any) => (
-                  <Row key={item.id || item.code} label={item.label} value={fmt(item.amount)} />
-                ))}
-
-                <Row label="Net à payer" value={fmt(netAPayer)} bold divider />
-              </tbody>
-            </table>
-          </div>
-
-          {/* ── Signatures — employé à gauche (sous le tableau), patron
-                collé au bord droit du contenu (même bord que la date) ──── */}
-          <div style={{ position: 'relative', marginTop: 40, height: 70 }}>
-            <div style={{ position: 'absolute', left: 0, textAlign: 'center', whiteSpace: 'nowrap' }}>
-              <div style={{ height: 44 }} />
-              <div style={{ borderTop: BD, fontSize: 10, fontWeight: 700, textTransform: 'uppercase' as const, paddingTop: 3 }}>
-                {qualite}
-              </div>
-            </div>
-            <div style={{ position: 'absolute', right: 0, textAlign: 'center', whiteSpace: 'nowrap' }}>
-              <div style={{ height: 44 }} />
-              <div style={{ borderTop: BD, fontSize: 10, fontWeight: 700, textTransform: 'uppercase' as const, paddingTop: 3 }}>
-                {(co as any).signatoryTitle || 'Directeur'}
-              </div>
-            </div>
-          </div>
-
         </div>
-      </div>
-    </>
-  );
+      ),
+      period: (
+        <div style={{ fontSize: 10.5, marginTop: 8, width: '100%', textAlign: 'right' }}>
+          {ville} — Paie du mois {moisPrefix}{moisNom} {anneeComplete}
+        </div>
+      ),
+      provider: (
+        <div style={{ textAlign: 'center', marginTop: 26, marginBottom: 24 }}>
+          <div style={{
+            display: 'inline-block', background: '#e4f1e8', border: '1px solid #0a7a3d',
+            padding: '4px 10px', fontSize: 12, fontWeight: 800,
+          }}>
+            {fullName} {qualite}
+          </div>
+        </div>
+      ),
+      items: (
+        <div style={{ flex: 1 }}>
+          <table style={{ borderCollapse: 'collapse' }}>
+            <tbody>
+              <Row label="Forfait" value={fmt(forfaitMontant)} bold />
+
+              {congeMontant > 0 && <Row label="Indemnité de congé" value={fmt(congeMontant)} />}
+              {autresGains.map((item: any) => (
+                <Row key={item.id || item.code} label={item.label} value={fmt(item.amount)} />
+              ))}
+              {indems.map((item: any) => (
+                <Row key={item.id || item.code} label={item.label} value={fmt(item.amount)} />
+              ))}
+              {absMontant > 0 && <Row label={absItem?.label || 'Retenue absence'} value={fmt(absMontant)} />}
+              {bncMontant > 0 && <Row label={bncItem?.label || 'Retenue impôt'} value={fmt(bncMontant)} />}
+              {retenues.map((item: any) => (
+                <Row key={item.id || item.code} label={item.label} value={fmt(item.amount)} />
+              ))}
+
+              <Row label="Net à payer" value={fmt(netAPayer)} bold divider />
+            </tbody>
+          </table>
+        </div>
+      ),
+      signatures: (
+        <div style={{ position: 'relative', marginTop: 40, height: 70 }}>
+          <div style={{ position: 'absolute', left: 0, textAlign: 'center', whiteSpace: 'nowrap' }}>
+            <div style={{ height: 44 }} />
+            <div style={{ borderTop: BD, fontSize: 10, fontWeight: 700, textTransform: 'uppercase' as const, paddingTop: 3 }}>
+              {qualite}
+            </div>
+          </div>
+          <div style={{ position: 'absolute', right: 0, textAlign: 'center', whiteSpace: 'nowrap' }}>
+            <div style={{ height: 44 }} />
+            <div style={{ borderTop: BD, fontSize: 10, fontWeight: 700, textTransform: 'uppercase' as const, paddingTop: 3 }}>
+              {(co as any).signatoryTitle || 'Directeur'}
+            </div>
+          </div>
+        </div>
+      ),
+    }} />;
 }

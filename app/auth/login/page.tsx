@@ -395,7 +395,7 @@ function LoginContent() {
     <>
       <AuthShell>
         <AuthHeading
-          title="Bon retour parmi nous"
+          title="Se connecter à Konza"
           description="Connectez-vous pour accéder à votre espace Konza RH."
         />
 

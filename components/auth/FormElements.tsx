@@ -81,7 +81,6 @@ export const PasswordField = forwardRef<HTMLInputElement, PasswordFieldProps>(
           />
           <button
             type="button"
-            tabIndex={-1}
             onClick={() => setVisible((v) => !v)}
             className="au-eye"
             aria-label={visible ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}

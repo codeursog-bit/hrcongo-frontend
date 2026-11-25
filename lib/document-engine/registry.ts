@@ -2,16 +2,22 @@ import type { Block, DocLayout, DocType, FontId, TableConfig } from '@/types/doc
 import skins from '@/docs/modeles-documents/skins.json';
 import references from '@/docs/modeles-documents/reference-documents.json';
 import { buildPayslipContext, cumulativeColumns, payColumns, payslipSpec, type PayslipData } from './payslip';
+import { administrativeSpecs, buildAdministrativeContext, type AdministrativeInput } from './administrative';
 
 const { page, skins: payslipSkins } = skins.bulletinDePaie;
 const { PAYSLIP: reference } = references;
 export const documentRegistry = {
+  ...administrativeSpecs,
   PAYSLIP: { ...payslipSpec, buildContext: buildPayslipContext, defaultPreset: 'A_BLEU' as const },
 } satisfies Partial<Record<DocType, unknown>>;
 export type SupportedDocType = keyof typeof documentRegistry;
 
-export function buildContext(docType: SupportedDocType, apiData: PayslipData) {
-  return documentRegistry[docType].buildContext(apiData);
+export function buildContext(docType: 'PAYSLIP', apiData: PayslipData): ReturnType<typeof buildPayslipContext>;
+export function buildContext(doc: AdministrativeInput): ReturnType<typeof buildAdministrativeContext>;
+export function buildContext(doc: 'PAYSLIP' | AdministrativeInput, apiData?: PayslipData) {
+  if (doc !== 'PAYSLIP') return buildAdministrativeContext(doc);
+  if (!apiData) throw new Error('Données de bulletin manquantes.');
+  return documentRegistry.PAYSLIP.buildContext(apiData);
 }
 
 export type PayslipPreset = keyof typeof payslipSkins;
@@ -75,5 +81,15 @@ export function createPayslipLayout(
     ],
     labels: {},
     footer: { text: reference.piedDePage, showPageNumber: false },
+  };
+}
+
+export function createBlankPayslipLayout(): DocLayout {
+  const layout = createPayslipLayout();
+  return {
+    ...layout,
+    basePreset: 'BLANK',
+    blocks: layout.blocks.filter(block => block.locked).map((block, index) => ({ ...block, row: index + 1 })),
+    footer: { text: '', showPageNumber: false },
   };
 }

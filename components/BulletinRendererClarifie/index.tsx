@@ -254,6 +254,7 @@ export default function BulletinRendererClarifie({ payroll, template, previewMod
   };
 
   const manualDeductions = retenueItems.filter((i: any) => i.code === 'MANUAL_DEDUCTION');
+  const salaryRounding = retenueItems.find((i: any) => i.code === 'SALARY_ROUNDING');
   const loanItems        = retenueItems.filter((i: any) => ['LOAN','ADVANCE'].includes(i.code));
   const ctaxEmp = cotisItems.filter((i: any) =>
     !['CNSS_SAL','CNSS','ITS','IRPP','BNC_SOURCE'].includes(i.code) && !isCnssPatSummary(i));
@@ -497,6 +498,7 @@ export default function BulletinRendererClarifie({ payroll, template, previewMod
                   <DataRow key={item.id || item.code} indent={false} label={item.label} base={itemBase(item)} tauxS={itemTaux(item)} mtS={fmt(item.amount)} />
                 ))}
               </>}
+              {salaryRounding && <DataRow label={salaryRounding.label} mtS={fmtNeg(salaryRounding.amount)} />}
 
               {/* ── Spacer — absorbe l'espace restant du canevas A4 fixe (au
                    lieu de le répartir sur chaque ligne de contenu) ────────── */}

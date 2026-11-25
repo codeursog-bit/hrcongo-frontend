@@ -1,4 +1,5 @@
 'use client';
+import { useRequestDocumentTemplate } from '@/hooks/useRequestDocumentTemplate';
 import { AttendanceSelect } from '@/components/attendance/AttendanceSelect';
 import { RequestForm, RequestSummaryCard, RequestSuccessScreen } from '@/components/requests';
 import { useToast } from '@/components/design-system/feedback';
@@ -25,7 +26,7 @@ import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import PresenceModuleSwitcher from '@/components/PresenceModuleSwitcher';
 import PermissionsSubNav from '@/components/PermissionsSubNav';
-import PermissionTicketPrintable from '@/components/PermissionTicketPrintable';
+import { ExitPermissionDocument } from '@/components/documents/RequestDocuments';
 import DocumentPreviewModal from '@/components/loans/DocumentPreviewModal';
 
 type PermType = 'URGENCE' | 'MISSION' | 'AUTRE';
@@ -62,6 +63,7 @@ export default function NouveauTicketPage() {
   const [userRole, setUserRole] = useState('');
   const [employee, setEmployee] = useState<any>(null);
   const [company, setCompany] = useState<any>(null);
+  const requestTemplate = useRequestDocumentTemplate('EXIT_PERMISSION', company);
 
   const [employeesList, setEmployeesList] = useState<any[]>([]);
   const [employeeSearch, setEmployeeSearch] = useState('');
@@ -140,7 +142,7 @@ export default function NouveauTicketPage() {
 
   const previewData = {
     reference: 'TK-XXXXXXXX',
-    company: { legalName: company?.legalName, tradeName: company?.tradeName, logo: company?.logo, rccmNumber: company?.rccmNumber, taxNumber: company?.taxNumber, address: company?.address, phone: company?.phone },
+    company: { id: company?.id, city: company?.city, documentFooterText: company?.documentFooterText, legalName: company?.legalName, tradeName: company?.tradeName, logo: company?.logo, rccmNumber: company?.rccmNumber, taxNumber: company?.taxNumber, address: company?.address, phone: company?.phone },
     employee: {
       firstName: selectedTargetEmployee?.firstName || '', lastName: selectedTargetEmployee?.lastName || '',
       employeeNumber: selectedTargetEmployee?.employeeNumber, department: selectedTargetEmployee?.department?.name,
@@ -265,7 +267,7 @@ export default function NouveauTicketPage() {
  </div></RequestForm>
 
       <DocumentPreviewModal open={showPreviewModal} onClose={() => setShowPreviewModal(false)}>
-        <PermissionTicketPrintable id="preview-ticket" data={previewData as any} />
+        <ExitPermissionDocument template={requestTemplate} id="preview-ticket" data={previewData as any} />
       </DocumentPreviewModal>
     </div></ModulePageFrame>
   );

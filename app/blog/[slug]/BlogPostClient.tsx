@@ -17,6 +17,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Navbar } from '@/components/landing/Navbar';
+import s from '@/components/landing/PublicSite.module.css';
 import { Footer } from '@/components/landing/Footer';
 import { sanitizeArticleHtml } from '@/lib/sanitize-html';
 
@@ -35,7 +36,7 @@ type Post = {
 type TocEntry = { id: string; text: string; level: 2 | 3 };
 
 // ── Constantes ────────────────────────────────────────────────────────────────
-const ACCENT = '#FF9A62';
+const ACCENT = 'var(--action)';
 
 const CAT_LABEL: Record<string, string> = {
   ANNONCE:'Annonce', PAIE:'Paie & Fiscalité', DROIT_TRAVAIL:'Droit du travail',
@@ -370,18 +371,18 @@ export default function BlogPostClient({ slug, initialPost }: Props) {
   }
 
   if (loading) return (
-    <div className="min-h-screen bg-[#050607] font-sans text-[#F2F2F2]">
+    <div className={s.site}>
       <Navbar />
-      <p role="status" className="flex min-h-screen items-center justify-center text-[#9a9a9a]">Chargement…</p>
+      <p role="status" className="flex min-h-screen items-center justify-center text-[var(--text-secondary)]">Chargement…</p>
     </div>
   );
 
   if (error || !post) return (
-    <div className="min-h-screen bg-[#050607] font-sans text-[#F2F2F2]">
+    <div className={s.site}>
       <Navbar />
       <div className="mx-auto max-w-xl px-6 pt-44 text-center">
         <h1 className="mb-5 text-[30px] font-semibold">{error || 'Article introuvable'}</h1>
-        <Link href="/blog" className="inline-flex rounded-xl bg-[#FAFAFA] px-6 py-3 text-[14px] font-semibold text-black transition-colors hover:bg-white">
+        <Link href="/blog" className="inline-flex rounded-xl bg-[var(--text)] px-6 py-3 text-[14px] font-semibold text-[var(--surface)] transition-colors hover:bg-[var(--surface-2)]">
           ← Retour au blog
         </Link>
       </div>
@@ -398,47 +399,47 @@ export default function BlogPostClient({ slug, initialPost }: Props) {
     ? new Date(post.updatedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
     : null;
 
-  const cardCls = 'rounded-xl border border-white/[0.08] bg-[#0c0c0d] p-5';
-  const labelCls = 'mb-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#6f6f6f]';
+  const cardCls = 'rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5';
+  const labelCls = 'mb-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--text-secondary)]';
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#050607] font-sans text-[#F2F2F2]">
+    <div className={s.site}>
       <Navbar />
 
       {/* ── En-tête de l'article ── */}
-      <header className="px-6 pt-32">
+      <header className="px-6 pt-16">
         <div className="mx-auto max-w-5xl">
-          <nav aria-label="Fil d’Ariane" className="mb-7 flex items-center gap-2 text-[13px] text-[#6f6f6f]">
-            <Link href="/" className="transition-colors hover:text-[#F2F2F2]">Accueil</Link>
+          <nav aria-label="Fil d’Ariane" className="mb-7 flex items-center gap-2 text-[13px] text-[var(--text-secondary)]">
+            <Link href="/" className="transition-colors hover:text-[var(--text)]">Accueil</Link>
             <span aria-hidden>›</span>
-            <Link href="/blog" className="transition-colors hover:text-[#F2F2F2]">Blog RH</Link>
+            <Link href="/blog" className="transition-colors hover:text-[var(--text)]">Blog RH</Link>
             <span aria-hidden>›</span>
-            <span className="max-w-[280px] truncate text-[#9a9a9a]">{post.title}</span>
+            <span className="max-w-[280px] truncate text-[var(--text-secondary)]">{post.title}</span>
           </nav>
 
           <div className="mb-5 flex flex-wrap items-center gap-3 text-[12.5px]">
             <span className="font-semibold uppercase tracking-[0.1em]" style={{ color: ACCENT }}>
               {CAT_LABEL[post.category] || post.category}
             </span>
-            {isSA && <span className="rounded-full border border-white/15 px-2.5 py-0.5 text-[12px] text-[#d6d6d6]">Officiel Konza RH</span>}
+            {isSA && <span className="rounded-full border border-[var(--border)] px-2.5 py-0.5 text-[12px] text-[var(--text-secondary)]">Officiel Konza RH</span>}
           </div>
 
           <h1 className="max-w-3xl text-[32px] font-bold leading-[1.1] tracking-[-0.03em] sm:text-[46px]">{post.title}</h1>
 
           {post.excerpt && (
-            <p className="mt-6 max-w-3xl border-l-2 pl-4 text-[18px] leading-relaxed text-[#b5b5b5]" style={{ borderColor: ACCENT }}>
+            <p className="mt-6 max-w-3xl border-l-2 pl-4 text-[18px] leading-relaxed text-[var(--text-secondary)]" style={{ borderColor: ACCENT }}>
               {post.excerpt}
             </p>
           )}
 
-          <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-b border-white/[0.08] pb-7">
+          <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-b border-[var(--border)] pb-7">
             <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-[14px] font-semibold">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--surface-2)] text-[14px] font-semibold">
                 {isSA ? 'K' : author[0]}
               </span>
               <div>
                 <div className="text-[14px] font-semibold">{author}</div>
-                <div className="text-[12.5px] text-[#9a9a9a]">
+                <div className="text-[12.5px] text-[var(--text-secondary)]">
                   {role}{company && !isSA ? ` · ${company}` : ''} · <time dateTime={post.publishedAt}>{date}</time>
                   {updated && <> · <span title={`Mis à jour le ${updated}`}>mis à jour le {updated}</span></>}
                   {' · '}{readingTime} min de lecture
@@ -450,8 +451,8 @@ export default function BlogPostClient({ slug, initialPost }: Props) {
                 type="button"
                 onClick={handleLike}
                 aria-pressed={liked}
-                className="flex items-center gap-2 rounded-lg border border-white/10 px-4 py-2 text-[13.5px] font-medium transition-colors hover:border-white/25"
-                style={{ color: liked ? ACCENT : '#9a9a9a' }}
+                className="flex items-center gap-2 rounded-lg border border-[var(--border)] px-4 py-2 text-[13.5px] font-medium transition-colors hover:border-[var(--border)]"
+                style={{ color: liked ? ACCENT : 'var(--text-secondary)' }}
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill={liked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
                   <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
@@ -461,8 +462,8 @@ export default function BlogPostClient({ slug, initialPost }: Props) {
               <button
                 type="button"
                 onClick={share}
-                className="rounded-lg border border-white/10 px-4 py-2 text-[13.5px] font-medium transition-colors hover:border-white/25"
-                style={{ color: copied ? ACCENT : '#9a9a9a' }}
+                className="rounded-lg border border-[var(--border)] px-4 py-2 text-[13.5px] font-medium transition-colors hover:border-[var(--border)]"
+                style={{ color: copied ? ACCENT : 'var(--text-secondary)' }}
               >
                 {copied ? 'Lien copié' : 'Partager'}
               </button>
@@ -474,7 +475,7 @@ export default function BlogPostClient({ slug, initialPost }: Props) {
       {/* ── Image de couverture ── */}
       {post.coverImage && (
         <div className="px-6 pt-8">
-          <div className="mx-auto max-w-5xl overflow-hidden rounded-2xl border border-white/[0.08]">
+          <div className="mx-auto max-w-5xl overflow-hidden rounded-2xl border border-[var(--border)]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={post.coverImage} alt={post.title} className="block max-h-[460px] w-full object-cover" />
           </div>
@@ -482,7 +483,7 @@ export default function BlogPostClient({ slug, initialPost }: Props) {
       )}
 
       {/* ── Contenu ── */}
-      <main className="px-6 pb-24 pt-10">
+      <main id="contenu" className="px-6 pb-24 pt-10">
         <div className="mx-auto grid max-w-5xl gap-12 lg:grid-cols-[minmax(0,1fr)_240px]">
           <article ref={articleRef} className="article-content" dangerouslySetInnerHTML={{ __html: contentHtml }} />
 
@@ -499,7 +500,7 @@ export default function BlogPostClient({ slug, initialPost }: Props) {
                           key={t.id}
                           href={`#${t.id}`}
                           className={`border-l-2 py-1.5 text-[13px] leading-snug transition-colors ${t.level === 3 ? 'pl-6' : 'pl-3'} ${
-                            on ? 'border-[#FF9A62] font-semibold text-[#FF9A62]' : 'border-transparent text-[#9a9a9a] hover:text-[#F2F2F2]'
+                            on ? 'border-[var(--action)] font-semibold text-[var(--action)]' : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text)]'
                           }`}
                         >
                           {t.text}
@@ -513,12 +514,12 @@ export default function BlogPostClient({ slug, initialPost }: Props) {
               <div className={cardCls}>
                 <p className={labelCls}>Auteur</p>
                 <div className="flex items-center gap-3">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-[13px] font-semibold">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--surface-2)] text-[13px] font-semibold">
                     {isSA ? 'K' : author[0]}
                   </span>
                   <div>
                     <div className="text-[13.5px] font-semibold">{author}</div>
-                    <div className="text-[12px] text-[#9a9a9a]">{role}</div>
+                    <div className="text-[12px] text-[var(--text-secondary)]">{role}</div>
                   </div>
                 </div>
               </div>
@@ -530,12 +531,12 @@ export default function BlogPostClient({ slug, initialPost }: Props) {
                     {related.map((r) => (
                       <Link key={r.id} href={`/blog/${r.slug}`} className="group block">
                         <div
-                          className="mb-1 text-[13.5px] font-semibold leading-snug transition-colors group-hover:text-[#FF9A62]"
+                          className="mb-1 text-[13.5px] font-semibold leading-snug transition-colors group-hover:text-[var(--action)]"
                           style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
                         >
                           {r.title}
                         </div>
-                        <div className="text-[12px] text-[#6f6f6f]">
+                        <div className="text-[12px] text-[var(--text-secondary)]">
                           {new Date(r.publishedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                         </div>
                       </Link>
@@ -546,13 +547,13 @@ export default function BlogPostClient({ slug, initialPost }: Props) {
 
               <div className={cardCls}>
                 <p className="mb-1.5 text-[13.5px] font-semibold">Gérez la paie de votre entreprise</p>
-                <p className="mb-4 text-[12.5px] leading-relaxed text-[#9a9a9a]">Bulletins PDF, CNSS, CAMU, congés, selon le droit congolais.</p>
-                <Link href="/auth/register" className="block rounded-lg bg-[#FAFAFA] px-4 py-2.5 text-center text-[13px] font-semibold text-black transition-colors hover:bg-white">
+                <p className="mb-4 text-[12.5px] leading-relaxed text-[var(--text-secondary)]">Bulletins PDF, CNSS, CAMU, congés, selon le droit congolais.</p>
+                <Link href="/auth/register" className="block rounded-lg bg-[var(--text)] px-4 py-2.5 text-center text-[13px] font-semibold text-[var(--surface)] transition-colors hover:bg-[var(--surface-2)]">
                   Essayer Konza RH
                 </Link>
               </div>
 
-              <Link href="/blog" className="rounded-lg border border-white/10 px-4 py-2.5 text-center text-[13px] font-medium text-[#9a9a9a] transition-colors hover:border-white/25 hover:text-[#F2F2F2]">
+              <Link href="/blog" className="rounded-lg border border-[var(--border)] px-4 py-2.5 text-center text-[13px] font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--border)] hover:text-[var(--text)]">
                 ← Retour au blog
               </Link>
             </div>
@@ -563,12 +564,12 @@ export default function BlogPostClient({ slug, initialPost }: Props) {
         <div className="mx-auto mt-12 flex max-w-5xl flex-col gap-4 lg:hidden">
           <div className={cardCls}>
             <p className="mb-1.5 text-[14px] font-semibold">Gérez la paie de votre entreprise</p>
-            <p className="mb-4 text-[13px] text-[#9a9a9a]">Bulletins PDF, CNSS, CAMU, congés, selon le droit congolais.</p>
-            <Link href="/auth/register" className="inline-block rounded-lg bg-[#FAFAFA] px-5 py-2.5 text-[13.5px] font-semibold text-black">
+            <p className="mb-4 text-[13px] text-[var(--text-secondary)]">Bulletins PDF, CNSS, CAMU, congés, selon le droit congolais.</p>
+            <Link href="/auth/register" className="inline-block rounded-lg bg-[var(--text)] px-5 py-2.5 text-[13.5px] font-semibold text-[var(--surface)]">
               Essayer Konza RH
             </Link>
           </div>
-          <Link href="/blog" className="text-center text-[14px] text-[#9a9a9a] hover:text-[#F2F2F2]">← Retour au blog</Link>
+          <Link href="/blog" className="text-center text-[14px] text-[var(--text-secondary)] hover:text-[var(--text)]">← Retour au blog</Link>
         </div>
       </main>
 
@@ -576,43 +577,43 @@ export default function BlogPostClient({ slug, initialPost }: Props) {
 
       {/* Typographie du corps d'article (limitée à .article-content : plus de reset global) */}
       <style>{`
-        html{scroll-behavior:smooth}
-        .article-content{font-size:16.5px;color:#bdbdbd;line-height:1.85}
+        .article-content{scroll-behavior:smooth}
+        .article-content{font-size:16.5px;color:var(--text-secondary);line-height:1.85}
         .article-content h2{
-          scroll-margin-top:100px;font-size:clamp(22px,2.6vw,30px);font-weight:700;color:#F2F2F2;
-          letter-spacing:-0.02em;margin:48px 0 16px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.08);
+          scroll-margin-top:100px;font-size:clamp(22px,2.6vw,30px);font-weight:700;color:var(--text);
+          letter-spacing:-0.02em;margin:48px 0 16px;padding-top:12px;border-top:1px solid var(--border);
         }
         .article-content h2:first-child{border-top:none;padding-top:0;margin-top:0}
-        .article-content h3{scroll-margin-top:100px;font-size:21px;font-weight:650;color:#F2F2F2;margin:32px 0 12px}
-        .article-content h4{font-size:17px;font-weight:650;color:#F2F2F2;margin:24px 0 8px}
-        .article-content p{margin:0 0 18px;font-size:16.5px;color:#bdbdbd;line-height:1.85}
-        .article-content strong{color:#F2F2F2;font-weight:650}
+        .article-content h3{scroll-margin-top:100px;font-size:21px;font-weight:650;color:var(--text);margin:32px 0 12px}
+        .article-content h4{font-size:17px;font-weight:650;color:var(--text);margin:24px 0 8px}
+        .article-content p{margin:0 0 18px;font-size:16.5px;color:var(--text-secondary);line-height:1.85}
+        .article-content strong{color:var(--text);font-weight:650}
         .article-content em{font-style:italic}
-        .article-content code{background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px;font-family:ui-monospace,monospace;font-size:13.5px;color:${ACCENT}}
+        .article-content code{background:var(--border);padding:2px 6px;border-radius:4px;font-family:ui-monospace,monospace;font-size:13.5px;color:${ACCENT}}
         .article-content a{color:${ACCENT};text-decoration:underline;text-underline-offset:3px}
-        .article-content a:hover{color:#FFB894}
-        .article-content hr{border:none;border-top:1px solid rgba(255,255,255,0.08);margin:32px 0}
+        .article-content a:hover{color:var(--brand-strong)}
+        .article-content hr{border:none;border-top:1px solid var(--border);margin:32px 0}
 
         .article-content ul,.article-content ol{margin:0 0 20px;padding-left:0;list-style:none}
-        .article-content ul li,.article-content ol li{position:relative;padding-left:28px;margin-bottom:10px;font-size:16.5px;line-height:1.7;color:#bdbdbd}
+        .article-content ul li,.article-content ol li{position:relative;padding-left:28px;margin-bottom:10px;font-size:16.5px;line-height:1.7;color:var(--text-secondary)}
         .article-content ul li::before{content:'';position:absolute;left:6px;top:12px;width:6px;height:6px;border-radius:50%;background:${ACCENT}}
         .article-content ol{counter-reset:kz-ol}
         .article-content ol li{counter-increment:kz-ol}
         .article-content ol li::before{
           content:counter(kz-ol);position:absolute;left:0;top:3px;width:20px;height:20px;border-radius:6px;
-          background:rgba(255,154,98,0.14);color:${ACCENT};font-size:11.5px;font-weight:700;display:flex;align-items:center;justify-content:center;
+          background:var(--brand-soft);color:${ACCENT};font-size:11.5px;font-weight:700;display:flex;align-items:center;justify-content:center;
         }
 
-        .article-content blockquote{margin:24px 0;padding:16px 20px;border-left:3px solid ${ACCENT};background:rgba(255,154,98,0.06);border-radius:0 10px 10px 0}
-        .article-content blockquote p{font-style:italic;color:#bdbdbd;margin:0 0 6px;font-size:15.5px}
+        .article-content blockquote{margin:24px 0;padding:16px 20px;border-left:3px solid ${ACCENT};background:var(--brand-soft);border-radius:0 10px 10px 0}
+        .article-content blockquote p{font-style:italic;color:var(--text-secondary);margin:0 0 6px;font-size:15.5px}
         .article-content blockquote p:last-child{margin-bottom:0}
 
-        .article-table-wrap{margin:24px 0;overflow-x:auto;border:1px solid rgba(255,255,255,0.08);border-radius:12px}
+        .article-table-wrap{margin:24px 0;overflow-x:auto;border:1px solid var(--border);border-radius:12px}
         .article-content table{width:100%;border-collapse:collapse;font-size:14px}
-        .article-content thead th{background:rgba(255,255,255,0.04);color:#F2F2F2;font-weight:650;text-align:left;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.08);white-space:nowrap}
-        .article-content tbody td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.08);color:#bdbdbd}
+        .article-content thead th{background:var(--surface-2);color:var(--text);font-weight:650;text-align:left;padding:10px 14px;border-bottom:1px solid var(--border);white-space:nowrap}
+        .article-content tbody td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text-secondary)}
         .article-content tbody tr:last-child td{border-bottom:none}
-        .article-content tbody tr:hover{background:rgba(255,255,255,0.02)}
+        .article-content tbody tr:hover{background:var(--surface-2)}
         @media(max-width:768px){.article-content{font-size:15.5px}.article-content p,.article-content li{font-size:15.5px!important}}
       `}</style>
     </div>

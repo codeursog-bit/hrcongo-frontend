@@ -29,7 +29,11 @@ import { KonzaLoader } from '@/components/ui/KonzaLoader';
 import { printReport } from '@/lib/report-print';
 import { downloadJournalPDF } from '@/lib/payroll-journal-pdf';
 import { MONTHS_FR } from '@/lib/payroll-journal-columns';
-import type { JournalRow, PayrollJournal } from '@/types/payroll-journal';
+import type { JournalRow, PayrollJournal, PayrollCostReport } from '@/types/payroll-journal';
+import { PayrollCostOverview } from '@/components/payroll-journal/PayrollCostOverview';
+import { PayrollCostDetails } from '@/components/payroll-journal/PayrollCostDetails';
+import { PayrollCostTrends } from '@/components/payroll-journal/PayrollCostTrends';
+import { PayrollCostEmployees } from '@/components/payroll-journal/PayrollCostEmployees';
 import JournalDashboard from '@/components/payroll-journal/JournalDashboard';
 import JournalTable from '@/components/payroll-journal/JournalTable';
 import JournalPrintable from '@/components/payroll-journal/JournalPrintable';
@@ -50,6 +54,8 @@ function JournalPaiePage() {
   const now = new Date();
   const [period, setPeriod] = useState({ month: now.getMonth() + 1, year: now.getFullYear() });
   const [journal, setJournal] = useState<PayrollJournal | null>(null);
+  const [view, setView] = useState<'costs' | 'journal'>('costs');
+  const [costReport, setCostReport] = useState<PayrollCostReport | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -64,12 +70,18 @@ function JournalPaiePage() {
   const loadData = useCallback(
     async (showLoader = true) => {
       if (showLoader) setIsLoading(true);
+      if (showLoader) { setJournal(null); setCostReport(null); }
       setLoadError(null);
       try {
+        if (view === 'costs') {
+          const data = await api.get<PayrollCostReport>(`/payroll-journal/costs?month=${period.month}&year=${period.year}`);
+          setCostReport(data);
+        } else {
         const data = await api.get<PayrollJournal>(
           `/payroll-journal?month=${period.month}&year=${period.year}`,
         );
         setJournal(data);
+        }
       } catch (e: any) {
         setLoadError(e?.message || 'Erreur de chargement');
         if (showLoader) setJournal(null);
@@ -77,7 +89,7 @@ function JournalPaiePage() {
         if (showLoader) setIsLoading(false);
       }
     },
-    [period],
+    [period, view],
   );
 
   useEffect(() => {
@@ -234,6 +246,10 @@ function JournalPaiePage() {
         </div>
 
         <RapportsSubNav active="/rapports/journal-paie" />
+        <div className="mt-5 flex gap-2" aria-label="Vue du rapport">
+          {([['costs', 'Analyse des coûts'], ['journal', 'Journal complet et documents']] as const).map(([key, label]) => <button key={key} aria-pressed={view === key} onClick={() => setView(key)} className={`rounded-xl px-4 py-3 text-sm font-medium ${view === key ? 'bg-[var(--brand-soft)] text-[var(--action)]' : 'bg-[var(--surface)] text-[var(--text-muted)]'}`}>{label}</button>)}
+        </div>
+        {view === 'costs' && <p className="mt-3 text-xs text-[var(--text-muted)]">Les impressions, exports et saisies de paie étrangère restent disponibles dans « Journal complet et documents ».</p>}
 
         {actionError && (
           <div className="mt-4 flex items-start gap-3 p-4 bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))] border border-[var(--border)] rounded-2xl">
@@ -253,6 +269,8 @@ function JournalPaiePage() {
       {/* ── Contenu ─────────────────────────────────────────────────── */}
       {isLoading ? (
         <KonzaLoader variant="section" />
+      ) : view === 'costs' ? (
+        costReport ? <div className="space-y-5"><PayrollCostOverview journal={costReport}/><PayrollCostDetails journal={costReport}/><PayrollCostTrends journal={costReport}/><PayrollCostEmployees key={`${period.month}-${period.year}`} month={period.month} year={period.year}/></div> : null
       ) : !journal || journal.rows.length === 0 ? (
         <div className="bg-[var(--surface)] rounded-2xl p-12 border border-[var(--border)] text-center text-[var(--text-muted)] reports-card">
           Aucun bulletin trouvé pour cette période.

@@ -10,7 +10,7 @@
 // Vidéos lues DIRECTEMENT sur le site (YouTube iframe embed), pas redirect
 // Miniatures cliquables + modale description + player intégré
 // Vrais barèmes ITS 2026 + CNSS exacts
-// Fond #050607 identique à la landing
+// Fond var(--bg) identique à la landing
 // ============================================================================
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -22,6 +22,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { Navbar } from '@/components/landing/Navbar';
+import s from '@/components/landing/PublicSite.module.css';
 import { Footer } from '@/components/landing/Footer';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -140,16 +141,16 @@ function SectionHead({
   badge?: { text: string; type: 'req' | 'opt' | 'crit' };
 }) {
   const badgeClass = {
-    req:  'bg-[#8B8F98]/10 text-[#8B8F98] border-[#8B8F98]/20',
-    opt:  'bg-[#FF9A62]/10 text-[#FF9A62] border-[#FF9A62]/20',
+    req:  'bg-[var(--text-secondary)]/10 text-[var(--text-secondary)] border-[var(--text-secondary)]/20',
+    opt:  'bg-[var(--brand-soft)] text-[var(--action)] border-[var(--border)]',
     crit: 'bg-red-500/10 text-red-400 border-red-500/20',
   }[badge?.type ?? 'req'];
 
   return (
-    <div className="flex items-end gap-3 mb-6 pb-3 border-b border-white/[0.06]">
+    <div className="flex items-end gap-3 mb-6 pb-3 border-b border-[var(--border)]">
       <div>
-        <span className="block font-mono text-[11px] text-[#8B8F98] mb-0.5">{num}</span>
-        <h2 className="text-[1.3rem] font-bold tracking-tight text-white">{title}</h2>
+        <span className="block font-mono text-[11px] text-[var(--text-secondary)] mb-0.5">{num}</span>
+        <h2 className="text-[1.3rem] font-bold tracking-tight text-[var(--text)]">{title}</h2>
       </div>
       {badge && (
         <span className={`font-mono text-[10px] px-2 py-0.5 rounded border mb-0.5 font-semibold ${badgeClass}`}>
@@ -163,11 +164,11 @@ function SectionHead({
 function PathCrumb({ path }: { path: string }) {
   const parts = path.split('→').map(p => p.trim());
   return (
-    <div className="inline-flex items-center gap-1 font-mono text-[11px] bg-white/[0.04] border border-white/10 rounded-md px-2.5 py-1 text-[#8B8F98] mb-4">
+    <div className="inline-flex items-center gap-1 font-mono text-[11px] bg-[var(--surface-2)] border border-[var(--border)] rounded-md px-2.5 py-1 text-[var(--text-secondary)] mb-4">
       {parts.map((p, i) => (
         <span key={i} className="flex items-center gap-1">
-          {i > 0 && <span className="text-[#5A5E66] mx-0.5">›</span>}
-          <span className={i === parts.length - 1 ? 'text-[#FF9A62]' : ''}>{p}</span>
+          {i > 0 && <span className="text-[var(--text-secondary)] mx-0.5">›</span>}
+          <span className={i === parts.length - 1 ? 'text-[var(--action)]' : ''}>{p}</span>
         </span>
       ))}
     </div>
@@ -176,23 +177,23 @@ function PathCrumb({ path }: { path: string }) {
 
 function GuideCard({ icon: Icon, iconColor, title, steps }: GuideCardProps) {
   const colorClass = {
-    cyan:  'bg-[#FF9A62]/10 text-[#FF9A62]',
-    green: 'bg-[#FF9A62]/10 text-[#FF9A62]',
-    amber: 'bg-[#8B8F98]/10 text-[#8B8F98]',
+    cyan:  'bg-[var(--brand-soft)] text-[var(--action)]',
+    green: 'bg-[var(--brand-soft)] text-[var(--action)]',
+    amber: 'bg-[var(--text-secondary)]/10 text-[var(--text-secondary)]',
   }[iconColor];
 
   return (
-    <div className="bg-[#0c0c0d] border border-white/[0.06] rounded-2xl p-5 mb-3 hover:border-white/10 transition-colors">
+    <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 mb-3 hover:border-[var(--border)] transition-colors">
       <div className="flex items-center gap-2 mb-4">
         <span className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${colorClass}`}>
           <Icon size={15} />
         </span>
-        <span className="text-sm font-semibold text-white">{title}</span>
+        <span className="text-sm font-semibold text-[var(--text)]">{title}</span>
       </div>
       <ul className="space-y-0">
         {steps.map((s, i) => (
-          <li key={i} className="flex gap-2.5 items-start text-[13px] text-[#8B8F98] py-2 border-b border-white/[0.04] last:border-0">
-            <span className="w-5 h-5 rounded-full bg-white/[0.04] border border-white/10 flex-shrink-0 flex items-center justify-center text-[10px] font-mono text-[#FF9A62] mt-0.5">
+          <li key={i} className="flex gap-2.5 items-start text-[13px] text-[var(--text-secondary)] py-2 border-b border-[var(--border)] last:border-0">
+            <span className="w-5 h-5 rounded-full bg-[var(--surface-2)] border border-[var(--border)] flex-shrink-0 flex items-center justify-center text-[10px] font-mono text-[var(--action)] mt-0.5">
               {i + 1}
             </span>
             <span>{s.text}</span>
@@ -205,9 +206,9 @@ function GuideCard({ icon: Icon, iconColor, title, steps }: GuideCardProps) {
 
 function InfoBlock({ type, title, children }: { type: AlertType; title: string; children: React.ReactNode }) {
   const styles: Record<AlertType, string> = {
-    tip:  'bg-[#FF9A62]/[0.07] border-l-2 border-[#FF9A62] text-[#FF9A62]',
-    warn: 'bg-[#8B8F98]/[0.07]   border-l-2 border-[#8B8F98]  text-[#8B8F98]',
-    note: 'bg-[#FF9A62]/[0.06]    border-l-2 border-[#FF9A62]   text-[#FF9A62]',
+    tip:  'bg-[var(--brand-soft)] border-l-2 border-[var(--action)] text-[var(--action)]',
+    warn: 'bg-[var(--text-secondary)]/[0.07]   border-l-2 border-[var(--text-secondary)]  text-[var(--text-secondary)]',
+    note: 'bg-[var(--brand-soft)]    border-l-2 border-[var(--action)]   text-[var(--action)]',
   };
   const icons: Record<AlertType, LucideIcon> = {
     tip: Zap, warn: AlertTriangle, note: FileText,
@@ -227,18 +228,18 @@ function InfoBlock({ type, title, children }: { type: AlertType; title: string; 
 function FaqItem({ q, children }: { q: string; children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="border-b border-white/[0.06] last:border-0">
+    <div className="border-b border-[var(--border)] last:border-0">
       <button
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between gap-4 py-4 px-5 text-left text-[13.5px] font-medium text-white hover:bg-white/[0.02] transition-colors"
+        className="w-full flex items-center justify-between gap-4 py-4 px-5 text-left text-[13.5px] font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
       >
         {q}
-        <span className={`w-5 h-5 rounded-full border border-white/20 flex items-center justify-center text-[#8B8F98] font-mono text-sm flex-shrink-0 transition-all duration-200 ${open ? 'rotate-45 bg-[#FF9A62]/10 border-[#FF9A62]/40 text-[#FF9A62]' : ''}`}>
+        <span className={`w-5 h-5 rounded-full border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] font-mono text-sm flex-shrink-0 transition-all duration-200 ${open ? 'rotate-45 bg-[var(--brand-soft)] border-[var(--border)] text-[var(--action)]' : ''}`}>
           +
         </span>
       </button>
       {open && (
-        <div className="px-5 pb-4 text-[13px] text-[#8B8F98] leading-relaxed">
+        <div className="px-5 pb-4 text-[13px] text-[var(--text-secondary)] leading-relaxed">
           {children}
         </div>
       )}
@@ -257,19 +258,20 @@ function Screenshots({
   items: ScreenshotItem[];
   onOpen: (src: string, alt: string) => void;
 }) {
+  if (!items.some(item=>item.src.startsWith('/images/produit/'))) return null;
   return (
     <div className="mt-4 mb-2">
-      <p className="text-[10px] font-mono uppercase tracking-widest text-[#8B8F98] mb-2.5">
+      <p className="text-[10px] font-mono uppercase tracking-widest text-[var(--text-secondary)] mb-2.5">
         {label}
       </p>
       <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-thin">
-        {items.map((item, i) => (
+        {items.filter(item=>item.src.startsWith('/images/produit/')).map((item, i) => (
           <button
             key={i}
             onClick={() => onOpen(item.src, item.alt)}
-            className="flex-shrink-0 w-52 rounded-xl overflow-hidden border border-white/10 bg-white/[0.03] hover:border-[#FF9A62]/30 hover:translate-y-[-2px] transition-all text-left"
+            className="flex-shrink-0 w-52 rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--surface-2)] hover:border-[var(--border)]  transition-all text-left"
           >
-            <div className="w-full aspect-video bg-gradient-to-br from-white/[0.04] to-white/[0.02] flex items-center justify-center relative overflow-hidden">
+            <div className="w-full aspect-video bg-[var(--surface-2)] flex items-center justify-center relative overflow-hidden">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={item.src}
@@ -282,12 +284,12 @@ function Screenshots({
                   if (ph) ph.style.display = 'flex';
                 }}
               />
-              <div className="absolute inset-0 flex-col items-center justify-center gap-1 text-[#8B8F98] text-xs font-mono hidden">
+              <div className="absolute inset-0 flex-col items-center justify-center gap-1 text-[var(--text-secondary)] text-xs font-mono hidden">
                 <span className="text-2xl opacity-30"></span>
                 <span className="text-[10px]">{item.alt}</span>
               </div>
             </div>
-            <div className="px-2.5 py-1.5 text-[11px] text-[#8B8F98] font-medium border-t border-white/[0.04]">
+            <div className="px-2.5 py-1.5 text-[11px] text-[var(--text-secondary)] font-medium border-t border-[var(--border)]">
               {item.caption}
             </div>
           </button>
@@ -312,22 +314,22 @@ function VideoCard({
     : `https://img.youtube.com/vi/${video.youtubeId}/hqdefault.jpg`;
 
   const moduleBadgeColor: Record<string, string> = {
-    'Démarrage': 'bg-[#FF9A62]/15 text-[#FF9A62] border-[#FF9A62]/20',
-    'Employés':  'bg-[#FF9A62]/15 text-[#FF9A62] border-[#FF9A62]/20',
-    'Présences': 'bg-[#FF9A62]/15 text-[#FF9A62] border-[#FF9A62]/20',
-    'Paie':      'bg-[#8B8F98]/15 text-[#8B8F98] border-[#8B8F98]/20',
-    'Congés':    'bg-[#FF9A62]/15 text-[#FF9A62] border-[#FF9A62]/20',
-    'CNSS':      'bg-[#FF9A62]/15 text-[#FF9A62] border-[#FF9A62]/20',
+    'Démarrage': 'bg-[var(--brand-soft)] text-[var(--action)] border-[var(--border)]',
+    'Employés':  'bg-[var(--brand-soft)] text-[var(--action)] border-[var(--border)]',
+    'Présences': 'bg-[var(--brand-soft)] text-[var(--action)] border-[var(--border)]',
+    'Paie':      'bg-[var(--text-secondary)]/15 text-[var(--text-secondary)] border-[var(--text-secondary)]/20',
+    'Congés':    'bg-[var(--brand-soft)] text-[var(--action)] border-[var(--border)]',
+    'CNSS':      'bg-[var(--brand-soft)] text-[var(--action)] border-[var(--border)]',
   };
-  const badgeCls = moduleBadgeColor[video.module] ?? 'bg-[#8B8F98]/15 text-[#8B8F98] border-[#8B8F98]/20';
+  const badgeCls = moduleBadgeColor[video.module] ?? 'bg-[var(--text-secondary)]/15 text-[var(--text-secondary)] border-[var(--text-secondary)]/20';
 
   return (
     <div
-      className="group bg-[#0c0c0d] border border-white/[0.06] rounded-2xl overflow-hidden hover:border-[#FF9A62]/30 hover:-translate-y-0.5 transition-all cursor-pointer"
+      className="group bg-[var(--surface)] border border-[var(--border)] rounded-2xl overflow-hidden hover:border-[var(--border)] hover:-translate-y-0.5 transition-all cursor-pointer"
       onClick={() => onOpen(video)}
     >
       {/* Thumbnail */}
-      <div className="relative w-full aspect-video bg-gradient-to-br from-white/[0.04] to-white/[0.02] overflow-hidden">
+      <div className="relative w-full aspect-video bg-[var(--surface-2)] overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={thumbSrc}
@@ -341,7 +343,7 @@ function VideoCard({
           }}
         />
         {/* Placeholder si image absente */}
-        <div className="absolute inset-0 flex-col items-center justify-center gap-2 text-[#5A5E66] font-mono hidden">
+        <div className="absolute inset-0 flex-col items-center justify-center gap-2 text-[var(--text-secondary)] font-mono hidden">
           <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" opacity="0.3">
             <path d="M21 3H3C1.9 3 1 3.9 1 5v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 13l-5-4 5-4v8z"/>
           </svg>
@@ -349,8 +351,8 @@ function VideoCard({
         </div>
 
         {/* Overlay sombre + bouton play */}
-        <div className="absolute inset-0 bg-[#050607]/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-          <div className="w-14 h-14 rounded-full bg-white/10 border-2 border-white/20 flex items-center justify-center backdrop-blur-sm group-hover:bg-[#FF9A62] group-hover:border-[#FF9A62] transition-colors duration-200 shadow-lg">
+        <div className="absolute inset-0 bg-[var(--bg)]/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <div className="w-14 h-14 rounded-full bg-[var(--surface-2)] border-2 border-[var(--border)] flex items-center justify-center backdrop-blur-sm group-hover:bg-[var(--action)] group-hover:border-[var(--action)] transition-colors duration-200 shadow-lg">
             <svg className="ml-1" width="22" height="22" viewBox="0 0 24 24" fill="white">
               <polygon points="5,3 19,12 5,21" />
             </svg>
@@ -359,7 +361,7 @@ function VideoCard({
 
         {/* Always-visible play icon (subtile) */}
         <div className="absolute inset-0 flex items-center justify-center group-hover:opacity-0 transition-opacity">
-          <div className="w-11 h-11 rounded-full bg-[#050607]/60 border border-white/20 flex items-center justify-center backdrop-blur-sm">
+          <div className="w-11 h-11 rounded-full bg-[var(--bg)]/60 border border-[var(--border)] flex items-center justify-center backdrop-blur-sm">
             <svg className="ml-0.5" width="16" height="16" viewBox="0 0 24 24" fill="white">
               <polygon points="5,3 19,12 5,21" />
             </svg>
@@ -371,20 +373,20 @@ function VideoCard({
           {video.module}
         </span>
         {/* Duration badge */}
-        <span className="absolute bottom-2 right-2.5 text-[10px] font-mono font-semibold bg-[#050607]/80 text-white px-1.5 py-0.5 rounded">
+        <span className="absolute bottom-2 right-2.5 text-[10px] font-mono font-semibold bg-[var(--bg)]/80 text-[var(--text)] px-1.5 py-0.5 rounded">
           {video.duration}
         </span>
       </div>
 
       {/* Info */}
       <div className="p-4">
-        <p className="text-[13.5px] font-semibold text-white mb-1.5 leading-snug group-hover:text-[#FF9A62] transition-colors">
+        <p className="text-[13.5px] font-semibold text-[var(--text)] mb-1.5 leading-snug group-hover:text-[var(--action)] transition-colors">
           {video.title}
         </p>
-        <p className="text-[12px] text-[#8B8F98] leading-relaxed line-clamp-2">
+        <p className="text-[12px] text-[var(--text-secondary)] leading-relaxed line-clamp-2">
           {video.desc}
         </p>
-        <div className="mt-3 flex items-center gap-1.5 text-[11px] text-[#FF9A62] font-semibold">
+        <div className="mt-3 flex items-center gap-1.5 text-[11px] text-[var(--action)] font-semibold">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
             <polygon points="5,3 19,12 5,21" />
           </svg>
@@ -415,30 +417,30 @@ function VideoModal({
   }, [onClose]);
 
   const moduleBadgeColor: Record<string, string> = {
-    'Démarrage': 'bg-[#FF9A62]/15 text-[#FF9A62] border-[#FF9A62]/20',
-    'Employés':  'bg-[#FF9A62]/15 text-[#FF9A62] border-[#FF9A62]/20',
-    'Présences': 'bg-[#FF9A62]/15 text-[#FF9A62] border-[#FF9A62]/20',
-    'Paie':      'bg-[#8B8F98]/15 text-[#8B8F98] border-[#8B8F98]/20',
-    'Congés':    'bg-[#FF9A62]/15 text-[#FF9A62] border-[#FF9A62]/20',
-    'CNSS':      'bg-[#FF9A62]/15 text-[#FF9A62] border-[#FF9A62]/20',
+    'Démarrage': 'bg-[var(--brand-soft)] text-[var(--action)] border-[var(--border)]',
+    'Employés':  'bg-[var(--brand-soft)] text-[var(--action)] border-[var(--border)]',
+    'Présences': 'bg-[var(--brand-soft)] text-[var(--action)] border-[var(--border)]',
+    'Paie':      'bg-[var(--text-secondary)]/15 text-[var(--text-secondary)] border-[var(--text-secondary)]/20',
+    'Congés':    'bg-[var(--brand-soft)] text-[var(--action)] border-[var(--border)]',
+    'CNSS':      'bg-[var(--brand-soft)] text-[var(--action)] border-[var(--border)]',
   };
-  const badgeCls = moduleBadgeColor[video.module] ?? 'bg-[#8B8F98]/15 text-[#8B8F98] border-[#8B8F98]/20';
+  const badgeCls = moduleBadgeColor[video.module] ?? 'bg-[var(--text-secondary)]/15 text-[var(--text-secondary)] border-[var(--text-secondary)]/20';
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(2,6,23,0.92)', backdropFilter: 'blur(8px)' }}
+      style={{ background: 'color-mix(in srgb, var(--text) 70%, transparent)' }}
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-[860px] rounded-2xl overflow-hidden border border-white/10 shadow-2xl"
-        style={{ background: '#0c0c0d' }}
+        className="relative w-full max-w-[860px] rounded-2xl overflow-hidden border border-[var(--border)] shadow-2xl"
+        style={{ background: 'var(--surface)' }}
         onClick={e => e.stopPropagation()}
       >
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-white/[0.08] border border-white/15 text-white flex items-center justify-center hover:bg-white/15 transition-colors text-sm"
+          className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text)] flex items-center justify-center hover:bg-[var(--surface-2)] transition-colors text-sm"
         >
           ✕
         </button>
@@ -455,21 +457,21 @@ function VideoModal({
         </div>
 
         {/* Description */}
-        <div className="p-5 border-t border-white/[0.06]">
+        <div className="p-5 border-t border-[var(--border)]">
           <div className="flex items-start gap-3">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-2 flex-wrap">
                 <span className={`text-[10px] font-mono font-semibold border px-2 py-0.5 rounded-full ${badgeCls}`}>
                   {video.module}
                 </span>
-                <span className="text-[10px] font-mono text-[#8B8F98] bg-white/[0.04] border border-white/[0.06] px-2 py-0.5 rounded">
+                <span className="text-[10px] font-mono text-[var(--text-secondary)] bg-[var(--surface-2)] border border-[var(--border)] px-2 py-0.5 rounded">
                   {video.duration}
                 </span>
               </div>
-              <h3 className="text-[1rem] font-bold text-white mb-2 leading-snug">
+              <h3 className="text-[1rem] font-bold text-[var(--text)] mb-2 leading-snug">
                 {video.title}
               </h3>
-              <p className="text-[13px] text-[#8B8F98] leading-relaxed">
+              <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed">
                 {video.longDesc ?? video.desc}
               </p>
             </div>
@@ -491,12 +493,12 @@ function Lightbox({ src, alt, onClose }: { src: string; alt: string; onClose: ()
 
   return (
     <div
-      className="fixed inset-0 bg-[#050607]/95 backdrop-blur-sm z-50 flex items-center justify-center"
+      className="fixed inset-0 bg-[var(--bg)]/95 backdrop-blur-sm z-50 flex items-center justify-center"
       onClick={onClose}
     >
       <button
         onClick={onClose}
-        className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/[0.08] border border-white/15 text-white flex items-center justify-center hover:bg-white/15 transition-colors text-sm"
+        className="absolute top-4 right-4 w-9 h-9 rounded-full bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text)] flex items-center justify-center hover:bg-[var(--surface-2)] transition-colors text-sm"
       >
         ✕
       </button>
@@ -504,7 +506,7 @@ function Lightbox({ src, alt, onClose }: { src: string; alt: string; onClose: ()
       <img
         src={src}
         alt={alt}
-        className="max-w-[90vw] max-h-[85vh] rounded-xl border border-white/10 object-contain"
+        className="max-w-[90vw] max-h-[85vh] rounded-xl border border-[var(--border)] object-contain"
         onClick={e => e.stopPropagation()}
       />
     </div>
@@ -522,21 +524,21 @@ function ITSTable() {
     { tranche: '> 5 000 000 FCFA',              taux: '30 %',            note: '' },
   ];
   return (
-    <div className="overflow-x-auto rounded-xl border border-white/[0.06] mb-3">
+    <div className="overflow-x-auto rounded-xl border border-[var(--border)] mb-3">
       <table className="w-full text-[12.5px]">
         <thead>
-          <tr className="bg-white/[0.04] border-b border-white/[0.06]">
-            <th className="text-left px-4 py-2.5 text-[#8B8F98] font-semibold">Tranche annuelle (par part fiscale)</th>
-            <th className="text-left px-4 py-2.5 text-[#8B8F98] font-semibold">Taux</th>
-            <th className="text-left px-4 py-2.5 text-[#8B8F98] font-semibold"></th>
+          <tr className="bg-[var(--surface-2)] border-b border-[var(--border)]">
+            <th className="text-left px-4 py-2.5 text-[var(--text-secondary)] font-semibold">Tranche annuelle (par part fiscale)</th>
+            <th className="text-left px-4 py-2.5 text-[var(--text-secondary)] font-semibold">Taux</th>
+            <th className="text-left px-4 py-2.5 text-[var(--text-secondary)] font-semibold"></th>
           </tr>
         </thead>
         <tbody>
           {rows.map((r, i) => (
-            <tr key={i} className="border-b border-white/[0.04] last:border-0 hover:bg-white/[0.02]">
-              <td className="px-4 py-2.5 text-[#FAFAFA] font-mono">{r.tranche}</td>
-              <td className="px-4 py-2.5 text-[#FF9A62] font-bold font-mono">{r.taux}</td>
-              <td className="px-4 py-2.5 text-[#8B8F98] text-[11px]">{r.note}</td>
+            <tr key={i} className="border-b border-[var(--border)] last:border-0 hover:bg-[var(--surface-2)]">
+              <td className="px-4 py-2.5 text-[var(--text)] font-mono">{r.tranche}</td>
+              <td className="px-4 py-2.5 text-[var(--action)] font-bold font-mono">{r.taux}</td>
+              <td className="px-4 py-2.5 text-[var(--text-secondary)] text-[11px]">{r.note}</td>
             </tr>
           ))}
         </tbody>
@@ -549,90 +551,90 @@ function CNSSTable() {
   return (
     <div className="space-y-3">
       {/* Salarié */}
-      <div className="overflow-x-auto rounded-xl border border-white/[0.06]">
+      <div className="overflow-x-auto rounded-xl border border-[var(--border)]">
         <table className="w-full text-[12.5px]">
           <thead>
-            <tr className="bg-white/[0.04] border-b border-white/[0.06]">
-              <th colSpan={3} className="text-left px-4 py-2.5 text-[#FF9A62] font-semibold text-[11px] uppercase tracking-wider">
+            <tr className="bg-[var(--surface-2)] border-b border-[var(--border)]">
+              <th colSpan={3} className="text-left px-4 py-2.5 text-[var(--action)] font-semibold text-[11px] uppercase tracking-wider">
                 CNSS Salarié
               </th>
             </tr>
-            <tr className="bg-white/[0.02] border-b border-white/[0.06]">
-              <th className="text-left px-4 py-2 text-[#8B8F98] font-medium">Cotisation</th>
-              <th className="text-left px-4 py-2 text-[#8B8F98] font-medium">Taux</th>
-              <th className="text-left px-4 py-2 text-[#8B8F98] font-medium">Plafond</th>
+            <tr className="bg-[var(--surface-2)] border-b border-[var(--border)]">
+              <th className="text-left px-4 py-2 text-[var(--text-secondary)] font-medium">Cotisation</th>
+              <th className="text-left px-4 py-2 text-[var(--text-secondary)] font-medium">Taux</th>
+              <th className="text-left px-4 py-2 text-[var(--text-secondary)] font-medium">Plafond</th>
             </tr>
           </thead>
           <tbody>
-            <tr className="border-b border-white/[0.04]">
-              <td className="px-4 py-2.5 text-[#FAFAFA]">Pension vieillesse</td>
-              <td className="px-4 py-2.5 text-[#FF9A62] font-bold font-mono">4 %</td>
-              <td className="px-4 py-2.5 text-[#8B8F98] font-mono">Plafonné à 1 200 000 FCFA</td>
+            <tr className="border-b border-[var(--border)]">
+              <td className="px-4 py-2.5 text-[var(--text)]">Pension vieillesse</td>
+              <td className="px-4 py-2.5 text-[var(--action)] font-bold font-mono">4 %</td>
+              <td className="px-4 py-2.5 text-[var(--text-secondary)] font-mono">Plafonné à 1 200 000 FCFA</td>
             </tr>
           </tbody>
         </table>
       </div>
 
       {/* Patronal */}
-      <div className="overflow-x-auto rounded-xl border border-white/[0.06]">
+      <div className="overflow-x-auto rounded-xl border border-[var(--border)]">
         <table className="w-full text-[12.5px]">
           <thead>
-            <tr className="bg-white/[0.04] border-b border-white/[0.06]">
-              <th colSpan={3} className="text-left px-4 py-2.5 text-[#8B8F98] font-semibold text-[11px] uppercase tracking-wider">
+            <tr className="bg-[var(--surface-2)] border-b border-[var(--border)]">
+              <th colSpan={3} className="text-left px-4 py-2.5 text-[var(--text-secondary)] font-semibold text-[11px] uppercase tracking-wider">
                 CNSS Patronal — Total ≈ 20,28 %
               </th>
             </tr>
-            <tr className="bg-white/[0.02] border-b border-white/[0.06]">
-              <th className="text-left px-4 py-2 text-[#8B8F98] font-medium">Branche</th>
-              <th className="text-left px-4 py-2 text-[#8B8F98] font-medium">Taux</th>
-              <th className="text-left px-4 py-2 text-[#8B8F98] font-medium">Plafond d'assiette</th>
+            <tr className="bg-[var(--surface-2)] border-b border-[var(--border)]">
+              <th className="text-left px-4 py-2 text-[var(--text-secondary)] font-medium">Branche</th>
+              <th className="text-left px-4 py-2 text-[var(--text-secondary)] font-medium">Taux</th>
+              <th className="text-left px-4 py-2 text-[var(--text-secondary)] font-medium">Plafond d'assiette</th>
             </tr>
           </thead>
           <tbody>
-            <tr className="border-b border-white/[0.04]">
-              <td className="px-4 py-2.5 text-[#FAFAFA]">Pension vieillesse</td>
-              <td className="px-4 py-2.5 text-[#8B8F98] font-bold font-mono">8 %</td>
-              <td className="px-4 py-2.5 text-[#8B8F98] font-mono">Plafonné à 1 200 000 FCFA</td>
+            <tr className="border-b border-[var(--border)]">
+              <td className="px-4 py-2.5 text-[var(--text)]">Pension vieillesse</td>
+              <td className="px-4 py-2.5 text-[var(--text-secondary)] font-bold font-mono">8 %</td>
+              <td className="px-4 py-2.5 text-[var(--text-secondary)] font-mono">Plafonné à 1 200 000 FCFA</td>
             </tr>
-            <tr className="border-b border-white/[0.04]">
-              <td className="px-4 py-2.5 text-[#FAFAFA]">Prestations familiales</td>
-              <td className="px-4 py-2.5 text-[#8B8F98] font-bold font-mono">10 %</td>
-              <td className="px-4 py-2.5 text-[#8B8F98] font-mono">Plafonné à 600 000 FCFA</td>
+            <tr className="border-b border-[var(--border)]">
+              <td className="px-4 py-2.5 text-[var(--text)]">Prestations familiales</td>
+              <td className="px-4 py-2.5 text-[var(--text-secondary)] font-bold font-mono">10 %</td>
+              <td className="px-4 py-2.5 text-[var(--text-secondary)] font-mono">Plafonné à 600 000 FCFA</td>
             </tr>
-            <tr className="border-b border-white/[0.04]">
-              <td className="px-4 py-2.5 text-[#FAFAFA]">Accidents du travail</td>
-              <td className="px-4 py-2.5 text-[#8B8F98] font-bold font-mono">2,25 %</td>
-              <td className="px-4 py-2.5 text-[#8B8F98] font-mono">Plafonné à 600 000 FCFA</td>
+            <tr className="border-b border-[var(--border)]">
+              <td className="px-4 py-2.5 text-[var(--text)]">Accidents du travail</td>
+              <td className="px-4 py-2.5 text-[var(--text-secondary)] font-bold font-mono">2,25 %</td>
+              <td className="px-4 py-2.5 text-[var(--text-secondary)] font-mono">Plafonné à 600 000 FCFA</td>
             </tr>
           </tbody>
         </table>
       </div>
 
       {/* TUS */}
-      <div className="overflow-x-auto rounded-xl border border-white/[0.06]">
+      <div className="overflow-x-auto rounded-xl border border-[var(--border)]">
         <table className="w-full text-[12.5px]">
           <thead>
-            <tr className="bg-white/[0.04] border-b border-white/[0.06]">
-              <th colSpan={3} className="text-left px-4 py-2.5 text-[#FF9A62] font-semibold text-[11px] uppercase tracking-wider">
+            <tr className="bg-[var(--surface-2)] border-b border-[var(--border)]">
+              <th colSpan={3} className="text-left px-4 py-2.5 text-[var(--action)] font-semibold text-[11px] uppercase tracking-wider">
                 TUS — Taxe Unique sur les Salaires (7,5 % total)
               </th>
             </tr>
-            <tr className="bg-white/[0.02] border-b border-white/[0.06]">
-              <th className="text-left px-4 py-2 text-[#8B8F98] font-medium">Destinataire</th>
-              <th className="text-left px-4 py-2 text-[#8B8F98] font-medium">Taux</th>
-              <th className="text-left px-4 py-2 text-[#8B8F98] font-medium">Base</th>
+            <tr className="bg-[var(--surface-2)] border-b border-[var(--border)]">
+              <th className="text-left px-4 py-2 text-[var(--text-secondary)] font-medium">Destinataire</th>
+              <th className="text-left px-4 py-2 text-[var(--text-secondary)] font-medium">Taux</th>
+              <th className="text-left px-4 py-2 text-[var(--text-secondary)] font-medium">Base</th>
             </tr>
           </thead>
           <tbody>
-            <tr className="border-b border-white/[0.04]">
-              <td className="px-4 py-2.5 text-[#FAFAFA]">Part État / DGI</td>
-              <td className="px-4 py-2.5 text-[#FF9A62] font-bold font-mono">2,025 %</td>
-              <td className="px-4 py-2.5 text-[#8B8F98] font-mono">Salaire brut</td>
+            <tr className="border-b border-[var(--border)]">
+              <td className="px-4 py-2.5 text-[var(--text)]">Part État / DGI</td>
+              <td className="px-4 py-2.5 text-[var(--action)] font-bold font-mono">2,025 %</td>
+              <td className="px-4 py-2.5 text-[var(--text-secondary)] font-mono">Salaire brut</td>
             </tr>
             <tr>
-              <td className="px-4 py-2.5 text-[#FAFAFA]">Part CNSS</td>
-              <td className="px-4 py-2.5 text-[#FF9A62] font-bold font-mono">5,475 %</td>
-              <td className="px-4 py-2.5 text-[#8B8F98] font-mono">Salaire brut</td>
+              <td className="px-4 py-2.5 text-[var(--text)]">Part CNSS</td>
+              <td className="px-4 py-2.5 text-[var(--action)] font-bold font-mono">5,475 %</td>
+              <td className="px-4 py-2.5 text-[var(--text-secondary)] font-mono">Salaire brut</td>
             </tr>
           </tbody>
         </table>
@@ -645,7 +647,7 @@ function CNSSTable() {
 
 export default function DocsPage() {
   // Vidéos en premier par défaut
-  const [page,        setPage]        = useState<PageView>('videos');
+  const [page,        setPage]        = useState<PageView>('doc');
   const [companyMode, setCompanyMode] = useState<CompanyMode>('entreprise');
   const [activeId,    setActiveId]    = useState('vid-demarrage');
   const [lightbox,    setLightbox]    = useState<{ src: string; alt: string } | null>(null);
@@ -674,25 +676,24 @@ export default function DocsPage() {
   // ── Sidebar ──────────────────────────────────────────────────────────────
   const sidebar = (
     <aside
-      className="hidden lg:flex flex-col w-[268px] flex-shrink-0"
-      style={{ position: 'fixed', top: 64, bottom: 0, overflowY: 'auto', background: '#0c0c0d', borderRight: '1px solid rgba(255,255,255,0.08)', zIndex: 100, paddingBottom: '3rem' }}
+      className={s.docsSidebar}
     >
       {/* Brand */}
-      <div className="px-5 pt-5 pb-4 border-b border-white/[0.06]">
-        <p className="text-[10px] font-mono text-[#FF9A62] uppercase tracking-widest">Centre d'aide</p>
-        <p className="text-[11px] font-mono text-[#8B8F98] mt-0.5">v2.0 · Documentation officielle</p>
+      <div className="px-5 pt-5 pb-4 border-b border-[var(--border)]">
+        <p className="text-[10px] font-mono text-[var(--action)] uppercase tracking-widest">Centre d'aide</p>
+        <p className="text-[11px] font-mono text-[var(--text-secondary)] mt-0.5">v2.0 · Documentation officielle</p>
       </div>
 
       {/* Mode switcher — Vidéos en premier */}
-      <div className="flex gap-1 mx-3 mt-3 mb-1 bg-white/[0.04] border border-white/[0.06] rounded-xl p-1">
+      <div className="flex gap-1 mx-3 mt-3 mb-1 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl p-1">
         {(['videos', 'doc'] as const).map(v => (
           <button
             key={v}
             onClick={() => setPage(v)}
             className={`flex-1 py-1.5 text-[11.5px] font-semibold rounded-lg transition-all ${
               page === v
-                ? 'bg-gradient-to-r from-[#FF9A62] to-[#FF9A62] text-[#050607] shadow-sm'
-                : 'text-[#8B8F98] hover:text-white'
+                ? 'bg-[var(--text)] text-[var(--surface)] shadow-sm'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text)]'
             }`}
           >
             {v === 'videos' ? 'Vidéos' : 'Guide'}
@@ -703,7 +704,7 @@ export default function DocsPage() {
       {/* Nav links */}
       {currentNav.map(group => (
         <div key={group.label}>
-          <p className="px-5 pt-4 pb-1 text-[9.5px] font-bold uppercase tracking-[0.12em] text-[#5A5E66] font-mono">
+          <p className="px-5 pt-4 pb-1 text-[9.5px] font-bold uppercase tracking-[0.12em] text-[var(--text-secondary)] font-mono">
             {group.label}
           </p>
           {group.links.map(link => {
@@ -715,11 +716,11 @@ export default function DocsPage() {
                 href={link.href}
                 className={`flex items-center gap-2.5 px-5 py-[0.47rem] text-[12.5px] font-medium border-l-2 transition-all ${
                   active
-                    ? 'border-[#FF9A62] text-[#FF9A62] bg-[#FF9A62]/[0.05]'
-                    : 'border-transparent text-[#8B8F98] hover:text-[#FAFAFA] hover:bg-white/[0.03]'
+                    ? 'border-[var(--action)] text-[var(--action)] bg-[var(--brand-soft)]'
+                    : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]'
                 }`}
               >
-                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${active ? 'bg-[#FF9A62]' : 'bg-[#5A5E66]'}`} />
+                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${active ? 'bg-[var(--action)]' : 'bg-[var(--text-secondary)]'}`} />
                 {link.label}
               </a>
             );
@@ -738,8 +739,8 @@ export default function DocsPage() {
           onClick={() => setPage(v)}
           className={`px-4 py-2 text-[12.5px] font-semibold rounded-lg border transition-all ${
             page === v
-              ? 'bg-[#FF9A62]/10 border-[#FF9A62]/30 text-[#FF9A62]'
-              : 'bg-transparent border-white/10 text-[#8B8F98] hover:border-white/20 hover:text-white'
+              ? 'bg-[var(--brand-soft)] border-[var(--border)] text-[var(--action)]'
+              : 'bg-transparent border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border)] hover:text-[var(--text)]'
           }`}
         >
           {label}
@@ -893,38 +894,38 @@ export default function DocsPage() {
   const videosContent = (
     <div className={page === 'videos' ? 'block' : 'hidden'}>
       {/* Hero */}
-      <div className="mb-10 pb-8 border-b border-white/[0.06]">
-        <p className="text-[10px] font-mono text-[#FF9A62] uppercase tracking-[0.12em] mb-3">Tutoriels vidéo</p>
-        <div className="text-[1.9rem] font-semibold tracking-tight leading-tight mb-2 bg-gradient-to-br from-white to-[#8B8F98] bg-clip-text text-transparent">
+      <div className="mb-10 pb-8 border-b border-[var(--border)]">
+        <p className="text-[10px] font-mono text-[var(--action)] uppercase tracking-[0.12em] mb-3">Tutoriels vidéo</p>
+        <div className="text-[1.9rem] font-semibold tracking-tight leading-tight mb-2 text-[var(--text)]">
           Apprenez Konza RH<br />en vidéo
         </div>
-        <p className="text-[13.5px] text-[#8B8F98] max-w-md leading-relaxed">
+        <p className="text-[13.5px] text-[var(--text-secondary)] max-w-md leading-relaxed">
           Courtes vidéos de démonstration pour chaque module. Cliquez sur une vidéo pour la lire directement ici, sans quitter la page.
         </p>
         <div className="flex flex-wrap gap-2 mt-4">
-          <span className="text-[11px] font-semibold px-3 py-1 rounded-full border border-[#FF9A62]/20 bg-[#FF9A62]/[0.07] text-[#FF9A62]">
-            ▶ Lecture sur la page
+          <span className="text-[11px] font-semibold px-3 py-1 rounded-full border border-[var(--border)] bg-[var(--brand-soft)] text-[var(--action)]">
+            Lecture sur la page
           </span>
-          <span className="text-[11px] font-semibold px-3 py-1 rounded-full border border-[#FF9A62]/20 bg-[#FF9A62]/[0.07] text-[#FF9A62]">
-            ✓ {hasVideos ? `${publishedSections.reduce((acc, s) => acc + s.videos.length, 0)} tutoriels disponibles` : 'Tutoriels bientôt disponibles'}
+          <span className="text-[11px] font-semibold px-3 py-1 rounded-full border border-[var(--border)] bg-[var(--brand-soft)] text-[var(--action)]">
+            {hasVideos ? `${publishedSections.reduce((acc, s) => acc + s.videos.length, 0)} tutoriels disponibles` : 'Tutoriels bientôt disponibles'}
           </span>
         </div>
       </div>
 
       {!hasVideos && (
-        <div className="mb-14 rounded-2xl border border-white/[0.06] bg-[#0c0c0d] p-8 text-[13.5px] leading-relaxed text-[#8B8F98]">
+        <div className="mb-14 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-8 text-[13.5px] leading-relaxed text-[var(--text-secondary)]">
           Les tutoriels vidéo arrivent bientôt. En attendant, le guide écrit couvre chaque module pas à pas.
         </div>
       )}
 
       {publishedSections.map(sec => (
         <section key={sec.id} id={sec.id} className="mb-14 scroll-mt-20">
-          <div className="flex items-end gap-3 mb-5 pb-3 border-b border-white/[0.06]">
+          <div className="flex items-end gap-3 mb-5 pb-3 border-b border-[var(--border)]">
             <div>
-              <span className="block font-mono text-[10px] text-[#8B8F98] mb-0.5">{sec.label}</span>
-              <h2 className="text-[1.2rem] font-bold tracking-tight text-white">{sec.sectionTitle}</h2>
+              <span className="block font-mono text-[10px] text-[var(--text-secondary)] mb-0.5">{sec.label}</span>
+              <h2 className="text-[1.2rem] font-bold tracking-tight text-[var(--text)]">{sec.sectionTitle}</h2>
             </div>
-            <span className="ml-auto text-[11px] font-mono text-[#5A5E66] pb-0.5">
+            <span className="ml-auto text-[11px] font-mono text-[var(--text-secondary)] pb-0.5">
               {sec.videos.length} vidéo{sec.videos.length > 1 ? 's' : ''}
             </span>
           </div>
@@ -939,16 +940,16 @@ export default function DocsPage() {
       {hasVideos && (
       <>
       {/* CTA footer */}
-      <div className="bg-[#0c0c0d] border border-white/[0.06] rounded-[14px] p-8 text-center mb-16">
-        <h3 className="text-[1.1rem] font-bold text-white mb-2">Voir toutes nos vidéos sur YouTube</h3>
-        <p className="text-[0.85rem] text-[#8B8F98] mb-5">
+      <div className="bg-[var(--surface)] border border-[var(--border)] rounded-[14px] p-8 text-center mb-16">
+        <h3 className="text-[1.1rem] font-bold text-[var(--text)] mb-2">Voir toutes nos vidéos sur YouTube</h3>
+        <p className="text-[0.85rem] text-[var(--text-secondary)] mb-5">
           Notre chaîne YouTube contient l'intégralité des tutoriels et est mise à jour à chaque nouvelle fonctionnalité.
         </p>
         <a
           href="https://youtube.com/@KonzaRH"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 px-[1.4rem] py-[0.65rem] bg-[#ff0000] text-white text-[0.85rem] font-bold rounded-[10px] hover:opacity-90 transition-opacity"
+          className="inline-flex items-center gap-2 px-[1.4rem] py-[0.65rem] bg-[var(--text)] text-[var(--surface)] text-[var(--text)] text-[0.85rem] font-bold rounded-[10px] hover:opacity-90 transition-opacity"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
             <path d="M23.5 6.2c-.3-1-1-1.8-2-2.1C19.6 3.6 12 3.6 12 3.6s-7.6 0-9.5.5c-1 .3-1.7 1.1-2 2.1C0 8.1 0 12 0 12s0 3.9.5 5.8c.3 1 1 1.8 2 2.1 1.9.5 9.5.5 9.5.5s7.6 0 9.5-.5c1-.3 1.7-1.1 2-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z"/>
@@ -967,48 +968,48 @@ export default function DocsPage() {
   const docContent = (
     <div className={page === 'doc' ? 'block' : 'hidden'}>
       {/* Hero */}
-      <div className="mb-12 pb-10 border-b border-white/[0.06]">
-        <p className="text-[10px] font-mono text-[#FF9A62] uppercase tracking-[0.12em] mb-3">Documentation officielle · v2.0</p>
-        <h1 className="text-4xl font-semibold tracking-tight leading-[1.1] mb-3 bg-gradient-to-br from-white to-[#8B8F98] bg-clip-text text-transparent">
-          Centre d'aide<br />Konza RH
-        </h1>
-        <p className="text-[15px] text-[#8B8F98] max-w-lg leading-relaxed">
+      <div className="mb-12 pb-10 border-b border-[var(--border)]">
+        <p className="text-[10px] font-mono text-[var(--action)] uppercase tracking-[0.12em] mb-3">Documentation officielle · v2.0</p>
+        <h2 className="text-3xl font-semibold tracking-tight leading-[1.1] mb-3 text-[var(--text)]">
+          Prendre en main Konza RH
+        </h2>
+        <p className="text-[15px] text-[var(--text-secondary)] max-w-lg leading-relaxed">
           De l'inscription à votre première paie, tout ce qu'il faut pour prendre en main la plateforme — sans contacter le support.
         </p>
         <div className="flex flex-wrap gap-2 mt-4">
-          <span className="text-[11px] font-semibold px-3 py-1 rounded-full border border-[#FF9A62]/20 bg-[#FF9A62]/[0.07] text-[#FF9A62]">✦ Guide complet A–Z</span>
-          <span className="text-[11px] font-semibold px-3 py-1 rounded-full border border-[#FF9A62]/20 bg-[#FF9A62]/[0.07] text-[#FF9A62]">✓ Mis à jour 2026</span>
-          <span className="text-[11px] font-semibold px-3 py-1 rounded-full border border-white/10 bg-white/[0.03] text-[#8B8F98]"> Conforme droit congolais</span>
+          <span className="text-[11px] font-semibold px-3 py-1 rounded-full border border-[var(--border)] bg-[var(--brand-soft)] text-[var(--action)]">Guide par module</span>
+          <span className="text-[11px] font-semibold px-3 py-1 rounded-full border border-[var(--border)] bg-[var(--brand-soft)] text-[var(--action)]">Guide écrit</span>
+          <span className="text-[11px] font-semibold px-3 py-1 rounded-full border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-secondary)]"> Conforme droit congolais</span>
         </div>
       </div>
 
       {/* ── 01 Inscription ── */}
       <section id="inscription" className="mb-16 scroll-mt-20">
         <SectionHead num="01" title="Inscription & première connexion" badge={{ text: 'Point de départ', type: 'req' }} />
-        <p className="text-[13.5px] text-[#8B8F98] mb-5 leading-relaxed">
+        <p className="text-[13.5px] text-[var(--text-secondary)] mb-5 leading-relaxed">
           Tout commence ici. Suivez ces étapes dans l'ordre — chaque étape débloque la suivante.
           Ne sautez pas la configuration entreprise : les bulletins de paie en dépendent.
         </p>
 
         {/* Flow */}
         <div className="relative pl-10 space-y-0">
-          <div className="absolute left-[19px] top-10 bottom-10 w-px bg-gradient-to-b from-[#FF9A62] via-[#FF9A62]/30 to-transparent" />
+          <div className="absolute left-[19px] top-10 bottom-10 w-px bg-[var(--border)]" />
           {[
-            { title: 'Créer votre compte', body: <>Rendez-vous sur <strong className="text-white">konza-rh.cg/auth/register</strong>. Email professionnel + mot de passe fort. Un lien de confirmation est envoyé automatiquement.</> },
-            { title: 'Confirmer votre email', body: <>Cliquez sur le lien reçu (valable <strong className="text-white">24h</strong>). Vérifiez vos spams si vous ne recevez rien. Sans confirmation, l'accès est limité.</> },
-            { title: 'Configurer votre entreprise ou cabinet', body: <>Un assistant apparaît à la première connexion. Il vous guide pour créer votre entreprise ou votre cabinet. <strong className="text-white">Ne le fermez pas</strong> — il n'apparaît qu'une seule fois.</>, link: { href: '#entreprise-cabinet', label: '→ Guide Entreprise / Cabinet' } },
+            { title: 'Créer votre compte', body: <>Rendez-vous sur <strong className="text-[var(--text)]">konza-rh.cg/auth/register</strong>. Email professionnel + mot de passe fort. Un lien de confirmation est envoyé automatiquement.</> },
+            { title: 'Confirmer votre email', body: <>Cliquez sur le lien reçu (valable <strong className="text-[var(--text)]">24h</strong>). Vérifiez vos spams si vous ne recevez rien. Sans confirmation, l'accès est limité.</> },
+            { title: 'Configurer votre entreprise ou cabinet', body: <>Un assistant apparaît à la première connexion. Il vous guide pour créer votre entreprise ou votre cabinet. <strong className="text-[var(--text)]">Ne le fermez pas</strong> — il n'apparaît qu'une seule fois.</>, link: { href: '#entreprise-cabinet', label: '→ Guide Entreprise / Cabinet' } },
             { title: 'Créer vos départements', body: <>Avant d'ajouter des employés, créez au moins un département. Chaque employé y sera rattaché lors de sa création.</>, link: { href: '#departements', label: '→ Guide Départements' } },
-            { title: 'Ajouter vos employés & générer la paie', body: <>Ajoutez vos employés (manuellement ou via Excel), puis rendez-vous dans <strong className="text-white">Paie</strong> pour générer votre premier bulletin.</>, link: { href: '#paie', label: '→ Guide Paie' } },
+            { title: 'Ajouter vos employés & générer la paie', body: <>Ajoutez vos employés (manuellement ou via Excel), puis rendez-vous dans <strong className="text-[var(--text)]">Paie</strong> pour générer votre premier bulletin.</>, link: { href: '#paie', label: '→ Guide Paie' } },
           ].map((step, i) => (
             <div key={i} className="flex gap-4 py-3 relative">
-              <div className="w-9 h-9 rounded-full bg-[#161616] border border-white/10 flex items-center justify-center font-mono text-[11px] text-[#FF9A62] flex-shrink-0 z-10 mt-0.5">
+              <div className="w-9 h-9 rounded-full bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center font-mono text-[11px] text-[var(--action)] flex-shrink-0 z-10 mt-0.5">
                 {String(i + 1).padStart(2, '0')}
               </div>
               <div className="pt-1">
-                <h3 className="text-sm font-semibold text-white mb-1">{step.title}</h3>
-                <p className="text-[13px] text-[#8B8F98] leading-relaxed">{step.body}</p>
+                <h3 className="text-sm font-semibold text-[var(--text)] mb-1">{step.title}</h3>
+                <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed">{step.body}</p>
                 {step.link && (
-                  <a href={step.link.href} className="text-[12px] font-semibold text-[#FF9A62] hover:underline mt-1 inline-block">
+                  <a href={step.link.href} className="text-[12px] font-semibold text-[var(--action)] hover:underline mt-1 inline-block">
                     {step.link.label}
                   </a>
                 )}
@@ -1036,28 +1037,28 @@ export default function DocsPage() {
       {/* ── 02 Rôles ── */}
       <section id="roles" className="mb-16 scroll-mt-20">
         <SectionHead num="02" title="Rôles & permissions" />
-        <p className="text-[13.5px] text-[#8B8F98] mb-4 leading-relaxed">
+        <p className="text-[13.5px] text-[var(--text-secondary)] mb-4 leading-relaxed">
           Konza RH dispose de 4 niveaux d'accès. L'accès aux modules dépend du rôle assigné lors de la création du compte.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
           {[
-            { name: 'ADMIN', color: 'text-[#FF9A62] bg-[#FF9A62]/10 border-[#FF9A62]/20', perms: ['Accès total à tous les modules', 'Configuration entreprise & système', 'Gestion de la paie & validation', 'Gestion des utilisateurs & rôles'] },
-            { name: 'RH MANAGER', color: 'text-[#FF9A62] bg-[#FF9A62]/10 border-[#FF9A62]/20', perms: ['Gestion complète des employés', 'Création & validation bulletins', 'Gestion présences & congés', 'Prêts & avances sur salaire'] },
-            { name: 'MANAGER', color: 'text-[#8B8F98] bg-[#8B8F98]/10 border-[#8B8F98]/20', perms: ['Voir les profils de son équipe', 'Valider les congés de son équipe', 'Pointage et présences équipe', 'Ses propres présences'] },
-            { name: 'EMPLOYÉ', color: 'text-[#8B8F98] bg-white/[0.05] border-white/10', perms: ['Consulter sa fiche de paie', 'Pointer via GPS', 'Soumettre des demandes de congé', 'Voir son planning & matériel'] },
+            { name: 'ADMIN', color: 'text-[var(--action)] bg-[var(--brand-soft)] border-[var(--border)]', perms: ['Accès total à tous les modules', 'Configuration entreprise & système', 'Gestion de la paie & validation', 'Gestion des utilisateurs & rôles'] },
+            { name: 'RH MANAGER', color: 'text-[var(--action)] bg-[var(--brand-soft)] border-[var(--border)]', perms: ['Gestion complète des employés', 'Création & validation bulletins', 'Gestion présences & congés', 'Prêts & avances sur salaire'] },
+            { name: 'MANAGER', color: 'text-[var(--text-secondary)] bg-[var(--text-secondary)]/10 border-[var(--text-secondary)]/20', perms: ['Voir les profils de son équipe', 'Valider les congés de son équipe', 'Pointage et présences équipe', 'Ses propres présences'] },
+            { name: 'EMPLOYÉ', color: 'text-[var(--text-secondary)] bg-[var(--surface-2)] border-[var(--border)]', perms: ['Consulter sa fiche de paie', 'Pointer via GPS', 'Soumettre des demandes de congé', 'Voir son planning & matériel'] },
           ].map(role => (
-            <div key={role.name} className="bg-[#0c0c0d] border border-white/[0.06] rounded-xl p-4 hover:border-white/10 transition-colors">
+            <div key={role.name} className="bg-[var(--surface)] border border-[var(--border)] rounded-xl p-4 hover:border-[var(--border)] transition-colors">
               <span className={`inline-block text-[11px] font-mono font-bold px-2 py-0.5 rounded border mb-3 ${role.color}`}>{role.name}</span>
               <ul className="space-y-0.5">
                 {role.perms.map(p => (
-                  <li key={p} className="text-[12.5px] text-[#8B8F98] before:content-['›_'] before:text-[#FF9A62]/60">{p}</li>
+                  <li key={p} className="text-[12.5px] text-[var(--text-secondary)] before:content-['›_'] before:text-[var(--action)]/60">{p}</li>
                 ))}
               </ul>
             </div>
           ))}
         </div>
         <InfoBlock type="note" title="Inviter un utilisateur">
-          Allez dans <code className="bg-white/[0.06] border border-white/10 rounded px-1.5 py-0.5 text-[#FF9A62] text-[11px]">Paramètres → Gestion Utilisateurs → Inviter un utilisateur</code>.
+          Allez dans <code className="bg-[var(--surface-2)] border border-[var(--border)] rounded px-1.5 py-0.5 text-[var(--action)] text-[11px]">Paramètres → Gestion Utilisateurs → Inviter un utilisateur</code>.
           Saisissez l'email, choisissez le rôle, validez. L'utilisateur reçoit un lien d'activation valable 24h.
         </InfoBlock>
       </section>
@@ -1065,7 +1066,7 @@ export default function DocsPage() {
       {/* ── 03 Entreprise / Cabinet ── */}
       <section id="entreprise-cabinet" className="mb-16 scroll-mt-20">
         <SectionHead num="03" title="Entreprise & Cabinet" badge={{ text: 'Priorité 1', type: 'req' }} />
-        <p className="text-[13.5px] text-[#8B8F98] mb-4 leading-relaxed">
+        <p className="text-[13.5px] text-[var(--text-secondary)] mb-4 leading-relaxed">
           Selon votre situation, choisissez le mode adapté. Cliquez sur l'un des deux pour afficher le guide correspondant.
         </p>
 
@@ -1077,15 +1078,15 @@ export default function DocsPage() {
               onClick={() => setCompanyMode(mode)}
               className={`text-left p-4 rounded-xl border transition-all ${
                 companyMode === mode
-                  ? 'border-[#FF9A62] bg-[#FF9A62]/[0.04]'
-                  : 'border-white/[0.06] bg-[#0c0c0d] hover:border-white/10'
+                  ? 'border-[var(--action)] bg-[var(--brand-soft)]'
+                  : 'border-[var(--border)] bg-[var(--surface)] hover:border-[var(--border)]'
               }`}
             >
               
-              <h4 className="text-sm font-semibold text-white mb-1">
+              <h4 className="text-sm font-semibold text-[var(--text)] mb-1">
                 {mode === 'entreprise' ? 'Mode Entreprise' : 'Mode Cabinet'}
               </h4>
-              <p className="text-[12px] text-[#8B8F98]">
+              <p className="text-[12px] text-[var(--text-secondary)]">
                 {mode === 'entreprise'
                   ? 'Je gère une seule société (PME, TPE, start-up)'
                   : 'Je gère plusieurs sociétés (cabinet RH, comptable, DRH externalisée)'}
@@ -1101,13 +1102,13 @@ export default function DocsPage() {
             <GuideCard
               icon={Building2} iconColor="cyan" title="Configurer votre entreprise"
               steps={[
-                { text: <>Renseignez la <strong className="text-white">raison sociale</strong> telle qu'elle apparaît sur vos documents officiels.</> },
-                { text: <>Entrez le <strong className="text-white">RCCM / NIF</strong> de votre société (utilisé sur les déclarations CNSS).</> },
-                { text: <>Saisissez l'<strong className="text-white">adresse complète</strong>, le téléphone et l'email RH.</> },
-                { text: <>Téléversez votre <strong className="text-white">logo</strong> (PNG fond transparent recommandé) — il apparaîtra sur tous les bulletins.</> },
-                { text: <>Configurez le <strong className="text-white">rayon GPS autorisé</strong> en mètres pour le pointage des employés.</> },
-                { text: <>Définissez le <strong className="text-white">jour de paiement des salaires</strong> (ex : le 5 du mois suivant). Ce paramètre pilote le module de suivi des impayés.</> },
-                { text: <><strong className="text-white">Enregistrez</strong>. Ces paramètres prennent effet immédiatement.</> },
+                { text: <>Renseignez la <strong className="text-[var(--text)]">raison sociale</strong> telle qu'elle apparaît sur vos documents officiels.</> },
+                { text: <>Entrez le <strong className="text-[var(--text)]">RCCM / NIF</strong> de votre société (utilisé sur les déclarations CNSS).</> },
+                { text: <>Saisissez l'<strong className="text-[var(--text)]">adresse complète</strong>, le téléphone et l'email RH.</> },
+                { text: <>Téléversez votre <strong className="text-[var(--text)]">logo</strong> (PNG fond transparent recommandé) — il apparaîtra sur tous les bulletins.</> },
+                { text: <>Configurez le <strong className="text-[var(--text)]">rayon GPS autorisé</strong> en mètres pour le pointage des employés.</> },
+                { text: <>Définissez le <strong className="text-[var(--text)]">jour de paiement des salaires</strong> (ex : le 5 du mois suivant). Ce paramètre pilote le module de suivi des impayés.</> },
+                { text: <><strong className="text-[var(--text)]">Enregistrez</strong>. Ces paramètres prennent effet immédiatement.</> },
               ]}
             />
             <InfoBlock type="warn" title="Attention GPS">
@@ -1131,16 +1132,16 @@ export default function DocsPage() {
             <PathCrumb path="Cabinet → Créer / Gérer mes PME" />
             <div className="grid sm:grid-cols-2 gap-3 mb-3">
               <GuideCard icon={Landmark} iconColor="cyan" title="Créer un cabinet" steps={[
-                { text: <>Allez dans <code className="bg-white/[0.06] border border-white/10 rounded px-1 text-[#FF9A62] text-[11px]">Cabinet → Créer mon cabinet</code>.</> },
-                { text: <>Donnez un <strong className="text-white">nom à votre structure</strong> (ex : "Cabinet Dupont RH").</> },
-                { text: <>Votre compte devient le compte principal avec <strong className="text-white">accès total</strong> à toutes les PME.</> },
+                { text: <>Allez dans <code className="bg-[var(--surface-2)] border border-[var(--border)] rounded px-1 text-[var(--action)] text-[11px]">Cabinet → Créer mon cabinet</code>.</> },
+                { text: <>Donnez un <strong className="text-[var(--text)]">nom à votre structure</strong> (ex : "Cabinet Dupont RH").</> },
+                { text: <>Votre compte devient le compte principal avec <strong className="text-[var(--text)]">accès total</strong> à toutes les PME.</> },
                 { text: <>Votre tableau de bord affiche désormais toutes les PME rattachées.</> },
               ]} />
               <GuideCard icon={Building2} iconColor="green" title="Ajouter une PME" steps={[
-                { text: <>Dans le dashboard cabinet, cliquez <strong className="text-white">Ajouter une PME</strong>.</> },
+                { text: <>Dans le dashboard cabinet, cliquez <strong className="text-[var(--text)]">Ajouter une PME</strong>.</> },
                 { text: <>Renseignez les infos légales : raison sociale, RCCM, adresse.</> },
                 { text: <>Chaque PME a sa propre config, ses employés et sa paie.</> },
-                { text: <>Basculez entre PME via le <strong className="text-white">sélecteur d'entreprise</strong> en haut à gauche.</> },
+                { text: <>Basculez entre PME via le <strong className="text-[var(--text)]">sélecteur d'entreprise</strong> en haut à gauche.</> },
               ]} />
             </div>
             <InfoBlock type="note" title="Isolation totale">
@@ -1165,9 +1166,9 @@ export default function DocsPage() {
         <SectionHead num="04" title="Créer des départements" badge={{ text: 'Priorité 2', type: 'req' }} />
         <PathCrumb path="Paramètres → Départements" />
         <GuideCard icon={FolderOpen} iconColor="cyan" title="Ajouter un département" steps={[
-          { text: <>Cliquez sur <strong className="text-white">Nouveau département</strong>.</> },
-          { text: <>Saisissez le <strong className="text-white">nom du service</strong> (ex : Direction, RH, Comptabilité, Terrain).</> },
-          { text: <>Assignez un <strong className="text-white">Manager responsable</strong> si l'utilisateur existe déjà.</> },
+          { text: <>Cliquez sur <strong className="text-[var(--text)]">Nouveau département</strong>.</> },
+          { text: <>Saisissez le <strong className="text-[var(--text)]">nom du service</strong> (ex : Direction, RH, Comptabilité, Terrain).</> },
+          { text: <>Assignez un <strong className="text-[var(--text)]">Manager responsable</strong> si l'utilisateur existe déjà.</> },
           { text: <>Sauvegardez. Le département est disponible immédiatement lors de la création d'un employé.</> },
         ]} />
         <InfoBlock type="tip" title="Bonne pratique">
@@ -1180,10 +1181,10 @@ export default function DocsPage() {
         <SectionHead num="05" title="Gestion des utilisateurs" />
         <PathCrumb path="Paramètres → Gestion Utilisateurs" />
         <GuideCard icon={Users} iconColor="green" title="Inviter un utilisateur" steps={[
-          { text: <>Cliquez sur <strong className="text-white">Inviter un utilisateur</strong>.</> },
-          { text: <>Saisissez l'adresse email et choisissez le <strong className="text-white">rôle</strong> approprié.</> },
-          { text: <>Validez. L'utilisateur reçoit un email d'invitation avec un lien d'activation valable <strong className="text-white">24h</strong>.</> },
-          { text: <>Pour réinitialiser un mot de passe : options <code className="bg-white/[0.06] border border-white/10 rounded px-1 text-[#FF9A62] text-[11px]">⋯</code> → "Envoyer un lien de réinitialisation".</> },
+          { text: <>Cliquez sur <strong className="text-[var(--text)]">Inviter un utilisateur</strong>.</> },
+          { text: <>Saisissez l'adresse email et choisissez le <strong className="text-[var(--text)]">rôle</strong> approprié.</> },
+          { text: <>Validez. L'utilisateur reçoit un email d'invitation avec un lien d'activation valable <strong className="text-[var(--text)]">24h</strong>.</> },
+          { text: <>Pour réinitialiser un mot de passe : options <code className="bg-[var(--surface-2)] border border-[var(--border)] rounded px-1 text-[var(--action)] text-[11px]">⋯</code> → "Envoyer un lien de réinitialisation".</> },
         ]} />
       </section>
 
@@ -1196,14 +1197,14 @@ export default function DocsPage() {
           Vous n'avez rien à modifier — les barèmes ci-dessous sont uniquement fournis à titre informatif.
         </InfoBlock>
 
-        <p className="text-[13px] font-semibold text-[#FAFAFA] mb-2 mt-5">Barème ITS 2026 <span className="text-[11px] text-[#8B8F98] font-normal">(Impôt sur les Traitements et Salaires — appliqué sur le quotient annuel par part fiscale)</span></p>
+        <p className="text-[13px] font-semibold text-[var(--text)] mb-2 mt-5">Barème ITS 2026 <span className="text-[11px] text-[var(--text-secondary)] font-normal">(Impôt sur les Traitements et Salaires — appliqué sur le quotient annuel par part fiscale)</span></p>
         <ITSTable />
         <InfoBlock type="note" title="Abattement & parts fiscales">
           Un abattement forfaitaire de <strong>20 %</strong> est appliqué sur le revenu net avant calcul ITS.
           Les parts fiscales sont maintenues en 2026 : de 1 part (célibataire) à 6,5 parts (marié + enfants).
         </InfoBlock>
 
-        <p className="text-[13px] font-semibold text-[#FAFAFA] mb-2 mt-6">CNSS & TUS <span className="text-[11px] text-[#8B8F98] font-normal">(Décret n°2009-392 — inchangé en 2026)</span></p>
+        <p className="text-[13px] font-semibold text-[var(--text)] mb-2 mt-6">CNSS & TUS <span className="text-[11px] text-[var(--text-secondary)] font-normal">(Décret n°2009-392 — inchangé en 2026)</span></p>
         <CNSSTable />
       </section>
 
@@ -1212,17 +1213,17 @@ export default function DocsPage() {
         <SectionHead num="07" title="Créer un employé" />
         <PathCrumb path="Employés → Nouveau → Formulaire" />
         <GuideCard icon={User} iconColor="cyan" title="Formulaire en 4 étapes" steps={[
-          { text: <><strong className="text-white">Identité</strong> — Nom, prénom, date de naissance, photo, nationalité.</> },
-          { text: <><strong className="text-white">Situation familiale</strong> — Statut matrimonial, nombre d'enfants (impacte les calculs ITS).</> },
-          { text: <><strong className="text-white">Poste & contrat</strong> — Département, poste, type de contrat (CDI/CDD/Stage), date d'embauche, salaire de base.</> },
-          { text: <><strong className="text-white">Validation</strong> — Vérifiez le récapitulatif avant de confirmer.</> },
+          { text: <><strong className="text-[var(--text)]">Identité</strong> — Nom, prénom, date de naissance, photo, nationalité.</> },
+          { text: <><strong className="text-[var(--text)]">Situation familiale</strong> — Statut matrimonial, nombre d'enfants (impacte les calculs ITS).</> },
+          { text: <><strong className="text-[var(--text)]">Poste & contrat</strong> — Département, poste, type de contrat (CDI/CDD/Stage), date d'embauche, salaire de base.</> },
+          { text: <><strong className="text-[var(--text)]">Validation</strong> — Vérifiez le récapitulatif avant de confirmer.</> },
         ]} />
         <Screenshots
           label="Captures d'écran — Fiche employé"
           items={[
             { src: '/docs/screenshots/employe-01.png', alt: 'Formulaire employé', caption: 'Formulaire création' },
             { src: '/docs/screenshots/employe-02.png', alt: 'Fiche employé', caption: 'Fiche complète' },
-            { src: '/docs/screenshots/employe-03.png', alt: 'Liste employés', caption: 'Liste des employés' },
+            { src: '/images/produit/employes.webp', alt: 'Liste employés', caption: 'Liste des employés' },
           ]}
           onOpen={openLightbox}
         />
@@ -1233,14 +1234,14 @@ export default function DocsPage() {
         <SectionHead num="08" title="Import en masse via Excel" badge={{ text: 'Recommandé', type: 'opt' }} />
         <PathCrumb path="Employés → Importer" />
         <GuideCard icon={BarChart3} iconColor="green" title="Procédure d'import" steps={[
-          { text: <>Téléchargez le <strong className="text-white">modèle Excel</strong> fourni sur la page d'import.</> },
-          { text: <>Remplissez les colonnes obligatoires : <code className="bg-white/[0.06] border border-white/10 rounded px-1 text-[#FF9A62] text-[11px]">prénom</code>, <code className="bg-white/[0.06] border border-white/10 rounded px-1 text-[#FF9A62] text-[11px]">nom</code>, <code className="bg-white/[0.06] border border-white/10 rounded px-1 text-[#FF9A62] text-[11px]">département</code>, <code className="bg-white/[0.06] border border-white/10 rounded px-1 text-[#FF9A62] text-[11px]">salaire_base</code>.</> },
-          { text: <>Vérifiez que les <strong className="text-white">noms de départements</strong> correspondent exactement à ceux créés dans Paramètres.</> },
+          { text: <>Téléchargez le <strong className="text-[var(--text)]">modèle Excel</strong> fourni sur la page d'import.</> },
+          { text: <>Remplissez les colonnes obligatoires : <code className="bg-[var(--surface-2)] border border-[var(--border)] rounded px-1 text-[var(--action)] text-[11px]">prénom</code>, <code className="bg-[var(--surface-2)] border border-[var(--border)] rounded px-1 text-[var(--action)] text-[11px]">nom</code>, <code className="bg-[var(--surface-2)] border border-[var(--border)] rounded px-1 text-[var(--action)] text-[11px]">département</code>, <code className="bg-[var(--surface-2)] border border-[var(--border)] rounded px-1 text-[var(--action)] text-[11px]">salaire_base</code>.</> },
+          { text: <>Vérifiez que les <strong className="text-[var(--text)]">noms de départements</strong> correspondent exactement à ceux créés dans Paramètres.</> },
           { text: <>Glissez le fichier dans la zone d'import ou cliquez pour le sélectionner.</> },
-          { text: <>L'interface affiche un <strong className="text-white">rapport de validation</strong> avec les lignes en erreur avant confirmation.</> },
+          { text: <>L'interface affiche un <strong className="text-[var(--text)]">rapport de validation</strong> avec les lignes en erreur avant confirmation.</> },
         ]} />
         <InfoBlock type="warn" title="Format requis">
-          Seul le format <code className="bg-white/[0.06] border border-white/10 rounded px-1 text-[#FF9A62] text-[11px]">.xlsx</code> est accepté.
+          Seul le format <code className="bg-[var(--surface-2)] border border-[var(--border)] rounded px-1 text-[var(--action)] text-[11px]">.xlsx</code> est accepté.
           Les lignes avec un département inexistant seront rejetées.
         </InfoBlock>
       </section>
@@ -1252,15 +1253,15 @@ export default function DocsPage() {
         <div className="grid sm:grid-cols-2 gap-3">
           <GuideCard icon={FileText} iconColor="cyan" title="Créer un contrat" steps={[
             { text: <>Ouvrez la fiche de l'employé concerné.</> },
-            { text: <>Onglet Contrat → cliquez <strong className="text-white">Nouveau contrat</strong>.</> },
+            { text: <>Onglet Contrat → cliquez <strong className="text-[var(--text)]">Nouveau contrat</strong>.</> },
             { text: <>Choisissez le type (CDI, CDD…), la date de début, la durée si CDD.</> },
             { text: <>Téléversez le document signé en PDF.</> },
           ]} />
           <GuideCard icon={Scissors} iconColor="amber" title="Rupture de contrat" steps={[
-            { text: <>Cliquez <strong className="text-white">Rompre le contrat</strong> depuis la fiche employé.</> },
+            { text: <>Cliquez <strong className="text-[var(--text)]">Rompre le contrat</strong> depuis la fiche employé.</> },
             { text: <>Sélectionnez le motif (démission, licenciement, fin CDD…).</> },
             { text: <>Indiquez la date de fin effective.</> },
-            { text: <>Le statut passe automatiquement à <code className="bg-white/[0.06] border border-white/10 rounded px-1 text-[#FF9A62] text-[11px]">Suspendu</code>.</> },
+            { text: <>Le statut passe automatiquement à <code className="bg-[var(--surface-2)] border border-[var(--border)] rounded px-1 text-[var(--action)] text-[11px]">Suspendu</code>.</> },
           ]} />
         </div>
         <InfoBlock type="tip" title="Alertes CDD">
@@ -1274,9 +1275,9 @@ export default function DocsPage() {
         <PathCrumb path="Présences → Ma Pointeuse GPS" />
         <GuideCard icon={MapPin} iconColor="green" title="Comment pointer (employé / manager)" steps={[
           { text: <>Ouvrez Konza RH sur votre téléphone ou navigateur depuis les locaux.</> },
-          { text: <>Autorisez la <strong className="text-white">géolocalisation</strong> du navigateur quand la demande apparaît.</> },
+          { text: <>Autorisez la <strong className="text-[var(--text)]">géolocalisation</strong> du navigateur quand la demande apparaît.</> },
           { text: <>L'application vérifie votre distance par rapport au périmètre autorisé.</> },
-          { text: <>Si validé, cliquez <strong className="text-white">Pointer l'arrivée</strong>. En fin de journée : <strong className="text-white">Pointer le départ</strong>.</> },
+          { text: <>Si validé, cliquez <strong className="text-[var(--text)]">Pointer l'arrivée</strong>. En fin de journée : <strong className="text-[var(--text)]">Pointer le départ</strong>.</> },
           { text: <>La présence est enregistrée en temps réel dans la vue journalière.</> },
         ]} />
         <div className="grid sm:grid-cols-2 gap-3">
@@ -1290,11 +1291,11 @@ export default function DocsPage() {
         <SectionHead num="11" title="Pointage manuel" />
         <PathCrumb path="Présences → Pointage Manuel" />
         <GuideCard icon={Pencil} iconColor="amber" title="Saisir ou corriger une présence" steps={[
-          { text: <>Sélectionnez l'<strong className="text-white">employé</strong> concerné dans la liste.</> },
-          { text: <>Choisissez la <strong className="text-white">date</strong> à corriger ou à compléter.</> },
-          { text: <>Saisissez l'heure d'<strong className="text-white">arrivée</strong> et l'heure de <strong className="text-white">départ</strong>.</> },
-          { text: <>Ajoutez une <strong className="text-white">note de justification</strong> (obligatoire pour les corrections).</> },
-          { text: <>Enregistrez. La correction apparaît avec la mention <code className="bg-white/[0.06] border border-white/10 rounded px-1 text-[#FF9A62] text-[11px]">Manuel</code>.</> },
+          { text: <>Sélectionnez l'<strong className="text-[var(--text)]">employé</strong> concerné dans la liste.</> },
+          { text: <>Choisissez la <strong className="text-[var(--text)]">date</strong> à corriger ou à compléter.</> },
+          { text: <>Saisissez l'heure d'<strong className="text-[var(--text)]">arrivée</strong> et l'heure de <strong className="text-[var(--text)]">départ</strong>.</> },
+          { text: <>Ajoutez une <strong className="text-[var(--text)]">note de justification</strong> (obligatoire pour les corrections).</> },
+          { text: <>Enregistrez. La correction apparaît avec la mention <code className="bg-[var(--surface-2)] border border-[var(--border)] rounded px-1 text-[var(--action)] text-[11px]">Manuel</code>.</> },
         ]} />
       </section>
 
@@ -1304,15 +1305,15 @@ export default function DocsPage() {
         <PathCrumb path="Présences → Shifts" />
         <div className="grid sm:grid-cols-2 gap-3">
           <GuideCard icon={Calendar} iconColor="cyan" title="Créer un shift" steps={[
-            { text: <>Cliquez sur <strong className="text-white">Nouveau shift</strong>.</> },
-            { text: <>Nommez-le (ex : <code className="bg-white/[0.06] border border-white/10 rounded px-1 text-[#FF9A62] text-[11px]">Matin 7h–15h</code>) et définissez les horaires.</> },
-            { text: <>Activez <strong className="text-white">Shift de nuit</strong> si applicable (déclenche la prime nuit).</> },
+            { text: <>Cliquez sur <strong className="text-[var(--text)]">Nouveau shift</strong>.</> },
+            { text: <>Nommez-le (ex : <code className="bg-[var(--surface-2)] border border-[var(--border)] rounded px-1 text-[var(--action)] text-[11px]">Matin 7h–15h</code>) et définissez les horaires.</> },
+            { text: <>Activez <strong className="text-[var(--text)]">Shift de nuit</strong> si applicable (déclenche la prime nuit).</> },
             { text: <>Choisissez une couleur et sauvegardez.</> },
           ]} />
           <GuideCard icon={User} iconColor="green" title="Assigner un shift" steps={[
-            { text: <>Cliquez <strong className="text-white">Assigner</strong> en haut de la page.</> },
+            { text: <>Cliquez <strong className="text-[var(--text)]">Assigner</strong> en haut de la page.</> },
             { text: <>Sélectionnez le shift, puis l'employé dans la liste.</> },
-            { text: <>Choisissez <strong className="text-white">Date précise</strong> ou <strong className="text-white">Récurrent</strong> (par jour de semaine).</> },
+            { text: <>Choisissez <strong className="text-[var(--text)]">Date précise</strong> ou <strong className="text-[var(--text)]">Récurrent</strong> (par jour de semaine).</> },
             { text: <>Confirmez — l'employé apparaît dans l'onglet <em>Employés & Plannings</em>.</> },
           ]} />
         </div>
@@ -1322,23 +1323,23 @@ export default function DocsPage() {
       <section id="paie" className="mb-16 scroll-mt-20">
         <SectionHead num="13" title="Bulletin de paie individuel" />
         <PathCrumb path="Paie → Nouveau bulletin" />
-        <p className="text-[13.5px] text-[#8B8F98] mb-4 leading-relaxed">
+        <p className="text-[13.5px] text-[var(--text-secondary)] mb-4 leading-relaxed">
           Les calculs (CNSS, ITS, TUS) sont entièrement automatisés. Vous n'avez rien à configurer.
         </p>
         <GuideCard icon={Wallet} iconColor="green" title="Générer un bulletin" steps={[
-          { text: <>Cliquez sur <strong className="text-white">Nouveau bulletin</strong> dans le menu Paie.</> },
-          { text: <>Sélectionnez l'<strong className="text-white">employé</strong> et le <strong className="text-white">mois de paie</strong>.</> },
+          { text: <>Cliquez sur <strong className="text-[var(--text)]">Nouveau bulletin</strong> dans le menu Paie.</> },
+          { text: <>Sélectionnez l'<strong className="text-[var(--text)]">employé</strong> et le <strong className="text-[var(--text)]">mois de paie</strong>.</> },
           { text: <>Le système pré-remplit le salaire de base depuis la fiche employé.</> },
-          { text: <>Ajoutez les <strong className="text-white">heures supplémentaires</strong>, <strong className="text-white">primes</strong> ou <strong className="text-white">déductions</strong> si applicable.</> },
-          { text: <>Vérifiez l'<strong className="text-white">aperçu</strong> avec CNSS, ITS et net à payer calculés automatiquement.</> },
-          { text: <>Validez. Une fois le virement effectué, marquez le bulletin comme <strong className="text-white">Payé</strong>.</> },
+          { text: <>Ajoutez les <strong className="text-[var(--text)]">heures supplémentaires</strong>, <strong className="text-[var(--text)]">primes</strong> ou <strong className="text-[var(--text)]">déductions</strong> si applicable.</> },
+          { text: <>Vérifiez l'<strong className="text-[var(--text)]">aperçu</strong> avec CNSS, ITS et net à payer calculés automatiquement.</> },
+          { text: <>Validez. Une fois le virement effectué, marquez le bulletin comme <strong className="text-[var(--text)]">Payé</strong>.</> },
         ]} />
         <Screenshots
           label="Captures d'écran — Paie"
           items={[
             { src: '/docs/screenshots/paie-01.png', alt: 'Nouveau bulletin', caption: 'Création bulletin' },
-            { src: '/docs/screenshots/paie-02.png', alt: 'Aperçu bulletin', caption: 'Aperçu & calculs' },
-            { src: '/docs/screenshots/paie-03.png', alt: 'Bulletin validé', caption: 'Bulletin validé' },
+            { src: '/images/produit/bulletin.webp', alt: 'Aperçu bulletin', caption: 'Aperçu du bulletin de démonstration' },
+            { src: '/images/produit/paie.webp', alt: 'Liste des bulletins', caption: 'Suivre les bulletins et les paiements' },
           ]}
           onOpen={openLightbox}
         />
@@ -1349,14 +1350,14 @@ export default function DocsPage() {
         <SectionHead num="14" title="Paie en masse" badge={{ text: 'Gain de temps', type: 'opt' }} />
         <PathCrumb path="Paie → Paie en masse" />
         <GuideCard icon={Zap} iconColor="cyan" title="Lancer une paie groupée" steps={[
-          { text: <><strong className="text-white">Période</strong> — Choisissez le mois et l'année de paie.</> },
-          { text: <><strong className="text-white">Sélection</strong> — Filtrez par département ou sélectionnez tous les employés.</> },
-          { text: <><strong className="text-white">Traitement</strong> — Konza calcule automatiquement tous les bulletins.</> },
-          { text: <>Une fenêtre récapitule la <strong className="text-white">masse salariale totale</strong>.</> },
-          { text: <>Tous les bulletins sont disponibles dans <strong className="text-white">Paie → Historique</strong>.</> },
+          { text: <><strong className="text-[var(--text)]">Période</strong> — Choisissez le mois et l'année de paie.</> },
+          { text: <><strong className="text-[var(--text)]">Sélection</strong> — Filtrez par département ou sélectionnez tous les employés.</> },
+          { text: <><strong className="text-[var(--text)]">Traitement</strong> — Konza calcule automatiquement tous les bulletins.</> },
+          { text: <>Une fenêtre récapitule la <strong className="text-[var(--text)]">masse salariale totale</strong>.</> },
+          { text: <>Tous les bulletins sont disponibles dans <strong className="text-[var(--text)]">Paie → Historique</strong>.</> },
         ]} />
         <InfoBlock type="tip" title="Simulateur de paie">
-          Avant de lancer, utilisez <code className="bg-white/[0.06] border border-white/10 rounded px-1 text-[#FF9A62] text-[11px]">Paie → Simulateur</code> pour tester un scénario sans générer de bulletins réels.
+          Avant de lancer, utilisez <code className="bg-[var(--surface-2)] border border-[var(--border)] rounded px-1 text-[var(--action)] text-[11px]">Paie → Simulateur</code> pour tester un scénario sans générer de bulletins réels.
         </InfoBlock>
       </section>
 
@@ -1364,15 +1365,15 @@ export default function DocsPage() {
       <section id="impayes" className="mb-16 scroll-mt-20">
         <SectionHead num="15" title="Suivi des impayés" />
         <PathCrumb path="Paie → Impayés" />
-        <p className="text-[13.5px] text-[#8B8F98] mb-4 leading-relaxed">
+        <p className="text-[13.5px] text-[var(--text-secondary)] mb-4 leading-relaxed">
           Cette page détecte automatiquement les retards en comparant la date de paiement prévue avec l'état réel des bulletins.
           Aucune action manuelle n'est requise pour qu'une alerte apparaisse.
         </p>
         <GuideCard icon={AlertTriangle} iconColor="amber" title="Comment fonctionne la détection" steps={[
-          { text: <><strong className="text-white">J-3 avant la date prévue</strong> — Alerte bleue : préparez les virements.</> },
-          { text: <><strong className="text-white">Date dépassée, aucun bulletin</strong> — Alerte violette : paie non lancée. Montant affiché = approximatif (basé sur le salaire de base).</> },
-          { text: <><strong className="text-white">Bulletin généré mais non payé</strong> — Alerte orange : bulletin en brouillon ou validé mais paiement non confirmé.</> },
-          { text: <><strong className="text-white">Marquer comme payé</strong> — Une fois le virement effectué, marquez le bulletin comme <code className="bg-white/[0.06] border border-white/10 rounded px-1 text-[#FF9A62] text-[11px]">Payé</code> dans <em>Paie → Bulletins</em>.</> },
+          { text: <><strong className="text-[var(--text)]">J-3 avant la date prévue</strong> — Alerte bleue : préparez les virements.</> },
+          { text: <><strong className="text-[var(--text)]">Date dépassée, aucun bulletin</strong> — Alerte violette : paie non lancée. Montant affiché = approximatif (basé sur le salaire de base).</> },
+          { text: <><strong className="text-[var(--text)]">Bulletin généré mais non payé</strong> — Alerte orange : bulletin en brouillon ou validé mais paiement non confirmé.</> },
+          { text: <><strong className="text-[var(--text)]">Marquer comme payé</strong> — Une fois le virement effectué, marquez le bulletin comme <code className="bg-[var(--surface-2)] border border-[var(--border)] rounded px-1 text-[var(--action)] text-[11px]">Payé</code> dans <em>Paie → Bulletins</em>.</> },
         ]} />
         <InfoBlock type="warn" title="Art. 95 CT Congo">
           Les salaires doivent être payés à date fixe. 3 mois de retard = droit de saisir l'Inspection du Travail.
@@ -1384,10 +1385,10 @@ export default function DocsPage() {
         <SectionHead num="16" title="Prêts & avances sur salaire" />
         <PathCrumb path="Avances & Prêts → Nouveau financement" />
         <GuideCard icon={Handshake} iconColor="amber" title="Enregistrer un prêt" steps={[
-          { text: <>Cliquez sur <strong className="text-white">Nouveau Financement</strong>.</> },
-          { text: <>Sélectionnez l'<strong className="text-white">employé bénéficiaire</strong> et le type : avance ponctuelle ou prêt échelonné.</> },
-          { text: <>Saisissez le <strong className="text-white">montant</strong> et, pour les prêts, le nombre de mensualités.</> },
-          { text: <>Le remboursement est <strong className="text-white">déduit automatiquement</strong> du bulletin chaque mois.</> },
+          { text: <>Cliquez sur <strong className="text-[var(--text)]">Nouveau Financement</strong>.</> },
+          { text: <>Sélectionnez l'<strong className="text-[var(--text)]">employé bénéficiaire</strong> et le type : avance ponctuelle ou prêt échelonné.</> },
+          { text: <>Saisissez le <strong className="text-[var(--text)]">montant</strong> et, pour les prêts, le nombre de mensualités.</> },
+          { text: <>Le remboursement est <strong className="text-[var(--text)]">déduit automatiquement</strong> du bulletin chaque mois.</> },
         ]} />
       </section>
 
@@ -1396,13 +1397,13 @@ export default function DocsPage() {
         <SectionHead num="17" title="Gestion des congés" />
         <div className="grid sm:grid-cols-2 gap-3">
           <GuideCard icon={Palmtree} iconColor="cyan" title="Employé — faire une demande" steps={[
-            { text: <>Allez dans <strong className="text-white">Mes Demandes</strong>.</> },
-            { text: <>Cliquez <strong className="text-white">Nouvelle demande</strong>, choisissez les dates.</> },
+            { text: <>Allez dans <strong className="text-[var(--text)]">Mes Demandes</strong>.</> },
+            { text: <>Cliquez <strong className="text-[var(--text)]">Nouvelle demande</strong>, choisissez les dates.</> },
             { text: <>Sélectionnez le type (annuel, maladie…).</> },
             { text: <>Soumettez. Le manager est notifié.</> },
           ]} />
           <GuideCard icon={CheckCircle2} iconColor="green" title="Manager — valider" steps={[
-            { text: <>Allez dans <strong className="text-white">Validation Congés</strong>.</> },
+            { text: <>Allez dans <strong className="text-[var(--text)]">Validation Congés</strong>.</> },
             { text: <>Consultez les demandes en attente.</> },
             { text: <>Approuvez ou refusez avec une note.</> },
             { text: <>L'employé reçoit une notification.</> },
@@ -1416,7 +1417,7 @@ export default function DocsPage() {
         <PathCrumb path="Rapports → Déclarations" />
         <GuideCard icon={Landmark} iconColor="cyan" title="Déclaration mensuelle" steps={[
           { text: <>Assurez-vous que tous les bulletins du mois sont générés et validés.</> },
-          { text: <>Allez dans <strong className="text-white">Déclarations</strong> et sélectionnez le mois concerné.</> },
+          { text: <>Allez dans <strong className="text-[var(--text)]">Déclarations</strong> et sélectionnez le mois concerné.</> },
           { text: <>Konza calcule automatiquement les cotisations patronales et salariales.</> },
           { text: <>Exportez au format PDF ou Excel selon la CNSS.</> },
         ]} />
@@ -1428,12 +1429,12 @@ export default function DocsPage() {
         <PathCrumb path="Recrutement" />
         <div className="grid sm:grid-cols-2 gap-3">
           <GuideCard icon={ClipboardList} iconColor="cyan" title="Mode manuel" steps={[
-            { text: <>Créez une <strong className="text-white">offre d'emploi</strong> avec intitulé, description, critères.</> },
+            { text: <>Créez une <strong className="text-[var(--text)]">offre d'emploi</strong> avec intitulé, description, critères.</> },
             { text: <>Gérez les candidatures reçues dans le kanban.</> },
             { text: <>Faites progresser les candidats par étapes jusqu'à l'embauche.</> },
           ]} />
           <GuideCard icon={Bot} iconColor="green" title="Mode IA" steps={[
-            { text: <>Activez le <strong className="text-white">mode IA</strong> pour le scoring automatique des CVs.</> },
+            { text: <>Activez le <strong className="text-[var(--text)]">mode IA</strong> pour le scoring automatique des CVs.</> },
             { text: <>L'IA analyse les compétences et classe les candidats.</> },
             { text: <>Consultez les analytics pour optimiser vos offres.</> },
           ]} />
@@ -1444,7 +1445,7 @@ export default function DocsPage() {
       <section id="formation" className="mb-16 scroll-mt-20">
         <SectionHead num="20" title="Formation" />
         <PathCrumb path="Formation" />
-        <p className="text-[13.5px] text-[#8B8F98] leading-relaxed">
+        <p className="text-[13.5px] text-[var(--text-secondary)] leading-relaxed">
           Gérez le plan de formation de vos équipes : créez des sessions, assignez des participants et suivez les compétences développées.
           Les formations terminées sont consignées dans le dossier de chaque employé.
         </p>
@@ -1454,7 +1455,7 @@ export default function DocsPage() {
       <section id="materiel" className="mb-16 scroll-mt-20">
         <SectionHead num="21" title="Gestion du matériel" />
         <PathCrumb path="Matériel" />
-        <p className="text-[13.5px] text-[#8B8F98] leading-relaxed">
+        <p className="text-[13.5px] text-[var(--text-secondary)] leading-relaxed">
           Enregistrez les équipements attribués à chaque employé (ordinateur, véhicule, téléphone…).
           Lors d'une rupture de contrat, la liste du matériel à restituer est générée automatiquement.
         </p>
@@ -1463,24 +1464,24 @@ export default function DocsPage() {
       {/* ── FAQ ── */}
       <section id="faq" className="mb-16 scroll-mt-20">
         <SectionHead num="—" title="Questions fréquentes" />
-        <div className="bg-[#0c0c0d] border border-white/[0.06] rounded-2xl overflow-hidden">
+        <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl overflow-hidden">
           <FaqItem q="Pourquoi mon bulletin de paie a un montant incorrect ?">
             Ouvrez la fiche de l'employé concerné et vérifiez que son <strong>salaire de base</strong> est correct.
             Vérifiez ensuite les primes et déductions ajoutées manuellement sur ce bulletin.
             Vous pouvez modifier un bulletin via{' '}
-            <code className="bg-white/[0.06] border border-white/10 rounded px-1 text-[#FF9A62] text-[11px]">Paie → [bulletin] → Modifier</code>.
+            <code className="bg-[var(--surface-2)] border border-[var(--border)] rounded px-1 text-[var(--action)] text-[11px]">Paie → [bulletin] → Modifier</code>.
           </FaqItem>
           <FaqItem q="Un employé ne peut pas pointer en GPS — que faire ?">
             Vérifiez que la localisation GPS est activée dans{' '}
-            <code className="bg-white/[0.06] border border-white/10 rounded px-1 text-[#FF9A62] text-[11px]">Paramètres → Entreprise</code>{' '}
+            <code className="bg-[var(--surface-2)] border border-[var(--border)] rounded px-1 text-[var(--action)] text-[11px]">Paramètres → Entreprise</code>{' '}
             et que le rayon autorisé est suffisant. Assurez-vous que l'employé autorise la géolocalisation dans son navigateur.
             En dernier recours, utilisez le <strong>Pointage Manuel</strong>.
           </FaqItem>
           <FaqItem q="Comment réinitialiser le mot de passe d'un utilisateur ?">
             Allez dans{' '}
-            <code className="bg-white/[0.06] border border-white/10 rounded px-1 text-[#FF9A62] text-[11px]">Paramètres → Gestion Utilisateurs</code>,
+            <code className="bg-[var(--surface-2)] border border-[var(--border)] rounded px-1 text-[var(--action)] text-[11px]">Paramètres → Gestion Utilisateurs</code>,
             trouvez l'utilisateur et cliquez sur les options{' '}
-            <code className="bg-white/[0.06] border border-white/10 rounded px-1 text-[#FF9A62] text-[11px]">⋯</code>.
+            <code className="bg-[var(--surface-2)] border border-[var(--border)] rounded px-1 text-[var(--action)] text-[11px]">⋯</code>.
             Sélectionnez "Envoyer un lien de réinitialisation". Le lien est valable 24h.
           </FaqItem>
           <FaqItem q="Des impayés apparaissent alors que je n'ai pas généré de bulletin — est-ce normal ?">
@@ -1489,16 +1490,16 @@ export default function DocsPage() {
             Si la date est dépassée et qu'aucun bulletin n'est généré, c'est considéré comme un retard.
             Le montant affiché est alors <strong>approximatif</strong> (basé sur le salaire de base).
             Pour clôturer : générez le bulletin, effectuez le virement, puis marquez comme{' '}
-            <code className="bg-white/[0.06] border border-white/10 rounded px-1 text-[#FF9A62] text-[11px]">Payé</code>.
+            <code className="bg-[var(--surface-2)] border border-[var(--border)] rounded px-1 text-[var(--action)] text-[11px]">Payé</code>.
           </FaqItem>
           <FaqItem q="Peut-on gérer plusieurs entreprises depuis un seul compte ?">
             Oui, via le <strong>Mode Cabinet</strong>. Allez dans{' '}
-            <code className="bg-white/[0.06] border border-white/10 rounded px-1 text-[#FF9A62] text-[11px]">Cabinet → Créer mon cabinet</code>,
+            <code className="bg-[var(--surface-2)] border border-[var(--border)] rounded px-1 text-[var(--action)] text-[11px]">Cabinet → Créer mon cabinet</code>,
             puis ajoutez vos PME. Chaque PME dispose de sa propre configuration, employés et paie, accessibles depuis un tableau de bord central.
           </FaqItem>
           <FaqItem q="Comment exporter les données pour la comptabilité ?">
             Allez dans{' '}
-            <code className="bg-white/[0.06] border border-white/10 rounded px-1 text-[#FF9A62] text-[11px]">Rapports → Comptabilité</code>.
+            <code className="bg-[var(--surface-2)] border border-[var(--border)] rounded px-1 text-[var(--action)] text-[11px]">Rapports → Comptabilité</code>.
             Vous pouvez exporter le journal de paie, le récapitulatif des cotisations et le grand livre RH au format Excel ou PDF.
           </FaqItem>
           <FaqItem q="Les données sont-elles sauvegardées automatiquement ?">
@@ -1509,7 +1510,7 @@ export default function DocsPage() {
       </section>
 
       {/* Footer doc */}
-      <div className="pt-6 border-t border-white/[0.06] flex items-center justify-between text-[11.5px] text-[#5A5E66]">
+      <div className="pt-6 border-t border-[var(--border)] flex items-center justify-between text-[11.5px] text-[var(--text-secondary)]">
         <span>Konza RH · Centre d'aide v2.0</span>
         <span>Besoin d'aide ? Contactez le support via l'application.</span>
       </div>
@@ -1521,16 +1522,17 @@ export default function DocsPage() {
   // ─────────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen" style={{ background: '#050607', color: '#FAFAFA' }}>
+    <div className={s.site}>
       <Navbar />
 
-      <div style={{ display: 'flex', paddingTop: 64 }}>
+      <header className={[s.container,s.pageHeader].join(' ')}><p className={s.eyebrow}>Documentation</p><h1 className={s.title}>Un guide, au moment<br/>où vous en avez besoin.</h1><p className={s.copy}>Retrouvez les étapes pour configurer votre espace et travailler dans Konza RH.</p></header>
+      <div className={[s.container,s.docsLayout].join(' ')}>
         {sidebar}
 
         <main
-          style={{ marginLeft: 268, flex: 1, maxWidth: 860, padding: '3rem 3.5rem 8rem', minWidth: 0 }}
-          className="lg:ml-[268px] mx-auto"
+          id="contenu" className={s.docsMain}
         >
+          <details className={s.mobileContents}><summary>Parcourir le guide</summary><nav aria-label="Sommaire mobile" className="mt-4 grid gap-3">{currentNav.flatMap(group=>group.links).map(link=><a key={link.href} href={link.href}>{link.label}</a>)}</nav></details>
           {pageTabs}
           {videosContent}
           {docContent}

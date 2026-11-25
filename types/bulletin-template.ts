@@ -9,13 +9,14 @@ export interface PayrollItem {
   id: string;
   code: string;
   label: string;
-  type: 'GAIN' | 'DEDUCTION' | 'EMPLOYER_COST';
+  type: 'GAIN' | 'DEDUCTION' | 'EMPLOYER_COST' | 'INFO';
   base?: number;
   rate?: number;
   quantity?: number;   // ← ajouter cette ligne
   amount: number;
   isTaxable: boolean;
   isCnss: boolean;
+  isNature?: boolean;
   order: number;
 }
 

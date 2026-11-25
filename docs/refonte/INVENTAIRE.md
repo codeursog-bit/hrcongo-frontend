@@ -417,21 +417,21 @@ Relevé statique : couleurs en dur = classes de palette ou couleurs littérales 
 
 | Suivi | Route | Source dans `app/` | Constat / protection |
 |---|---|---|---|
-| [ ] | `/` | `page.tsx` | Couleurs en dur |
+| [~] | `/` | `page.tsx` | Accueil recomposé, grands aperçus réels de l’application ; revue utilisateur en attente |
 | [ ] | `/affiliate/dashboard` | `affiliate/dashboard/page.tsx` | Couleurs en dur |
 | [ ] | `/affiliate/login` | `affiliate/login/page.tsx` | Couleurs en dur |
-| [ ] | `/auth/accept-invitation/[token]` | `auth/accept-invitation/[token]/page.tsx` | Couleurs en dur |
-| [ ] | `/auth/accept-portfolio-invitation/[token]` | `auth/accept-portfolio-invitation/[token]/page.tsx` | Couleurs en dur |
-| [ ] | `/auth/forgot-password` | `auth/forgot-password/page.tsx` | Couleurs en dur |
-| [ ] | `/auth/login` | `auth/login/page.tsx` | Couleurs en dur |
-| [ ] | `/auth/register` | `auth/register/page.tsx` | Couleurs en dur |
-| [ ] | `/auth/reset-password` | `auth/reset-password/page.tsx` | Couleurs en dur |
-| [ ] | `/blog` | `blog/page.tsx` | Styles délégués : composants importés à vérifier |
-| [ ] | `/blog/[slug]` | `blog/[slug]/page.tsx` | Styles délégués : composants importés à vérifier |
+| [~] | `/auth/accept-invitation/[token]` | `auth/accept-invitation/[token]/page.tsx` | Présentation auth commune, formulaire prioritaire et capture réelle ; validations et parcours conservés ; revue utilisateur attendue |
+| [~] | `/auth/accept-portfolio-invitation/[token]` | `auth/accept-portfolio-invitation/[token]/page.tsx` | Présentation auth commune, formulaire prioritaire et capture réelle ; validations et parcours conservés ; revue utilisateur attendue |
+| [~] | `/auth/forgot-password` | `auth/forgot-password/page.tsx` | Présentation auth commune, formulaire prioritaire et capture réelle ; validations et parcours conservés ; revue utilisateur attendue |
+| [~] | `/auth/login` | `auth/login/page.tsx` | Présentation auth commune, formulaire prioritaire et capture réelle ; validations et parcours conservés ; revue utilisateur attendue |
+| [~] | `/auth/register` | `auth/register/page.tsx` | Présentation auth commune, formulaire prioritaire et capture réelle ; validations et parcours conservés ; revue utilisateur attendue |
+| [~] | `/auth/reset-password` | `auth/reset-password/page.tsx` | Présentation auth commune, formulaire prioritaire et capture réelle ; validations et parcours conservés ; revue utilisateur attendue |
+| [~] | `/blog` | `blog/page.tsx` | Journal éditorial, article à la une et liste ; recherche, catégories et réactions conservées |
+| [~] | `/blog/[slug]` | `blog/[slug]/page.tsx` | Lecture et sommaire avec tokens clair/sombre ; contenu, SEO et interactions conservés |
 | [ ] | `/cgu` | `cgu/page.tsx` | Couleurs en dur |
-| [ ] | `/companies/create` | `companies/create/page.tsx` | Couleurs en dur |
-| [ ] | `/contact` | `contact/page.tsx` | Styles délégués : composants importés à vérifier |
-| [ ] | `/docs` | `docs/page.tsx` | Couleurs en dur ; documents / exports : **NE PAS TOUCHER** (interface autour à distinguer) |
+| [~] | `/companies/create` | `companies/create/page.tsx` | Création en quatre étapes, champs regroupés, récapitulatif latéral et conventions harmonisées ; validations/payload conservés ; revue visuelle utilisateur attendue |
+| [~] | `/contact` | `contact/page.tsx` | Formulaire et coordonnées réorganisés ; envoi, validation et suivi Support conservés |
+| [~] | `/docs` | `docs/page.tsx` | Guide responsive, sommaire mobile et captures produit avec agrandissement ; documents / exports : **NE PAS TOUCHER** |
 | [ ] | `/ecran` | `ecran/page.tsx` | Couleurs en dur |
 | [ ] | `/entreprises` | `entreprises/page.tsx` | Styles délégués : composants importés à vérifier |
 | [ ] | `/entreprises/[slug]` | `entreprises/[slug]/page.tsx` | Couleurs en dur |
@@ -449,10 +449,10 @@ Relevé statique : couleurs en dur = classes de palette ou couleurs littérales 
 | [ ] | `/outils/calcul-its-congo` | `outils/calcul-its-congo/page.tsx` | Styles délégués : composants importés à vérifier |
 | [ ] | `/outils/calcul-tus-congo` | `outils/calcul-tus-congo/page.tsx` | Styles délégués : composants importés à vérifier |
 | [ ] | `/privacy` | `privacy/page.tsx` | Couleurs en dur |
-| [ ] | `/qui-sommes-nous` | `qui-sommes-nous/page.tsx` | Couleurs en dur |
-| [ ] | `/register` | `register/page.tsx` | Couleurs en dur |
+| [~] | `/qui-sommes-nous` | `qui-sommes-nous/page.tsx` | Présentation éditoriale, produit réel et histoire ; aucune photo fictive ; revue utilisateur en attente |
+| [~] | `/register` | `register/page.tsx` | Présentation auth commune, formulaire prioritaire et capture réelle ; validations et parcours conservés ; revue utilisateur attendue |
 | [ ] | `/simulateur` | `simulateur/page.tsx` | Styles délégués : composants importés à vérifier |
-| [ ] | `/tarifs` | `tarifs/page.tsx` | Styles délégués : composants importés à vérifier |
+| [~] | `/tarifs` | `tarifs/page.tsx` | Présentation publique harmonisée, catalogue serveur inchangé, comparaison et mensuel/annuel contrôlés ; revue visuelle utilisateur attendue |
 | [ ] | `/verify/[ref]` | `verify/[ref]/page.tsx` | Couleurs en dur |
 
 ### Module : rapports

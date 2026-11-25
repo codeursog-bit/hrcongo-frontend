@@ -8,6 +8,7 @@ import {
   Trash2, Check, Info, X, Code, Server,
 } from 'lucide-react';
 import { adminService } from '@/lib/services/adminService';
+import { IncidentPanel } from '@/components/admin/IncidentPanel';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 interface AppError {
@@ -143,6 +144,7 @@ export default function ErrorsPage() {
 
   return (
     <div className="space-y-6">
+      <IncidentPanel />
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

@@ -1,0 +1,46 @@
+.spot {
+  position: fixed;
+  z-index: 30;
+  border: 2px solid #46aa8e;
+  border-radius: 5px;
+  box-shadow: 0 0 0 150vmax rgb(11 26 22 / 30%);
+  pointer-events: none;
+}
+.cursor {
+  position: fixed;
+  z-index: 31;
+  pointer-events: none;
+  transition-property: top, left;
+  transition-timing-function: ease-in-out;
+}
+.cursor[data-playing='false'] { transition: none; }
+.panel {
+  position: fixed;
+  z-index: 32;
+  bottom: 16px;
+  width: min(360px, calc(100vw - 32px));
+  padding: .65rem;
+  display: grid;
+  gap: .55rem;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: .65rem;
+  box-shadow: 0 4px 18px rgb(0 0 0 / 13%);
+  font-size: .82rem;
+}
+.panel header, .controls { display: flex; flex-wrap: wrap; gap: .35rem; align-items: center; }
+.panel header strong { flex: 1; }
+.panel :is(button, select) {
+  padding: .25rem .42rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: .32rem;
+  color: var(--text);
+}
+.panel button[aria-pressed='true'] { border-color: var(--brand); background: var(--brand-soft); }
+.panel button:disabled { opacity: .45; }
+.panel .grip { cursor: grab; touch-action: none; }
+.panel p { margin: 0; }
+.panel .example { color: var(--text-muted); }
+@media (prefers-reduced-motion: reduce) { .cursor { transition: none !important; } }

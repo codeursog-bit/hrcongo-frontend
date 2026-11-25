@@ -20,6 +20,9 @@ import { demoEmployeeManagement } from './employee-management';
 import { demoWorkforce } from './workforce';
 import { demoPresenceScreens } from './presence-screens';
 import type { SavedDocumentLayout } from '@/lib/document-engine/layout-api';
+import type { DocLayout } from '@/types/document-layout';
+import type { SavedAdministrativeLayout } from '@/lib/document-engine/administrative-api';
+import type { AdministrativeType } from '@/lib/document-engine/administrative';
 import type { DocumentTemplate } from '@/lib/document-template';
 
 const notifications = [{ id: 'demo-notification-1', type: 'LEAVE', title: 'Demande de congé de Patrick Likibi', message: 'Une demande attend votre décision.', link: '/conges', read: false, createdAt: '2026-11-12T08:00:00+01:00' }];
@@ -30,13 +33,20 @@ export function createDemoStore() {
   store.employees[0].selfServiceEnabled = true;
   store.employees.forEach((employee,index)=>Object.assign(employee,{cnssNumber:index===0?'DEMO-CNSS-001':null,cnssEmployeeDeclared:index===0?false:index===1?true:null,isSubjectToCnss:index!==2,isSubjectToIrpp:index!==2}));
   Object.assign(store.loans[0], { repaymentLogs: structuredClone(loanHistory) });
-  return { ...store, documentLayout: null as SavedDocumentLayout | null, documentTemplate: 'DEFAULT' as DocumentTemplate };
+  return { ...store, documentLayout: null as SavedDocumentLayout | null,
+    administrativeLayouts: new Map<string, SavedAdministrativeLayout>(), documentTemplate: 'DEFAULT' as DocumentTemplate,
+    invoiceModel: 'forfait', salaryProrataDisplay: false };
 }
 const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
 /** Closed fixture router: unsupported requests never fall through to the real API. */
 export function demoResponse(url: URL, method: string, body: Record<string, unknown>, store: Store, role: 'ADMIN' | 'EMPLOYEE'): Response {
   const p = url.pathname;
-  const user = demoUser(role);
+  if (p === '/companies' && method === 'PATCH' && typeof body.salaryProrataDisplay === 'boolean') {
+    if (role !== 'ADMIN') return json({ message: 'Modification réservée à l’administration.' }, 403);
+    store.salaryProrataDisplay = body.salaryProrataDisplay;
+    return json({ ...company, salaryProrataDisplay: store.salaryProrataDisplay });
+  }
+  const user = { ...demoUser(role), company: { ...company, documentTemplate: store.documentTemplate } };
   const settings = demoSettings(url, method, role);
   if (settings) return settings;
   const performance = demoPerformance(url, method, role);
@@ -51,7 +61,32 @@ export function demoResponse(url: URL, method: string, body: Record<string, unkn
   if (recruitment) return role === 'ADMIN' ? recruitment : json({ message: 'Cet espace de recrutement est réservé aux RH en démonstration.' }, 403);
   const serviceCatalog = demoServiceCatalogs(url, method, role);
   if (serviceCatalog) return serviceCatalog;
-  if (p === '/companies/mine' && method === 'GET') return json({ ...company, documentTemplate: store.documentTemplate });
+  if (p === '/companies/mine' && method === 'GET') return json({
+    ...company, documentTemplate: store.documentTemplate, salaryProrataDisplay: store.salaryProrataDisplay,
+  });
+  if (p === '/document-layouts/rights' && method === 'GET') {
+    return role === 'ADMIN' ? json({ canCustomizeDocuments: true, canBuildDocumentsFromScratch: true })
+      : json({ message: 'Personnalisation réservée à l’administration.' }, 403);
+  }
+  const administrativeType = /^\/document-layouts\/(LEAVE|ABSENCE|EXIT_PERMISSION|LOAN|ADVANCE|CONTRACTOR_INVOICE)$/.exec(p)?.[1] as SavedAdministrativeLayout['docType'] | undefined;
+  if (administrativeType) {
+    const response = (layout?: SavedAdministrativeLayout) => json({ layout: layout ?? null });
+    if (method === 'GET') return response(store.administrativeLayouts.get(administrativeType));
+    if (role !== 'ADMIN') return json({ message: 'Modification réservée à l’administration.' }, 403);
+    if (method === 'DELETE') { store.administrativeLayouts.delete(administrativeType); return response(); }
+    const config = body.config as DocLayout | undefined;
+    if (method === 'PUT' && config?.docType === administrativeType && config.basePreset &&
+      ['A_CLASSIQUE', 'B_MODERNE', 'C_INSTITUTIONNEL', 'D_CARTOUCHE', 'HIST_STANDARD', 'HIST_MODERN', 'HIST_TICKET', 'STANDARD_TICKET_A4', 'BLANK', 'INVOICE_FORFAIT', 'INVOICE_DETAILED', 'INVOICE_PRO'].includes(config.basePreset)) {
+      const layout: SavedAdministrativeLayout = {
+        companyId: company.id, docType: config.docType, basePreset: config.basePreset, config: { ...config, independent: true },
+        name: typeof body.name === 'string' ? body.name : undefined,
+        version: (store.administrativeLayouts.get(administrativeType)?.version ?? 0) + 1,
+      };
+      store.administrativeLayouts.set(administrativeType, layout);
+      return response(layout);
+    }
+    return json({ message: 'Design administratif invalide.' }, 400);
+  }
   if (p === '/document-layouts/PAYSLIP') {
     if (method === 'GET') return json({ layout: store.documentLayout });
     if (role !== 'ADMIN') return json({ message: 'Modification réservée à l’administration.' }, 403);
@@ -66,14 +101,21 @@ export function demoResponse(url: URL, method: string, body: Record<string, unkn
       }
       store.documentLayout = {
         id: 'demo-payslip-layout', companyId: company.id, docType: 'PAYSLIP',
-        config, name: typeof body.name === 'string' ? body.name : 'Mon modèle', basePreset: config.basePreset,
+        config: { ...config, independent: true }, name: typeof body.name === 'string' ? body.name : 'Mon modèle', basePreset: config.basePreset,
         version: (store.documentLayout?.version ?? 0) + 1, updatedAt: new Date().toISOString(),
       };
-      store.documentTemplate = 'CUSTOM';
       return json({ layout: store.documentLayout });
     }
   }
-  if (method === 'GET' && p === '/companies/bulletin-template') return json({ config: { templateId: 'default' } });
+  if (p === '/companies/bulletin-template') {
+    if (method === 'PUT' && role === 'ADMIN' && typeof body.factureTemplateId === 'string'
+      && ['forfait', 'detaillee', 'professionnelle'].includes(body.factureTemplateId)) {
+      store.invoiceModel = body.factureTemplateId;
+    }
+    if (method === 'GET' || method === 'PUT' && role === 'ADMIN') {
+      return json({ config: { templateId: 'default', factureTemplateId: store.invoiceModel } });
+    }
+  }
   if (method === 'GET' && /^\/payrolls\/demo-payroll-\d+$/.test(p)) {
     const payroll = payrolls.find(item => item.id === p.split('/')[2]);
     if (!payroll || role === 'EMPLOYEE' && payroll.employeeId !== user.employeeId) return json({ message: 'Bulletin de démonstration introuvable.' }, 404);
@@ -118,7 +160,7 @@ export function demoResponse(url: URL, method: string, body: Record<string, unkn
     return json([]);
   }
   if (p === '/departments' && method === 'GET') return json(departments);
-  if (/^\/companies\/(mine|me|demo-company)$/.test(p)) return json(company);
+  if (/^\/companies\/(mine|me|demo-company)$/.test(p)) return json(user.company);
   if (p === '/approvals/me') return json({ canSign: false, functions: [], externalCompanies: [] });
   const approvalMatch = p.match(/^\/approvals\/requests\/(loan|advance)\/([^/]+)\/(state|decision)$/);
   if (approvalMatch) {

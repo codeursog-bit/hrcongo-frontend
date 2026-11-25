@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { reportClientIncident } from '@/lib/client-incidents';
 import { ServerCrash, RotateCcw, AlertTriangle, LayoutDashboard } from 'lucide-react';
 import { ErrorLayout } from '@/components/ui/ErrorLayout';
 
@@ -30,6 +31,7 @@ export default function Error({
   const chunkError = isChunkLoadError(error);
 
   React.useEffect(() => {
+    reportClientIncident(error, 'REACT_ERROR');
     if (!chunkError) return;
     // Évite une boucle de rechargement infinie si le problème persiste
     // réellement (ex. déploiement en échec côté serveur) : on ne se
@@ -37,7 +39,7 @@ export default function Error({
     if (sessionStorage.getItem(CHUNK_RELOAD_FLAG)) return;
     sessionStorage.setItem(CHUNK_RELOAD_FLAG, '1');
     window.location.reload();
-  }, [chunkError]);
+  }, [chunkError, error]);
 
   // Le rechargement est lancé au montage : ce texte n'est visible qu'un
   // instant, ou si le rechargement automatique a déjà eu lieu une fois.
@@ -77,7 +79,7 @@ export default function Error({
     <ErrorLayout
       code="500"
       title="Quelque chose s'est mal passé"
-      description="Notre équipe technique a été notifiée. Ce n'est pas de votre faute ! Essayez de rafraîchir la page."
+      description="La page a rencontré un problème. Essayez de la recharger ou revenez au tableau de bord."
       icon={ServerCrash}
       gradient="from-red-500 to-orange-500"
     >

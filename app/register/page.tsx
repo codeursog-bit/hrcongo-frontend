@@ -18,8 +18,8 @@ function RedirectInner() {
   }, [router, searchParams]);
 
   return (
-    <div role="status" className="flex min-h-screen items-center justify-center bg-[#050607]">
-      <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#FF9A62] border-t-transparent" />
+    <div role="status" className="flex min-h-screen items-center justify-center bg-[var(--bg)]">
+      <div className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--brand)] border-t-transparent" />
     </div>
   );
 }

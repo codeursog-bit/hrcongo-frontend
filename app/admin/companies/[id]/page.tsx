@@ -13,6 +13,7 @@ import {
   ArchiveRestore, Pencil, Loader2, X, AlertTriangle, BarChart3,
 } from 'lucide-react';
 import { adminService } from '@/lib/services/adminService';
+import { CompanyIncidentHealth } from '@/components/admin/CompanyIncidentHealth';
 import type { DocumentTemplate } from '@/lib/document-template';
 import { CompanyInsightsPanel, CompanyInsightsData } from '@/components/admin/companies/CompanyInsights';
 
@@ -240,6 +241,7 @@ export default function CompanyDetailsPage() {
 
   return (
     <div className="space-y-6">
+      <CompanyIncidentHealth companyId={companyId} />
       {/* Header */}
       <div className="flex items-center gap-4">
         <button

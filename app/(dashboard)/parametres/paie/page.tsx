@@ -44,6 +44,7 @@ interface PayrollSettings {
   cnssPensionCeiling:      number;
   cnssSocialCeiling:       number;
   cnssRounding:            string;
+  salaryRoundingEnabled:   boolean;
   // Heures sup
   overtimeEnabled:         boolean;
   overtimeRate10:          number;
@@ -80,6 +81,7 @@ const DEFAULTS: PayrollSettings = {
   cnssPensionCeiling:      1200000,
   cnssSocialCeiling:       600000,
   cnssRounding:            'UP',
+  salaryRoundingEnabled:   false,
   overtimeEnabled:         true,
   overtimeRate10:          10,
   overtimeRate25:          25,
@@ -212,6 +214,7 @@ export default function PayrollSettingsPage() {
             cnssPensionCeiling:      data.cnssPensionCeiling      ?? 1200000,
             cnssSocialCeiling:       data.cnssSocialCeiling       ?? 600000,
             cnssRounding:            data.cnssRounding            ?? 'UP',
+            salaryRoundingEnabled:   data.salaryRoundingEnabled   ?? false,
             overtimeEnabled:         data.overtimeEnabled         ?? true,
             overtimeRate10:          data.overtimeRate10          ?? 10,
             overtimeRate25:          data.overtimeRate25          ?? 25,
@@ -497,6 +500,17 @@ const handleSave = async () => {
               </div>
 
               {/* Arrondi */}
+              <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5">
+                <label className="flex items-center justify-between gap-4 cursor-pointer">
+                  <span>
+                    <span className="block text-sm font-bold text-[var(--text)]">Arrondi du net à payer</span>
+                    <span className="block text-xs text-[var(--text-muted)]">Ramener le net au multiple inférieur de 50 FCFA. La différence figure en dernière rubrique.</span>
+                  </span>
+                  <input type="checkbox" checked={settings.salaryRoundingEnabled}
+                    onChange={e => set('salaryRoundingEnabled', e.target.checked)}
+                    aria-label="Activer l'arrondi du net à payer" className="h-5 w-5 accent-emerald-600" />
+                </label>
+              </div>
               <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5">
                 <label className="block text-sm font-bold text-[var(--text)] mb-3">
                   Règle d'arrondi CNSS

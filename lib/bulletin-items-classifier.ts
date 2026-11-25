@@ -194,7 +194,7 @@ const COTIS_CODES = new Set([
 ]);
 
 /** Codes DEDUCTION qui sont des retenues diverses (prêts, avances, retenues libres…) */
-const RETENUE_CODES = new Set(['LOAN', 'ADVANCE', 'MANUAL_DEDUCTION']);
+const RETENUE_CODES = new Set(['LOAN', 'ADVANCE', 'MANUAL_DEDUCTION', 'SALARY_ROUNDING']);
 
 export function classifyItems(items: PayrollItem[]): ClassifiedItems {
   const gainItems:    PayrollItem[] = [];

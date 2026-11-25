@@ -850,7 +850,7 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
                 {selectedTemplate && !selectedTemplate.quantityMode && selectedTemplate.defaultAmount == null && selectedTemplate.defaultPercentage == null && (
                   <div>
                     <label className="block text-sm font-bold text-[var(--text-secondary)] mb-2">Montant (FCFA)</label>
-                    <input type="number" min="0" value={customAmount} onChange={e => setCustomAmount(e.target.value)}
+                    <input type="number" value={customAmount} onChange={e => setCustomAmount(e.target.value)}
                       placeholder="Ex: 25 000"
                       className="w-full p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl outline-none font-bold font-mono text-xl text-[var(--text)]" />
                   </div>
@@ -862,13 +862,14 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
                     <label className="block text-sm font-bold text-[var(--text-secondary)] mb-2">
                       Ajuster le montant <span className="text-xs font-normal text-[var(--text-secondary)]">(optionnel — défaut: {Number(selectedTemplate.defaultAmount).toLocaleString('fr-FR')} F)</span>
                     </label>
-                    <input type="number" min="0" value={customAmount} onChange={e => setCustomAmount(e.target.value)}
+                    <input type="number" value={customAmount} onChange={e => setCustomAmount(e.target.value)}
                       placeholder={String(selectedTemplate.defaultAmount)}
                       className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl outline-none font-bold font-mono text-lg text-[var(--text)]" />
                   </div>
                 )}
 
                 {/* Fréquence */}
+                {Number(customAmount) < 0 && <p role="alert" className="text-xs text-amber-700">Montant négatif : cette prime ou indemnité réduira le net à payer.</p>}
                 {selectedTemplate && (
                   <div>
                     <label className="block text-sm font-bold text-[var(--text-secondary)] mb-2">Fréquence</label>

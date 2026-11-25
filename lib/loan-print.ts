@@ -1,3 +1,5 @@
+import { printEngineRequest } from './engine-request-print';
+
 // ============================================================================
 // 📁 lib/loan-print.ts
 // ✅ Même technique éprouvée que absence-print.ts / leave-print.ts.
@@ -9,6 +11,7 @@ function findElement(elementId: string): HTMLElement | null {
 
 export function printLoanDocument(elementId: string) {
   const el = findElement(elementId);
+  if (printEngineRequest(el)) return;
   if (!el) { window.print(); return; }
 
   const iframe = document.createElement('iframe');
@@ -79,6 +82,7 @@ ${styleInlines}
 
 export async function downloadLoanDocumentPDF(elementId: string, filename: string): Promise<void> {
   const el = findElement(elementId);
+  if (printEngineRequest(el)) return;
   if (!el) { alert('Impossible de générer le PDF : document introuvable.'); return; }
 
   const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([

@@ -1,0 +1,191 @@
+.au-centered:has(.company-setup) .au-layout {
+  max-width: 1160px;
+}
+.au-centered:has(.company-setup) .au-form {
+  max-width: 1040px;
+  width: 100%;
+  margin: 0 auto;
+}
+.au-centered:has(.company-setup) .au-main {
+  padding: 32px 40px 24px;
+}
+.company-intro {
+  margin-bottom: 32px;
+}
+.company-intro > p,
+.company-context {
+  color: var(--action);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin: 0 0 12px;
+}
+.company-intro h2 {
+  font-size: 34px;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1.2;
+  margin: 0 0 10px;
+}
+.company-intro > span {
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.8;
+}
+.company-steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  list-style: none;
+  margin: 0 0 40px;
+  padding: 0;
+  gap: 16px;
+}
+.company-steps li {
+  padding: 16px 0;
+  border-bottom: 2px solid var(--surface-2);
+  color: var(--text-secondary);
+}
+.company-steps li > div,
+.company-steps button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+.company-steps b {
+  font-weight: 500;
+}
+.company-steps span {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  font-size: 12px;
+}
+.company-steps .is-current {
+  border-color: var(--action);
+  color: var(--text);
+}
+.company-steps .is-current span {
+  background: var(--text);
+  color: var(--surface);
+}
+.company-steps .is-done {
+  border-color: var(--brand);
+  color: var(--action);
+}
+.company-steps .is-done span {
+  background: var(--brand-soft);
+}
+.company-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 64px;
+  align-items: start;
+}
+.company-fields {
+  min-width: 0;
+}
+.company-fields .au-heading {
+  margin-bottom: 28px;
+}
+.company-fields .au-title {
+  font-size: 28px;
+}
+.company-fields .au-row-2 {
+  gap: 18px;
+}
+.company-guidance {
+  padding: 24px;
+  background: var(--surface-2);
+  border-radius: 12px;
+}
+.company-guidance h3 {
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.company-guidance dl {
+  margin: 24px 0;
+  display: grid;
+  gap: 16px;
+}
+.company-guidance dt {
+  color: var(--text-secondary);
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+.company-guidance dd {
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.company-tip {
+  border-top: 1px solid var(--border);
+  padding-top: 20px;
+}
+.company-tip h4 {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.company-tip p {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.8;
+}
+.company-setup > .au-actions {
+  max-width: calc(100% - 324px);
+  padding-top: 28px;
+  margin-top: 28px;
+  border-top: 1px solid var(--border);
+}
+.company-setup .au-conv > .grid {
+  grid-template-columns: 1fr;
+}
+.company-setup .au-subtitle {
+  margin: 16px 0 4px;
+}
+@media (max-width: 850px) {
+  .company-workspace {
+    grid-template-columns: minmax(0, 1fr) 220px;
+    gap: 28px;
+  }
+  .company-setup > .au-actions {
+    max-width: calc(100% - 248px);
+  }
+}
+@media (max-width: 650px) {
+  .au-centered:has(.company-setup) .au-main {
+    padding: 28px 24px;
+  }
+  .company-intro h2 {
+    font-size: 27px;
+  }
+  .company-steps {
+    gap: 8px;
+    margin-bottom: 28px;
+  }
+  .company-steps li > div,
+  .company-steps button {
+    flex-direction: column;
+    align-items: start;
+    gap: 8px;
+    font-size: 11px;
+  }
+  .company-workspace {
+    grid-template-columns: 1fr;
+  }
+  .company-guidance {
+    display: none;
+  }
+  .company-setup > .au-actions {
+    max-width: none;
+  }
+  .company-fields .au-title {
+    font-size: 25px;
+  }
+}

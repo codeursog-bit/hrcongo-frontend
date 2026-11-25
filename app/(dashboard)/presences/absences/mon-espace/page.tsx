@@ -1,4 +1,5 @@
 'use client';
+import { useRequestDocumentTemplate } from '@/hooks/useRequestDocumentTemplate';
 import { DocumentReader } from '@/components/ui/DocumentReader';
 import { RequestStatusTabs, RequestStatusBadge } from '@/components/requests';
 import { requestStatus, type RequestGroup } from '@/lib/request-status';
@@ -132,13 +133,15 @@ export default function MonEspaceAbsencesPage() {
   } : null;
 
   const isStandard = usesStandardData(company?.documentTemplate);
+  const requestTemplate = useRequestDocumentTemplate('ABSENCE', company);
+  const standardDocument = usesStandardData(requestTemplate);
   const [motifCatalog, setMotifCatalog] = useState<any[]>([]);
   useEffect(() => {
-    if (!isStandard) return;
+    if (!standardDocument) return;
     (async () => { try { setMotifCatalog(await api.get('/absence-requests/motifs') || []); } catch {} })();
-  }, [isStandard]);
+  }, [standardDocument]);
 
-  const standardAbsenceData = selected && isStandard ? {
+  const standardAbsenceData = selected && standardDocument ? {
     reference: `DEA-${selected.id.slice(0, 8).toUpperCase()}`,
     company: { legalName: company?.legalName, tradeName: company?.tradeName, logo: company?.logo, address: company?.address, city: company?.city, country: company?.country, phone: company?.phone, email: company?.email, cachetUrl: company?.cachetUrl, documentFooterText: company?.documentFooterText },
     employee: { firstName: employee?.firstName || '', lastName: employee?.lastName || '', employeeNumber: employee?.employeeNumber, position: employee?.position },
@@ -147,6 +150,7 @@ export default function MonEspaceAbsencesPage() {
     // ligne cochée en comparant au texte enregistré (= libellé exact de la
     // convention au moment de la demande), même logique que le backend.
     motifKey: motifCatalog.find((m: any) => m.label === selected.reason)?.key,
+    otherReason: requestTemplate === 'CUSTOM' && !motifCatalog.some(m => m.label === selected.reason) ? selected.reason : undefined,
     startDate: selected.startDate,
     endDate: selected.endDate,
     returnDate: selected.returnDate,
@@ -351,8 +355,8 @@ export default function MonEspaceAbsencesPage() {
                   {/* Aperçu imprimable */}
                   <DocumentReader title="Demande d’absence">
                     <div className="loan-document-protected scale-[0.42] origin-top-left -mb-[58%]" style={{ width: '238%' }}>
-                      {isStandard ? (
-                        standardAbsenceData && <AbsenceRequestDocument template={company?.documentTemplate} data={standardAbsenceData as any} />
+                      {standardDocument ? (
+                        standardAbsenceData && <AbsenceRequestDocument template={requestTemplate} data={standardAbsenceData as any} />
                       ) : (
                         printData && <AbsenceRequestPrintable data={printData as any} />
                       )}

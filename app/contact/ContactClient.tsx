@@ -11,10 +11,11 @@ import {
   CheckCircle2, AlertCircle, ArrowRight,
 } from 'lucide-react';
 import { Navbar } from '@/components/landing/Navbar';
+import s from '@/components/landing/PublicSite.module.css';
 import { Footer } from '@/components/landing/Footer';
 import { api }    from '@/services/api';
 
-const ACCENT = '#FF9A62';
+const ACCENT = 'var(--action)';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface ContactPayload {
@@ -105,75 +106,54 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#050607] font-sans text-[#F2F2F2]">
+    <div className={s.site}>
       <Navbar />
 
-      {/* ── Titre ───────────────────────────────────────────────────────────── */}
-      <section className="relative px-6 pb-16 pt-36 text-center">
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{ background: 'radial-gradient(55% 60% at 50% 0%, rgba(247,135,75,.12), transparent 70%)' }}
-        />
-        <div className="relative mx-auto max-w-2xl">
-          <div className="mb-4 text-[13px] font-semibold uppercase tracking-[0.12em]" style={{ color: ACCENT }}>
-            Contact
-          </div>
-          <h1 className="text-[38px] font-bold leading-[1.08] tracking-[-0.03em] sm:text-[54px]">
-            On vous répond <span style={{ color: ACCENT }}>sous 24 heures.</span>
-          </h1>
-          <p className="mx-auto mt-5 max-w-lg text-[18px] leading-relaxed text-[#9a9a9a]">
-            Une question sur la paie, un besoin de démo, un projet d’intégration ? Notre équipe à Pointe-Noire est là
-            pour vous.
-          </p>
-        </div>
-      </section>
-
-      {/* ── Contenu ─────────────────────────────────────────────────────────── */}
-      <section className="border-t border-white/[0.06]">
-        <div className="mx-auto grid max-w-6xl items-start gap-14 px-6 py-20 lg:grid-cols-[360px_1fr] lg:gap-16">
-
+      <main id="contenu">
+      <header className={[s.container,s.pageHeader].join(' ')}><p className={s.eyebrow}>Contact</p><div className={s.heroGrid}><h1 className={s.title}>Parlons de votre<br/>organisation.</h1><p className={s.intro}>Une démonstration, un besoin précis ou une question sur votre espace ? Écrivez à l’équipe Konza, à Pointe-Noire.</p></div></header>
+      <section className={[s.container,s.contactGrid].join(' ')}>
           {/* ── Infos ── */}
           <div className="space-y-9">
             <div>
               <h2 className="mb-2 text-[22px] font-semibold tracking-[-0.01em]">Parlons de votre projet</h2>
-              <p className="text-[15px] leading-relaxed text-[#9a9a9a]">
+              <p className="text-[15px] leading-relaxed text-[var(--text-secondary)]">
                 Démo, devis, support ou simple question : on répond en français, par une équipe qui connaît votre réalité.
               </p>
             </div>
 
-            <ul className="border-t border-white/10">
+            <ul className="border-t border-[var(--border)]">
               {CONTACT_INFO.map(({ icon: Icon, label, value, href }) => (
-                <li key={label} className="flex items-center gap-4 border-b border-white/10 py-4">
+                <li key={label} className="flex items-center gap-4 border-b border-[var(--border)] py-4">
                   <Icon size={18} style={{ color: ACCENT }} className="shrink-0" />
                   <div>
-                    <div className="mb-0.5 text-[12px] font-medium text-[#6f6f6f]">{label}</div>
+                    <div className="mb-0.5 text-[12px] font-medium text-[var(--text-secondary)]">{label}</div>
                     {href ? (
-                      <a href={href} className="text-[15px] font-medium text-[#F2F2F2] underline-offset-4 hover:underline">
+                      <a href={href} className="text-[15px] font-medium text-[var(--text)] underline-offset-4 hover:underline">
                         {value}
                       </a>
                     ) : (
-                      <span className="text-[15px] text-[#d6d6d6]">{value}</span>
+                      <span className="text-[15px] text-[var(--text-secondary)]">{value}</span>
                     )}
                   </div>
                 </li>
               ))}
             </ul>
 
-            <p className="text-[14px] leading-relaxed text-[#9a9a9a]">
+            <p className="text-[14px] leading-relaxed text-[var(--text-secondary)]">
               En cas d’urgence, appelez-nous au{' '}
-              <a href="tel:+242064133693" className="font-semibold text-[#F2F2F2] underline-offset-4 hover:underline">
+              <a href="tel:+242064133693" className="font-semibold text-[var(--text)] underline-offset-4 hover:underline">
                 +242 06 413 36 93
               </a>.
             </p>
 
             <div>
-              <p className="mb-3 text-[12px] font-semibold uppercase tracking-[0.12em] text-[#6f6f6f]">Liens utiles</p>
+              <p className="mb-3 text-[12px] font-semibold uppercase tracking-[0.12em] text-[var(--text-secondary)]">Liens utiles</p>
               <div className="space-y-2.5">
                 {QUICK_LINKS.map((lk) => (
                   <Link
                     key={lk.label}
                     href={lk.href}
-                    className="flex items-center gap-2 text-[14px] text-[#9a9a9a] transition-colors hover:text-[#F2F2F2]"
+                    className="flex items-center gap-2 text-[14px] text-[var(--text-secondary)] transition-colors hover:text-[var(--text)]"
                   >
                     <ArrowRight size={13} style={{ color: ACCENT }} /> {lk.label}
                   </Link>
@@ -183,21 +163,21 @@ export default function ContactPage() {
           </div>
 
           {/* ── Formulaire ── */}
-          <div className="rounded-2xl border border-white/[0.08] bg-[#0c0c0d] p-7 sm:p-10">
+          <div className={s.contactForm}>
             {status === 'success' ? (
               <div className="py-10 text-center">
                 <div
                   className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full border"
-                  style={{ borderColor: `${ACCENT}55`, background: `${ACCENT}14` }}
+                  style={{ borderColor: 'var(--border)', background: 'var(--brand-soft)' }}
                 >
                   <CheckCircle2 size={28} style={{ color: ACCENT }} />
                 </div>
                 <h3 className="mb-3 text-[22px] font-semibold">Message envoyé</h3>
-                <p className="mb-2 text-[15px] leading-relaxed text-[#9a9a9a]">
-                  Merci <strong className="text-[#F2F2F2]">{form.name}</strong>. Notre équipe vous répondra sous 24 h à{' '}
+                <p className="mb-2 text-[15px] leading-relaxed text-[var(--text-secondary)]">
+                  Merci <strong className="text-[var(--text)]">{form.name}</strong>. Notre équipe vous répondra sous 24 h à{' '}
                   <span style={{ color: ACCENT }}>{form.email}</span>.
                 </p>
-                <p className="mb-8 text-[13px] text-[#6f6f6f]">
+                <p className="mb-8 text-[13px] text-[var(--text-secondary)]">
                   {followUp?.emailSent
                     ? 'Le lien privé de suivi vous a été envoyé par e-mail.'
                     : 'Conservez le lien ci-dessous pour lire nos réponses et poursuivre la conversation.'}
@@ -212,7 +192,7 @@ export default function ContactPage() {
                 <button
                   type="button"
                   onClick={reset}
-                  className="rounded-xl border border-white/10 px-5 py-2.5 text-[14px] font-medium text-[#d6d6d6] transition-colors hover:border-white/25 hover:bg-white/[0.04]"
+                  className="rounded-xl border border-[var(--border)] px-5 py-2.5 text-[14px] font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--border)] hover:bg-[var(--surface-2)]"
                 >
                   Envoyer un autre message
                 </button>
@@ -221,8 +201,8 @@ export default function ContactPage() {
               <form onSubmit={handleSubmit} className="space-y-5" noValidate>
                 <div>
                   <h3 className="mb-1 text-[20px] font-semibold">Écrivez-nous</h3>
-                  <p className="text-[13px] text-[#6f6f6f]">Les champs * sont obligatoires.</p>
-                  <Link href="/assistance" className="mt-1 inline-block text-[13px] text-[#9a9a9a] underline underline-offset-4 hover:text-[#F2F2F2]">
+                  <p className="text-[13px] text-[var(--text-secondary)]">Les champs * sont obligatoires.</p>
+                  <Link href="/assistance" className="mt-1 inline-block text-[13px] text-[var(--text-secondary)] underline underline-offset-4 hover:text-[var(--text)]">
                     Déjà un compte ? Retrouvez vos conversations avec le support.
                   </Link>
                 </div>
@@ -263,7 +243,7 @@ export default function ContactPage() {
                 </Field>
 
                 {(status === 'error' || errMsg) && (
-                  <div role="alert" className="flex items-start gap-3 rounded-xl border border-red-500/25 bg-red-500/[0.08] p-3.5 text-[14px] text-red-300">
+                  <div role="alert" className="flex items-start gap-3 rounded-xl border border-transparent bg-[color-mix(in_srgb,var(--danger)_8%,var(--surface))] p-3.5 text-[14px] text-[var(--danger-text)]">
                     <AlertCircle size={15} className="mt-0.5 shrink-0" />
                     <span>{errMsg}</span>
                   </div>
@@ -272,25 +252,24 @@ export default function ContactPage() {
                 <button
                   type="submit"
                   disabled={status === 'loading'}
-                  className="flex w-full items-center justify-center gap-2.5 rounded-xl bg-[#FAFAFA] py-3.5 text-[15px] font-semibold text-black transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex w-full items-center justify-center gap-2.5 rounded-xl bg-[var(--text)] py-3.5 text-[15px] font-semibold text-[var(--surface)] transition-colors hover:bg-[var(--action)] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {status === 'loading'
                     ? <><Loader2 size={16} className="animate-spin" /> Envoi en cours…</>
                     : <><Send size={15} /> Envoyer le message</>}
                 </button>
 
-                <p className="text-center text-[12.5px] text-[#6f6f6f]">
+                <p className="text-center text-[12.5px] text-[var(--text-secondary)]">
                   En envoyant ce message, vous acceptez notre{' '}
-                  <Link href="/privacy" className="text-[#9a9a9a] underline underline-offset-4 hover:text-[#F2F2F2]">
+                  <Link href="/privacy" className="text-[var(--text-secondary)] underline underline-offset-4 hover:text-[var(--text)]">
                     politique de confidentialité
                   </Link>.
                 </p>
               </form>
             )}
           </div>
-        </div>
       </section>
-
+      </main>
       <Footer />
     </div>
   );
@@ -302,24 +281,15 @@ function Field({ label, children }: { label: string; children: React.ReactElemen
   const isSelect = children.type === 'select';
   return (
     <div className="space-y-1.5">
-      <label htmlFor={id} className="block text-[13px] font-medium text-[#9a9a9a]">{label}</label>
+      <label htmlFor={id} className="block text-[13px] font-medium text-[var(--text-secondary)]">{label}</label>
       {React.cloneElement(children, {
         id,
-        style: isSelect
-          ? {
-              backgroundImage:
-                "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239a9a9a' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>\")",
-              backgroundRepeat: 'no-repeat',
-              backgroundPosition: 'right 14px center',
-              paddingRight: 40,
-            }
-          : undefined,
         className: [
-          'w-full rounded-xl border border-white/10 bg-[#050607] px-4 py-3',
-          'font-[inherit] text-[15px] text-[#F2F2F2] placeholder:text-[#5a5a5a]',
-          'outline-none transition-colors focus:border-[#FF9A62]/60',
+          'w-full rounded-xl border border-transparent bg-[var(--surface-2)] px-4 py-3',
+          'font-[inherit] text-[15px] text-[var(--text)] placeholder:text-[var(--text-secondary)]',
+          'outline-none transition-colors focus:border-[var(--action)] focus:ring-2 focus:ring-[var(--brand-soft)]',
           children.type === 'textarea' ? 'min-h-[110px] resize-y' : '',
-          isSelect ? 'cursor-pointer appearance-none' : '',
+          isSelect ? 'cursor-pointer' : '',
           children.props.className || '',
         ].join(' '),
       })}

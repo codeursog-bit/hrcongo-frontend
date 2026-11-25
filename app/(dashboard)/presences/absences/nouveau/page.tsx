@@ -1,4 +1,5 @@
 'use client';
+import { useRequestDocumentTemplate } from '@/hooks/useRequestDocumentTemplate';
 import { DocumentReader } from '@/components/ui/DocumentReader';
 import { RequestForm, RequestSummaryCard, RequestSuccessScreen } from '@/components/requests';
 import { useToast } from '@/components/design-system/feedback';
@@ -98,6 +99,8 @@ export default function NouvelleAbsencePage() {
   // l'entreprise, avec un nombre de jours fixe (remplace le choix
   // type/sous-type/raison libre + double date de la version DEFAULT).
   const isStandard = usesStandardData(company?.documentTemplate);
+  const requestTemplate = useRequestDocumentTemplate('ABSENCE', company);
+  const standardDocument = usesStandardData(requestTemplate);
   const [motifCatalog, setMotifCatalog] = useState<any[]>([]);
   const [selectedMotifKey, setSelectedMotifKey] = useState('');
   // 🆕 Motif « Autre » : hors catalogue, motif saisi librement ; la RH tranche payé / non payé.
@@ -107,14 +110,14 @@ export default function NouvelleAbsencePage() {
   const [paidChoice, setPaidChoice] = useState<boolean | null>(null);
 
   useEffect(() => {
-    if (!isStandard) return;
+    if (!isStandard && !standardDocument) return;
     (async () => {
       try {
         const list: any = await api.get('/absence-requests/motifs');
         setMotifCatalog(list || []);
       } catch (e) { console.error('Erreur chargement catalogue de motifs', e); }
     })();
-  }, [isStandard]);
+  }, [isStandard, standardDocument]);
 
   const selectedMotif = motifCatalog.find(m => m.key === selectedMotifKey);
 
@@ -303,7 +306,7 @@ export default function NouvelleAbsencePage() {
     },
     catalog: motifCatalog,
     motifKey: isOther ? undefined : (selectedMotifKey || undefined),
-    otherReason: isOther ? (reason.trim() || '…') : undefined,
+    otherReason: isOther ? (reason.trim() || '…') : !isStandard && standardDocument ? reason.trim() || SUBTYPE_OPTIONS[type]?.find(item => item.value === subType)?.label : undefined,
     startDate: startDate || new Date(),
     endDate: lastAbsenceDate || startDate || new Date(),
     returnDate: returnDate || undefined,
@@ -754,8 +757,8 @@ export default function NouvelleAbsencePage() {
             <p className="text-xs font-semibold text-[var(--text-muted)]   mb-3">Aperçu du document</p>
             <DocumentReader title="Demande d’absence">
               <div className="loan-document-protected scale-[0.62] origin-top -mb-[38%] shadow-2xl">
-                {isStandard ? (
-                  <AbsenceRequestDocument template={company?.documentTemplate} data={standardPreviewData as any} />
+                {standardDocument ? (
+                  <AbsenceRequestDocument template={requestTemplate} data={standardPreviewData as any} />
                 ) : (
                   <AbsenceRequestPrintable data={previewData as any} />
                 )}

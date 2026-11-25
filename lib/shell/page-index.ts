@@ -143,6 +143,7 @@ export const SHELL_PAGES: ShellPage[] = [
   P('Paramètres', '/parametres', '/parametres', 'Paramètres', undefined, 'reglages configuration'),
   P('Paramètres', '/parametres', '/parametres/entreprise', 'Paramètres de l’entreprise', 'Entreprise', 'societe logo adresse'),
   P('Paramètres', '/parametres', '/parametres/paie', 'Paramètres de paie', 'Paie', 'cotisations calcul'),
+  P('Paramètres', '/parametres', '/parametres/documents', 'Modèles de documents', 'Documents', 'personnaliser bulletin facture demandes'),
   P('Paramètres', '/parametres', '/parametres/primes', 'Catalogue des primes', 'Primes'),
   P('Paramètres', '/parametres', '/parametres/taxes', 'Taxes et impôts', 'Taxes', 'its tus'),
   P('Paramètres', '/parametres', '/parametres/departements', 'Départements', 'Départements', 'services equipes'),
@@ -150,7 +151,6 @@ export const SHELL_PAGES: ShellPage[] = [
   P('Paramètres', '/parametres', '/parametres/securite', 'Sécurité', 'Sécurité', 'mot de passe double authentification'),
   P('Paramètres', '/parametres', '/parametres/subscription', 'Abonnement', 'Abonnement', 'forfait facturation'),
   P('Paramètres', '/parametres', '/parametres/circuits', 'Circuits de validation', 'Circuits', 'avis workflow'),
-  P('Paramètres', '/parametres', '/parametres/bulletin', 'Modèle de bulletin', 'Bulletin', 'personnaliser bulletin facture'),
 
   P('Mon compte', '/mon-profil', '/mon-profil', 'Mon profil', undefined, 'compte apparence theme mot de passe preferences', true),
   P('Mon compte', '/notifications', '/notifications', 'Notifications', undefined, 'alertes historique', true),

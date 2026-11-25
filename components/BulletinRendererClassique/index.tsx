@@ -275,6 +275,7 @@ export default function BulletinRendererClassique({ payroll, template, previewMo
     return /^cnss\s+(pension|famille|accidents?)\b/.test(lbl);
   };
   const manualDeductions = retenueItems.filter((i: any) => i.code === 'MANUAL_DEDUCTION');
+  const salaryRounding = retenueItems.find((i: any) => i.code === 'SALARY_ROUNDING');
   const loanItems        = retenueItems.filter((i: any) => ['LOAN','ADVANCE'].includes(i.code));
   const ctaxEmp = cotisItems.filter((i: any) =>
     !['CNSS_SAL','CNSS','ITS','IRPP','BNC_SOURCE'].includes(i.code) && !isCnssPatSummary(i));
@@ -287,6 +288,7 @@ export default function BulletinRendererClassique({ payroll, template, previewMo
     + ctaxEmp.reduce((s: number, i: any) => s + nv(i.amount), 0)
     + loanItems.reduce((s: number, i: any) => s + nv(i.amount), 0)
     + manualDeductions.reduce((s: number, i: any) => s + nv(i.amount), 0)
+    + nv(salaryRounding?.amount)
     + (absDeductItem ? nv(absDeductItem.amount) : 0);
   // ✅ CORRECTIF — "Charges sal." Période (bloc Cumuls) ne comptait que
   // CNSS+ITS, sans les taxes custom (CAMU/TOL/CTAX_), et surtout PAS la
@@ -493,6 +495,7 @@ export default function BulletinRendererClassique({ payroll, template, previewMo
               {indemItems.map((item: any) => { rub += 10; return (
                 <Row key={item.id || item.code} n={rub} label={item.label} nombre={itemQty(item)} base={itemBase(item)} tauxS={itemRate(item)} gain={fmt(item.amount)} />
               ); })}
+              {salaryRounding && <Row n={6999} label={salaryRounding.label} ret={fmt(salaryRounding.amount)} />}
 
               {/* ── Spacer — absorbe l'espace restant du canevas A4 fixe (au
                    lieu de le répartir sur chaque ligne de contenu) ────────── */}

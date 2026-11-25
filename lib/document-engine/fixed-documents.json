@@ -1,0 +1,17 @@
+{
+  "invoiceForfait": {
+    "type": "CONTRACTOR_INVOICE",
+    "size": "A5",
+    "sections": ["header", "period", "provider", "items", "signatures"]
+  },
+  "invoiceDetailed": {
+    "type": "CONTRACTOR_INVOICE",
+    "size": "A5",
+    "sections": ["provider", "period", "client", "title", "purpose", "items", "signatures"]
+  },
+  "leaveAuthorization": {
+    "type": "LEAVE_AUTHORIZATION",
+    "size": "A4",
+    "sections": ["sender", "recipient", "subject", "body", "signature", "footer"]
+  }
+}

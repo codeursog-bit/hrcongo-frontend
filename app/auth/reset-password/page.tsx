@@ -96,6 +96,7 @@ function ResetPasswordContent() {
 
   return (
     <AuthCard>
+      <AuthHeading title="Nouveau mot de passe" description="Choisissez un mot de passe sécurisé pour votre compte." />
       <form onSubmit={handleSubmit} className="au-stack" noValidate>
         <div>
           <PasswordField
@@ -151,7 +152,6 @@ function ResetPasswordContent() {
 export default function ResetPasswordPage() {
   return (
     <AuthShell>
-      <AuthHeading title="Nouveau mot de passe" description="Choisissez un mot de passe sécurisé pour votre compte." />
       <Suspense fallback={
         <div className="au-loading" style={{ height: 160 }}>
           <Loader2 className="au-spin" size={28} style={{ color: 'var(--brand)' }} aria-label="Chargement" />

@@ -45,9 +45,10 @@ interface Props {
   payroll:      BulletinPayroll;
   previewMode?: boolean;
   documentLayout?: DocLayout;
+  resolveCompanyLayout?: boolean;
 }
 
-export default function BulletinDisplay({ payroll: rawPayroll, previewMode = false, documentLayout }: Props) {
+export default function BulletinDisplay({ payroll: rawPayroll, previewMode = false, documentLayout, resolveCompanyLayout = true }: Props) {
   const { config, isLoading } = useBulletinConfig();
 
   // ✅ Option entreprise « salaire de base proratisé » : fusion SAL_BASE +
@@ -62,74 +63,75 @@ export default function BulletinDisplay({ payroll: rawPayroll, previewMode = fal
     return <FactureDisplay payroll={payroll} previewMode={previewMode} />;
   }
 
-  if (!documentLayout && payroll.company?.documentTemplate === 'CUSTOM') {
-    const companyId = payroll.company.id ?? payroll.companyId;
-    if (companyId && companyId === authService.getCurrentUser()?.companyId) {
-      return <CompanyEnginePayslip key={companyId} companyId={companyId} payroll={payroll} />;
+  function fallback() {
+    const engineLayout = documentLayout ?? (config.mode === 'engine' ? config.documentLayout : undefined);
+    if (engineLayout?.docType === 'PAYSLIP') {
+      return <EnginePayslip layout={engineLayout} payroll={payroll} />;
     }
-  }
 
-  const engineLayout = documentLayout ?? (config.mode === 'engine' ? config.documentLayout : undefined);
-  if (engineLayout?.docType === 'PAYSLIP') {
-    return <EnginePayslip layout={engineLayout} payroll={payroll} />;
-  }
+    if (isLoading) {
+      return (
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'center', padding:'40px', background:'#fff' }}>
+          <div style={{ width:28, height:28, borderRadius:'50%', border:'3px solid #e2e8f0', borderTopColor:'#0EA5E9', animation:'spin .8s linear infinite' }} />
+          <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+        </div>
+      );
+    }
 
-  if (isLoading) {
+    if (config.mode === 'canvas') {
+      return (
+        <CanvasRenderer
+          layout={config.canvasLayout}
+          payroll={payroll}
+          previewMode={previewMode}
+        />
+      );
+    }
+
+    // Default/Clarifié/Classique sont 3 GABARITS différents (mise en page
+    // distincte, pas juste une palette de couleurs) — ce switch route vers le
+    // bon renderer selon le modèle choisi en paramètres.
+    const templateId = config.templateConfig?.templateId;
+    if (templateId === 'clarifie') {
+      return (
+        <BulletinRendererClarifie
+          payroll={payroll}
+          template={config.templateConfig}
+          previewMode={previewMode}
+        />
+      );
+    }
+    if (templateId === 'classique') {
+      return (
+        <BulletinRendererClassique
+          payroll={payroll}
+          template={config.templateConfig}
+          previewMode={previewMode}
+        />
+      );
+    }
+    if (templateId === 'inf') {
+      return (
+        <BulletinRendererInf
+          payroll={payroll}
+          template={config.templateConfig}
+          previewMode={previewMode}
+        />
+      );
+    }
+
     return (
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'center', padding:'40px', background:'#fff' }}>
-        <div style={{ width:28, height:28, borderRadius:'50%', border:'3px solid #e2e8f0', borderTopColor:'#0EA5E9', animation:'spin .8s linear infinite' }} />
-        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-      </div>
-    );
-  }
-
-  if (config.mode === 'canvas') {
-    return (
-      <CanvasRenderer
-        layout={config.canvasLayout}
-        payroll={payroll}
-        previewMode={previewMode}
-      />
-    );
-  }
-
-  // Default/Clarifié/Classique sont 3 GABARITS différents (mise en page
-  // distincte, pas juste une palette de couleurs) — ce switch route vers le
-  // bon renderer selon le modèle choisi en paramètres.
-  const templateId = config.templateConfig?.templateId;
-  if (templateId === 'clarifie') {
-    return (
-      <BulletinRendererClarifie
+      <BulletinRenderer
         payroll={payroll}
         template={config.templateConfig}
         previewMode={previewMode}
       />
     );
   }
-  if (templateId === 'classique') {
-    return (
-      <BulletinRendererClassique
-        payroll={payroll}
-        template={config.templateConfig}
-        previewMode={previewMode}
-      />
-    );
-  }
-  if (templateId === 'inf') {
-    return (
-      <BulletinRendererInf
-        payroll={payroll}
-        template={config.templateConfig}
-        previewMode={previewMode}
-      />
-    );
-  }
 
-  return (
-    <BulletinRenderer
-      payroll={payroll}
-      template={config.templateConfig}
-      previewMode={previewMode}
-    />
-  );
+  const companyId = payroll.company?.id ?? payroll.companyId;
+  if (!documentLayout && resolveCompanyLayout && companyId && companyId === authService.getCurrentUser()?.companyId) {
+    return <CompanyEnginePayslip key={companyId} companyId={companyId} payroll={payroll} fallback={fallback()} />;
+  }
+  return fallback();
 }

@@ -1,4 +1,5 @@
 'use client';
+import { useRequestDocumentTemplate } from '@/hooks/useRequestDocumentTemplate';
 import { Button } from '@/components/design-system/primitives';
 import { LoanModuleFrame, LoanModuleSkeleton } from '@/components/loans/LoanModuleFrame';
 
@@ -387,7 +388,8 @@ export default function LoansManagementPage() {
   // ── Impression ─────────────────────────────────────────────────────────────
 
   const PRINT_ID = 'loan-doc-print';
-  const isStandard = usesStandardData(docData?.company?.documentTemplate);
+  const requestTemplate = useRequestDocumentTemplate(tab === 'advances' ? 'ADVANCE' : 'LOAN', docData?.company ?? company);
+  const isStandard = usesStandardData(requestTemplate);
   const printSource = tab === 'loans' ? selectedLoan : selectedAdvance;
   const printReference = printSource ? `${tab === 'loans' ? 'PR' : 'AV'}-${printSource.id.slice(0, 8).toUpperCase()}` : '';
 
@@ -848,7 +850,7 @@ export default function LoansManagementPage() {
                   <div className="flex gap-2">
                     {/* Impression 100% côté navigateur (aucune dépendance serveur) — marche pour Orca (rendu HTML fidèle) comme pour les autres (LoanRequestPrintable), puisque PRINT_ID contient déjà le bon rendu. */}
                     <Button variant="ghost" onClick={() => setTimeout(() => printLoanDocument(PRINT_ID), 50)} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)]"><Printer size={16} /> Imprimer</Button>
-                    {docData?.company?.documentTemplate === 'ORCA' ? (
+                    {requestTemplate === 'ORCA' ? (
                       <Button variant="ghost" onClick={handleDownloadOrcaXlsx} disabled={isExportingXlsx} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)] disabled:opacity-40">{isExportingXlsx ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} Fiche Excel</Button>
                     ) : (
                       <Button variant="ghost" onClick={handleDownloadPdf} disabled={isExportingPdf} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)] disabled:opacity-40">{isExportingPdf ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} PDF</Button>
@@ -861,10 +863,10 @@ export default function LoansManagementPage() {
 
                   {/* Rendu réel hors-écran (pas display:none) : nécessaire pour la capture d'impression navigateur */}
                   <div className="fixed -left-[9999px] top-0 pointer-events-none" aria-hidden="true">
-                    {docData?.company?.documentTemplate === 'ORCA' ? (
+                    {requestTemplate === 'ORCA' ? (
                       orcaHtml && <div id={PRINT_ID} dangerouslySetInnerHTML={{ __html: orcaHtml }} />
                     ) : isStandard ? (
-                      standardLoanData && <LoanRequestDocument template={docData?.company?.documentTemplate} id={PRINT_ID} data={standardLoanData as any} />
+                      standardLoanData && <LoanRequestDocument template={requestTemplate} id={PRINT_ID} data={standardLoanData as any} />
                     ) : (
                       printData && <LoanRequestPrintable id={PRINT_ID} data={printData as any} />
                     )}
@@ -1098,7 +1100,7 @@ export default function LoansManagementPage() {
 
                   <div className="flex gap-2">
                     <Button variant="ghost" onClick={() => setTimeout(() => printLoanDocument(PRINT_ID), 50)} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)]"><Printer size={16} /> Imprimer</Button>
-                    {docData?.company?.documentTemplate === 'ORCA' ? (
+                    {requestTemplate === 'ORCA' ? (
                       <Button variant="ghost" onClick={handleDownloadOrcaXlsx} disabled={isExportingXlsx} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)] disabled:opacity-40">{isExportingXlsx ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} Fiche Excel</Button>
                     ) : (
                       <Button variant="ghost" onClick={handleDownloadPdf} disabled={isExportingPdf} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)] disabled:opacity-40">{isExportingPdf ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} PDF</Button>
@@ -1110,10 +1112,10 @@ export default function LoansManagementPage() {
                   </Button>
 
                   <div className="fixed -left-[9999px] top-0 pointer-events-none" aria-hidden="true">
-                    {docData?.company?.documentTemplate === 'ORCA' ? (
+                    {requestTemplate === 'ORCA' ? (
                       orcaHtml && <div id={PRINT_ID} dangerouslySetInnerHTML={{ __html: orcaHtml }} />
                     ) : isStandard ? (
-                      standardAdvanceData && <AdvanceRequestDocument template={docData?.company?.documentTemplate} id={PRINT_ID} data={standardAdvanceData as any} />
+                      standardAdvanceData && <AdvanceRequestDocument template={requestTemplate} id={PRINT_ID} data={standardAdvanceData as any} />
                     ) : (
                       printData && <LoanRequestPrintable id={PRINT_ID} data={printData as any} />
                     )}
@@ -1419,19 +1421,19 @@ export default function LoansManagementPage() {
 
       <DocumentPreviewModal open={showPreviewModal} onClose={() => setShowPreviewModal(false)}>
         {tab === 'loans' && selectedLoan && docData && (
-          docData.company?.documentTemplate === 'ORCA' ? (
+          requestTemplate === 'ORCA' ? (
             orcaHtml && <div dangerouslySetInnerHTML={{ __html: orcaHtml }} />
           ) : isStandard ? (
-            standardLoanData && <LoanRequestDocument template={docData?.company?.documentTemplate} id="loan-doc-preview" data={standardLoanData as any} />
+            standardLoanData && <LoanRequestDocument template={requestTemplate} id="loan-doc-preview" data={standardLoanData as any} />
           ) : (
             printData && <LoanRequestPrintable id="loan-doc-preview" data={printData as any} />
           )
         )}
         {tab === 'advances' && selectedAdvance && docData && (
-          docData.company?.documentTemplate === 'ORCA' ? (
+          requestTemplate === 'ORCA' ? (
             orcaHtml && <div dangerouslySetInnerHTML={{ __html: orcaHtml }} />
           ) : isStandard ? (
-            standardAdvanceData && <AdvanceRequestDocument template={docData?.company?.documentTemplate} id="advance-doc-preview" data={standardAdvanceData as any} />
+            standardAdvanceData && <AdvanceRequestDocument template={requestTemplate} id="advance-doc-preview" data={standardAdvanceData as any} />
           ) : (
             printData && <LoanRequestPrintable id="advance-doc-preview" data={printData as any} />
           )

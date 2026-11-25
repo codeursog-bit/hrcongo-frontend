@@ -29,6 +29,6 @@ export function loadPayslipLayout(companyId: string) {
 }
 
 export const savePayslipLayout = (name: string, config: DocLayout) =>
-  api.put<{ layout: SavedDocumentLayout }>(endpoint, { name, config }).then(({ layout }) => layout);
+  api.put<{ layout: SavedDocumentLayout }>(endpoint, { name, config: { ...config, independent: true } }).then(({ layout }) => layout);
 
 export const resetPayslipLayout = () => api.delete<{ layout: null }>(endpoint);

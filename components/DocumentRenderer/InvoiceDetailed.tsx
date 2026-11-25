@@ -29,8 +29,8 @@
 
 import React, { useMemo } from 'react';
 import type { BulletinPayroll, BulletinTemplateConfig, PayrollItem } from '@/types/bulletin-template';
+import { FixedInvoiceSheet } from '@/components/DocumentRenderer/FixedDocument';
 import { classifyItems } from '@/lib/bulletin-items-classifier';
-import { getBaseTemplate } from '@/lib/bulletin-templates';
 
 export interface FactureRendererDetailleeProps {
   payroll:      BulletinPayroll;
@@ -82,8 +82,7 @@ const Row = ({ label, value, bold = false }: { label: string; value: string; bol
   </tr>
 );
 
-export default function FactureRendererDetaillee({ payroll, template, previewMode, invoiceSequence = 1 }: FactureRendererDetailleeProps) {
-  const tpl = template ?? getBaseTemplate('classique');
+export default function InvoiceDetailed({ payroll, invoiceSequence = 1 }: FactureRendererDetailleeProps) {
   const e   = (payroll.employee ?? {}) as any;
   const co  = (payroll.company  ?? {}) as any; // même société que pour un bulletin — c'est elle qui "doit" le paiement
   const items: PayrollItem[] = payroll.items ?? [];
@@ -128,115 +127,97 @@ export default function FactureRendererDetaillee({ payroll, template, previewMod
       ? 'Mes indemnités de congé au cours du mois de'
       : 'Ma rémunération au titre du mois de';
 
-  return (
-    <>
-      <style>{`
-        @media print {
-          @page { size: A5 portrait; margin: 0; }
-          body { visibility: hidden !important; background: #fff !important; margin: 0 !important; padding: 0 !important; }
-          #fac-detaillee-wrap, #fac-detaillee-wrap * { visibility: visible !important; }
-          #fac-detaillee-wrap { position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; }
-          #fac-detaillee { box-shadow: none !important; border: none !important; }
-          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-        }
-      `}</style>
-
-      <div id="fac-detaillee-wrap" data-bulletin-root="true" style={{ background: '#fff' }}>
-        <div id="fac-detaillee" style={{
-          fontFamily: SANS, color: K, background: '#fff',
-          width: '148mm', minHeight: '210mm', boxSizing: 'border-box', padding: '18mm 16mm',
-          margin: '0 auto', boxShadow: '0 2px 16px rgba(0,0,0,0.10)',
-          display: 'flex', flexDirection: 'column', justifyContent: 'center', fontSize: 11.5,
-        }}>
-
-          {/* ── Expéditeur (le prestataire) — aligné à gauche ───────────── */}
-          <div style={{ textAlign: 'left' }}>
-            <div style={{ fontSize: 13, fontWeight: 800, textDecoration: 'none' }}>{fullName}</div>
-            <div style={{ fontSize: 12, fontWeight: 800, textDecoration: 'none' }}>{emetteurVille}</div>
-          </div>
-
-          {/* ── Date d'émission — alignée à droite ──────────────────────── */}
-          <div style={{ textAlign: 'right', marginTop: 22, fontSize: 11.5 }}>
-            {lieuEmission}, Paie du mois {moisPrefix}{moisNom} {anneeComplete}
-          </div>
-
-          {/* ── Encadré "Doit :" — société débitrice (payroll.company) ──── */}
-          <div style={{ display: 'flex', justifyContent: 'center', marginTop: 10 }}>
-            <div style={{ border: BD, padding: '8px 14px', display: 'flex', gap: 8 }}>
-              <div style={{ fontWeight: 800, fontSize: 11.5, textDecoration: 'none' }}>Doit :</div>
-              <div>
-                <div style={{ fontWeight: 800, fontSize: 12.5, textDecoration: 'none' }}>{co.tradeName || co.legalName || '—'}</div>
-                {co.district && <div style={{ fontSize: 11.5, fontWeight: 700, textDecoration: 'none' }}>{co.district}</div>}
-                <div style={{ fontSize: 11.5, fontWeight: 700, textDecoration: 'none' }}>{co.city || '—'}</div>
-              </div>
-            </div>
-          </div>
-
-          {/* ── Titre de la facture — centré, souligné ──────────────────── */}
-          <div style={{ textAlign: 'center', fontWeight: 800, fontSize: 13, textDecoration: 'underline', marginTop: 30 }}>
-            FACTURE N° {numeroFacture}
-          </div>
-
-          {/* ── Motif — s'adapte automatiquement au type de paiement ────── */}
-          <div style={{ marginTop: 14, fontSize: 11.5 }}>
-            <div>{motifLabel} <span style={{ fontWeight: 800, textDecoration: 'none' }}>{moisNom}-{anneeCourte}</span></div>
-            <div>en qualité de : <span style={{ fontWeight: 800, textDecoration: 'none' }}>{qualite}</span></div>
-          </div>
-
-          {/* ── Corps : chaque item avec son propre label ───────────────── */}
-          <div style={{ marginTop: 20 }}>
-            <table style={{ borderCollapse: 'collapse', margin: '0 auto' }}>
-              <tbody>
-                {gains.map((item: any) => (
-                  <Row key={item.id || item.code} label={item.label} value={fmt(item.amount)} />
-                ))}
-
-                <Row label="Total brut" value={fmt(totalBrut)} bold />
-
-                {indems.map((item: any) => (
-                  <Row key={item.id || item.code} label={item.label} value={fmt(item.amount)} />
-                ))}
-
-                {deductions.map((item: any) => (
-                  <Row key={item.id || item.code} label={item.label} value={fmt(item.amount)} />
-                ))}
-
-                <Row label="Montant net à payer" value={fmt(netAPayer)} bold />
-              </tbody>
-            </table>
-          </div>
-
-          {/* ── Pied de page : mention + signatures des 2 parties ───────── */}
-          <div style={{ marginTop: 30 }}>
-            <div style={{ textAlign: 'center', fontStyle: 'italic', fontSize: 10.5, margin: '18px 0' }}>
-              Valeur en votre règlement à réception de la présente facture
-            </div>
-
-            {/* ── Signatures — prestataire à gauche, société collée au bord
-                  droit du contenu (même bord que la date d'émission) ────── */}
-            <div style={{ position: 'relative', marginTop: 40, height: 70 }}>
-              <div style={{ position: 'absolute', left: 0, textAlign: 'center', whiteSpace: 'nowrap' }}>
-                {e.signatureImage ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={e.signatureImage} alt="" crossOrigin="anonymous" style={{ height: 44, objectFit: 'contain' }} />
-                ) : (
-                  <div style={{ height: 44 }} />
-                )}
-                <div style={{ borderTop: BD, fontSize: 10, fontWeight: 700, textTransform: 'uppercase' as const, paddingTop: 3 }}>
-                  {fullName}
-                </div>
-              </div>
-              <div style={{ position: 'absolute', right: 0, textAlign: 'center', whiteSpace: 'nowrap' }}>
-                <div style={{ height: 44 }} />
-                <div style={{ borderTop: BD, fontSize: 10, fontWeight: 700, textTransform: 'uppercase' as const, paddingTop: 3 }}>
-                  {(co as any).signatoryTitle || 'Directeur'}
-                </div>
-              </div>
-            </div>
-          </div>
-
+  return <FixedInvoiceSheet layout="invoiceDetailed" id="fac-detaillee" style={{
+    fontFamily: SANS, color: K, background: '#fff',
+    width: '148mm', minHeight: '210mm', boxSizing: 'border-box', padding: '18mm 16mm',
+    margin: '0 auto', boxShadow: '0 2px 16px rgba(0,0,0,0.10)',
+    display: 'flex', flexDirection: 'column', justifyContent: 'center', fontSize: 11.5,
+  }} sections={{
+      provider: (
+        <div style={{ textAlign: 'left' }}>
+          <div style={{ fontSize: 13, fontWeight: 800, textDecoration: 'none' }}>{fullName}</div>
+          <div style={{ fontSize: 12, fontWeight: 800, textDecoration: 'none' }}>{emetteurVille}</div>
         </div>
-      </div>
-    </>
-  );
+      ),
+      period: (
+        <div style={{ textAlign: 'right', marginTop: 22, fontSize: 11.5 }}>
+          {lieuEmission}, Paie du mois {moisPrefix}{moisNom} {anneeComplete}
+        </div>
+      ),
+      client: (
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 10 }}>
+          <div style={{ border: BD, padding: '8px 14px', display: 'flex', gap: 8 }}>
+            <div style={{ fontWeight: 800, fontSize: 11.5, textDecoration: 'none' }}>Doit :</div>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: 12.5, textDecoration: 'none' }}>{co.tradeName || co.legalName || '—'}</div>
+              {co.district && <div style={{ fontSize: 11.5, fontWeight: 700, textDecoration: 'none' }}>{co.district}</div>}
+              <div style={{ fontSize: 11.5, fontWeight: 700, textDecoration: 'none' }}>{co.city || '—'}</div>
+            </div>
+          </div>
+        </div>
+      ),
+      title: (
+        <div style={{ textAlign: 'center', fontWeight: 800, fontSize: 13, textDecoration: 'underline', marginTop: 30 }}>
+          FACTURE N° {numeroFacture}
+        </div>
+      ),
+      purpose: (
+        <div style={{ marginTop: 14, fontSize: 11.5 }}>
+          <div>{motifLabel} <span style={{ fontWeight: 800, textDecoration: 'none' }}>{moisNom}-{anneeCourte}</span></div>
+          <div>en qualité de : <span style={{ fontWeight: 800, textDecoration: 'none' }}>{qualite}</span></div>
+        </div>
+      ),
+      items: (
+        <div style={{ marginTop: 20 }}>
+          <table style={{ borderCollapse: 'collapse', margin: '0 auto' }}>
+            <tbody>
+              {gains.map((item: any) => (
+                <Row key={item.id || item.code} label={item.label} value={fmt(item.amount)} />
+              ))}
+
+              <Row label="Total brut" value={fmt(totalBrut)} bold />
+
+              {indems.map((item: any) => (
+                <Row key={item.id || item.code} label={item.label} value={fmt(item.amount)} />
+              ))}
+
+              {deductions.map((item: any) => (
+                <Row key={item.id || item.code} label={item.label} value={fmt(item.amount)} />
+              ))}
+
+              <Row label="Montant net à payer" value={fmt(netAPayer)} bold />
+            </tbody>
+          </table>
+        </div>
+      ),
+      signatures: (
+        <div style={{ marginTop: 30 }}>
+          <div style={{ textAlign: 'center', fontStyle: 'italic', fontSize: 10.5, margin: '18px 0' }}>
+            Valeur en votre règlement à réception de la présente facture
+          </div>
+
+          {/* ── Signatures — prestataire à gauche, société collée au bord
+                droit du contenu (même bord que la date d'émission) ────── */}
+          <div style={{ position: 'relative', marginTop: 40, height: 70 }}>
+            <div style={{ position: 'absolute', left: 0, textAlign: 'center', whiteSpace: 'nowrap' }}>
+              {e.signatureImage ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={e.signatureImage} alt="" crossOrigin="anonymous" style={{ height: 44, objectFit: 'contain' }} />
+              ) : (
+                <div style={{ height: 44 }} />
+              )}
+              <div style={{ borderTop: BD, fontSize: 10, fontWeight: 700, textTransform: 'uppercase' as const, paddingTop: 3 }}>
+                {fullName}
+              </div>
+            </div>
+            <div style={{ position: 'absolute', right: 0, textAlign: 'center', whiteSpace: 'nowrap' }}>
+              <div style={{ height: 44 }} />
+              <div style={{ borderTop: BD, fontSize: 10, fontWeight: 700, textTransform: 'uppercase' as const, paddingTop: 3 }}>
+                {(co as any).signatoryTitle || 'Directeur'}
+              </div>
+            </div>
+          </div>
+        </div>
+      ),
+    }} />;
 }

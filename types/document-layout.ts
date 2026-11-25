@@ -4,7 +4,7 @@ export type DocType = 'PAYSLIP' | 'LEAVE' | 'ABSENCE' | 'EXIT_PERMISSION' | 'LOA
 export type FontId = 'carlito' | 'caladea' | 'liberation-sans';
 export type BlockType = 'header' | 'title' | 'meta' | 'fieldGroup' | 'table' | 'cumuls'
   | 'checklist' | 'textLines' | 'declaration' | 'dateSignature' | 'decision' | 'reviewTable'
-  | 'signatures' | 'image' | 'freeText' | 'divider' | 'spacer' | 'note';
+  | 'leaveBalance' | 'signatures' | 'image' | 'freeText' | 'divider' | 'spacer' | 'note';
 
 export interface Block {
   id: string;
@@ -15,8 +15,21 @@ export interface Block {
   visible: boolean;
   locked?: boolean;
   heightMm?: number | 'auto' | 'fill';
+  colors?: DocumentColors;
+  sectionColors?: Record<string, Pick<DocumentColors, 'ink' | 'background'>>;
+  separator?: DocumentSeparator;
+  sectionSeparators?: Record<string, DocumentSeparator>;
   config: Record<string, unknown>;
 }
+
+export type DocumentColors = {
+  ink?: string; muted?: string; main?: string; line?: string; accent?: string;
+  headFill?: string; headText?: string; soft?: string; thin?: string;
+  netHeadFill?: string; netHeadText?: string; netCellFill?: string; netCellText?: string;
+  background?: string; companyText?: string; fieldLabel?: string; fieldValue?: string;
+  totalsText?: string;
+};
+export type DocumentSeparator = { style: 'solid' | 'dashed' | 'thick'; color?: string; word?: string };
 
 export interface TableConfig {
   columns: {
@@ -37,12 +50,27 @@ export interface TableConfig {
 export interface CumulsConfig {
   columns: { key: string; label: string; widthPct: number }[];
   highlight: { column: string; valueKey: string };
+  separator?: DocumentSeparator;
+}
+
+export interface DocumentShape {
+  id: string;
+  anchor: string;
+  x: number;
+  y: number;
+  width: number;
+  thickness: number;
+  color: string;
+  style: 'solid' | 'dashed';
 }
 
 export interface DocLayout {
+  shapes?: DocumentShape[];
   schemaVersion: 2;
   docType: DocType;
   basePreset: string | null;
+  useOriginal?: true;
+  independent?: true;
   page: {
     size: 'A4';
     orientation: 'portrait' | 'landscape';
@@ -51,11 +79,7 @@ export interface DocLayout {
   tokens: {
     fonts: { title: FontId; body: FontId };
     sizeBasePt: number;
-    colors: {
-      ink: string; muted: string; main: string; line: string; accent?: string;
-      headFill?: string; headText?: string; soft?: string;
-      thin?: string; netHeadFill?: string; netCellFill?: string; netCellText?: string;
-    };
+    colors: DocumentColors & { ink: string; muted: string; main: string; line: string };
     lineWidthPt: number;
   };
   variants: {
@@ -65,7 +89,7 @@ export interface DocLayout {
   logo?: { assetUrl: string; align: 'left' | 'center' | 'right'; widthMm: number; hideNameWhenLogo: boolean };
   blocks: Block[];
   labels: Record<string, string>;
-  footer: { text?: string; showPageNumber: boolean };
+  footer: { text?: string; showPageNumber: boolean; colors?: Pick<DocumentColors, 'ink' | 'background'>; separator?: DocumentSeparator };
 }
 
 export type DocumentValue = string | number | null | undefined;
@@ -82,4 +106,10 @@ export interface DocumentContext {
   values: Record<string, DocumentValue>;
   items: DocumentRow[];
   company: { name: string; logo?: string };
+  administrative?: {
+    motifs?: { key: string; label: string; days?: number | null; checked: boolean }[];
+    approvals?: { code: string; label: string; name: string; decision: string; image?: string; date?: string }[];
+    footer?: string;
+    stamp?: string;
+  };
 }

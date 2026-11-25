@@ -1,5 +1,8 @@
 'use client';
 import { chartTheme } from '@/lib/chart-theme';
+import { PayrollCostOverview } from './PayrollCostOverview';
+import { PayrollCostDetails } from './PayrollCostDetails';
+import { PayrollCostTrends } from './PayrollCostTrends';
 
 
 // ============================================================================
@@ -73,7 +76,9 @@ export default function JournalDashboard({ journal }: { journal: PayrollJournal 
 
   return (
     <div className="space-y-4 print:hidden">
+      {journal.costSummary && <><PayrollCostOverview journal={journal} /><PayrollCostDetails journal={journal}/><PayrollCostTrends journal={journal}/></>}
       {/* ── Récapitulatif ─────────────────────────────────────────────── */}
+      {!journal.costSummary && (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <Kpi
           label="Effectif au journal" Icon={Users} tone="text-[var(--brand)]"
@@ -112,7 +117,7 @@ export default function JournalDashboard({ journal }: { journal: PayrollJournal 
           Icon={Percent} tone="text-[var(--brand)]"
           value={`${fmtMoney(s.totalCompanyCost)} F`}
         />
-      </div>
+      </div>) }
 
       {/* ── Indicateurs en pourcentage ───────────────────────────────── */}
       <Card title="Indicateurs clés" subtitle="Calculés sur la paie Congo du mois">
@@ -125,7 +130,7 @@ export default function JournalDashboard({ journal }: { journal: PayrollJournal 
 
       {/* ── Graphiques ───────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 reports-charts">
-        <Card title="Où va l'argent ?" subtitle="Répartition du coût salarial du mois">
+        <Card title="Où va l'argent ?" subtitle="Net et retenues des salariés — les charges patronales ne sont pas représentées ici">
           {c.distribution.length === 0 ? (
             <p className="text-xs text-[var(--text-muted)] py-10 text-center">Aucune donnée.</p>
           ) : (

@@ -58,3 +58,4 @@ pnpm-debug.log*
 
 # Résultats de scripts QA générés localement
 qa-*-results.json
+/public/aide/modeles-documents/

@@ -1,3 +1,5 @@
+import { printEngineRequest } from './engine-request-print';
+
 // ============================================================================
 // 📁 lib/leave-print.ts
 // ✅ Même technique éprouvée que absence-print.ts, paramétrée par élément —
@@ -10,6 +12,7 @@ function findElement(elementId: string): HTMLElement | null {
 
 export function printLeaveDocument(elementId: string, orientation: 'portrait' | 'landscape' = 'portrait') {
   const el = findElement(elementId);
+  if (printEngineRequest(el)) return;
   if (!el) { window.print(); return; }
 
   const pageWidth = orientation === 'landscape' ? '297mm' : '210mm';
@@ -89,6 +92,7 @@ ${styleInlines}
 
 export async function downloadLeaveDocumentPDF(elementId: string, filename: string, orientation: 'portrait' | 'landscape' = 'portrait'): Promise<void> {
   const el = findElement(elementId);
+  if (printEngineRequest(el)) return;
   if (!el) { alert('Impossible de générer le PDF : document introuvable.'); return; }
 
   const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([

@@ -4,10 +4,41 @@ on:
   push:
     branches: [main]
 
+concurrency:
+  group: konzarh-frontend-production
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Generate editor tutorial videos
+        env:
+          NEXT_PUBLIC_DEMO_MODE: "true"
+        run: |
+          npm ci
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          npx playwright install --with-deps chromium
+          npm run dev:check > /tmp/konza-demo.log 2>&1 &
+          demo_pid=$!
+          trap 'kill "$demo_pid" || true' EXIT
+          curl --silent --fail --retry 20 --retry-all-errors --retry-delay 3 --output /dev/null http://localhost:3100
+          npm run record-document-tour
+      - name: Copy tutorial media to the static assets directory
+        uses: appleboy/scp-action@v1.0.0
+        with:
+          host: 188.245.96.208
+          username: deploy
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "public/aide/modeles-documents/*"
+          target: "/home/deploy/hrcongo-frontend"
+          overwrite: true
       - name: Deploy to server
         uses: appleboy/ssh-action@v1.0.0
         with:

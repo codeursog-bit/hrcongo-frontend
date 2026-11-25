@@ -8,6 +8,7 @@
 //    complet + décision + aperçu de fiche masqué par défaut (comme /loans).
 // ============================================================================
 
+import { useRequestDocumentTemplate } from '@/hooks/useRequestDocumentTemplate';
 import { usesStandardData } from '@/lib/document-template';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
@@ -200,7 +201,8 @@ export default function ValidationsPage() {
     signatures: docSignatures,
   } : null;
 
-  const isStandard = usesStandardData(docData?.company?.documentTemplate);
+  const requestTemplate = useRequestDocumentTemplate(selected?.kind === 'advance' ? 'ADVANCE' : 'LOAN', docData?.company ?? null);
+  const isStandard = usesStandardData(requestTemplate);
   const standardLoanData = docData && selected?.kind === 'loan' ? {
     reference,
     company: docData.company,
@@ -362,7 +364,7 @@ export default function ValidationsPage() {
             </Button>
             <div className="flex gap-2">
               <Button variant="secondary" onClick={() => setTimeout(() => printLoanDocument('val-print-target'), 50)} className="flex-1 py-2 border border-[var(--border)] text-xs font-semibold rounded-xl text-[var(--text-secondary)] flex items-center justify-center gap-1.5 hover:bg-[var(--surface-2)]"><Printer strokeWidth={1.5} size={13} /> Imprimer</Button>
-              {docData?.company?.documentTemplate === 'ORCA' && (
+              {requestTemplate === 'ORCA' && (
                 <Button variant="secondary" onClick={handleDownloadOrcaXlsx} disabled={isExportingXlsx} className="flex-1 py-2 border border-[var(--border)] text-xs font-semibold rounded-xl text-[var(--text-secondary)] flex items-center justify-center gap-1.5 hover:bg-[var(--surface-2)] disabled:opacity-40">{isExportingXlsx ? <Loader2 strokeWidth={1.5} size={13} className="animate-spin" /> : <Download strokeWidth={1.5} size={13} />} Fiche Excel</Button>
               )}
             </div>
@@ -370,12 +372,12 @@ export default function ValidationsPage() {
             {/* Rendu réel hors-écran : nécessaire pour la capture d'impression navigateur */}
             <div className="fixed -left-[9999px] top-0 pointer-events-none" aria-hidden="true">
               {selected && docData && (
-                docData.company?.documentTemplate === 'ORCA' ? (
+                requestTemplate === 'ORCA' ? (
                   orcaHtml && <div id="val-print-target" dangerouslySetInnerHTML={{ __html: orcaHtml }} />
                 ) : isStandard ? (
                   selected.kind === 'loan'
-                    ? standardLoanData && <LoanRequestDocument template={docData?.company?.documentTemplate} id="val-print-target" data={standardLoanData as any} />
-                    : standardAdvanceData && <AdvanceRequestDocument template={docData?.company?.documentTemplate} id="val-print-target" data={standardAdvanceData as any} />
+                    ? standardLoanData && <LoanRequestDocument template={requestTemplate} id="val-print-target" data={standardLoanData as any} />
+                    : standardAdvanceData && <AdvanceRequestDocument template={requestTemplate} id="val-print-target" data={standardAdvanceData as any} />
                 ) : (
                   printData && <LoanRequestPrintable id="val-print-target" data={printData as any} />
                 )
@@ -389,12 +391,12 @@ export default function ValidationsPage() {
   <div className="validation-orchestrator validation-approval">{approvalDialog}</div>
       <DocumentPreviewModal open={showPreviewModal} onClose={() => setShowPreviewModal(false)}>
         {selected && docData && (
-          docData.company?.documentTemplate === 'ORCA' ? (
+          requestTemplate === 'ORCA' ? (
             orcaHtml && <div dangerouslySetInnerHTML={{ __html: orcaHtml }} />
           ) : isStandard ? (
             selected.kind === 'loan'
-              ? standardLoanData && <LoanRequestDocument template={docData?.company?.documentTemplate} id="val-doc-preview" data={standardLoanData as any} />
-              : standardAdvanceData && <AdvanceRequestDocument template={docData?.company?.documentTemplate} id="val-doc-preview" data={standardAdvanceData as any} />
+              ? standardLoanData && <LoanRequestDocument template={requestTemplate} id="val-doc-preview" data={standardLoanData as any} />
+              : standardAdvanceData && <AdvanceRequestDocument template={requestTemplate} id="val-doc-preview" data={standardAdvanceData as any} />
           ) : (
             printData && <LoanRequestPrintable id="val-doc-preview" data={printData as any} />
           )

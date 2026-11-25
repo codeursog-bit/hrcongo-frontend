@@ -1,4 +1,5 @@
 'use client';
+import { useRequestDocumentTemplate } from '@/hooks/useRequestDocumentTemplate';
 import { DocumentReader } from '@/components/ui/DocumentReader';
 import '@/components/leave-history/leave-workspace.css';
 import { ModuleSelect } from '@/components/ui/ModuleSelect';
@@ -27,7 +28,7 @@ import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import CongeSubNav from '@/components/CongeSubNav';
 import LeaveRequestFormPrintable from '@/components/LeaveRequestFormPrintable';
-import LeaveAuthorizationLetterPrintable from '@/components/LeaveAuthorizationLetterPrintable';
+import LeaveAuthorization from '@/components/DocumentRenderer/LeaveAuthorization';
 import { printLeaveDocument, downloadLeaveDocumentPDF } from '@/lib/leave-print';
 import { PrintAuthorizationModal } from '@/components/documents/PrintAuthorizationModal';
 import OrcaLeaveAbsenceDocument from '@/components/documents/orca/OrcaLeaveAbsenceDocument';
@@ -301,14 +302,16 @@ export default function LeaveDetailPage() {
     }
   };
 
+  const requestTemplate = useRequestDocumentTemplate('LEAVE', docData?.company ?? leave?.company);
+
   if (isLoading) return <ModulePageSkeleton />;
   if (!leave) return <div className="text-center py-24 text-[var(--text-muted)]">Demande introuvable.</div>;
 
   const FORM_ID = 'leave-form-print-root';
   const LETTER_ID = 'leave-letter-print';
   const reference = `CGE-${leave.id.slice(0, 8).toUpperCase()}`;
-  const isOrca = docData?.company?.documentTemplate === 'ORCA';
-  const isStandard = usesStandardData(docData?.company?.documentTemplate);
+  const isOrca = requestTemplate === 'ORCA';
+  const isStandard = usesStandardData(requestTemplate);
 
   const formData = {
     reference,
@@ -389,7 +392,7 @@ export default function LeaveDetailPage() {
         signatures={docSignatures}
       />
     ) : isStandard ? (
-      <LeaveRequestDocument template={docData?.company?.documentTemplate}
+      <LeaveRequestDocument template={requestTemplate}
         id={elementId}
         data={{
           reference,
@@ -744,7 +747,7 @@ export default function LeaveDetailPage() {
           <DocumentReader>
               {activeDoc === 'form'
                 ? renderFormDocument(FORM_ID)
-                : <LeaveAuthorizationLetterPrintable id={LETTER_ID} data={letterData as any} />}
+                : <LeaveAuthorization id={LETTER_ID} data={letterData} />}
           </DocumentReader>
         </div>
       </div>

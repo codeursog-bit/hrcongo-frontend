@@ -119,6 +119,12 @@ export function buildPayslipContext(payroll: PayslipData): DocumentContext {
     'pay.grossSalary': formatNumeric(payroll.grossSalary),
     'pay.netSalary': formatNumeric(payroll.netSalary),
   };
+  // Les compteurs INFO sont figés lors de la génération du bulletin.
+  // Ne pas reprendre un solde courant ni déduire un solde absent.
+  for (const [key, code] of [['entitled', 'LEAVE_DROITS'], ['taken', 'LEAVE_PRIS'], ['remaining', 'LEAVE_SOLDE']]) {
+    const snapshot = payroll.items?.find(item => item.code === code);
+    values['leave.' + key] = formatNumeric(snapshot?.amount) ?? '—';
+  }
   for (const { key } of cumulativeColumns) {
     if (key === 'period' || key === 'netSalary') continue;
     values[`monthly.${key}`] = formatNumeric(payroll[key]);
@@ -128,6 +134,7 @@ export function buildPayslipContext(payroll: PayslipData): DocumentContext {
   const gains: DocumentRow[] = [];
   const charges: DocumentRow[] = [];
   for (const item of [...(payroll.items ?? [])].sort((a, b) => a.order - b.order)) {
+    if (['LEAVE_DROITS', 'LEAVE_PRIS', 'LEAVE_SOLDE'].includes(item.code)) continue;
     const isGain = item.type === 'GAIN';
     const isDeduction = item.type === 'DEDUCTION';
     const isEmployer = item.type === 'EMPLOYER_COST';

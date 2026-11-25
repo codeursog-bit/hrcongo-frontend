@@ -85,7 +85,49 @@ export interface JournalTotals {
   totalNet: number;
 }
 
+export interface PayrollCostReport {
+  month: number;
+  year: number;
+  costSummary?: PayrollJournal['costSummary'];
+  options: Pick<PayrollJournal['options'], 'hasExpat'>;
+  summary: Pick<PayrollJournal['summary'], 'foreignGross' | 'foreignNet'>;
+}
+
 export interface PayrollJournal {
+  costSummary?: {
+    breakdowns?:{department:PayrollCostDistribution[];category:PayrollCostDistribution[];contractType:PayrollCostDistribution[];site:PayrollCostDistribution[];siteAvailable:boolean;siteNote:string;metadataNote:string};
+    evolution?:{previousMonth:PayrollCostComparison;previousYear:PayrollCostComparison;yearToDate:{headcount:number;gross:number;net:number;employerCharges:number;employerCost:number;headcountLabel:string};trend:{month:number;year:number;hasData:boolean;gross:number|null;employerCost:number|null}[]};
+    details?: {
+      composition:{key:string;label:string;amount:number}[];
+      employeeCharges:PayrollChargeLine[];employerCharges:PayrollChargeLine[];
+      reconciliation:{grossItemsDelta:number;employeeItemsDelta:number;employerItemsDelta:number};provenance:string;
+    };
+    controls?:{checkedCount:number;issueCount:number;tolerance:number;issues:{id:string;employeeId:string;status:string;netDelta:number;employerCostDelta:number}[];truncated:boolean};
+    scope: 'CONGO';
+    headcount: number;
+    paidHeadcount: number;
+    draftCount: number;
+    gross: number;
+    deductions: number;
+    net: number;
+    employerCharges: number;
+    chargedGross: number;
+    outsideGross: number;
+    employerCost: number;
+    employerChargesRatio: number | null;
+    averageGross: number | null;
+    averageEmployerCost: number | null;
+    employerBreakdown: { cnss: number; tus: number; customTaxes: number };
+    reconciliation: {
+      netDelta: number;
+      employerCostDelta: number;
+      level: 'AGGREGATE_ONLY';
+      description: string;
+    };
+    statuses: { status: string; count: number }[];
+    scopeDescription: string;
+    definitions: { key: string; label: string; formula: string }[];
+  };
   month: number;
   year: number;
   generatedAt: string;
@@ -150,7 +192,13 @@ export interface PayrollJournal {
     grossToNet: { label: string; value: number }[];
     topEarners: { name: string; totalNet: number; totalGross: number }[];
     byDepartment: { name: string; headcount: number; totalGross: number; totalNet: number }[];
-    byCountry: { countryCode: string; countryName: string; headcount: number; gross: number; net: number }[];
+    byCountry: {
+      countryCode: string;
+      countryName: string;
+      headcount: number;
+      gross: number;
+      net: number;
+    }[];
     chargesBreakdown: { label: string; value: number }[];
   };
 }
@@ -166,3 +214,8 @@ export interface UpsertForeignPayPayload {
   netAmount: number;
   note?: string;
 }
+
+export interface PayrollChargeLine {code:string;label:string;base:number|null;ratePercent:number|null;appliedCeiling:number|null;ceilingNote:string;amount:number;share:number|null;kind:string}
+
+export interface PayrollCostDistribution {label:string;headcount:number;gross:number;net:number;employerCharges:number;employerCost:number;share:number|null}
+export interface PayrollCostComparison {hasData:boolean;month:number|null;year:number|null;gross:number|null;employerCost:number|null;grossChange:number|null;employerCostChange:number|null}

@@ -707,3 +707,36 @@ Validation : 11 tests Jest dont un vrai parcours HTTP Nest avec contrôleur tém
 
 ### 24 novembre — rapports et turnover
 Suppression administrative distincte du départ réel, compte associé désactivé et historique conservé. Migration additive avec reprise prudente des suppressions auditées ; cas anciens ambigus à confirmer. Paie hors annulations, périodes propagées, coûts enregistrés et ITS/BNC séparés. 19 tests ciblés et 16 vues de rapports réussis. Migration et comparaison sur données réelles à effectuer : connexion de base absente. Aucun module Ruptures complet ni changement de modèles imprimables.
+
+
+### 24 novembre — pages publiques
+
+Accueil, À propos, blog et article, Contact, puis documentation : structure éditoriale et navigation commune, tokens clair/sombre, sommaire mobile. Captures réelles du mode démo (dashboard, employés, paie, bulletin complet) publiées en WebP avec provenance et script de régénération. Formulaire Contact, suivi Support, blog et SEO conservés ; modèles imprimables inchangés. Outils laissés pour la fin. Revue visuelle utilisateur attendue.
+
+### 24 novembre — authentification et captures fournies
+
+Connexion, inscription, récupération, réinitialisation et invitations héritent de la nouvelle coquille : formulaire à gauche, produit à droite, interface mobile simplifiée. Deux captures utilisateur intégrées telles quelles (dashboard et pointeuse), sans remplacer les données du dashboard. Tests clair/sombre/mobile et contrôles des formulaires/2FA/récupération/invitations réussis avec API simulée ; aucune création, aucun email et aucun changement de mot de passe réels.
+Ajustement demandé : titre « Le futur de la gestion RH » et phrase d’origine rétablis, carte de formulaire et panneau produit affinés. Coquille fixe, absence de défilement de page vérifiée sur connexion/inscription/récupération/réinitialisation aux formats bureau et mobile ; bas du formulaire long accessible dans sa zone.
+Ajustement suivant : deux colonnes pleine hauteur, présentation fixe à gauche et formulaire spacieux à droite, carte intérieure supprimée. Le défilement porte sur toute la colonne du formulaire, pas sur un cadre de champs ; connexion/inscription contrôlées à 1440 et 390 px, sans défilement global et avec accès au bouton final.
+
+### 25 novembre — dernière passe publique et entreprise
+
+Auth : dashboard intégral, bulletin réduit et chevauchement maîtrisé aux deux formats bureau demandés. Tarifs alignés sur la vitrine, catalogue serveur et hooks inchangés. Création entreprise réorganisée (quatre étapes, champs et aide contextuelle), conventions migrées vers les tokens, boutons imbriqués séparés. Contrôles sur sept routes en clair/sombre/mobile, parcours entreprise, bascule mensuel/annuel avec données simulées et TypeScript réussis. Aucune création réelle, aucun prix ni document imprimable modifié. Revue utilisateur attendue ; outils reportés.
+
+25 novembre — ajustement auth : images du dashboard et du bulletin en remplissage bord à bord de leur carte, proportions conservées, sans bandes blanches autour. Formulaires inchangés.
+
+25 novembre — Tarifs : quatre paliers explicités (25 / 50 / 100 / plus de 100), devis distinct. Catalogue démo corrigé pour inclure STARTER et afficher les bons effectifs ; aucun prix fictif ajouté, catalogue réel et backend inchangés.
+
+25 novembre — catalogue démo : fonctionnalités et quotas de chaque plan générés depuis plans.config.ts et catalogLimits du backend (script sync-demo-plans), sans reprendre de prix. Libellé « Sur devis » retiré des tarifs absents et réservé à la section dédiée. Démo explicitée ; catalogue réel inchangé.
+
+### 25 novembre — audit paie / incidents, première synthèse de coût
+
+Audit des cinq questions documenté ; première synthèse Congo reliée au journal avec montants enregistrés, agrégations en base et définitions. Indemnités hors brut, brouillons et étranger explicités ; écarts agrégés signalés sans correction. Calculateur, modèles et exports inchangés. Sept tests de référence/backend, rendu de la synthèse et TypeScript front/back réussis. Base réelle non disponible dans ce checkout. Charges détaillées, pagination/cache, évolution et exports restent à livrer. Incidents : cadrage uniquement, lots A–E non implémentés et aucun canal activé.
+
+### 25 novembre — séparateurs libres, factures et aperçus
+
+Traits superposés aux blocs, déplacement entre zones, poignée de longueur, position, couleur/épaisseur et largeur sur une ou plusieurs colonnes ; conversion explicite des anciens diviseurs. Factures : trois choix historiques conservés et variantes éditables, page blanche Entreprise, sauvegarde indépendante et impression unitaire/groupée. Aperçus : défilement dans le lecteur, actions au-dessus. Validation serveur des formes et champs de facture obligatoires ; tests de rendu, annuler/rétablir, droits et isolation réussis. Aucune migration ni déploiement ; revue souris/défilement laissée à l’utilisateur selon les règles locales.
+
+### 25 novembre — compteurs de congés sur le bulletin
+
+Option « Afficher les soldes de congé » dans la structure de l’éditeur, inactive par défaut. Bloc déplaçable et masquable : droits, pris, restants en jours. Source exclusive : snapshots LEAVE_DROITS/PRIS/SOLDE du bulletin ; valeur absente affichée « — », sans calcul ni solde courant. Compteurs retirés des lignes financières du moteur pour éviter les doublons. Validation serveur du bloc ajoutée ; tests zéro/décimales/absence/activation/masquage réussis. Rendus historiques Orca/Standard et Prisma inchangés.

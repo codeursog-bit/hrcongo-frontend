@@ -61,7 +61,7 @@
   height: var(--doc-height);
   margin: 0 auto;
   padding: var(--doc-padding);
-  background: #fff;
+  background: var(--doc-background, #fff);
   overflow: hidden;
 }
 .sheet + .sheet { margin-top: 6mm; }
@@ -74,7 +74,8 @@
   min-width: 0;
 }
 .gridRow[data-fill="true"] { flex: 1 0 auto; }
-.block { min-width: 0; overflow-wrap: anywhere; }
+.block { min-width: 0; overflow-wrap: anywhere; --frame: var(--doc-rule) solid var(--doc-line); }
+.root[data-frame="double"] .block { --frame: 2.25pt double var(--doc-line); }
 .gridRow[data-fill="true"] .block, .block[data-fixed-table] { display: flex; flex-direction: column; }
 
 .header {
@@ -94,7 +95,10 @@
   text-align: right;
   letter-spacing: .15pt;
 }
-.company { display: grid; align-items: end; font-size: 18pt; }
+.company { display: grid; align-items: end; font-size: 18pt; color: var(--doc-company, var(--doc-main)); }
+.header[data-heading-style="centered"], .header[data-heading-style="stacked"] { grid-template-columns: 1fr; gap: 2mm; }
+.header[data-heading-style="centered"], .header[data-heading-style="centered"] h1 { text-align: center; }
+.header[data-heading-style="stacked"] h1 { text-align: left; font-size: 22pt; }
 .logo { display: block; max-width: 100%; max-height: 35mm; object-fit: contain; object-position: inherit; }
 .meta {
   display: grid;
@@ -105,6 +109,9 @@
 .meta dl, .identity dl, .meta dd, .identity dd { margin: 0; }
 .meta dl > div { display: flex; flex-wrap: wrap; gap: 0 .8mm; }
 .meta dt, .identity dt { font-weight: 700; }
+.meta dt, .identity dt { color: var(--doc-field-label); }
+.meta dd, .identity dd { color: var(--doc-field-value); }
+.meta dl > div[data-field-ink] :is(dt, dd), .identity dl > div[data-field-ink] :is(dt, dd) { color: inherit; }
 .meta dt::after, .identity dl:last-child dt::after { content: " :"; }
 .identity {
   display: grid;
@@ -150,6 +157,7 @@
 .payTable [data-item] { height: var(--row-height); }
 .payTable [data-amount="true"], .payTable [data-total="true"] { font-weight: 700; }
 .payTable [data-total="true"] td { border-block: .5pt solid var(--doc-line); }
+.payTable [data-total="true"] td { color: var(--doc-totals-text); }
 .payTable[data-totals="fill"] [data-total="true"] { background: var(--doc-soft); }
 .filler { height: 100%; }
 .filler td { padding: 0; }
@@ -160,7 +168,10 @@
 .cumuls tbody th { text-align: left; }
 .cumuls td { text-align: right; }
 .cumuls tbody tr { height: 5.5mm; }
-.cumuls th[data-net="true"] { background: var(--doc-net-head); color: #fff; }
+.cumuls[data-separator] tbody tr + tr > * { border-top: .7pt solid var(--doc-cumuls-rule, var(--doc-line)); }
+.cumuls[data-separator="dashed"] tbody tr + tr > * { border-top-style: dashed; }
+.cumuls[data-separator="thick"] tbody tr + tr > * { border-top-width: 2pt; }
+.cumuls th[data-net="true"] { background: var(--doc-net-head); color: var(--doc-net-head-text, #fff); }
 .cumuls td.net {
   text-align: center;
   background: var(--doc-net-fill);
@@ -179,6 +190,14 @@
 .signatures > div > div { height: 18mm; border: .65pt solid var(--doc-line); margin-top: .8mm; }
 .footer { flex: none; margin-top: auto; padding-top: 8mm; text-align: center; font-size: 7pt; color: var(--doc-muted); }
 
+.root[data-base-preset="REFERENCE"] .header { min-height: 8mm; }
+.root[data-base-preset="REFERENCE"] .header h1 { font-size: 20pt; }
+.root[data-base-preset="REFERENCE"] .company { font-size: 13pt; }
+.root[data-base-preset="REFERENCE"] .meta { padding-left: 38%; margin: 1.5mm 0 1mm; }
+.root[data-base-preset="REFERENCE"] .identity dl > div { min-height: 5mm; }
+.root[data-base-preset="REFERENCE"] .signatures > div > div { height: 12mm; }
+.root[data-base-preset="REFERENCE"] .footer { padding-top: 3mm; }
+
 @media print {
   .root { overflow: visible; print-color-adjust: exact; }
   .measure { display: none; }
@@ -186,3 +205,9 @@
   .sheet + .sheet { margin-top: 0; }
   .sheet:last-child { break-after: auto; }
 }
+
+.leaveBalance { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); border:var(--frame); }
+.leaveBalance dl { margin:0; padding:2mm; }
+.leaveBalance dl + dl { border-left:var(--frame); }
+.leaveBalance dt { font-weight:700; margin-bottom:1mm; }
+.leaveBalance dd { margin:0; font-variant-numeric:tabular-nums; }

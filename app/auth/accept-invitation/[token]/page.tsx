@@ -53,12 +53,12 @@ function InvitePanel({ info, brandColor, brandColor2, hasCabinet }: {
           <img src={info.cabinetLogo} alt={info.cabinetName ?? 'Cabinet'} />
         </div>
       ) : hasCabinet ? (
-        <div className="au-invite-mark is-icon" style={{ background: `linear-gradient(135deg, ${brandColor}, ${brandColor2})` }}>
+        <div className="au-invite-mark is-icon" style={{ background: brandColor }}>
           <Building2 size={34} />
         </div>
       ) : (
         <div className="au-invite-mark is-konza">
-          <img src="/logos/konza_logo_h_white.png" alt="Konza RH" />
+          <img src="/logos/konza_logo_h_color.png" alt="Konza RH" />
         </div>
       )}
 
@@ -72,7 +72,7 @@ function InvitePanel({ info, brandColor, brandColor2, hasCabinet }: {
       {info?.companyName && (
         <div
           className="au-invite-badge"
-          style={{ borderColor: `${brandColor}55`, background: `${brandColor}1f`, color: '#fff' }}
+          style={{ borderColor: `${brandColor}55`, background: `${brandColor}1f`, color: 'var(--text)' }}
         >
           <Building2 size={15} />
           {info.companyName}

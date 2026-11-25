@@ -16,6 +16,9 @@ import ModernAbsenceRequestForm, { type ModernAbsenceRequestFormData } from './m
 import ModernAdvanceRequestForm, { type ModernAdvanceRequestFormData } from './modern/ModernAdvanceRequestForm';
 import ModernLeaveRequestForm, { type ModernLeaveRequestFormData } from './modern/ModernLeaveRequestForm';
 import ModernLoanRequestForm, { type ModernLoanRequestFormData } from './modern/ModernLoanRequestForm';
+import dynamic from 'next/dynamic';
+import PermissionTicketPrintable, { type PermissionTicketData } from '@/components/PermissionTicketPrintable';
+const EngineRequestDocument = dynamic(() => import('./EngineRequestDocument'));
 
 interface Props<T> {
   template?: string | null;
@@ -24,6 +27,7 @@ interface Props<T> {
 }
 
 export function AbsenceRequestDocument({ template, id, data }: Props<ModernAbsenceRequestFormData>) {
+  if (template === 'CUSTOM') return <EngineRequestDocument id={id} request={{ docType: 'ABSENCE', input: data }} />;
   return template === 'MODERN' ? (
     <ModernAbsenceRequestForm id={id} data={data} />
   ) : (
@@ -32,6 +36,7 @@ export function AbsenceRequestDocument({ template, id, data }: Props<ModernAbsen
 }
 
 export function LeaveRequestDocument({ template, id, data }: Props<ModernLeaveRequestFormData>) {
+  if (template === 'CUSTOM') return <EngineRequestDocument id={id} request={{ docType: 'LEAVE', input: data }} />;
   return template === 'MODERN' ? (
     <ModernLeaveRequestForm id={id} data={data} />
   ) : (
@@ -40,6 +45,7 @@ export function LeaveRequestDocument({ template, id, data }: Props<ModernLeaveRe
 }
 
 export function LoanRequestDocument({ template, id, data }: Props<ModernLoanRequestFormData>) {
+  if (template === 'CUSTOM') return <EngineRequestDocument id={id} request={{ docType: 'LOAN', input: data }} />;
   return template === 'MODERN' ? (
     <ModernLoanRequestForm id={id} data={data} />
   ) : (
@@ -48,9 +54,16 @@ export function LoanRequestDocument({ template, id, data }: Props<ModernLoanRequ
 }
 
 export function AdvanceRequestDocument({ template, id, data }: Props<ModernAdvanceRequestFormData>) {
+  if (template === 'CUSTOM') return <EngineRequestDocument id={id} request={{ docType: 'ADVANCE', input: data }} />;
   return template === 'MODERN' ? (
     <ModernAdvanceRequestForm id={id} data={data} />
   ) : (
     <StandardAdvanceRequestForm id={id} data={data} />
   );
+}
+
+export function ExitPermissionDocument({ template, id, data }: Props<PermissionTicketData> & { id: string }) {
+  return template === 'CUSTOM'
+    ? <EngineRequestDocument id={id} request={{ docType: 'EXIT_PERMISSION', input: data }} />
+    : <PermissionTicketPrintable id={id} data={data} />;
 }

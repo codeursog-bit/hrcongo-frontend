@@ -28,6 +28,7 @@ interface Row {
   base:    number | '';
   rate:    number | '';
   amount:  number;
+  isNature?: boolean;
 }
 
 interface ManualDeduction {
@@ -160,9 +161,9 @@ const LabelInput = ({ value, onChange, placeholder, suggestions, className = '' 
 
 // ─── InputRow ────────────────────────────────────────────────────────────────
 
-const InputRow = ({ row, onChangeLabel, onChangeBase, onChangeRate, onRemove, placeholder = 'Libellé…', suggestions = [] }: {
+const InputRow = ({ row, onChangeLabel, onChangeBase, onChangeRate, onChangeNature, onRemove, placeholder = 'Libellé…', suggestions = [] }: {
   row: Row; onChangeLabel: (v: string) => void; onChangeBase: (v: number | '') => void;
-  onChangeRate: (v: number | '') => void; onRemove: () => void; placeholder?: string; suggestions?: string[];
+  onChangeRate: (v: number | '') => void; onChangeNature?: (v: boolean) => void; onRemove: () => void; placeholder?: string; suggestions?: string[];
 }) => (
   <motion.div initial={{ opacity:0, y:-4 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-4 }}
     className="group grid grid-cols-[1fr_100px_70px_90px_28px] gap-2 items-center">
@@ -175,11 +176,13 @@ const InputRow = ({ row, onChangeLabel, onChangeBase, onChangeRate, onRemove, pl
     <input type="number" value={row.rate} step="0.01" onChange={e => onChangeRate(e.target.value === '' ? '' : Number(e.target.value))} placeholder="Taux"
       className="w-full px-2 py-2 bg-[var(--surface-2)]  border border-[var(--border)]  rounded-xl text-sm font-mono text-center text-[var(--text-secondary)]  focus:outline-none focus:ring-2 focus:ring-[var(--focus)]" />
     <div className={`px-2 py-2 rounded-xl text-sm font-semibold font-mono text-right tabular-nums border transition-colors ${row.amount > 0 ? 'bg-[color-mix(in_srgb,var(--green)_12%,var(--surface))]  border-[var(--border)]  text-[var(--success-text)] ' : 'bg-[var(--surface-2)]  border-[var(--border)]  text-[var(--text-secondary)]'}`}>
-      {row.amount > 0 ? row.amount.toLocaleString('fr-FR') : '—'}
+      {row.amount !== 0 ? row.amount.toLocaleString('fr-FR') : '—'}
     </div>
     <button onClick={onRemove} className="p-1.5 text-[var(--text-secondary)] hover:text-[var(--danger-text)] opacity-0 group-hover:opacity-100 hover:bg-[color-mix(in_srgb,var(--danger)_10%,var(--surface))]  rounded-lg transition-colors">
       <Trash2 size={13} />
     </button>
+    {onChangeNature && <label className="col-span-full flex items-center gap-2 text-xs text-[var(--text-secondary)]"><input type="checkbox" checked={row.isNature ?? false} onChange={e => onChangeNature(e.target.checked)} /> Avantage en nature</label>}
+    {row.amount < 0 && <p role="alert" className="col-span-full text-xs text-amber-700">Montant négatif : le net à payer diminuera.</p>}
   </motion.div>
 );
 
@@ -285,18 +288,20 @@ export default function ModifierBulletinPage({ params }: { params: { id: string 
             base:    i.base     ? Number(i.base)     : '',
             rate:    i.quantity ? Number(i.quantity)  : (i.rate ? Number(i.rate) : 1),
             amount:  Number(i.amount ?? 0),
+            isNature: i.isNature ?? false,
           }));
         if (extractedPrimes.length > 0) setPrimes(extractedPrimes);
 
         // Indemnités (GAIN !isTaxable && !isCnss)
         const extractedIndem: Row[] = items
-          .filter(i => i.type === 'GAIN' && !i.isTaxable && !i.isCnss)
+          .filter(i => i.type === 'GAIN' && !i.isTaxable && !i.isCnss && i.code !== 'SALARY_ROUNDING')
           .map(i => ({
             localId: uid(),
             label:   i.label ?? '',
             base:    i.base     ? Number(i.base)     : '',
             rate:    i.quantity ? Number(i.quantity)  : (i.rate ? Number(i.rate) : 1),
             amount:  Number(i.amount ?? 0),
+            isNature: i.isNature ?? false,
           }));
         if (extractedIndem.length > 0) setIndemnites(extractedIndem);
 
@@ -348,9 +353,10 @@ export default function ModifierBulletinPage({ params }: { params: { id: string 
 
   // ── Simulateur ───────────────────────────────────────────────────────────────
   const buildBonusPayload = (rows: Row[], taxable: boolean) =>
-    rows.filter(r => n(r.amount) > 0).map(r => ({
+    rows.filter(r => n(r.amount) !== 0).map(r => ({
       bonusType:  r.label || (taxable ? 'Prime' : 'Indemnité'),
       amount:     r.amount,
+      isNature:   r.isNature ?? false,
       base:       n(r.base) > 0 ? n(r.base) : r.amount,
       rate:       n(r.rate) > 0 ? n(r.rate) : (n(r.base) > 0 ? 1 : undefined),
       isTaxable:  taxable,
@@ -542,6 +548,7 @@ export default function ModifierBulletinPage({ params }: { params: { id: string 
                     onChangeLabel={v => updateRow(setPrimes, row.localId, { label: v })}
                     onChangeBase={v => updateRow(setPrimes, row.localId, { base: v })}
                     onChangeRate={v => updateRow(setPrimes, row.localId, { rate: v })}
+                    onChangeNature={v => updateRow(setPrimes, row.localId, { isNature: v })}
                     onRemove={() => removeRow(setPrimes, row.localId)} />
                 ))}
               </AnimatePresence>
@@ -575,6 +582,7 @@ export default function ModifierBulletinPage({ params }: { params: { id: string 
                     onChangeLabel={v => updateRow(setIndemnites, row.localId, { label: v })}
                     onChangeBase={v => updateRow(setIndemnites, row.localId, { base: v })}
                     onChangeRate={v => updateRow(setIndemnites, row.localId, { rate: v })}
+                    onChangeNature={v => updateRow(setIndemnites, row.localId, { isNature: v })}
                     onRemove={() => removeRow(setIndemnites, row.localId)} />
                 ))}
               </AnimatePresence>

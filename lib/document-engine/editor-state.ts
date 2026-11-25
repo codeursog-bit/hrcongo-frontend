@@ -21,7 +21,7 @@ export type EditorCommand =
 export const blockNames: Partial<Record<BlockType, string>> = {
   header: 'En-tête', meta: 'Période et paiement', fieldGroup: 'Identité du salarié',
   table: 'Tableau de paie', cumuls: 'Cumuls et net à payer', signatures: 'Signatures',
-  freeText: 'Texte libre', divider: 'Filet', spacer: 'Espace',
+  leaveBalance: 'Congés (jours)', freeText: 'Texte libre', divider: 'Séparateur', spacer: 'Espace',
 };
 
 const byPosition = (a: Block, b: Block) => a.row - b.row || a.col - b.col;
@@ -77,7 +77,7 @@ function apply(current: EditorDraft, command: Exclude<EditorCommand, { type: 'un
       const blocks = layout.blocks.map(block => ({ ...block, row: positions.indexOf(block.row) + 1 }));
       return { ...current, layout: { ...layout, blocks: [...blocks, { ...command.block, row: positions.length + 1 }] } };
     }
-    case 'remove': return { ...current, layout: { ...layout, blocks: layout.blocks.filter(block => block.id !== command.id || block.locked) } };
+    case 'remove': return { ...current, layout: { ...layout, shapes: layout.shapes?.filter(shape => shape.anchor !== command.id || layout.blocks.some(block => block.id === command.id && block.locked)), blocks: layout.blocks.filter(block => block.id !== command.id || block.locked) } };
     case 'move': return { ...current, layout: { ...layout, blocks: move(layout.blocks, command.id, command.target, command.side) } };
     case 'table': return { ...current, layout: { ...layout, blocks: layout.blocks.map(block => block.type === 'table'
       ? { ...block, config: { ...block.config, ...command.patch } } : block) } };

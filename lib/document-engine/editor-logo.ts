@@ -45,12 +45,12 @@ export async function logoColors(url: string) {
   return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6).map(([color]) => color);
 }
 
-export async function uploadDocumentLogo(assetUrl: string) {
+export async function uploadDocumentLogo(assetUrl: string, docType = 'PAYSLIP') {
   if (DEMO_MODE || !assetUrl.startsWith('data:')) return assetUrl;
   const blob = await (await fetch(assetUrl)).blob();
   const suffix = blob.type === 'image/png' ? 'png' : blob.type === 'image/jpeg' ? 'jpeg' : 'webp';
   const form = new FormData();
   form.append('logo', blob, `logo.${suffix}`);
-  const result = await api.postFormData<{ logo: string }>('/document-layouts/PAYSLIP/upload-logo', form);
+  const result = await api.postFormData<{ logo: string }>(`/document-layouts/${docType}/upload-logo`, form);
   return result.logo;
 }

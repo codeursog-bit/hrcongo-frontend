@@ -5,9 +5,11 @@
 //   • 'BLUE'  — « Bleu moderne »  : vagues bleues, nom en écriture manuscrite
 //   • 'GREEN' — « Vert classique » : cadre vert, coins Art déco, rosette
 // Le modèle sombre actuel reste disponible sous l'identifiant 'CLASSIC'
-// (il continue d'être dessiné par la page elle-même).
+// (gabarit d’origine).
 // Géométrie calquée sur des maquettes 2000 × 1414 px.
 // ============================================================================
+
+import { drawClassicCertificate } from './certificate-classic';
 
 export type CertificateTemplate = 'CLASSIC' | 'BLUE' | 'GREEN';
 
@@ -22,6 +24,10 @@ export const CERTIFICATE_TEMPLATE_KEY = 'konza.certificateTemplate';
 export interface CertificateRenderData {
   ref: string;
   employeeName: string;
+  position?: string;
+  department?: string;
+  providerName?: string;
+  validationNote?: string;
   courseTitle: string;
   durationHours?: number | null;
   mention: string; // « Satisfaisant » | « Bien » | « Très Bien » | « Excellent »
@@ -486,7 +492,11 @@ function drawGreen(ctx: Ctx, d: CertificateRenderData) {
 // API publique
 // ════════════════════════════════════════════════════════════════════════════
 /** Dessine le certificat sur le canvas fourni (2000 × 1414). */
-export function drawCertificate(canvas: HTMLCanvasElement, template: 'BLUE' | 'GREEN', data: CertificateRenderData) {
+export function drawCertificate(canvas: HTMLCanvasElement, template: CertificateTemplate, data: CertificateRenderData) {
+  if (template === 'CLASSIC') {
+    drawClassicCertificate(canvas, data);
+    return;
+  }
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext('2d')!;
@@ -495,12 +505,13 @@ export function drawCertificate(canvas: HTMLCanvasElement, template: 'BLUE' | 'G
 }
 
 /** Dessine puis télécharge en PNG. */
-export async function downloadCertificate(template: 'BLUE' | 'GREEN', data: CertificateRenderData) {
-  await ensureCertificateFonts();
+export async function downloadCertificate(template: CertificateTemplate, data: CertificateRenderData) {
+  if (template !== 'CLASSIC') await ensureCertificateFonts();
   const canvas = document.createElement('canvas');
   drawCertificate(canvas, template, data);
   const link = document.createElement('a');
-  link.download = `certificat-${data.employeeName.replace(/\s+/g, '-').toLowerCase()}-${data.year}.png`;
+  const name = data.employeeName.replace(/\s+/g, '-').toLowerCase();
+  link.download = `certificat-${name}-${data.year}.png`;
   link.href = canvas.toDataURL('image/png', 1.0);
   link.click();
 }

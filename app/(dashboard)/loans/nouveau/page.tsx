@@ -4,6 +4,7 @@
 // 📁 app/(dashboard)/loans/nouveau/page.tsx
 // ============================================================================
 
+import { useRequestDocumentTemplate } from '@/hooks/useRequestDocumentTemplate';
 import { usesStandardData } from '@/lib/document-template';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -96,6 +97,7 @@ export default function NouvellePretAvancePage() {
 
   const isFinance = FINANCE_ROLES.includes(userRole);
   const isAdvance = type === 'AVANCE';
+  const requestTemplate = useRequestDocumentTemplate(isAdvance ? 'ADVANCE' : 'LOAN', company);
 
   useEffect(() => {
     try {
@@ -297,10 +299,10 @@ export default function NouvellePretAvancePage() {
     </div>
   </RequestForm>
       <DocumentPreviewModal open={showPreviewModal} onClose={() => setShowPreviewModal(false)}>
-        {isStandard ? (
+        {usesStandardData(requestTemplate) ? (
           isAdvance
-            ? <AdvanceRequestDocument template={company?.documentTemplate} id="preview-loan" data={standardAdvancePreviewData as any} />
-            : <LoanRequestDocument template={company?.documentTemplate} id="preview-loan" data={standardPreviewData as any} />
+            ? <AdvanceRequestDocument template={requestTemplate} id="preview-loan" data={standardAdvancePreviewData as any} />
+            : <LoanRequestDocument template={requestTemplate} id="preview-loan" data={standardPreviewData as any} />
         ) : (
           <LoanRequestPrintable id="preview-loan" data={previewData as any} />
         )}

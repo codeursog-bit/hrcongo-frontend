@@ -18,7 +18,7 @@
 //   4. Un cache minimal pour un usage hors-ligne basique des pages/app
 // ============================================================================
 
-const CACHE_NAME = 'konza-rh-cache-v2';
+const CACHE_NAME = 'konza-rh-cache-v3';
 const OFFLINE_URL = '/';
 
 // ─── Cycle de vie ────────────────────────────────────────────────────────────
@@ -69,16 +69,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Navigation (pages) : réseau d'abord, repli sur le cache si hors-ligne
+  // Private pages must never survive logout in a shared offline cache.
   if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, response.clone()));
-          return response;
-        })
-        .catch(() => caches.match(request).then((r) => r || caches.match(OFFLINE_URL))),
-    );
+    event.respondWith(fetch(request).catch(() => new Response('Connexion indisponible. Reconnectez-vous au réseau pour ouvrir cette page.', {status:503,headers:{'Content-Type':'text/plain; charset=utf-8','Cache-Control':'no-store'}})));
   }
 });
 

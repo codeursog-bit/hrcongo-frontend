@@ -17,6 +17,7 @@ import './globals.css';
 import { appearanceBootstrap } from '@/lib/appearance-bootstrap';
 import { RootAppearance } from '@/components/layout/RootAppearance';
 import { DemoProvider } from '@/components/providers/DemoProvider';
+import { IncidentProvider } from '@/components/providers/IncidentProvider';
 
 const inter = localFont({
   src: '../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2',
@@ -193,6 +194,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <SubscriptionReminderProvider>
                 <NotificationProvider>
                   <RootAppearance />
+                  <IncidentProvider />
                   {children}
                   <SubscriptionBlockedModal />
                   <SubscriptionEndedBanner />

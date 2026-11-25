@@ -16,6 +16,7 @@
 import React from 'react';
 
 interface CompanyInfo {
+  id?: string; city?: string; documentFooterText?: string | null;
   legalName?: string; tradeName?: string; logo?: string | null;
   rccmNumber?: string; taxNumber?: string; address?: string; phone?: string;
 }

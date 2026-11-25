@@ -27,6 +27,7 @@ export interface BonusTemplate {
   isRecurring:        boolean;
   isTaxable:          boolean;
   isCnss:             boolean;
+  isNature?:          boolean;
   fiscalType?:        'TAXABLE_CNSS' | 'TAXABLE_NO_CNSS' | 'NON_TAXABLE' | null;
   // 🆕 Système quantité
   unitAmount?:        number | null;
@@ -250,6 +251,7 @@ const emptyForm = () => ({
   isRecurring:       true,
   isTaxable:         true,
   isCnss:            true,
+  isNature:           false,
   description:       '',
   // Montant
   usePercentage:     false,
@@ -358,6 +360,7 @@ function CataloguePrimesPage() {
       isRecurring:       t.isRecurring,
       isTaxable:         t.isTaxable,
       isCnss:            t.isCnss,
+      isNature:          t.isNature ?? false,
       description:       t.description ?? '',
       usePercentage:     t.defaultPercentage != null,
       useFixedAmount:    t.defaultAmount != null && !t.unitAmount,
@@ -382,6 +385,7 @@ function CataloguePrimesPage() {
       isRecurring:       p.isRecurring,
       isTaxable:         p.isTaxable,
       isCnss:            p.isCnss,
+      isNature:          p.isNature ?? false,
       description:       p.description ?? '',
       usePercentage:     p.defaultPercentage != null,
       useFixedAmount:    p.defaultAmount != null && !p.unitAmount,
@@ -411,6 +415,7 @@ function CataloguePrimesPage() {
       isRecurring:     form.isRecurring,
       isTaxable:       form.isTaxable,
       isCnss:          form.isCnss,
+      isNature:        form.isNature,
       fiscalType:      form.fiscalType,
       isProratized:    form.isProratized,
       description:     form.description || null,
@@ -692,6 +697,7 @@ function CataloguePrimesPage() {
                   <div className="flex items-center gap-2 flex-wrap mb-1.5">
                     <p className="font-semibold text-[var(--text)]">{t.name}</p>
                     <FiscalBadge fiscalType={t.fiscalType} isTaxable={t.isTaxable} isCnss={t.isCnss} />
+                    {t.isNature && <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-[var(--brand-soft)] text-[var(--success-text)] border border-[var(--border)]">En nature</span>}
                     <QuantityBadge mode={t.quantityMode} />
                     {t.isProratized && (
                       <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-[color-mix(in_srgb,var(--mustard)_14%,var(--surface))]  text-[var(--warning-text)]  border border-[var(--border)] ">
@@ -811,6 +817,13 @@ function CataloguePrimesPage() {
                 </div>
 
                 {/* 🆕 Mode de calcul */}
+                <label className="flex items-center gap-2 text-sm text-[var(--text)]">
+                  <input type="checkbox" checked={form.isNature} onChange={e => setForm(p => ({ ...p, isNature: e.target.checked }))} />
+                  Avantage en nature (pour la DAS)
+                </label>
+                {Number(form.defaultAmount) < 0 && <p role="alert" className="text-xs text-amber-700">Montant négatif : cette prime ou indemnité réduira le net à payer.</p>}
+                {Number(form.unitAmount) < 0 && <p role="alert" className="text-xs text-amber-700">Montant unitaire négatif : cette rubrique réduira le net à payer.</p>}
+
                 <div>
                   <label className="block text-sm font-semibold text-[var(--text)] mb-2">
                     Mode de calcul
@@ -859,7 +872,7 @@ function CataloguePrimesPage() {
                         Ex: 1 200 pour "1 200 FCFA par jour"
                       </span>
                     </label>
-                    <input type="number" min="0" value={form.unitAmount}
+                    <input type="number" value={form.unitAmount}
                       onChange={e => setForm(p => ({ ...p, unitAmount: e.target.value }))}
                       placeholder="Ex: 1200"
                       className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl outline-none font-semibold font-mono text-lg text-[var(--text)]" />
@@ -928,7 +941,7 @@ function CataloguePrimesPage() {
                       <p className="text-xs text-[var(--text-muted)] italic">Montant saisi lors de l'attribution à chaque employé.</p>
                     )}
                     {form.useFixedAmount && !form.usePercentage && (
-                      <input type="number" min="0" value={form.defaultAmount}
+                      <input type="number" value={form.defaultAmount}
                         onChange={e => setForm(p => ({ ...p, defaultAmount: e.target.value }))}
                         placeholder="Ex: 25 000"
                         className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl outline-none font-semibold font-mono text-lg text-[var(--text)]" />

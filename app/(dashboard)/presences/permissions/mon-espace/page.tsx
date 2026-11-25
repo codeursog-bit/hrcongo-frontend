@@ -1,4 +1,5 @@
 'use client';
+import { useRequestDocumentTemplate } from '@/hooks/useRequestDocumentTemplate';
 import { RequestStatusTabs, RequestStatusBadge, RequestEmptyState } from '@/components/requests';
 import { requestStatus, type RequestGroup } from '@/lib/request-status';
 import { AttendanceModuleFrame as ModulePageFrame } from '@/components/attendance/AttendanceModuleFrame';
@@ -26,7 +27,7 @@ import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import PresenceModuleSwitcher from '@/components/PresenceModuleSwitcher';
 import PermissionsSubNav from '@/components/PermissionsSubNav';
-import PermissionTicketPrintable from '@/components/PermissionTicketPrintable';
+import { ExitPermissionDocument } from '@/components/documents/RequestDocuments';
 import DocumentPreviewModal from '@/components/loans/DocumentPreviewModal';
 import { printTicket, downloadTicketPDF } from '@/lib/ticket-print';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
@@ -60,6 +61,7 @@ export default function MonEspacePermissionsPage() {
   const [tickets, setTickets] = useState<any[]>([]);
   const [employee, setEmployee] = useState<any>(null);
   const [company, setCompany] = useState<any>(null);
+  const requestTemplate = useRequestDocumentTemplate('EXIT_PERMISSION', company);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [userRole, setUserRole] = useState('');
@@ -119,7 +121,7 @@ export default function MonEspacePermissionsPage() {
 
   const printData = selected ? {
     reference: ticketRef,
-    company: { legalName: company?.legalName, tradeName: company?.tradeName, logo: company?.logo, rccmNumber: company?.rccmNumber, taxNumber: company?.taxNumber, address: company?.address, phone: company?.phone },
+    company: { id: company?.id, city: company?.city, documentFooterText: company?.documentFooterText, legalName: company?.legalName, tradeName: company?.tradeName, logo: company?.logo, rccmNumber: company?.rccmNumber, taxNumber: company?.taxNumber, address: company?.address, phone: company?.phone },
     employee: { firstName: employee?.firstName || '', lastName: employee?.lastName || '', employeeNumber: employee?.employeeNumber, department: employee?.department?.name },
     type: selected.type, missionType: selected.missionType, reason: selected.reason, destination: selected.destination,
     departureTime: effectiveDeparture(selected), expectedReturnTime: selected.expectedReturnTime, actualReturnTime: selected.actualReturnTime,
@@ -315,7 +317,7 @@ export default function MonEspacePermissionsPage() {
 
                   {/* Rendu réel hors-écran : nécessaire pour la capture d'impression navigateur */}
                   <div className="fixed -left-[9999px] top-0 pointer-events-none" aria-hidden="true">
-                    {printData && <PermissionTicketPrintable id={TICKET_ID} data={printData as any} />}
+                    {printData && <ExitPermissionDocument template={requestTemplate} id={TICKET_ID} data={printData as any} />}
                   </div>
               </motion.div>
             )}
@@ -387,7 +389,7 @@ export default function MonEspacePermissionsPage() {
       )}
 
       <DocumentPreviewModal open={showPreviewModal} onClose={() => setShowPreviewModal(false)}>
-        {printData && <PermissionTicketPrintable id="my-perm-doc-preview" data={printData as any} />}
+        {printData && <ExitPermissionDocument template={requestTemplate} id="my-perm-doc-preview" data={printData as any} />}
       </DocumentPreviewModal>
     </div></ModulePageFrame>
   );

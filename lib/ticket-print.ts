@@ -1,3 +1,5 @@
+import { printEngineRequest } from './engine-request-print';
+
 // ============================================================================
 // 📁 lib/ticket-print.ts
 // ✅ Même technique que absence-print.ts / report-print.ts, adaptée au petit
@@ -27,6 +29,7 @@ function findElement(elementId: string): HTMLElement | null {
 
 export function printTicket(elementId: string) {
   const el = findElement(elementId);
+  if (printEngineRequest(el)) return;
   if (!el) { window.print(); return; }
 
   const iframe = document.createElement('iframe');
@@ -90,6 +93,7 @@ ${styleInlines}
 
 export async function downloadTicketPDF(elementId: string, filename: string): Promise<void> {
   const el = findElement(elementId);
+  if (printEngineRequest(el)) return;
   if (!el) { alert('Impossible de générer le PDF : ticket introuvable.'); return; }
 
   const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([

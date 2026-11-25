@@ -17,6 +17,7 @@
 const nextConfig = {
   output: 'standalone',
   reactStrictMode: true,
+  productionBrowserSourceMaps: false,
   // A second dev/check server must never overwrite the live server's chunks.
   distDir: process.env.NEXT_DIST_DIR || '.next',
 

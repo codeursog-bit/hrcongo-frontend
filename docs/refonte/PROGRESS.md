@@ -1,8 +1,14 @@
 # SUIVI DE LA REFONTE — PROGRESS (version courte)
 
+**25 novembre — Finalisation incidents [~] :** décodage local des source maps privées ajouté, 31 tests réussis et TypeScript frontend validé. Préférence e-mail personnelle désactivée par défaut, y compris pour les résumés. Migration et vérification des canaux réels à effectuer au déploiement ; voir `backend/docs/INCIDENTS-ACTIVATION.md`.
+
 > **À lire au début de chaque session : CE FICHIER SEULEMENT** (il est court exprès pour économiser les crédits). Ne relis pas `INVENTAIRE.md` ni `JOURNAL.md` en entier. De `REFONTE.md`, lis seulement §2 (règles absolues), §14 (décisions) et la section utile à la page en cours.
 
 Légende des cases : `[ ]` à faire · `[~]` livrée, revue visuelle en attente · `[x]` validée par l'utilisateur · `[!]` bloquée.
+
+**Documents — 25 novembre [~] :** séparateurs libres superposés (déplacement entre zones, longueur, couleur, épaisseur, alignement sur une ou plusieurs colonnes des cumuls), galerie et édition des trois factures prestataires, défilement des aperçus corrigé. Modèles existants préservés, activation par type, aucune migration. Tests de rendu/validation/isolation exécutés ; gestes souris et défilement à valider visuellement par l’utilisateur, conformément aux règles de vérification locales.
+
+**Bulletins — congés optionnels [~] :** bloc droits/pris/restants activable dans l’éditeur, valeurs figées du bulletin, masqué par défaut. Tests ciblés réussis ; revue visuelle utilisateur attendue.
 
 ## Étapes
 
@@ -13,6 +19,14 @@ Légende des cases : `[ ]` à faire · `[~]` livrée, revue visuelle en attente 
 - [ ] Étape 4 — Passe finale (cohérence, dark mode, mobile, accessibilité, performance, nettoyage ; **inclut une 2e passe sur l'intérieur des pages Paie**, où seul le cadre commun a été intégré par prudence)
 
 ## Prochaine action
+
+**Nouveaux briefs — paie et incidents (25 novembre) :** audit paie écrit dans `backend/docs/PAYROLL-REPORT-AUDIT.md` ; premier lot « synthèse et définitions » livré au journal existant : agrégats en base, brut/retenues/patronal/chargé/coût/net distincts, hors brut, brouillons signalés, étranger séparé et écarts agrégés explicites. Calculateur, bulletins et exports existants inchangés. Sept tests backend et contrôle de rendu réussis ; TypeScript front/back réussi. Pas de comparaison sur base réelle (configuration backend absente). **Suite paie :** charges détaillées et contrôles individuels → répartition/évolution → détail paginé/cache → exports. **Incidents :** audit et plan dans `backend/docs/INCIDENTS-DELIVERY.md` ; les lots A–E restent à implémenter, aucun capteur ni canal activé. Le brief les place après le chantier des modèles de documents.
+
+**Dernière passe publique — 25 novembre [~] :** accueil, À propos, tarifs, blog, Contact, documentation et auth contrôlés en clair/sombre aux formats 1917 × 823, 1366 × 768 et mobile. Dashboard auth complet (fin du recadrage), bulletin moins large et chevauchement limité ; titre et phrase utilisateur conservés. Tarifs harmonisés avec le site, montants/limites toujours issus du catalogue serveur ; bascule mensuel/annuel et FAQ testées avec catalogue simulé. Création entreprise livrée : quatre étapes, récapitulatif, conventions thématiques et boutons de détail séparés. Validation, champs, payload et taux existants conservés ; aucune entreprise créée pendant les tests. TypeScript et contrôles navigateur réussis. Lot public livré, validation visuelle utilisateur attendue ; outils toujours reportés en dernier.
+
+**Authentification — 24 novembre [~] :** connexion, inscription, récupération/réinitialisation, deux invitations et alias /register harmonisés. Deux colonnes pleine hauteur : présentation fixe à gauche, formulaire large à droite, sans carte intérieure ; logo unique et formulaire seul sur mobile ; carrousel, halos et captures vides retirés. Titre et phrase utilisateur conservés exactement : « Le futur de la gestion RH » et « Connectez-vous à l’écosystème le plus avancé pour les entreprises congolaises. » Coquille fixe à 100dvh, aucun défilement de page ; colonne formulaire entière défilante pour les formulaires longs (pas de défilement sur .au-form), contrôlés de 390 × 650 à 1440 × 900. Capture dashboard et pointeuse mobile fournies par l’utilisateur intégrées telles quelles à la vitrine ; dashboard également utilisé sur l’auth. Validation des formulaires, ouverture 2FA, récupération et invitations contrôlées avec réponses simulées, sans compte créé ni email envoyé. Revue visuelle utilisateur attendue.
+
+**Pages publiques — 24 novembre [~] :** accueil, À propos, blog (liste + article), Contact et documentation repris. Présentation éditoriale, navigation et pied de page communs, captures réelles du produit (dashboard fourni, employés, paie, bulletin complet). Pas de photo fictive ni de cadre vide ; pas de modification des modèles imprimables. Recherche/réactions du blog et formulaire/suivi Contact conservés. Revue utilisateur attendue avant la suite ; pages outils reportées en dernier.
 
 **Priorité utilisateur — cohérence des rapports et turnover (24 novembre) :** corrections front/back livrées ; suppressions de fiches séparées des départs réels, historique de paie conservé. Effectifs alignés sur les employés actifs, périodes sélectionnées propagées, paie hors annulations et coûts employeur issus des montants enregistrés ; ITS/BNC distingués. 19 tests ciblés, rendu des 16 routes et TypeScript front/back réussis. Appliquer la migration `20261124120000_employee_record_deletion` sur la base cible puis comparer les chiffres réels : aucune connexion de base disponible dans ce checkout. Les anciennes fins de contrat sans preuve restent « à confirmer », sans faux départ ; module Ruptures non finalisé par ce lot.
 
@@ -112,7 +126,7 @@ Correctif Présences du 18 novembre sur capture : **menu « Plus » contenu dans
 | presences | 0 | 23 | 0 |
 | pricing | 0 | 1 | 0 |
 | primes | 0 | 1 | 0 |
-| Public, authentification et portails | 0 | 0 | 37 |
+| Public, authentification et portails | 0 | 15 | 22 |
 | rapports | 0 | 16 | 0 |
 | recrutement | 0 | 17 | 0 |
 | rh-blog | 0 | 3 | 0 |
@@ -156,3 +170,11 @@ Les 12 décisions de cadrage sont dans `REFONTE.md` §14 (source de vérité). D
 4. Modifie les fichiers en place : ne réécris pas un fichier entier pour changer quelques lignes. Garde les fins de ligne du fichier d'origine (ne convertis pas LF en CRLF).
 5. Compte rendu en **10 lignes maximum** : pages livrées, fichiers clés, points d'attention, ce qui reste, besoins back. Ajoute une entrée courte (8 lignes max) en fin de `JOURNAL.md`.
 6. Mets à jour seulement : la case de la page dans `INVENTAIRE.md`, le tableau « État par module » et « Prochaine action ».
+
+**25 novembre — Incidents [~] :** capture, regroupement, canaux et écran super admin implémentés ; e-mails sur consentement personnel, désactivés par défaut. Migration additive préparée, non appliquée sur base réelle. Activation et limites : backend/docs/INCIDENTS-ACTIVATION.md. Décodage des source maps privées et webhook optionnel restent à livrer. Rapport de paie : détail des charges, contrôles individuels, évolution et pagination ajoutés ; cache et nouveaux exports restent à terminer.
+
+25 novembre — Sécurité incidents : quatre risques de fuite corrigés (JSON sensible, jetons de routes, identifiants URL de pile, version libre). 35 tests ciblés réussis ; périmètre et limites dans backend/docs/INCIDENTS-SECURITY.md.
+
+25 novembre — Revue sécurité globale ouverte : cache des pages privées, origines WebSocket, import des primes et logs de paiement corrigés. Rapport détaillé backend/docs/APPLICATION-SECURITY-REVIEW.md. 236/250 tests globaux réussis (suite paie mal configurée), 10 tests ciblés après corrections réussis. Base réelle et audit dépendances non validés.
+
+25 novembre — Sécurité deuxième passe : rattachements entreprise/cabinet/portefeuille révalidés, refresh atomique et sessions expirées refusées ; traitement Chariow non signé neutralisé au profit du polling existant. 30 tests ciblés sessions et HTTP réussis. Revue globale encore ouverte.

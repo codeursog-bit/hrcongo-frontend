@@ -12,9 +12,15 @@
 // lieu d'ajouter une colonne/table. Si absente → 'forfait' par défaut.
 // ============================================================================
 
-import React from 'react';
-import FactureRendererForfait from '@/components/FactureRendererForfait';
-import FactureRendererDetaillee from '@/components/FactureRendererDetaillee';
+import React, { useEffect, useState } from 'react';
+import { authService } from '@/lib/services/authService';
+import { loadAdministrativeLayout } from '@/lib/document-engine/administrative-api';
+import { invoiceContext } from '@/lib/document-engine/invoices';
+import type { DocLayout } from '@/types/document-layout';
+import DocumentRenderer from '@/components/DocumentRenderer';
+import HistoricInvoice from '@/components/DocumentRenderer/HistoricInvoice';
+import FactureRendererForfait from '@/components/DocumentRenderer/InvoiceForfait';
+import FactureRendererDetaillee from '@/components/DocumentRenderer/InvoiceDetailed';
 import FactureRendererPro from '@/components/FactureRendererPro';
 import { useBulletinConfig } from '@/hooks/useBulletinConfig';
 import type { BulletinPayroll } from '@/types/bulletin-template';
@@ -24,7 +30,7 @@ interface Props {
   previewMode?: boolean;
 }
 
-export default function FactureDisplay({ payroll, previewMode = false }: Props) {
+function LegacyFactureDisplay({ payroll, previewMode = false }: Props) {
   const { config, isLoading } = useBulletinConfig();
 
   if (isLoading) {
@@ -68,4 +74,29 @@ export default function FactureDisplay({ payroll, previewMode = false }: Props) 
       previewMode={previewMode}
     />
   );
+}
+
+function CompanyInvoice({ companyId, payroll, previewMode }: Props & { companyId: string }) {
+  const [layout, setLayout] = useState<DocLayout | null>();
+  const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  const { config, isLoading } = useBulletinConfig();
+  useEffect(() => {
+    let live = true;
+    loadAdministrativeLayout(companyId, 'CONTRACTOR_INVOICE').then(result => {
+      if (live) setLayout(result?.config?.independent ? result.config : null);
+    }).catch(() => { if (live) setFailed(true); });
+    return () => { live = false; };
+  }, [companyId, attempt]);
+  if (failed) return <p role="alert">Modèle de facture indisponible. <button type="button" onClick={() => { setFailed(false); setAttempt(value => value + 1); }}>Réessayer</button></p>;
+  if (layout === undefined || isLoading) return <p role="status">Chargement du modèle de facture…</p>;
+  if (layout?.useOriginal) return <HistoricInvoice preset={layout.basePreset ?? undefined} payroll={payroll} template={config.templateConfig} previewMode={previewMode} />;
+  if (layout) return <DocumentRenderer docType="CONTRACTOR_INVOICE" layout={layout} data={invoiceContext(payroll)} />;
+  return <LegacyFactureDisplay payroll={payroll} previewMode={previewMode} />;
+}
+export default function FactureDisplay(props: Props) {
+  const sessionCompany = authService.getCurrentUser()?.companyId;
+  const companyId = props.payroll.company?.id ?? props.payroll.companyId;
+  return companyId && sessionCompany === companyId
+    ? <CompanyInvoice key={companyId} companyId={companyId} {...props} /> : <LegacyFactureDisplay {...props} />;
 }

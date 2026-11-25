@@ -1,3 +1,5 @@
+import { printEngineRequest } from './engine-request-print';
+
 // ============================================================================
 // 📁 lib/absence-print.ts
 // ✅ Même technique que lib/bulletin-print.ts (iframe isolé pour l'impression,
@@ -21,6 +23,7 @@ function findAbsenceElement(): HTMLElement | null {
 
 export function printAbsenceRequest() {
   const el = findAbsenceElement();
+  if (printEngineRequest(el)) return;
   if (!el) { window.print(); return; }
 
   const iframe = document.createElement('iframe');
@@ -111,6 +114,7 @@ ${styleInlines}
 
 export async function downloadAbsenceRequestPDF(filename: string): Promise<void> {
   const el = findAbsenceElement();
+  if (printEngineRequest(el)) return;
   if (!el) {
     alert("Impossible de générer le PDF : formulaire introuvable.");
     return;
