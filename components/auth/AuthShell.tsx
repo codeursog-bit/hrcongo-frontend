@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ArrowUpRight, Check, FileText, Users, CalendarDays } from 'lucide-react';
+import { ArrowUpRight, Check, FileText, Users, CalendarDays } from 'lucide-react';
 import './auth.css';
 
 export function AuthLogo({ onDark = false }: { onDark?: boolean }) {
@@ -37,7 +37,7 @@ function AuthBrandPanel() {
       <div className="au-brand-copy">
         <p className="au-panel-label"><span className="au-brand-spark" /> Pensé pour les équipes d’ici</p>
         <h2 className="au-panel-title">Le travail avance.<br /><em>Tout le monde suit.</em></h2>
-        <p className="au-panel-sub">Les personnes, les absences et la paie réunies dans un espace clair. Pour se concentrer sur ce qui compte vraiment.</p>
+        <p className="au-panel-sub">Connectez-vous à l’écosystème le plus avancé pour les entreprises du Congo.</p>
         <Link href="/" className="au-product-link">Découvrir Konza RH <ArrowUpRight size={17} /></Link>
       </div>
       <div className="au-brand-art" aria-hidden="true">
@@ -67,18 +67,6 @@ export function AuthShell({
   const split = variant === 'split';
   return (
     <div className={split ? 'au-root au-split' : 'au-root au-centered'}>
-      <header className="au-header">
-        <AuthLogo />
-        <nav aria-label="Navigation authentification">
-          <Link href="/contact" className="au-help">
-            Une question ? Contactez-nous
-          </Link>
-          <Link href="/" className="au-home">
-            <ArrowLeft size={14} />
-            Accueil
-          </Link>
-        </nav>
-      </header>
       <div className="au-layout">
         {split &&
           (panel ? (

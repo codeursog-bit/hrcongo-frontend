@@ -2,6 +2,10 @@
 
 **25 novembre — Auth [~] :** présentation commune refaite sur les écrans de connexion, inscription et récupération. Captures produit et chiffres fictifs retirés du panneau de marque ; composition typographique et illustration CSS, formulaires plus lisibles, mobile et sombre ajustés. Parcours, routes, validations et appels API inchangés. Revue visuelle utilisateur attendue.
 
+**Ajustement auth — 25 novembre :** barre supérieure retirée ; cadre fixé à la hauteur de l’écran et défilement réservé au formulaire lorsqu’il est long. Aucun parcours métier modifié.
+
+**Ajustement auth — 26 novembre :** plus aucun défilement dans le formulaire ; inscription répartie en deux étapes entreprise ou trois étapes cabinet après le choix du profil, avec validation des champs avant chaque suite. Phrase de marque demandée rétablie. Payload, API et routes conservés.
+
 **25 novembre — Finalisation incidents [~] :** décodage local des source maps privées ajouté, 31 tests réussis et TypeScript frontend validé. Préférence e-mail personnelle désactivée par défaut, y compris pour les résumés. Migration et vérification des canaux réels à effectuer au déploiement ; voir `backend/docs/INCIDENTS-ACTIVATION.md`.
 
 > **À lire au début de chaque session : CE FICHIER SEULEMENT** (il est court exprès pour économiser les crédits). Ne relis pas `INVENTAIRE.md` ni `JOURNAL.md` en entier. De `REFONTE.md`, lis seulement §2 (règles absolues), §14 (décisions) et la section utile à la page en cours.

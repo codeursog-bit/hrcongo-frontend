@@ -77,6 +77,7 @@ function RegisterForm() {
   const router       = useRouter();
   const searchParams = useSearchParams();
   const [step, setStep]               = useState<'type' | 'form' | 'success'>('type');
+  const [formStep, setFormStep]       = useState(0);
   const [accountType, setAccountType] = useState<'COMPANY' | 'CABINET' | null>(null);
   const [isLoading, setIsLoading]     = useState(false);
   const [errorMsg, setErrorMsg]       = useState('');
@@ -105,7 +106,15 @@ function RegisterForm() {
     setAccountType(type);
     form.setValue('accountType', type);
     setErrorMsg('');
+    setFormStep(0);
     setStep('form');
+  };
+
+  const advanceForm = async () => {
+    const fields: (keyof FormData)[] = formStep === 0
+      ? ['firstName', 'lastName', 'email']
+      : ['cabinetName', 'subdomain'];
+    if (await form.trigger(fields)) setFormStep(value => value + 1);
   };
 
   const onSubmit = async (data: FormData) => {
@@ -217,22 +226,29 @@ function RegisterForm() {
       {step === 'form' && (
         <>
           <div className="au-stepbar">
-            <button type="button" className="au-back" onClick={() => setStep('type')}>
+            <button type="button" className="au-back" onClick={() => formStep ? setFormStep(value => value - 1) : setStep('type')}>
               <ArrowLeft size={14} /> Retour
             </button>
-            <span className="au-pill">{isCabinet ? 'Cabinet RH' : 'Entreprise'}</span>
+            <span className="au-pill">Étape {formStep + 1} / {isCabinet ? 3 : 2}</span>
           </div>
 
           <AuthHeading
-            title={isCabinet ? 'Créer votre cabinet' : 'Créer votre compte'}
-            description="30 jours d’essai gratuit, sans carte bancaire."
+            title={formStep === 0 ? 'Faisons connaissance' : isCabinet && formStep === 1 ? 'Votre cabinet' : 'Protégez votre compte'}
+            description={formStep === 0 ? 'Quelques informations pour commencer.' : isCabinet && formStep === 1 ? 'Un espace dédié à votre activité.' : 'Choisissez un mot de passe pour votre accès.'}
           />
 
           {hasAffiliateRef && <div className="au-mb"><InfoBanner>{AFFILIATE_MESSAGE}</InfoBanner></div>}
           {errorMsg && <div className="au-mb"><ErrorBanner>{errorMsg}</ErrorBanner></div>}
 
-          <form className="au-stack" onSubmit={form.handleSubmit(onSubmit)} noValidate>
-            <div className="au-row-2">
+          <form className="au-stack" onSubmit={event => {
+            if (formStep < (isCabinet ? 2 : 1)) {
+              event.preventDefault();
+              void advanceForm();
+            } else {
+              void form.handleSubmit(onSubmit)(event);
+            }
+          }} noValidate>
+            {formStep === 0 && <><div className="au-row-2">
               <TextField
                 {...form.register('firstName')}
                 label="Prénom"
@@ -246,8 +262,16 @@ function RegisterForm() {
                 error={errors.lastName?.message}
               />
             </div>
+            <TextField
+              {...form.register('email')}
+              icon={Mail}
+              label="Email professionnel"
+              type="email"
+              autoComplete="email"
+              error={errors.email?.message}
+            /></>}
 
-            {isCabinet && (
+            {isCabinet && formStep === 1 && (
               <>
                 <TextField
                   {...form.register('cabinetName')}
@@ -279,16 +303,7 @@ function RegisterForm() {
               </>
             )}
 
-            <TextField
-              {...form.register('email')}
-              icon={Mail}
-              label="Email professionnel"
-              type="email"
-              autoComplete="email"
-              error={errors.email?.message}
-            />
-
-            <div>
+            {formStep === (isCabinet ? 2 : 1) && <><div>
               <PasswordField
                 {...form.register('password')}
                 icon={Lock}
@@ -307,10 +322,13 @@ function RegisterForm() {
               autoComplete="new-password"
               error={errors.confirmPassword?.message}
             />
+            </>}
 
-            <PrimaryButton type="submit" loading={isLoading}>
+            {formStep < (isCabinet ? 2 : 1) ? <PrimaryButton type="button" onClick={advanceForm}>
+              Continuer <ArrowRight size={17} className="au-arrow" />
+            </PrimaryButton> : <PrimaryButton type="submit" loading={isLoading}>
               {isCabinet ? 'Créer mon cabinet' : 'Créer mon compte'} <ArrowRight size={17} className="au-arrow" />
-            </PrimaryButton>
+            </PrimaryButton>}
 
             <p className="au-note">Aucune carte bancaire · Résiliation à tout moment</p>
           </form>

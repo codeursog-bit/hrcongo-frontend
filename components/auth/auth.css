@@ -1482,3 +1482,20 @@ button.au-step:focus-visible {
 @media(max-width:600px){.au-header{height:72px;min-height:72px;width:calc(100% - 36px)}.au-layout{padding:0 20px}.au-main{padding:26px 0}.au-form{padding:12px 0}.au-title{font-size:35px}.au-heading{margin-bottom:28px}.au-footer{padding:18px 0 10px}}
 @media(min-width:1024px) and (max-height:760px){.au-header{height:68px;min-height:68px}.au-panel{margin:16px 0;padding:26px 34px}.au-panel-label{margin-bottom:15px}.au-panel-title{font-size:38px}.au-panel-sub{font-size:13px;margin-top:13px}.au-brand-art{height:200px;margin-top:0}.au-art-orbit-one{width:215px;height:215px}.au-art-orbit-two{width:315px;height:315px}.au-art-core{width:115px;height:115px;border-radius:28px}.au-art-core-k{font-size:78px}.au-art-chip{padding:8px 10px}.au-product-link{margin-top:15px}.au-form{padding:18px 8px}}
 @media(prefers-reduced-motion:reduce){.au-product-link,.au-home{transition:none}}
+
+/* Le cadre auth tient sur un écran ; seuls les formulaires longs défilent. */
+.au-root{height:100dvh;min-height:100dvh;overflow:hidden}
+.au-layout{height:100%;flex:1;min-height:0;align-items:stretch}
+.au-panel{margin:22px 0;min-height:0}
+.au-main{height:100%;min-height:0;overflow:hidden;padding:24px 0 16px}
+.au-form{min-height:0;max-height:100%;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--text) 25%,transparent) transparent}
+.au-footer{display:none}
+@media(max-width:1023px){.au-layout{height:100%;overflow:hidden}.au-main{height:100%;padding:20px 0}.au-form{max-height:100%;overflow-y:auto}}
+@media(max-width:600px){.au-layout{padding:0 20px}.au-main{padding:12px 0}.au-form{padding:18px 2px;max-height:100%}}
+@media(min-width:1024px) and (max-height:760px){.au-panel{margin:12px 0;padding:24px 34px}.au-main{padding:12px 0}.au-brand-art{height:min(27vh,190px)}}
+
+/* Aucun défilement sur les parcours auth, y compris dans le formulaire. */
+.au-form{overflow:hidden;overscroll-behavior:none}
+@media(max-width:1023px){.au-form{overflow:hidden}}
+@media(max-width:600px){.au-form{overflow:hidden}}
+@media(max-height:700px){.au-heading{margin-bottom:16px}.au-title{font-size:clamp(25px,3vw,35px)}.au-desc{margin-top:7px;font-size:13px}.au-stack{gap:10px}.au-input.au-input{min-height:44px;padding-top:9px;padding-bottom:9px}.au-btn{min-height:44px;padding-top:9px;padding-bottom:9px}.au-foot{margin-top:14px;padding-top:12px}.au-panel{padding-top:20px;padding-bottom:20px}.au-brand-art{height:min(24vh,160px)}}
